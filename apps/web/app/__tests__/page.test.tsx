@@ -8,7 +8,7 @@ describe("Home", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: /train with real table tennis professionals/i,
+        name: /where amateurs and pros play together/i,
       }),
     ).toBeInTheDocument();
   });
