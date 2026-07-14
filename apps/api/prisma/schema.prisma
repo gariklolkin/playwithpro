@@ -1,0 +1,14 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Placeholder model used to validate the migration pipeline end-to-end.
+model HealthCheck {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+}
