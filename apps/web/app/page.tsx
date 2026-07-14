@@ -99,7 +99,7 @@ export default function Home() {
           </div>
 
           {/* Illustration */}
-          <div className="mx-auto mt-10 max-w-[960px]">
+          <div className="mx-auto mt-10 max-w-[780px]">
             <Image
               src="/hero-players.png"
               alt="An amateur and a professional in a table tennis rally"
