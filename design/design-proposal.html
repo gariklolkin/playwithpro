@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TopSpin — Design Proposal</title>
+<style>
+  /* ============ Design tokens (Notion-inspired) ============ */
+  :root {
+    --bg: #FFFFFF;
+    --bg-secondary: #F7F6F3;      /* Notion sidebar gray */
+    --bg-hover: #EFEFEE;
+    --text: #37352F;               /* Notion ink */
+    --text-secondary: #787774;
+    --text-tertiary: #9B9A97;
+    --border: #EDEDEB;
+    --border-strong: #D3D1CB;
+    --accent: #2E6BE6;             /* calm blue, used sparingly */
+    --accent-soft: #D3E5EF;
+    /* Notion tag palette */
+    --tag-gray-bg: #F1F0EF;   --tag-gray-tx: #5A5A58;
+    --tag-blue-bg: #D3E5EF;   --tag-blue-tx: #24446B;
+    --tag-green-bg: #DBEDDB;  --tag-green-tx: #1C3829;
+    --tag-yellow-bg: #FDECC8; --tag-yellow-tx: #402C1B;
+    --tag-orange-bg: #FADEC9; --tag-orange-tx: #49290E;
+    --tag-purple-bg: #E8DEEE; --tag-purple-tx: #412454;
+    --tag-pink-bg: #F5E0E9;   --tag-pink-tx: #4C2337;
+    --tag-red-bg: #FFE2DD;    --tag-red-tx: #5D1715;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --shadow-card: rgba(15,15,15,0.04) 0 0 0 1px, rgba(15,15,15,0.03) 0 3px 6px, rgba(15,15,15,0.06) 0 9px 24px;
+    --shadow-soft: rgba(15,15,15,0.05) 0 1px 2px;
+    --font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji";
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: var(--font); color: var(--text); background: var(--bg); font-size:15px; line-height:1.5; }
+
+  /* ============ Prototype navigator (not part of product) ============ */
+  .proto-bar { position: sticky; top:0; z-index:100; background:#1F1E1B; color:#D4D4D0; padding:10px 20px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:13px; }
+  .proto-bar .label { color:#8A8985; margin-right:8px; }
+  .proto-btn { background:transparent; color:#D4D4D0; border:1px solid #44433F; border-radius:6px; padding:5px 12px; cursor:pointer; font-size:13px; font-family:var(--font); }
+  .proto-btn:hover { background:#33322F; }
+  .proto-btn.active { background:#D3E5EF; color:#24446B; border-color:transparent; font-weight:600; }
+  .screen { display:none; }
+  .screen.active { display:block; }
+
+  /* ============ App navbar ============ */
+  .navbar { display:flex; align-items:center; gap:20px; padding:12px 32px; border-bottom:1px solid var(--border); background:var(--bg); }
+  .logo { font-weight:700; font-size:17px; display:flex; align-items:center; gap:8px; }
+  .nav-links { display:flex; gap:4px; margin-left:12px; }
+  .nav-links a { color:var(--text-secondary); text-decoration:none; padding:5px 10px; border-radius:6px; font-size:14px; }
+  .nav-links a:hover { background:var(--bg-hover); color:var(--text); }
+  .nav-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
+  .lang-switch { border:1px solid var(--border); border-radius:6px; padding:5px 8px; font-size:13px; color:var(--text-secondary); background:var(--bg); cursor:pointer; font-family:var(--font); }
+  .btn { border:none; border-radius:6px; padding:7px 14px; font-size:14px; cursor:pointer; font-family:var(--font); font-weight:500; }
+  .btn-primary { background:var(--text); color:#fff; }
+  .btn-primary:hover { background:#000; }
+  .btn-ghost { background:transparent; color:var(--text); border:1px solid var(--border-strong); }
+  .btn-ghost:hover { background:var(--bg-hover); }
+  .btn-accent { background:var(--accent); color:#fff; }
+  .btn-sm { padding:4px 10px; font-size:13px; }
+
+  .container { max-width:1080px; margin:0 auto; padding:0 32px; }
+
+  /* ============ Landing ============ */
+  .hero { text-align:center; padding:72px 20px 48px; }
+  .hero .emoji-row { font-size:40px; margin-bottom:16px; letter-spacing:6px; }
+  .hero h1 { font-size:44px; line-height:1.15; letter-spacing:-0.5px; font-weight:700; max-width:640px; margin:0 auto 16px; }
+  .hero p { color:var(--text-secondary); font-size:18px; max-width:520px; margin:0 auto 28px; }
+  .hero .cta-row { display:flex; gap:12px; justify-content:center; }
+  .hero .btn { padding:10px 20px; font-size:15px; }
+  .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; padding:40px 0 64px; }
+  .step-card { background:var(--bg-secondary); border-radius:var(--radius-lg); padding:24px; }
+  .step-card .icon { font-size:28px; margin-bottom:10px; }
+  .step-card h3 { font-size:16px; margin-bottom:6px; }
+  .step-card p { color:var(--text-secondary); font-size:14px; }
+  .trust-strip { border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:20px 0; display:flex; justify-content:center; gap:48px; color:var(--text-secondary); font-size:14px; margin-bottom:64px; }
+  .trust-strip b { color:var(--text); }
+
+  /* ============ Section headers ============ */
+  .page-head { padding:36px 0 8px; }
+  .page-head h1 { font-size:28px; display:flex; align-items:center; gap:10px; }
+  .page-head p { color:var(--text-secondary); margin-top:4px; }
+
+  /* ============ Tags & badges ============ */
+  .tag { display:inline-flex; align-items:center; gap:4px; border-radius:4px; padding:2px 8px; font-size:12.5px; font-weight:500; }
+  .tag-gray  { background:var(--tag-gray-bg);  color:var(--tag-gray-tx); }
+  .tag-blue  { background:var(--tag-blue-bg);  color:var(--tag-blue-tx); }
+  .tag-green { background:var(--tag-green-bg); color:var(--tag-green-tx); }
+  .tag-yellow{ background:var(--tag-yellow-bg);color:var(--tag-yellow-tx); }
+  .tag-orange{ background:var(--tag-orange-bg);color:var(--tag-orange-tx); }
+  .tag-purple{ background:var(--tag-purple-bg);color:var(--tag-purple-tx); }
+  .tag-pink  { background:var(--tag-pink-bg);  color:var(--tag-pink-tx); }
+  .tag-red   { background:var(--tag-red-bg);   color:var(--tag-red-tx); }
+
+  /* ============ Catalog ============ */
+  .catalog-layout { display:grid; grid-template-columns:230px 1fr; gap:28px; padding:24px 0 64px; }
+  .filters { position:sticky; top:120px; align-self:start; }
+  .filter-group { margin-bottom:22px; }
+  .filter-group h4 { font-size:12px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-tertiary); margin-bottom:8px; }
+  .filter-item { display:flex; align-items:center; gap:8px; padding:4px 6px; border-radius:6px; font-size:14px; color:var(--text-secondary); cursor:pointer; }
+  .filter-item:hover { background:var(--bg-hover); }
+  .filter-item input { accent-color:var(--text); }
+  .pro-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+  .pro-card { border-radius:var(--radius-lg); padding:20px; box-shadow:var(--shadow-card); background:var(--bg); transition:transform .12s ease; cursor:pointer; }
+  .pro-card:hover { transform:translateY(-2px); }
+  .pro-card-top { display:flex; gap:14px; margin-bottom:12px; }
+  .avatar { width:56px; height:56px; border-radius:50%; background:var(--bg-secondary); display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0; }
+  .avatar-lg { width:88px; height:88px; font-size:42px; }
+  .pro-name { font-weight:600; font-size:16px; display:flex; align-items:center; gap:6px; }
+  .pro-title { color:var(--text-secondary); font-size:13.5px; }
+  .rating { color:var(--text-secondary); font-size:13.5px; margin-top:2px; }
+  .pro-card-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+  .pro-card-bottom { display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:12px; font-size:14px; }
+  .price { font-weight:600; }
+  .price span { color:var(--text-tertiary); font-weight:400; font-size:13px; }
+  .next-slot { color:var(--text-secondary); font-size:13px; }
+
+  /* ============ Profile & booking ============ */
+  .profile-layout { display:grid; grid-template-columns:1fr 340px; gap:32px; padding:24px 0 64px; }
+  .profile-header { display:flex; gap:20px; align-items:center; margin-bottom:20px; }
+  .section { margin-bottom:28px; }
+  .section h3 { font-size:13px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-tertiary); margin-bottom:10px; }
+  .achievement { display:flex; gap:10px; padding:8px 0; font-size:14.5px; align-items:baseline; }
+  .service-row { display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:8px; cursor:pointer; }
+  .service-row:hover, .service-row.selected { border-color:var(--text); box-shadow:var(--shadow-soft); }
+  .service-row.selected { background:var(--bg-secondary); }
+  .service-name { font-weight:500; display:flex; align-items:center; gap:8px; }
+  .service-desc { color:var(--text-secondary); font-size:13px; margin-top:2px; }
+  .booking-card { position:sticky; top:120px; border-radius:var(--radius-lg); box-shadow:var(--shadow-card); padding:20px; }
+  .booking-card h3 { font-size:15px; margin-bottom:14px; display:flex; align-items:center; gap:8px; text-transform:none; letter-spacing:0; color:var(--text); }
+  .week-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:14px; }
+  .day-col { text-align:center; }
+  .day-col .d { font-size:11px; color:var(--text-tertiary); text-transform:uppercase; }
+  .day-col .n { font-size:14px; font-weight:600; margin-bottom:6px; }
+  .slot { display:block; width:100%; border:1px solid var(--border); background:var(--bg); border-radius:6px; font-size:12px; padding:4px 0; margin-bottom:4px; cursor:pointer; color:var(--text-secondary); font-family:var(--font); }
+  .slot:hover { border-color:var(--text); color:var(--text); }
+  .slot.selected { background:var(--text); color:#fff; border-color:var(--text); }
+  .slot.taken { opacity:0.35; text-decoration:line-through; cursor:not-allowed; }
+  .upload-box { border:1.5px dashed var(--border-strong); border-radius:var(--radius); padding:16px; text-align:center; color:var(--text-secondary); font-size:13.5px; margin-bottom:14px; cursor:pointer; }
+  .upload-box:hover { background:var(--bg-secondary); }
+  .summary-row { display:flex; justify-content:space-between; font-size:14px; padding:5px 0; color:var(--text-secondary); }
+  .summary-row.total { border-top:1px solid var(--border); margin-top:6px; padding-top:10px; color:var(--text); font-weight:600; }
+  .escrow-note { background:var(--tag-blue-bg); color:var(--tag-blue-tx); border-radius:var(--radius); padding:10px 12px; font-size:12.5px; margin:12px 0; display:flex; gap:8px; }
+
+  /* ============ Dashboards ============ */
+  .dash-layout { display:grid; grid-template-columns:220px 1fr; min-height:600px; }
+  .sidebar { background:var(--bg-secondary); padding:20px 12px; border-right:1px solid var(--border); }
+  .side-item { display:flex; align-items:center; gap:9px; padding:6px 10px; border-radius:6px; font-size:14px; color:var(--text-secondary); cursor:pointer; margin-bottom:2px; }
+  .side-item:hover { background:var(--bg-hover); }
+  .side-item.active { background:rgba(0,0,0,0.055); color:var(--text); font-weight:500; }
+  .dash-main { padding:32px 40px 64px; }
+  .stat-row { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:28px; }
+  .stat-card { border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px 18px; }
+  .stat-card .k { font-size:13px; color:var(--text-secondary); display:flex; gap:6px; align-items:center; }
+  .stat-card .v { font-size:26px; font-weight:700; margin-top:4px; }
+  .stat-card .sub { font-size:12.5px; color:var(--text-tertiary); }
+  .session-card { display:flex; align-items:center; gap:16px; border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px 18px; margin-bottom:10px; }
+  .session-when { text-align:center; min-width:64px; }
+  .session-when .dd { font-size:20px; font-weight:700; }
+  .session-when .mm { font-size:11px; text-transform:uppercase; color:var(--text-tertiary); }
+  .session-info { flex:1; }
+  .session-info .t { font-weight:600; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .session-info .s { color:var(--text-secondary); font-size:13.5px; margin-top:2px; }
+  .meet-chip { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--border); border-radius:6px; padding:4px 10px; font-size:13px; color:var(--text-secondary); cursor:pointer; }
+  .meet-chip:hover { background:var(--bg-hover); }
+  .confirm-box { background:var(--tag-yellow-bg); border-radius:var(--radius-lg); padding:16px 18px; margin-bottom:10px; }
+  .confirm-box .t { font-weight:600; color:var(--tag-yellow-tx); display:flex; gap:8px; align-items:center; }
+  .confirm-box .s { font-size:13.5px; color:var(--tag-yellow-tx); opacity:0.85; margin:4px 0 10px; }
+
+  /* availability editor */
+  .avail-grid { display:grid; grid-template-columns:60px repeat(7,1fr); gap:4px; margin-top:12px; font-size:12px; }
+  .avail-grid .hdr { text-align:center; color:var(--text-tertiary); font-size:11px; text-transform:uppercase; padding:4px 0; }
+  .avail-grid .hour { color:var(--text-tertiary); text-align:right; padding-right:8px; font-size:11px; line-height:26px; }
+  .cell { height:26px; border:1px solid var(--border); border-radius:4px; cursor:pointer; }
+  .cell:hover { background:var(--bg-hover); }
+  .cell.on { background:var(--tag-green-bg); border-color:#B5D8B5; }
+  .cell.booked { background:var(--tag-blue-bg); border-color:#B0CCE0; cursor:default; }
+  .legend { display:flex; gap:16px; font-size:12.5px; color:var(--text-secondary); margin-top:10px; }
+  .legend i { display:inline-block; width:12px; height:12px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
+
+  /* ============ Admin ============ */
+  .table { width:100%; border-collapse:collapse; font-size:14px; }
+  .table th { text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-tertiary); font-weight:500; padding:8px 12px; border-bottom:1px solid var(--border); }
+  .table td { padding:12px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  .table tr:hover td { background:var(--bg-secondary); }
+  .doc-chip { display:inline-flex; align-items:center; gap:5px; background:var(--bg-secondary); border-radius:5px; padding:3px 9px; font-size:12.5px; color:var(--text-secondary); margin-right:5px; cursor:pointer; }
+
+  .footer-note { text-align:center; color:var(--text-tertiary); font-size:13px; padding:24px 0 48px; }
+</style>
+</head>
+<body>
+
+<!-- ==================== PROTOTYPE NAVIGATOR ==================== -->
+<div class="proto-bar">
+  <span class="label">🏓 TopSpin — design proposal · screens:</span>
+  <button class="proto-btn active" onclick="show('landing',this)">Landing</button>
+  <button class="proto-btn" onclick="show('catalog',this)">Coach catalog</button>
+  <button class="proto-btn" onclick="show('profile',this)">Profile & booking</button>
+  <button class="proto-btn" onclick="show('amateur',this)">Player dashboard</button>
+  <button class="proto-btn" onclick="show('pro',this)">Coach dashboard</button>
+  <button class="proto-btn" onclick="show('admin',this)">Admin</button>
+</div>
+
+<!-- ==================== SHARED NAVBAR (repeated per screen) ==================== -->
+
+<!-- ==================== 1. LANDING ==================== -->
+<div id="landing" class="screen active">
+  <nav class="navbar">
+    <div class="logo">🏓 TopSpin</div>
+    <div class="nav-links"><a href="#">Find a coach</a><a href="#">How it works</a><a href="#">For coaches</a></div>
+    <div class="nav-right">
+      <select class="lang-switch"><option>🌐 EN</option><option>FR</option><option>DE</option><option>RU</option><option>中文</option></select>
+      <button class="btn btn-ghost">Log in</button>
+      <button class="btn btn-primary">Get started</button>
+    </div>
+  </nav>
+  <div class="container">
+    <div class="hero">
+      <div class="emoji-row">🏓 🎯 📹</div>
+      <h1>Train with real table tennis professionals</h1>
+      <p>Upload your game footage, book a video session with a verified pro, and get personal feedback — in your language.</p>
+      <div class="cta-row">
+        <button class="btn btn-primary">Find your coach →</button>
+        <button class="btn btn-ghost">I'm a professional</button>
+      </div>
+    </div>
+    <div class="trust-strip">
+      <div>✅ <b>Verified</b> pros only</div>
+      <div>🔒 Payment held in <b>escrow</b></div>
+      <div>🎥 Video calls, <b>no account needed</b></div>
+      <div>🌍 <b>5</b> languages</div>
+    </div>
+    <div class="steps">
+      <div class="step-card"><div class="icon">📹</div><h3>1. Upload your video</h3><p>Record a match or training drill and upload it. The coach reviews it before your call.</p></div>
+      <div class="step-card"><div class="icon">🗓️</div><h3>2. Pick a coach & time</h3><p>Filter verified pros by language, service and price. Book a free slot — it lands in both Google Calendars with a Meet link.</p></div>
+      <div class="step-card"><div class="icon">💬</div><h3>3. Meet & improve</h3><p>Join the video call, get your analysis. Your payment is only released to the coach after the session happens.</p></div>
+    </div>
+  </div>
+  <div class="footer-note">TopSpin · English · Français · Deutsch · Русский · 中文</div>
+</div>
+
+<!-- ==================== 2. CATALOG ==================== -->
+<div id="catalog" class="screen">
+  <nav class="navbar">
+    <div class="logo">🏓 TopSpin</div>
+    <div class="nav-links"><a href="#">Find a coach</a><a href="#">My sessions</a></div>
+    <div class="nav-right">
+      <select class="lang-switch"><option>🌐 EN</option></select>
+      <div class="avatar" style="width:32px;height:32px;font-size:15px;">🙂</div>
+    </div>
+  </nav>
+  <div class="container">
+    <div class="page-head"><h1>🔍 Find a coach</h1><p>34 verified professionals available</p></div>
+    <div class="catalog-layout">
+      <aside class="filters">
+        <div class="filter-group"><h4>Language</h4>
+          <label class="filter-item"><input type="checkbox" checked> English</label>
+          <label class="filter-item"><input type="checkbox"> Français</label>
+          <label class="filter-item"><input type="checkbox"> Deutsch</label>
+          <label class="filter-item"><input type="checkbox" checked> Русский</label>
+          <label class="filter-item"><input type="checkbox"> 中文</label>
+        </div>
+        <div class="filter-group"><h4>Service</h4>
+          <label class="filter-item"><input type="checkbox" checked> 📹 Video analysis</label>
+          <label class="filter-item"><input type="checkbox"> 💬 General consultation</label>
+          <label class="filter-item"><input type="checkbox"> 📋 Training plan</label>
+        </div>
+        <div class="filter-group"><h4>Price / hour</h4>
+          <label class="filter-item"><input type="checkbox"> Up to €30</label>
+          <label class="filter-item"><input type="checkbox" checked> €30 – €60</label>
+          <label class="filter-item"><input type="checkbox"> €60+</label>
+        </div>
+        <div class="filter-group"><h4>Availability</h4>
+          <label class="filter-item"><input type="checkbox" checked> This week</label>
+          <label class="filter-item"><input type="checkbox"> Weekends</label>
+        </div>
+      </aside>
+      <div class="pro-grid">
+        <div class="pro-card" onclick="show('profile',document.querySelectorAll('.proto-btn')[2])">
+          <div class="pro-card-top">
+            <div class="avatar">🇩🇪</div>
+            <div>
+              <div class="pro-name">Stefan Weber <span class="tag tag-blue">✔ Verified</span></div>
+              <div class="pro-title">Ex-Bundesliga · National coach, 12 yrs</div>
+              <div class="rating">⭐ 4.9 · 127 sessions</div>
+            </div>
+          </div>
+          <div class="pro-card-tags">
+            <span class="tag tag-gray">🇬🇧 EN</span><span class="tag tag-gray">🇩🇪 DE</span><span class="tag tag-gray">🇷🇺 RU</span>
+            <span class="tag tag-purple">📹 Video analysis</span><span class="tag tag-green">💬 Consultation</span>
+          </div>
+          <div class="pro-card-bottom">
+            <div class="price">from €40 <span>/ hour</span></div>
+            <div class="next-slot">🗓️ Next: Wed 18:00</div>
+          </div>
+        </div>
+        <div class="pro-card">
+          <div class="pro-card-top">
+            <div class="avatar">🇨🇳</div>
+            <div>
+              <div class="pro-name">Li Wei <span class="tag tag-blue">✔ Verified</span></div>
+              <div class="pro-title">Former CNT sparring partner</div>
+              <div class="rating">⭐ 5.0 · 89 sessions</div>
+            </div>
+          </div>
+          <div class="pro-card-tags">
+            <span class="tag tag-gray">🇨🇳 中文</span><span class="tag tag-gray">🇬🇧 EN</span>
+            <span class="tag tag-purple">📹 Video analysis</span><span class="tag tag-yellow">📋 Training plan</span>
+          </div>
+          <div class="pro-card-bottom">
+            <div class="price">from €55 <span>/ hour</span></div>
+            <div class="next-slot">🗓️ Next: Thu 09:00</div>
+          </div>
+        </div>
+        <div class="pro-card">
+          <div class="pro-card-top">
+            <div class="avatar">🇫🇷</div>
+            <div>
+              <div class="pro-name">Camille Girard <span class="tag tag-blue">✔ Verified</span></div>
+              <div class="pro-title">Pro league player · FFTT coach</div>
+              <div class="rating">⭐ 4.8 · 64 sessions</div>
+            </div>
+          </div>
+          <div class="pro-card-tags">
+            <span class="tag tag-gray">🇫🇷 FR</span><span class="tag tag-gray">🇬🇧 EN</span>
+            <span class="tag tag-green">💬 Consultation</span><span class="tag tag-purple">📹 Video analysis</span>
+          </div>
+          <div class="pro-card-bottom">
+            <div class="price">from €35 <span>/ hour</span></div>
+            <div class="next-slot">🗓️ Next: Fri 17:30</div>
+          </div>
+        </div>
+        <div class="pro-card">
+          <div class="pro-card-top">
+            <div class="avatar">🇷🇺</div>
+            <div>
+              <div class="pro-name">Анна Соколова <span class="tag tag-blue">✔ Verified</span></div>
+              <div class="pro-title">Master of Sport · Youth team coach</div>
+              <div class="rating">⭐ 4.9 · 203 sessions</div>
+            </div>
+          </div>
+          <div class="pro-card-tags">
+            <span class="tag tag-gray">🇷🇺 RU</span><span class="tag tag-gray">🇬🇧 EN</span><span class="tag tag-gray">🇩🇪 DE</span>
+            <span class="tag tag-purple">📹 Video analysis</span><span class="tag tag-yellow">📋 Training plan</span>
+          </div>
+          <div class="pro-card-bottom">
+            <div class="price">from €30 <span>/ hour</span></div>
+            <div class="next-slot">🗓️ Next: today 20:00</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 3. PROFILE & BOOKING ==================== -->
+<div id="profile" class="screen">
+  <nav class="navbar">
+    <div class="logo">🏓 TopSpin</div>
+    <div class="nav-links"><a href="#">← Back to catalog</a></div>
+    <div class="nav-right"><select class="lang-switch"><option>🌐 EN</option></select><div class="avatar" style="width:32px;height:32px;font-size:15px;">🙂</div></div>
+  </nav>
+  <div class="container">
+    <div class="profile-layout">
+      <div>
+        <div class="profile-header">
+          <div class="avatar avatar-lg">🇩🇪</div>
+          <div>
+            <div class="pro-name" style="font-size:24px;">Stefan Weber <span class="tag tag-blue">✔ Verified</span></div>
+            <div class="pro-title" style="font-size:15px;">Ex-Bundesliga player · National team coach, 12 years</div>
+            <div class="rating">⭐ 4.9 (127 sessions) · 🌍 English, Deutsch, Русский · 🕐 Berlin (CET)</div>
+          </div>
+        </div>
+        <div class="section">
+          <h3>About</h3>
+          <p style="color:var(--text-secondary)">15 years in professional table tennis. I specialize in serve/receive tactics and footwork for intermediate players. Send me a match video and we will break down 3–4 concrete things you can fix in your next training week.</p>
+        </div>
+        <div class="section">
+          <h3>Achievements</h3>
+          <div class="achievement">🏆 <span>Bundesliga, TTC Fulda — 2014–2019</span></div>
+          <div class="achievement">🥈 <span>German National Championship, doubles silver — 2017</span></div>
+          <div class="achievement">🎓 <span>DTTB licensed A-coach since 2020</span></div>
+        </div>
+        <div class="section">
+          <h3>Services & pricing</h3>
+          <div class="service-row selected" onclick="pick(this)">
+            <div><div class="service-name">📹 Video analysis session</div><div class="service-desc">You upload a video in advance; live breakdown on the call + written summary</div></div>
+            <div class="price">€45 <span>/ hour</span></div>
+          </div>
+          <div class="service-row" onclick="pick(this)">
+            <div><div class="service-name">💬 General consultation</div><div class="service-desc">Equipment, tactics, training routine — bring your questions</div></div>
+            <div class="price">€40 <span>/ hour</span></div>
+          </div>
+          <div class="service-row" onclick="pick(this)">
+            <div><div class="service-name">📋 Training plan review</div><div class="service-desc">4-week personalized plan discussed on the call</div></div>
+            <div class="price">€60 <span>/ hour</span></div>
+          </div>
+        </div>
+        <div class="section">
+          <h3>Reviews</h3>
+          <div class="achievement">⭐⭐⭐⭐⭐ <span>"Spotted a flaw in my backhand loop in the first 5 minutes." — Marco, 🇮🇹</span></div>
+          <div class="achievement">⭐⭐⭐⭐⭐ <span>"Разбор видео очень детальный, получил конспект после сеанса." — Дмитрий, 🇷🇺</span></div>
+        </div>
+      </div>
+      <aside>
+        <div class="booking-card">
+          <h3>🗓️ Book a session</h3>
+          <div class="week-grid">
+            <div class="day-col"><div class="d">Mon</div><div class="n">13</div><button class="slot taken">18:00</button></div>
+            <div class="day-col"><div class="d">Tue</div><div class="n">14</div><button class="slot" onclick="pickSlot(this)">17:00</button><button class="slot" onclick="pickSlot(this)">19:00</button></div>
+            <div class="day-col"><div class="d">Wed</div><div class="n">15</div><button class="slot selected" onclick="pickSlot(this)">18:00</button></div>
+            <div class="day-col"><div class="d">Thu</div><div class="n">16</div><button class="slot" onclick="pickSlot(this)">09:00</button><button class="slot taken">18:00</button></div>
+            <div class="day-col"><div class="d">Fri</div><div class="n">17</div><button class="slot" onclick="pickSlot(this)">17:30</button></div>
+          </div>
+          <div class="upload-box">📎 <b>Attach your video</b><br>drag & drop or browse · up to 2 GB<br><span style="font-size:12px;color:var(--text-tertiary)">backhand_match.mp4 ✓ uploaded</span></div>
+          <div class="summary-row"><span>📹 Video analysis · 60 min</span><span>€45.00</span></div>
+          <div class="summary-row"><span>Service fee</span><span>€4.50</span></div>
+          <div class="summary-row total"><span>Total</span><span>€49.50</span></div>
+          <div class="escrow-note">🔒 <span>Your payment is held safely and released to Stefan only after the session takes place. Full refund if the coach doesn't show up.</span></div>
+          <button class="btn btn-primary" style="width:100%; padding:10px;">Confirm & pay €49.50</button>
+          <div style="font-size:12px;color:var(--text-tertiary);text-align:center;margin-top:10px;">📅 Calendar invite (Google Calendar or .ics email) with a video call link — no Google account required</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 4. AMATEUR DASHBOARD ==================== -->
+<div id="amateur" class="screen">
+  <nav class="navbar">
+    <div class="logo">🏓 TopSpin</div>
+    <div class="nav-right"><select class="lang-switch"><option>🌐 EN</option></select><div class="avatar" style="width:32px;height:32px;font-size:15px;">🙂</div></div>
+  </nav>
+  <div class="dash-layout">
+    <aside class="sidebar">
+      <div class="side-item active">🗓️ My sessions</div>
+      <div class="side-item">📹 My videos</div>
+      <div class="side-item">🔍 Find a coach</div>
+      <div class="side-item">💳 Payments</div>
+      <div class="side-item">⚙️ Settings</div>
+    </aside>
+    <main class="dash-main">
+      <div class="page-head" style="padding-top:0;"><h1>🗓️ My sessions</h1></div>
+
+      <div class="confirm-box">
+        <div class="t">⏳ Confirm your session with Anna Sokolova</div>
+        <div class="s">Your session on Jul 12 ended. Did it take place? Payment (€33.00) will be released to the coach. Auto-confirms in 46 hours.</div>
+        <button class="btn btn-primary btn-sm">✓ Yes, it happened</button>
+        <button class="btn btn-ghost btn-sm">⚠️ Report a problem</button>
+      </div>
+
+      <h3 style="font-size:13px;text-transform:uppercase;color:var(--text-tertiary);margin:20px 0 10px;">Upcoming</h3>
+      <div class="session-card">
+        <div class="session-when"><div class="dd">15</div><div class="mm">Jul · Wed</div></div>
+        <div class="session-info">
+          <div class="t">📹 Video analysis with Stefan Weber <span class="tag tag-blue">Paid · in escrow</span></div>
+          <div class="s">18:00–19:00 (your time) · backhand_match.mp4 attached</div>
+        </div>
+        <span class="meet-chip">🎥 Join video call</span>
+        <span class="meet-chip">📅 In your calendar</span>
+      </div>
+      <div class="session-card">
+        <div class="session-when"><div class="dd">21</div><div class="mm">Jul · Tue</div></div>
+        <div class="session-info">
+          <div class="t">💬 Consultation with Camille Girard <span class="tag tag-blue">Paid · in escrow</span></div>
+          <div class="s">17:30–18:30 (your time)</div>
+        </div>
+        <span class="meet-chip">🎥 Join video call</span>
+      </div>
+
+      <h3 style="font-size:13px;text-transform:uppercase;color:var(--text-tertiary);margin:24px 0 10px;">Past</h3>
+      <div class="session-card" style="opacity:0.75;">
+        <div class="session-when"><div class="dd">02</div><div class="mm">Jul · Thu</div></div>
+        <div class="session-info">
+          <div class="t">📹 Video analysis with Li Wei <span class="tag tag-green">Completed · paid out</span></div>
+          <div class="s">Rated ⭐⭐⭐⭐⭐ · summary notes received</div>
+        </div>
+        <span class="meet-chip">📄 Session notes</span>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ==================== 5. PRO DASHBOARD ==================== -->
+<div id="pro" class="screen">
+  <nav class="navbar">
+    <div class="logo">🏓 TopSpin</div>
+    <div class="nav-right"><select class="lang-switch"><option>🌐 DE</option></select><div class="avatar" style="width:32px;height:32px;font-size:15px;">🇩🇪</div></div>
+  </nav>
+  <div class="dash-layout">
+    <aside class="sidebar">
+      <div class="side-item active">🏠 Overview</div>
+      <div class="side-item">🗓️ Availability</div>
+      <div class="side-item">📥 Bookings</div>
+      <div class="side-item">💰 Earnings</div>
+      <div class="side-item">👤 My profile</div>
+      <div class="side-item">⚙️ Settings</div>
+    </aside>
+    <main class="dash-main">
+      <div class="page-head" style="padding-top:0;"><h1>👋 Hi Stefan <span class="tag tag-blue" style="font-size:13px;vertical-align:middle;">✔ Verified pro</span></h1></div>
+      <div class="stat-row">
+        <div class="stat-card"><div class="k">💰 In escrow</div><div class="v">€134</div><div class="sub">3 upcoming sessions</div></div>
+        <div class="stat-card"><div class="k">✅ Paid out (July)</div><div class="v">€612</div><div class="sub">14 completed sessions</div></div>
+        <div class="stat-card"><div class="k">⭐ Rating</div><div class="v">4.9</div><div class="sub">127 sessions total</div></div>
+      </div>
+
+      <h3 style="font-size:13px;text-transform:uppercase;color:var(--text-tertiary);margin-bottom:10px;">Next sessions</h3>
+      <div class="session-card">
+        <div class="session-when"><div class="dd">15</div><div class="mm">Jul · Wed</div></div>
+        <div class="session-info">
+          <div class="t">📹 Video analysis — Garik L. <span class="tag tag-purple">Video attached</span></div>
+          <div class="s">18:00–19:00 CET · client speaks EN, RU</div>
+        </div>
+        <span class="meet-chip">▶️ Watch video</span>
+        <span class="meet-chip">🎥 Join video call</span>
+      </div>
+
+      <h3 style="font-size:13px;text-transform:uppercase;color:var(--text-tertiary);margin:26px 0 0;">🗓️ My availability (week of Jul 13)</h3>
+      <div class="avail-grid">
+        <div></div><div class="hdr">Mon</div><div class="hdr">Tue</div><div class="hdr">Wed</div><div class="hdr">Thu</div><div class="hdr">Fri</div><div class="hdr">Sat</div><div class="hdr">Sun</div>
+        <div class="hour">09:00</div><div class="cell" onclick="tog(this)"></div><div class="cell" onclick="tog(this)"></div><div class="cell" onclick="tog(this)"></div><div class="cell on" onclick="tog(this)"></div><div class="cell" onclick="tog(this)"></div><div class="cell on" onclick="tog(this)"></div><div class="cell" onclick="tog(this)"></div>
+        <div class="hour">17:00</div><div class="cell" onclick="tog(this)"></div><div class="cell on" onclick="tog(this)"></div><div class="cell" onclick="tog(this)"></div><div class="cell" onclick="tog(this)"></div><div class="cell on" onclick="tog(this)"></div><div class="cell on" onclick="tog(this)"></div><div class="cell" onclick="tog(this)"></div>
+        <div class="hour">18:00</div><div class="cell booked"></div><div class="cell" onclick="tog(this)"></div><div class="cell booked"></div><div class="cell booked"></div><div class="cell" onclick="tog(this)"></div><div class="cell on" onclick="tog(this)"></div><div class="cell" onclick="tog(this)"></div>
+        <div class="hour">19:00</div><div class="cell" onclick="tog(this)"></div><div class="cell on" onclick="tog(this)"></div><div class="cell" onclick="tog(this)"></div><div class="cell" onclick="tog(this)"></div><div class="cell" onclick="tog(this)"></div><div class="cell" onclick="tog(this)"></div><div class="cell" onclick="tog(this)"></div>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--tag-green-bg);border:1px solid #B5D8B5;"></i>Available</span>
+        <span><i style="background:var(--tag-blue-bg);border:1px solid #B0CCE0;"></i>Booked</span>
+        <span><i style="background:#fff;border:1px solid var(--border);"></i>Off</span>
+        <span style="margin-left:auto;">Synced with your calendar (Google / .ics) ↺</span>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ==================== 6. ADMIN ==================== -->
+<div id="admin" class="screen">
+  <nav class="navbar">
+    <div class="logo">🏓 TopSpin <span class="tag tag-red" style="margin-left:6px;">Admin</span></div>
+    <div class="nav-right"><div class="avatar" style="width:32px;height:32px;font-size:15px;">🛡️</div></div>
+  </nav>
+  <div class="dash-layout">
+    <aside class="sidebar">
+      <div class="side-item active">✅ Verification queue <span class="tag tag-red" style="margin-left:auto;">3</span></div>
+      <div class="side-item">⚠️ Disputes <span class="tag tag-yellow" style="margin-left:auto;">1</span></div>
+      <div class="side-item">👥 Users</div>
+      <div class="side-item">💳 Transactions</div>
+      <div class="side-item">📊 Analytics</div>
+    </aside>
+    <main class="dash-main">
+      <div class="page-head" style="padding-top:0;"><h1>✅ Coach verification queue</h1><p>Review credentials before profiles go live</p></div>
+      <table class="table">
+        <tr><th>Applicant</th><th>Claims</th><th>Documents</th><th>Submitted</th><th></th></tr>
+        <tr>
+          <td><b>João Ferreira</b><br><span style="color:var(--text-tertiary);font-size:13px;">joao@…</span></td>
+          <td>Portuguese league player,<br>ITTF level 1 coach</td>
+          <td><span class="doc-chip">📄 license.pdf</span><span class="doc-chip">🔗 ITTF profile</span><span class="doc-chip">📄 club letter</span></td>
+          <td>Jul 13</td>
+          <td><button class="btn btn-primary btn-sm">✓ Approve</button> <button class="btn btn-ghost btn-sm">✕ Reject</button></td>
+        </tr>
+        <tr>
+          <td><b>Mei Chen</b><br><span style="color:var(--text-tertiary);font-size:13px;">mei@…</span></td>
+          <td>Provincial team player (CN)</td>
+          <td><span class="doc-chip">📄 rating card</span><span class="doc-chip">🎥 intro video</span></td>
+          <td>Jul 12</td>
+          <td><button class="btn btn-primary btn-sm">✓ Approve</button> <button class="btn btn-ghost btn-sm">✕ Reject</button></td>
+        </tr>
+        <tr>
+          <td><b>Viktor Hansen</b><br><span style="color:var(--text-tertiary);font-size:13px;">viktor@…</span></td>
+          <td>Danish national league</td>
+          <td><span class="doc-chip">🔗 ranking link</span></td>
+          <td>Jul 11</td>
+          <td><button class="btn btn-ghost btn-sm">💬 Request more info</button></td>
+        </tr>
+      </table>
+    </main>
+  </div>
+</div>
+
+<script>
+  function show(id, btn) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.proto-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    window.scrollTo(0,0);
+  }
+  function pick(el) {
+    document.querySelectorAll('.service-row').forEach(r => r.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+  function pickSlot(el) {
+    if (el.classList.contains('taken')) return;
+    document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+  function tog(el) { if (!el.classList.contains('booked')) el.classList.toggle('on'); }
+</script>
+</body>
+</html>
