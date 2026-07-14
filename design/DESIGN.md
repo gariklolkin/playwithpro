@@ -1,4 +1,4 @@
-# TopSpin — Design System & UX Specification
+# PlayWithPro — Design System & UX Specification
 
 > Marketplace connecting amateur table tennis players with verified professional players and coaches for paid video consultations.
 >
@@ -8,7 +8,7 @@
 
 Notion-inspired: calm, content-first, generous whitespace, emoji as icons, color used only for meaning (status, tags), never for decoration.
 
-**Working name:** TopSpin 🏓 (table tennis term; easy to localize — kept as a latin brand name in all locales).
+**Working name:** PlayWithPro 🏓 (says exactly what the platform does — amateurs playing/training with pros; kept as a latin brand name in all locales).
 
 ### 1.1 Color tokens
 
@@ -38,7 +38,7 @@ System font stack (`ui-sans-serif, -apple-system, "Segoe UI", …`) — like Not
 
 | Style | Size / weight |
 |---|---|
-| H1 (hero) | 44px / 700, letter-spacing −0.5px |
+| H1 (hero) | 62px / 800, letter-spacing −1.8px |
 | H1 (page) | 28px / 700 |
 | Section label | 13px / 500, uppercase, tertiary color |
 | Body | 15px / 400, line-height 1.5 |
@@ -47,7 +47,8 @@ System font stack (`ui-sans-serif, -apple-system, "Segoe UI", …`) — like Not
 ### 1.3 Components
 
 - **Cards:** radius 12px, layered soft shadow (`0 0 0 1px` ring + blur), lift on hover.
-- **Buttons:** primary = ink `#37352F` on white (Notion-style), ghost = 1px border, accent blue only for booking CTA.
+- **Buttons:** marketing/landing CTAs use a blue pair — primary `#1B5FD9` white text, secondary light-blue `#D3E5EF` with `#1B5FD9` text (Notion-homepage style). Inside the app: primary = ink `#37352F`, ghost = 1px border.
+- **Landing hero (Notion-homepage style):** big 62px headline with one keyword highlighted by a pastel pill (`--tag-blue-bg`, round, leading blue dot); blue CTA pair under the subtitle; center illustration — flat SVG table tennis table in corner perspective (blue top, dark side aprons, inset metal legs, low net with dark mesh and white top tape, orange ball on a dashed arc, red paddle); "how it works" cards on pastel tag backgrounds (blue/yellow/green). Landing container is wider (1320px) than app screens (1080px); illustration up to 1140px.
 - **Tags:** 4px radius, pastel bg, 12.5px medium.
 - **Icons:** emoji everywhere (🏓 📹 🗓️ 💬 🔒 ✅). Zero icon-font dependency, renders natively in all locales. Lucide icons allowed later for system UI (arrows, close).
 - **Avatars:** circle, `--bg-secondary` fill with emoji placeholder until photo uploaded.

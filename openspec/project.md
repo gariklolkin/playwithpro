@@ -2,7 +2,7 @@
 
 ## Purpose
 
-**TopSpin** — a two-sided marketplace connecting amateur table tennis players with verified professional players and coaches for paid one-on-one video consultations.
+**PlayWithPro** — a two-sided marketplace connecting amateur table tennis players with verified professional players and coaches for paid one-on-one video consultations.
 
 Core value loop: an amateur uploads game footage → picks a verified pro by language/service/price → books an available time slot → pays (funds held in escrow) → both parties meet on a video call → after the session is confirmed, funds are released to the pro minus a platform fee.
 
@@ -36,6 +36,10 @@ Core value loop: an amateur uploads game footage → picks a verified pro by lan
 - Testing: unit tests colocated; e2e for booking/payment flows are mandatory before a change is archived.
 - Session lifecycle (canonical state machine):
   `draft → pending_payment → paid_escrow → in_progress → awaiting_confirmation → completed_paid | disputed → resolved`
+
+## Tech debt / known issues
+
+- In-container `tsc --watch` cold compile takes ~5 min on the owner's machine (Rancher Desktop VM file I/O). Consider: running dev servers as Tilt `local_resource` on the host instead of containers, or SWC builder for NestJS. Revisit when it becomes painful.
 
 ## Roadmap (planned changes)
 

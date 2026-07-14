@@ -100,6 +100,28 @@
   .trust-strip { border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:20px 0; display:flex; justify-content:center; gap:48px; color:var(--text-secondary); font-size:14px; }
   .trust-strip b { color:var(--text); }
 
+  /* ============ Auth ============ */
+  .auth-wrap { display:grid; grid-template-columns:1fr 1fr; gap:28px; max-width:920px; margin:48px auto 64px; padding:0 32px; align-items:start; }
+  .auth-card { padding:28px; border-radius:var(--radius-lg); box-shadow:var(--shadow-card); }
+  .auth-card h2 { font-size:20px; margin-bottom:4px; }
+  .auth-card .sub { color:var(--text-secondary); font-size:13.5px; margin-bottom:18px; }
+  .field-label { font-size:12.5px; font-weight:500; color:var(--text-secondary); margin-bottom:4px; }
+  .input { width:100%; border:1px solid var(--border-strong); border-radius:8px; padding:9px 12px; font-size:14px; margin-bottom:12px; font-family:var(--font); background:var(--bg); }
+  .input:focus { outline:2px solid var(--accent); outline-offset:0; border-color:transparent; }
+  .role-pick { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+  .role-opt { border:1.5px solid var(--border); border-radius:10px; padding:12px 8px; text-align:center; cursor:pointer; }
+  .role-opt:hover { background:var(--bg-secondary); }
+  .role-opt.selected { border-color:var(--text); background:var(--bg-secondary); }
+  .role-opt .re { font-size:24px; }
+  .role-opt .rt { font-size:13.5px; font-weight:600; margin-top:4px; }
+  .role-opt .rd { font-size:11.5px; color:var(--text-tertiary); }
+  .btn-google { width:100%; display:flex; align-items:center; justify-content:center; gap:8px; border:1px solid var(--border-strong); background:var(--bg); border-radius:8px; padding:9px; font-size:14px; font-weight:500; cursor:pointer; font-family:var(--font); }
+  .btn-google:hover { background:var(--bg-secondary); }
+  .divider { display:flex; align-items:center; gap:10px; color:var(--text-tertiary); font-size:12px; margin:14px 0; }
+  .divider::before, .divider::after { content:""; flex:1; height:1px; background:var(--border); }
+  .auth-foot { font-size:13px; color:var(--text-secondary); text-align:center; margin-top:14px; }
+  .auth-foot a { color:var(--accent); text-decoration:none; }
+
   /* ============ Section headers ============ */
   .page-head { padding:36px 0 8px; }
   .page-head h1 { font-size:28px; display:flex; align-items:center; gap:10px; }
@@ -223,6 +245,7 @@
   <button class="proto-btn" onclick="show('amateur',this)">Player dashboard</button>
   <button class="proto-btn" onclick="show('pro',this)">Coach dashboard</button>
   <button class="proto-btn" onclick="show('admin',this)">Admin</button>
+  <button class="proto-btn" onclick="show('auth',this)">Auth</button>
 </div>
 
 <!-- ==================== SHARED NAVBAR (repeated per screen) ==================== -->
@@ -604,7 +627,51 @@
   </div>
 </div>
 
+<!-- ==================== 7. AUTH ==================== -->
+<div id="auth" class="screen">
+  <nav class="navbar">
+    <div class="logo">🏓 PlayWithPro</div>
+    <div class="nav-right"><select class="lang-switch"><option>🌐 EN</option><option>FR</option><option>DE</option><option>RU</option><option>中文</option></select></div>
+  </nav>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <h2>Welcome back 👋</h2>
+      <div class="sub">Log in to your PlayWithPro account</div>
+      <button class="btn-google"><span>🇬</span> Continue with Google</button>
+      <div class="divider">or with email</div>
+      <div class="field-label">Email</div>
+      <input class="input" type="email" placeholder="you@example.com">
+      <div class="field-label">Password</div>
+      <input class="input" type="password" placeholder="••••••••">
+      <button class="btn btn-primary" style="width:100%; padding:10px;">Log in</button>
+      <div class="auth-foot"><a href="#">Forgot password?</a></div>
+    </div>
+    <div class="auth-card">
+      <h2>Create account</h2>
+      <div class="sub">Free to join — pay only when you book</div>
+      <div class="role-pick">
+        <div class="role-opt selected" onclick="pickRole(this)"><div class="re">🏓</div><div class="rt">I'm a player</div><div class="rd">Book sessions with pros</div></div>
+        <div class="role-opt" onclick="pickRole(this)"><div class="re">🏆</div><div class="rt">I'm a professional</div><div class="rd">Coach and earn</div></div>
+      </div>
+      <div class="field-label">Display name</div>
+      <input class="input" type="text" placeholder="Garik L.">
+      <div class="field-label">Email</div>
+      <input class="input" type="email" placeholder="you@example.com">
+      <div class="field-label">Password</div>
+      <input class="input" type="password" placeholder="At least 8 characters">
+      <button class="btn btn-primary" style="width:100%; padding:10px;">Create account</button>
+      <div class="divider">or</div>
+      <button class="btn-google"><span>🇬</span> Sign up with Google</button>
+      <div class="auth-foot">We'll send a verification link · No Google account required</div>
+    </div>
+  </div>
+</div>
+
 <script>
+  function pickRole(el) {
+    document.querySelectorAll('.role-opt').forEach(r => r.classList.remove('selected'));
+    el.classList.add('selected');
+  }
   function show(id, btn) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');

@@ -1,4 +1,4 @@
-# TopSpin — Table Tennis Coaching Marketplace
+# PlayWithPro — Table Tennis Coaching Marketplace
 
 Two-sided marketplace: amateur players book paid video consultations with verified table tennis professionals. Escrow payments, video upload to S3, sessions via Google Meet/Jitsi, 5 UI languages (en/fr/de/ru/zh).
 

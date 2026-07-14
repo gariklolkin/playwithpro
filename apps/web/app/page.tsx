@@ -98,15 +98,15 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Illustration */}
-          <div className="mx-auto mt-10 max-w-[780px]">
+          {/* Illustration — white-background artwork blends into the page (per design mockup) */}
+          <div className="mx-auto mt-10 max-w-[900px]">
             <Image
-              src="/hero-players.png"
+              src="/hero-players.jpg"
               alt="An amateur and a professional in a table tennis rally"
               width={1400}
-              height={1179}
+              height={933}
               priority
-              className="h-auto w-full rounded-[20px] shadow-[0_12px_32px_rgba(35,60,110,0.16)]"
+              className="h-auto w-full"
             />
           </div>
         </section>
