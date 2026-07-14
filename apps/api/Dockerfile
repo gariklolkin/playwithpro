@@ -16,8 +16,8 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
 COPY packages ./packages
 COPY apps/api ./apps/api
 
-RUN pnpm --filter @topspin/shared run build
-RUN pnpm --filter @topspin/api exec prisma generate
+RUN pnpm --filter @playwithpro/shared run build
+RUN pnpm --filter @playwithpro/api exec prisma generate
 
 WORKDIR /workspace/apps/api
 

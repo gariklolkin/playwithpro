@@ -1,5 +1,5 @@
 {
-  "name": "@topspin/web",
+  "name": "@playwithpro/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
-    "@topspin/shared": "workspace:*",
+    "@playwithpro/shared": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.24.0",
@@ -27,7 +27,7 @@
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
-    "@topspin/config": "workspace:*",
+    "@playwithpro/config": "workspace:*",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

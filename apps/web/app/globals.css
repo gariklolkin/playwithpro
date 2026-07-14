@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* TopSpin design tokens (design/DESIGN.md) */
+  /* PlayWithPro design tokens (design/DESIGN.md) */
   --bg: #ffffff;
   --bg-secondary: #f7f6f3;
   --bg-hover: #efefee;

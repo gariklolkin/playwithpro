@@ -1,5 +1,5 @@
 {
-  "name": "@topspin/shared",
+  "name": "@playwithpro/shared",
   "version": "0.0.0",
   "private": true,
   "main": "./dist/index.js",
@@ -10,7 +10,7 @@
     "lint": "eslint src"
   },
   "devDependencies": {
-    "@topspin/config": "workspace:*",
+    "@playwithpro/config": "workspace:*",
     "eslint": "^9.18.0",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.20.0"

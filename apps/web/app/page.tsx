@@ -1,4 +1,4 @@
-import { SUPPORTED_LOCALES } from "@topspin/shared";
+import { SUPPORTED_LOCALES } from "@playwithpro/shared";
 
 const LOCALE_LABELS: Record<string, string> = {
   en: "English",
@@ -78,7 +78,7 @@ export default function Home() {
       </section>
 
       <footer className="pb-10 text-center text-xs text-text-tertiary">
-        TopSpin ·{" "}
+        PlayWithPro ·{" "}
         {SUPPORTED_LOCALES.map(
           (locale) => LOCALE_LABELS[locale] ?? locale,
         ).join(" · ")}

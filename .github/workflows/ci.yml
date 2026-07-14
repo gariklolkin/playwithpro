@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 env:
-  DATABASE_URL: postgresql://topspin:topspin@localhost:5432/topspin
+  DATABASE_URL: postgresql://playwithpro:playwithpro@localhost:5432/playwithpro
 
 jobs:
   ci:
@@ -16,13 +16,13 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_USER: topspin
-          POSTGRES_PASSWORD: topspin
-          POSTGRES_DB: topspin
+          POSTGRES_USER: playwithpro
+          POSTGRES_PASSWORD: playwithpro
+          POSTGRES_DB: playwithpro
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U topspin"
+          --health-cmd "pg_isready -U playwithpro"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10

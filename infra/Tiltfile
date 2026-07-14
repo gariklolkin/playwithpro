@@ -19,7 +19,7 @@ dc_resource(
 )
 
 docker_build(
-    "topspin-api:dev",
+    "playwithpro-api:dev",
     context="..",
     dockerfile="../apps/api/Dockerfile",
     live_update=[
@@ -30,7 +30,7 @@ docker_build(
 )
 
 docker_build(
-    "topspin-web:dev",
+    "playwithpro-web:dev",
     context="..",
     dockerfile="../apps/web/Dockerfile",
     live_update=[

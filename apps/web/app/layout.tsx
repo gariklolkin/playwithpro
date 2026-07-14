@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TopSpin — Train with real table tennis professionals",
+  title: "PlayWithPro — Train with real table tennis professionals",
   description:
     "Upload your game footage, book a video session with a verified pro, and get personal feedback — in your language.",
 };

@@ -16,7 +16,7 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
 COPY packages ./packages
 COPY apps/web ./apps/web
 
-RUN pnpm --filter @topspin/shared run build
+RUN pnpm --filter @playwithpro/shared run build
 
 WORKDIR /workspace/apps/web
 

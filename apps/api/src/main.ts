@@ -12,8 +12,8 @@ async function bootstrap() {
   app.enableCors({ origin: config.get<string>('WEB_APP_URL') });
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('TopSpin API')
-    .setDescription('TopSpin marketplace API')
+    .setTitle('PlayWithPro API')
+    .setDescription('PlayWithPro marketplace API')
     .setVersion('0.1')
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);

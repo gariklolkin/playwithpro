@@ -1,4 +1,4 @@
-# TopSpin
+# PlayWithPro
 
 Two-sided marketplace connecting amateur table tennis players with verified professional players and coaches for paid one-on-one video consultations.
 
@@ -23,7 +23,7 @@ Two-sided marketplace connecting amateur table tennis players with verified prof
 ```bash
 pnpm install
 cp .env.example .env
-tilt up -f infra/Tiltfile
+tilt up
 ```
 
 - Web app: http://localhost:3000
@@ -33,7 +33,7 @@ tilt up -f infra/Tiltfile
 
 Tilt watches `apps/web` and `apps/api` and live-reloads on source changes; infrastructure services (postgres, minio, mailpit) run as plain Compose resources.
 
-Press `Ctrl+C` and run `tilt down -f infra/Tiltfile` to stop and tear down the environment.
+Press `Ctrl+C` and run `tilt down` to stop and tear down the environment.
 
 ## Common commands
 

@@ -1,4 +1,4 @@
-import { prettierPreset } from "@topspin/config/eslint-preset";
+import { prettierPreset } from "@playwithpro/config/eslint-preset";
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";

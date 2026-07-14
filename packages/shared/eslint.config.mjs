@@ -1,6 +1,6 @@
 // @ts-check
 import eslint from "@eslint/js";
-import { prettierPreset } from "@topspin/config/eslint-preset";
+import { prettierPreset } from "@playwithpro/config/eslint-preset";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(

@@ -1,5 +1,5 @@
 {
-  "extends": "@topspin/config/tsconfig.base.json",
+  "extends": "@playwithpro/config/tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",
