@@ -47,7 +47,7 @@ System font stack (`ui-sans-serif, -apple-system, "Segoe UI", …`) — like Not
 ### 1.3 Components
 
 - **Cards:** radius 12px, layered soft shadow (`0 0 0 1px` ring + blur), lift on hover.
-- **Buttons:** marketing/landing CTAs use a blue pair — primary `#1B5FD9` white text, secondary light-blue `#D3E5EF` with `#1B5FD9` text (Notion-homepage style). Inside the app: primary = ink `#37352F`, ghost = 1px border.
+- **Buttons:** marketing/landing CTAs use a blue pair — primary `#2E7DE1` white text (hover `#2569C3`), secondary pale-azure `#EAF2FD` with `#2A5FC7` text (hover `#DCEAFB`) — Notion-homepage style. Inside the app: primary = ink `#37352F`, ghost = 1px border.
 - **Landing hero (Notion-homepage style):** big 62px headline with one keyword highlighted by a pastel pill (`--tag-blue-bg`, round, leading blue dot); blue CTA pair under the subtitle; center illustration — flat SVG table tennis table in corner perspective (blue top, dark side aprons, inset metal legs, low net with dark mesh and white top tape, orange ball on a dashed arc, red paddle); "how it works" cards on pastel tag backgrounds (blue/yellow/green). Landing container is wider (1320px) than app screens (1080px); illustration up to 1140px.
 - **Tags:** 4px radius, pastel bg, 12.5px medium.
 - **Icons:** emoji everywhere (🏓 📹 🗓️ 💬 🔒 ✅). Zero icon-font dependency, renders natively in all locales. Lucide icons allowed later for system UI (arrows, close).

@@ -61,7 +61,7 @@ function Navbar() {
         <button className="hidden rounded-md border border-[#D3D1CB] px-3.5 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover sm:block">
           Log in
         </button>
-        <button className="rounded-md bg-[#1B5FD9] px-3.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#164EB3]">
+        <button className="rounded-md bg-[#2E7DE1] px-3.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#2569C3]">
           Get started
         </button>
       </div>
@@ -90,10 +90,10 @@ export default function Home() {
             and get personal feedback — in your language.
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
-            <button className="rounded-lg bg-[#1B5FD9] px-[22px] py-[11px] text-[15px] font-semibold text-white transition-colors hover:bg-[#164EB3]">
+            <button className="rounded-lg bg-[#2E7DE1] px-[22px] py-[11px] text-[15px] font-semibold text-white transition-colors hover:bg-[#2569C3]">
               Find your coach →
             </button>
-            <button className="rounded-lg bg-[#D3E5EF] px-[22px] py-[11px] text-[15px] font-semibold text-[#1B5FD9] transition-colors hover:bg-[#C2DAEA]">
+            <button className="rounded-lg bg-[#EAF2FD] px-[22px] py-[11px] text-[15px] font-semibold text-[#2A5FC7] transition-colors hover:bg-[#DCEAFB]">
               I&apos;m a professional
             </button>
           </div>
