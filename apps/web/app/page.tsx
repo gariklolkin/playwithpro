@@ -106,7 +106,7 @@ export default function Home() {
               width={1400}
               height={933}
               priority
-              className="h-auto w-full"
+              className="h-auto w-full rounded-[20px] border border-border shadow-[0_4px_16px_rgba(15,15,15,0.06)]"
             />
           </div>
         </section>
