@@ -1,0 +1,41 @@
+
+docker_compose("./docker-compose.yml")
+
+dc_resource("postgres", labels=["infra"])
+dc_resource("minio", labels=["infra"])
+dc_resource("minio-bootstrap", labels=["infra"])
+dc_resource("mailpit", labels=["infra"])
+
+dc_resource(
+    "api",
+    labels=["app"],
+    resource_deps=["postgres"],
+)
+
+dc_resource(
+    "web",
+    labels=["app"],
+    resource_deps=["api"],
+)
+
+docker_build(
+    "topspin-api:dev",
+    context="..",
+    dockerfile="../apps/api/Dockerfile",
+    live_update=[
+        sync("../apps/api/src", "/workspace/apps/api/src"),
+        sync("../apps/api/prisma", "/workspace/apps/api/prisma"),
+        sync("../packages/shared/src", "/workspace/packages/shared/src"),
+    ],
+)
+
+docker_build(
+    "topspin-web:dev",
+    context="..",
+    dockerfile="../apps/web/Dockerfile",
+    live_update=[
+        sync("../apps/web/app", "/workspace/apps/web/app"),
+        sync("../apps/web/public", "/workspace/apps/web/public"),
+        sync("../packages/shared/src", "/workspace/packages/shared/src"),
+    ],
+)
