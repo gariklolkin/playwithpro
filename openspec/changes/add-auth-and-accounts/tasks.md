@@ -1,9 +1,9 @@
 # Tasks: add-auth-and-accounts
 
 ## 1. Data layer & shared types
-- [ ] 1.1 Prisma models: User, OAuthAccount, RefreshToken, VerificationToken + Role enum; migration committed
-- [ ] 1.2 `packages/shared`: Role enum, auth DTO types (register/login/refresh payloads, `MeResponse`)
-- [ ] 1.3 `prisma/seed.ts` seeding admin from `ADMIN_EMAIL`/`ADMIN_PASSWORD`; wire `pnpm db:seed`; extend `.env.example`
+- [x] 1.1 Prisma models: User, OAuthAccount, RefreshToken, VerificationToken + Role enum; migration committed
+- [x] 1.2 `packages/shared`: Role enum, auth DTO types (register/login/refresh payloads, `MeResponse`)
+- [x] 1.3 `prisma/seed.ts` seeding admin from `ADMIN_EMAIL`/`ADMIN_PASSWORD`; wire `pnpm db:seed`; extend `.env.example`
 
 ## 2. API — core auth
 - [ ] 2.1 Auth module: register (argon2id hash, verification email), login, logout, refresh with rotation + reuse detection; httpOnly cookies

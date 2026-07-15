@@ -12,3 +12,63 @@ model HealthCheck {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
 }
+
+enum Role {
+  AMATEUR
+  PROFESSIONAL
+  ADMIN
+}
+
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  passwordHash    String? // null for OAuth-only accounts
+  role            Role
+  displayName     String
+  locale          String    @default("en")
+  timezone        String    @default("UTC")
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  oauthAccounts      OAuthAccount[]
+  refreshTokens      RefreshToken[]
+  verificationTokens VerificationToken[]
+}
+
+model OAuthAccount {
+  id                String @id @default(uuid())
+  userId            String
+  provider          String // "google"
+  providerAccountId String
+  user              User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique // sha256 of the opaque token
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Single-use tokens for email verification and password reset.
+model VerificationToken {
+  id        String    @id @default(uuid())
+  userId    String
+  kind      String // "email_verify" | "password_reset"
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind])
+}
