@@ -42,6 +42,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Typed lint/typecheck need the generated client (postinstall can't
+      # find the schema in a pnpm workspace).
+      - name: Generate Prisma client
+        run: pnpm exec prisma generate
+        working-directory: apps/api
+
       - name: Apply Prisma migrations
         run: pnpm exec prisma migrate deploy
         working-directory: apps/api
