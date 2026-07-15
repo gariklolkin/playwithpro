@@ -72,6 +72,9 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-playwithpro}:${POSTGRES_PASSWORD:-playwithpro}@postgres:5432/${POSTGRES_DB:-playwithpro}
       PORT: 4000
       WEB_APP_URL: http://localhost:3000
+      # Mail goes container-to-container (host .env points at localhost).
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
     ports:
       - "4000:4000"
 
