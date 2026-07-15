@@ -2,7 +2,13 @@
 
 ## Purpose
 
-**PlayWithPro** — a two-sided marketplace connecting amateur table tennis players with verified professional players and coaches for paid one-on-one video consultations.
+**PlayWithPro** — a two-sided marketplace connecting amateur table tennis players with verified professional players and coaches for paid one-on-one sessions.
+
+Exactly three service types (keep it simple — anything further the parties arrange themselves):
+
+1. **Video analysis** (`video_analysis`) — amateur uploads footage, pro reviews it live on a video call
+2. **Consultation** (`consultation`) — a plain video call
+3. **Game** (`game`) — an **in-person** practice game at a physical venue (pro specifies city/club); no video room — the calendar invite carries the venue address, and session completion relies on mutual confirmation + the dispute window
 
 Core value loop: an amateur uploads game footage → picks a verified pro by language/service/price → books an available time slot → pays (funds held in escrow) → both parties meet on a video call → after the session is confirmed, funds are released to the pro minus a platform fee.
 
@@ -46,11 +52,11 @@ Core value loop: an amateur uploads game footage → picks a verified pro by lan
 1. `add-project-foundation` — monorepo scaffold, Tilt dev env, CI, empty web/api apps
 2. `add-auth-and-accounts` — email+password & Google OAuth, roles, sessions (JWT), account settings
 3. `add-i18n` — locale routing, message catalogs for 5 languages, language switcher
-4. `add-pro-profiles-verification` — coach profile CRUD, services & pricing, credentials submission, admin verification queue
+4. `add-pro-profiles-verification` — coach profile CRUD, services & pricing (incl. city/venue for the in-person game service), credentials submission, admin verification queue
 5. `add-availability-scheduling` — coach availability slots, timezone handling
 6. `add-video-upload` — S3 pre-signed uploads, video library for amateurs
 7. `add-booking-escrow` — booking flow, PaymentProvider abstraction + mock, escrow hold
-8. `add-session-rooms-calendar` — session room page, VideoProvider (Meet/Jitsi), CalendarProvider (Google/.ics), attendance logging
+8. `add-session-rooms-calendar` — session room page, VideoProvider (Meet/Jitsi), CalendarProvider (Google/.ics), attendance logging; in-person game sessions get a venue-address invite instead of a video room
 9. `add-confirmation-payouts-disputes` — mutual confirmation, auto-confirm window, release/refund, dispute flow
 10. `add-reviews-ratings` — post-session reviews
 11. `add-admin-console` — users, transactions, disputes, analytics

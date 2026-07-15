@@ -68,7 +68,7 @@ Admin:       Verification queue · Disputes · Users · Transactions · Analytic
 
 1. **Landing** — value prop, 3-step "how it works" (upload video → pick coach & slot → meet & improve), trust strip (verification, escrow, Google Meet, 5 languages).
 2. **Coach catalog** — filter sidebar (language, service, price/hour, availability) + coach cards: avatar, verified badge, rating/session count, language & service tags, price-from, next free slot.
-3. **Coach profile + booking** — bio, achievements, per-service pricing rows, reviews; sticky booking panel: week slot picker → video upload (drag&drop, up to 2 GB → S3) → order summary with platform fee → escrow notice → pay CTA. Note under CTA: Google Meet invite added to both calendars.
+3. **Coach profile + booking** — bio, achievements, per-service pricing rows (video analysis / consultation / in-person game with 📍 venue), reviews; sticky booking panel: week slot picker → video upload (only for video analysis; drag&drop, up to 2 GB → S3) → order summary with platform fee → escrow notice → pay CTA. Note under CTA: calendar invite added to both calendars (video link for online services, venue address for a game).
 4. **Player dashboard** — post-session confirmation banner (confirm / report a problem, auto-confirm countdown), upcoming sessions with escrow status + Meet chip + calendar chip, past sessions with payout status and notes.
 5. **Coach dashboard** — stats (in escrow / paid out / rating), next sessions with client's attached video, weekly availability grid editor (available / booked / off) synced to Google Calendar.
 6. **Admin — verification queue** — applicant claims, submitted documents (license, federation profile links, club letters, intro video), approve / reject / request more info.
@@ -87,6 +87,14 @@ Platform: PaymentProvider.release(coach) − platform fee   # payout
 ```
 
 Session-happened evidence (Meet link click tracking + mutual confirmation + dispute window) is specified in the OpenSpec phase.
+
+**Service types (exactly three, keep it simple):**
+
+| Service | `ServiceType` | Format | Session evidence |
+|---|---|---|---|
+| Video analysis | `video_analysis` | video call, footage uploaded in advance | attendance log + mutual confirmation |
+| Consultation | `consultation` | plain video call | attendance log + mutual confirmation |
+| Game | `game` | **in person** at a venue (pro sets city/club, shown on profile & catalog) | mutual confirmation + dispute window only (no video room); calendar invite carries the venue address |
 
 ### 4.2 Coach onboarding
 
