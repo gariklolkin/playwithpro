@@ -20,8 +20,8 @@
 - [x] 3.4 Tests: new-user flow, existing-email link, unlink guard
 
 ## 4. API — account settings
-- [ ] 4.1 `GET /users/me`, `PATCH /users/me` (displayName, locale, timezone), `PATCH /users/me/password` (requires current password)
-- [ ] 4.2 Tests for settings endpoints
+- [x] 4.1 `GET /users/me`, `PATCH /users/me` (displayName, locale, timezone), `PATCH /users/me/password` (requires current password)
+- [x] 4.2 Tests for settings endpoints
 
 ## 5. Web
 - [ ] 5.1 next-intl bootstrap with `en` catalog only; all new strings externalized
