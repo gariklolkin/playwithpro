@@ -30,50 +30,9 @@ const STEPS = [
   },
 ];
 
-function Navbar() {
-  return (
-    <nav className="flex w-full items-center gap-5 border-b border-border px-8 py-3">
-      <div className="flex items-center gap-2 text-[17px] font-bold text-text">
-        🏓 PlayWithPro
-      </div>
-      <div className="ml-3 hidden gap-1 sm:flex">
-        {["Find a coach", "How it works", "For coaches"].map((label) => (
-          <a
-            key={label}
-            href="#"
-            className="rounded-md px-2.5 py-1.5 text-sm text-text-secondary transition-colors hover:bg-bg-hover hover:text-text"
-          >
-            {label}
-          </a>
-        ))}
-      </div>
-      <div className="ml-auto flex items-center gap-2.5">
-        <select
-          aria-label="Language"
-          className="rounded-md border border-border bg-bg px-2 py-1.5 text-[13px] text-text-secondary"
-        >
-          <option>🌐 EN</option>
-          <option>FR</option>
-          <option>DE</option>
-          <option>RU</option>
-          <option>中文</option>
-        </select>
-        <button className="hidden rounded-md border border-[#D3D1CB] px-3.5 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover sm:block">
-          Log in
-        </button>
-        <button className="rounded-md bg-[#2E7DE1] px-3.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#2569C3]">
-          Get started
-        </button>
-      </div>
-    </nav>
-  );
-}
-
 export default function Home() {
   return (
     <main className="flex flex-1 flex-col items-center bg-bg">
-      <Navbar />
-
       <div className="w-full max-w-[1320px] px-5 sm:px-8">
         {/* Hero */}
         <section className="pt-14 pb-6 text-center">

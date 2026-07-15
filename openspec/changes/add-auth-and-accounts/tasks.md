@@ -24,13 +24,13 @@
 - [x] 4.2 Tests for settings endpoints
 
 ## 5. Web
-- [ ] 5.1 next-intl bootstrap with `en` catalog only; all new strings externalized
-- [ ] 5.2 Pages: /register (with role choice), /login (incl. "Continue with Google"), /verify-email, /forgot-password, /reset-password — shadcn/ui forms per design tokens
-- [ ] 5.3 OAuth completion page (role choice) for first-time Google users
-- [ ] 5.4 Auth session handling: middleware guarding /dashboard + /settings, silent refresh, logout
-- [ ] 5.5 Auth-aware navbar (avatar menu ~ design proposal); empty role-specific /dashboard shells
-- [ ] 5.6 /settings/account page (profile fields, password change, linked Google account)
-- [ ] 5.7 Component tests: register/login forms, middleware redirect
+- [x] 5.1 next-intl bootstrap with `en` catalog only; all new strings externalized
+- [x] 5.2 Pages: /register (with role choice), /login (incl. "Continue with Google"), /verify-email, /forgot-password, /reset-password — shadcn/ui forms per design tokens
+- [x] 5.3 OAuth completion page (role choice) for first-time Google users
+- [x] 5.4 Auth session handling: middleware guarding /dashboard + /settings, silent refresh, logout
+- [x] 5.5 Auth-aware navbar (avatar menu ~ design proposal); empty role-specific /dashboard shells
+- [x] 5.6 /settings/account page (profile fields, password change, linked Google account)
+- [x] 5.7 Component tests: register/login forms, middleware redirect
 
 ## 6. Verification & archive
 - [ ] 6.1 E2E happy paths (register→verify→login→me; google→complete→me; forgot→reset→login) against Tilt env; paste output in PR/commit message

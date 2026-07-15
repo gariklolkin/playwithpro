@@ -13,6 +13,7 @@
   --text-secondary: #787774;
   --text-tertiary: #9b9a97;
   --border: #ededeb;
+  --border-strong: #d3d1cb;
   --accent: #2e6be6;
   --destructive: #e03e3e;
 
@@ -52,6 +53,7 @@
   --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: var(--text-tertiary);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-accent: var(--accent);
 
   --radius-card: 12px;
