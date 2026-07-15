@@ -52,7 +52,7 @@ model VerificationToken {                // email verification + password reset
 
 - **Passwords:** argon2id (`argon2` package). Min 8 chars; no arbitrary complexity rules.
 - **Tokens:** access JWT 15 min (payload: sub, role), refresh opaque token 30 days, rotated on every refresh, stored hashed; reuse of a rotated token revokes the whole family. Delivery: httpOnly secure cookies (SameSite=Lax) — no tokens in localStorage.
-- **Google OAuth:** authorization-code flow handled by the API (`GET /auth/google` → consent → `GET /auth/google/callback`), passport-google-oauth20. If a verified user with the same email exists → link; else create user (role chosen on a post-OAuth "complete signup" step where the user picks amateur/professional).
+- **Google OAuth:** authorization-code flow handled by the API (`GET /auth/google` → consent → `GET /auth/google/callback`), implemented directly (fetch to Google's token endpoint + id_token decode) rather than passport-google-oauth20 — passport's `state` support requires express-session, while a signed httpOnly state cookie needs no session middleware. If a verified user with the same email exists → link; else the visitor picks amateur/professional on a "complete signup" step (`POST /auth/oauth/complete`), backed by a short-lived pending-signup JWT cookie — no user row exists until the role is chosen.
 - **Email:** nodemailer via SMTP env vars (Mailpit locally). Templates in English for now; localized in `add-i18n`.
 - **Email verification policy:** unverified users can log in but cannot book/publish (enforced by `EmailVerifiedGuard` on relevant endpoints in later changes).
 - **Admin:** `prisma/seed.ts` creates admin from `ADMIN_EMAIL`/`ADMIN_PASSWORD` env (dev only; documented).

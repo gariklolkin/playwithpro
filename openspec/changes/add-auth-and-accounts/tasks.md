@@ -14,10 +14,10 @@
 - [x] 2.6 Unit tests: token rotation & reuse revocation, guards, reset-token single use
 
 ## 3. API — Google OAuth
-- [ ] 3.1 Google strategy + `GET /auth/google` / callback with `state`; env vars documented
-- [ ] 3.2 Link-by-verified-email or create pending user; `POST /auth/oauth/complete` sets role for new OAuth users
-- [ ] 3.3 `DELETE /users/me/oauth/google` (unlink; forbidden if account has no password)
-- [ ] 3.4 Tests: new-user flow, existing-email link, unlink guard
+- [x] 3.1 Google strategy + `GET /auth/google` / callback with `state`; env vars documented
+- [x] 3.2 Link-by-verified-email or create pending user; `POST /auth/oauth/complete` sets role for new OAuth users
+- [x] 3.3 `DELETE /users/me/oauth/google` (unlink; forbidden if account has no password)
+- [x] 3.4 Tests: new-user flow, existing-email link, unlink guard
 
 ## 4. API — account settings
 - [ ] 4.1 `GET /users/me`, `PATCH /users/me` (displayName, locale, timezone), `PATCH /users/me/password` (requires current password)

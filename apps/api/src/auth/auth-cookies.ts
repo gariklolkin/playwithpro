@@ -4,6 +4,10 @@ import { ACCESS_TOKEN_TTL_MS, REFRESH_TOKEN_TTL_MS } from './token.service';
 
 export const ACCESS_TOKEN_COOKIE = 'access_token';
 export const REFRESH_TOKEN_COOKIE = 'refresh_token';
+export const OAUTH_STATE_COOKIE = 'oauth_state';
+export const OAUTH_PENDING_COOKIE = 'oauth_pending';
+
+const OAUTH_COOKIE_TTL_MS = 15 * 60 * 1000;
 
 /** User attached to the request by JwtAuthGuard. */
 export interface AuthenticatedUser {
@@ -36,6 +40,27 @@ export function setAuthCookies(
     path: '/auth',
     maxAge: REFRESH_TOKEN_TTL_MS,
   });
+}
+
+export function setOAuthCookie(
+  res: Response,
+  name: string,
+  value: string,
+  secure: boolean,
+): void {
+  res.cookie(name, value, {
+    ...baseOptions(secure),
+    path: '/auth',
+    maxAge: OAUTH_COOKIE_TTL_MS,
+  });
+}
+
+export function clearOAuthCookie(
+  res: Response,
+  name: string,
+  secure: boolean,
+): void {
+  res.clearCookie(name, { ...baseOptions(secure), path: '/auth' });
 }
 
 export function clearAuthCookies(res: Response, secure: boolean): void {

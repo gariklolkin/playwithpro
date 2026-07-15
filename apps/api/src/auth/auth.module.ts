@@ -4,8 +4,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { MailerModule } from '../mailer/mailer.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { GoogleOAuthClient } from './google-oauth.client';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
+import { OAuthService } from './oauth.service';
 import { ACCESS_TOKEN_TTL_MS, TokenService } from './token.service';
 
 @Module({
@@ -20,7 +22,14 @@ import { ACCESS_TOKEN_TTL_MS, TokenService } from './token.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, TokenService, JwtAuthGuard, RolesGuard],
-  exports: [TokenService, JwtAuthGuard, RolesGuard],
+  providers: [
+    AuthService,
+    OAuthService,
+    GoogleOAuthClient,
+    TokenService,
+    JwtAuthGuard,
+    RolesGuard,
+  ],
+  exports: [AuthService, TokenService, JwtAuthGuard, RolesGuard],
 })
 export class AuthModule {}
