@@ -6,12 +6,12 @@
 - [x] 1.3 `prisma/seed.ts` seeding admin from `ADMIN_EMAIL`/`ADMIN_PASSWORD`; wire `pnpm db:seed`; extend `.env.example`
 
 ## 2. API — core auth
-- [ ] 2.1 Auth module: register (argon2id hash, verification email), login, logout, refresh with rotation + reuse detection; httpOnly cookies
-- [ ] 2.2 JwtAuthGuard + RolesGuard + `@CurrentUser()`/`@Roles()` decorators
-- [ ] 2.3 Mailer module (nodemailer, SMTP env); verification + reset email templates (English)
-- [ ] 2.4 Email verify + resend endpoints; password forgot/reset endpoints (hashed one-time tokens, TTL 1h)
-- [ ] 2.5 Throttling on register/login/forgot; generic errors (no user enumeration)
-- [ ] 2.6 Unit tests: token rotation & reuse revocation, guards, reset-token single use
+- [x] 2.1 Auth module: register (argon2id hash, verification email), login, logout, refresh with rotation + reuse detection; httpOnly cookies
+- [x] 2.2 JwtAuthGuard + RolesGuard + `@CurrentUser()`/`@Roles()` decorators
+- [x] 2.3 Mailer module (nodemailer, SMTP env); verification + reset email templates (English)
+- [x] 2.4 Email verify + resend endpoints; password forgot/reset endpoints (hashed one-time tokens, TTL 1h)
+- [x] 2.5 Throttling on register/login/forgot; generic errors (no user enumeration)
+- [x] 2.6 Unit tests: token rotation & reuse revocation, guards, reset-token single use
 
 ## 3. API — Google OAuth
 - [ ] 3.1 Google strategy + `GET /auth/google` / callback with `state`; env vars documented

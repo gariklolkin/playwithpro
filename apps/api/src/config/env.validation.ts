@@ -2,6 +2,7 @@ import { Type, plainToInstance } from 'class-transformer';
 import {
   IsEnum,
   IsInt,
+  IsOptional,
   IsString,
   IsUrl,
   Min,
@@ -28,6 +29,31 @@ class EnvironmentVariables {
 
   @IsUrl({ require_tld: false })
   WEB_APP_URL = 'http://localhost:3000';
+
+  @IsUrl({ require_tld: false })
+  API_URL = 'http://localhost:4000';
+
+  @IsString()
+  JWT_ACCESS_SECRET = 'dev-only-change-me';
+
+  @IsString()
+  SMTP_HOST = 'localhost';
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  SMTP_PORT = 1025;
+
+  @IsString()
+  SMTP_FROM = 'PlayWithPro <no-reply@playwithpro.local>';
+
+  @IsOptional()
+  @IsString()
+  GOOGLE_CLIENT_ID?: string;
+
+  @IsOptional()
+  @IsString()
+  GOOGLE_CLIENT_SECRET?: string;
 }
 
 export function validate(
