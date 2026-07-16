@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { API_URL, apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { GoogleLogo } from "@/components/ui/google-logo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -228,7 +229,8 @@ export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
       <SettingsCard title={t("google.title")}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="inline-flex items-center gap-1.5 rounded-tag bg-[#F1F0EF] px-2 py-0.5 text-[12.5px] font-medium text-[#5A5A58]">
-            🇬 {user.googleLinked ? t("google.linked") : t("google.notLinked")}
+            <GoogleLogo className="h-3.5 w-3.5" />{" "}
+            {user.googleLinked ? t("google.linked") : t("google.notLinked")}
           </span>
           {user.googleLinked ? (
             <div className="flex items-center gap-3">
