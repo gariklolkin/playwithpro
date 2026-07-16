@@ -1,22 +1,19 @@
 "use client";
 
-import { SUPPORTED_LOCALES, type MeResponse } from "@playwithpro/shared";
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import {
+  SUPPORTED_LOCALES,
+  type Locale,
+  type MeResponse,
+} from "@playwithpro/shared";
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
+import { LOCALE_LABELS } from "@/i18n/locale-labels";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { API_URL, apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { GoogleLogo } from "@/components/ui/google-logo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-const LOCALE_LABELS: Record<string, string> = {
-  en: "English",
-  fr: "Français",
-  de: "Deutsch",
-  ru: "Русский",
-  zh: "中文",
-};
 
 function SettingsCard({
   title,
@@ -38,6 +35,8 @@ function SettingsCard({
 export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
   const t = useTranslations("settings");
   const router = useRouter();
+  const pathname = usePathname();
+  const activeLocale = useLocale();
   const [user, setUser] = useState(initialUser);
 
   const timezones = useMemo<string[]>(
@@ -78,7 +77,11 @@ export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
     }
     setUser((await response.json()) as MeResponse);
     setProfileStatus("saved");
-    router.refresh();
+    if (locale !== activeLocale) {
+      router.replace(pathname, { locale: locale as Locale });
+    } else {
+      router.refresh();
+    }
   }
 
   async function handlePasswordSubmit(event: React.FormEvent) {
@@ -133,7 +136,7 @@ export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
               >
                 {SUPPORTED_LOCALES.map((value) => (
                   <option key={value} value={value}>
-                    {LOCALE_LABELS[value] ?? value}
+                    {LOCALE_LABELS[value]}
                   </option>
                 ))}
               </select>

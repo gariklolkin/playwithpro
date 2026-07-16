@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/server-user";
+import { LocaleSwitcher } from "./locale-switcher";
 import { UserMenu } from "./user-menu";
 
 export async function Navbar() {
@@ -33,17 +34,7 @@ export async function Navbar() {
         ))}
       </div>
       <div className="ml-auto flex items-center gap-2.5">
-        <select
-          aria-label={t("language")}
-          className="rounded-md border border-border bg-bg px-2 py-1.5 text-[13px] text-text-secondary"
-          defaultValue="en"
-        >
-          <option value="en">🌐 EN</option>
-          <option value="fr">FR</option>
-          <option value="de">DE</option>
-          <option value="ru">RU</option>
-          <option value="zh">中文</option>
-        </select>
+        <LocaleSwitcher isAuthenticated={Boolean(user)} />
         {user ? (
           <UserMenu
             displayName={user.displayName}
