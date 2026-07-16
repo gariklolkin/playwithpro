@@ -1,0 +1,199 @@
+{
+  "nav": {
+    "findCoach": "寻找教练",
+    "howItWorks": "运作方式",
+    "forCoaches": "教练入驻",
+    "language": "语言",
+    "login": "登录",
+    "getStarted": "立即开始",
+    "dashboard": "控制台",
+    "settings": "设置",
+    "logout": "退出登录",
+    "verifyBanner": "请验证您的邮箱 — 查看收件箱。",
+    "verifyResend": "重新发送链接",
+    "verifyResent": "验证链接已发送。"
+  },
+  "auth": {
+    "login": {
+      "title": "欢迎回来 👋",
+      "subtitle": "登录您的 PlayWithPro 账户",
+      "google": "使用 Google 继续",
+      "orEmail": "或使用邮箱",
+      "email": "邮箱",
+      "emailPlaceholder": "you@example.com",
+      "password": "密码",
+      "passwordPlaceholder": "••••••••",
+      "submit": "登录",
+      "submitting": "正在登录…",
+      "forgot": "忘记密码？",
+      "invalid": "邮箱或密码不正确。",
+      "errorGoogle": "Google 登录未完成，请重试。",
+      "errorGoogleEmail": "该邮箱已注册账户。请使用密码登录，然后在设置中关联 Google。",
+      "noAccount": "第一次使用 PlayWithPro？",
+      "createAccount": "创建账户"
+    },
+    "register": {
+      "title": "创建账户",
+      "subtitle": "免费注册 — 只在预约时付费",
+      "rolePlayer": "我是球员",
+      "rolePlayerDescription": "预约职业选手课程",
+      "rolePro": "我是职业选手",
+      "roleProDescription": "执教并获得收入",
+      "displayName": "显示名称",
+      "displayNamePlaceholder": "Garik L.",
+      "email": "邮箱",
+      "emailPlaceholder": "you@example.com",
+      "password": "密码",
+      "passwordPlaceholder": "至少 8 个字符",
+      "submit": "创建账户",
+      "submitting": "正在创建账户…",
+      "or": "或",
+      "google": "使用 Google 注册",
+      "footer": "我们将发送验证链接 · 无需 Google 账户",
+      "failed": "注册失败。请检查信息后重试。",
+      "haveAccount": "已有账户？",
+      "logIn": "登录"
+    },
+    "verifyEmail": {
+      "title": "邮箱验证",
+      "verifying": "正在验证您的邮箱…",
+      "success": "您的邮箱已验证。一切就绪！✅",
+      "goToDashboard": "前往控制台",
+      "invalid": "此验证链接无效或已过期。",
+      "resendPrompt": "输入您的邮箱，我们将发送新的链接。",
+      "email": "邮箱",
+      "emailPlaceholder": "you@example.com",
+      "resend": "重新发送验证链接",
+      "resent": "如果该邮箱已注册账户，新链接正在发送中。"
+    },
+    "forgotPassword": {
+      "title": "重置密码",
+      "subtitle": "输入您的邮箱，我们将发送重置链接。",
+      "email": "邮箱",
+      "emailPlaceholder": "you@example.com",
+      "submit": "发送重置链接",
+      "submitting": "正在发送…",
+      "sent": "如果该邮箱已注册账户，重置链接正在发送中。",
+      "backToLogin": "返回登录"
+    },
+    "resetPassword": {
+      "title": "设置新密码",
+      "subtitle": "链接有效期为 1 小时，仅可使用一次。",
+      "password": "新密码",
+      "passwordPlaceholder": "至少 8 个字符",
+      "submit": "确认新密码",
+      "submitting": "正在保存…",
+      "success": "密码已更新。请使用新密码登录。",
+      "goToLogin": "前往登录",
+      "invalid": "此重置链接无效或已过期。",
+      "requestNew": "申请新链接"
+    },
+    "oauthComplete": {
+      "title": "最后一步 🏓",
+      "subtitle": "告诉我们您将如何使用 PlayWithPro",
+      "submit": "完成注册",
+      "submitting": "正在完成…",
+      "expired": "注册会话已过期，请重新开始。",
+      "backToLogin": "返回登录"
+    }
+  },
+  "dashboard": {
+    "greeting": "欢迎，{name} 👋",
+    "emptyTitle": "这里还没有内容",
+    "amateur": {
+      "title": "我的课程",
+      "empty": "预约的教练课程将显示在这里。",
+      "nav": {
+        "sessions": "我的课程",
+        "videos": "我的视频",
+        "payments": "付款",
+        "settings": "设置"
+      }
+    },
+    "professional": {
+      "title": "概览",
+      "empty": "您的预约、时间安排和收入将显示在这里。",
+      "nav": {
+        "overview": "概览",
+        "availability": "时间安排",
+        "bookings": "预约",
+        "earnings": "收入",
+        "profile": "我的主页",
+        "settings": "设置"
+      }
+    },
+    "admin": {
+      "title": "认证队列",
+      "empty": "职业选手的认证申请将显示在这里。",
+      "nav": {
+        "verification": "认证队列",
+        "disputes": "纠纷",
+        "users": "用户",
+        "transactions": "交易",
+        "analytics": "数据分析"
+      }
+    }
+  },
+  "settings": {
+    "title": "账户设置",
+    "subtitle": "您的资料、密码和关联账户",
+    "profile": {
+      "title": "个人资料",
+      "displayName": "显示名称",
+      "locale": "界面语言",
+      "timezone": "时区",
+      "save": "保存更改",
+      "saving": "正在保存…",
+      "saved": "资料已更新。",
+      "error": "无法保存更改，请重试。"
+    },
+    "password": {
+      "title": "密码",
+      "current": "当前密码",
+      "new": "新密码",
+      "newPlaceholder": "至少 8 个字符",
+      "submit": "修改密码",
+      "submitting": "正在修改…",
+      "changed": "密码已修改。其他会话已退出登录。",
+      "wrongCurrent": "当前密码不正确。",
+      "noPassword": "此账户尚未设置密码。请在登录页面使用“忘记密码？”来设置。"
+    },
+    "google": {
+      "title": "关联账户",
+      "linked": "已关联 Google 账户",
+      "notLinked": "未关联 Google 账户",
+      "link": "关联 Google 账户",
+      "unlink": "取消关联",
+      "unlinking": "正在取消关联…",
+      "needPassword": "请先设置密码，以免失去账户访问权限。",
+      "unlinked": "已取消关联 Google 账户。"
+    }
+  },
+  "home": {
+    "heroTitle": "业余球员与<accent>职业选手</accent>同场竞技。",
+    "heroSubtitle": "上传您的比赛视频，预约经过认证的职业选手进行视频课程，获得个性化点评 — 使用您的语言。",
+    "ctaFindCoach": "寻找您的教练 →",
+    "ctaProfessional": "我是职业选手",
+    "heroImageAlt": "一位业余球员与一位职业选手在乒乓球对打中",
+    "trustVerified": "仅限<b>认证</b>职业选手",
+    "trustEscrow": "款项由<b>第三方托管</b>",
+    "trustVideo": "视频通话，<b>无需额外账户</b>",
+    "trustLanguages": "<b>5</b> 种语言",
+    "step1Title": "1. 上传视频",
+    "step1Body": "录制比赛或训练片段并上传。教练会在通话前观看。",
+    "step2Title": "2. 选择教练和时间",
+    "step2Body": "按语言、服务和价格筛选认证职业选手。预订空闲时段 — 它会连同视频链接出现在双方日历中。",
+    "step3Title": "3. 见面并提升",
+    "step3Body": "加入视频通话，获得分析点评。课程完成后，款项才会支付给教练。"
+  },
+  "meta": {
+    "title": "PlayWithPro — 业余球员与职业选手同场竞技",
+    "description": "上传您的比赛视频，预约经过认证的职业选手进行视频课程，获得个性化点评 — 使用您的语言。",
+    "loginTitle": "登录 — PlayWithPro",
+    "registerTitle": "创建账户 — PlayWithPro",
+    "verifyEmailTitle": "邮箱验证 — PlayWithPro",
+    "resetPasswordTitle": "重置密码 — PlayWithPro",
+    "dashboardTitle": "控制台 — PlayWithPro",
+    "settingsTitle": "账户设置 — PlayWithPro"
+  }
+}

@@ -1,0 +1,199 @@
+{
+  "nav": {
+    "findCoach": "Trouver un coach",
+    "howItWorks": "Comment ça marche",
+    "forCoaches": "Pour les coachs",
+    "language": "Langue",
+    "login": "Se connecter",
+    "getStarted": "Commencer",
+    "dashboard": "Tableau de bord",
+    "settings": "Paramètres",
+    "logout": "Se déconnecter",
+    "verifyBanner": "Veuillez vérifier votre e-mail — consultez votre boîte de réception.",
+    "verifyResend": "Renvoyer le lien",
+    "verifyResent": "Lien de vérification envoyé."
+  },
+  "auth": {
+    "login": {
+      "title": "Bon retour 👋",
+      "subtitle": "Connectez-vous à votre compte PlayWithPro",
+      "google": "Continuer avec Google",
+      "orEmail": "ou par e-mail",
+      "email": "E-mail",
+      "emailPlaceholder": "vous@exemple.com",
+      "password": "Mot de passe",
+      "passwordPlaceholder": "••••••••",
+      "submit": "Se connecter",
+      "submitting": "Connexion…",
+      "forgot": "Mot de passe oublié ?",
+      "invalid": "E-mail ou mot de passe incorrect.",
+      "errorGoogle": "La connexion Google n'a pas abouti. Veuillez réessayer.",
+      "errorGoogleEmail": "Un compte existe déjà avec cet e-mail. Connectez-vous avec votre mot de passe, puis liez Google dans les paramètres.",
+      "noAccount": "Nouveau sur PlayWithPro ?",
+      "createAccount": "Créer un compte"
+    },
+    "register": {
+      "title": "Créer un compte",
+      "subtitle": "Inscription gratuite — payez uniquement à la réservation",
+      "rolePlayer": "Je suis joueur",
+      "rolePlayerDescription": "Réservez des séances avec des pros",
+      "rolePro": "Je suis professionnel",
+      "roleProDescription": "Coachez et gagnez",
+      "displayName": "Nom affiché",
+      "displayNamePlaceholder": "Garik L.",
+      "email": "E-mail",
+      "emailPlaceholder": "vous@exemple.com",
+      "password": "Mot de passe",
+      "passwordPlaceholder": "Au moins 8 caractères",
+      "submit": "Créer un compte",
+      "submitting": "Création du compte…",
+      "or": "ou",
+      "google": "S'inscrire avec Google",
+      "footer": "Nous vous enverrons un lien de vérification · Compte Google non requis",
+      "failed": "L'inscription a échoué. Vérifiez les informations et réessayez.",
+      "haveAccount": "Vous avez déjà un compte ?",
+      "logIn": "Se connecter"
+    },
+    "verifyEmail": {
+      "title": "Vérification de l'e-mail",
+      "verifying": "Vérification de votre e-mail…",
+      "success": "Votre e-mail est vérifié. Tout est prêt ! ✅",
+      "goToDashboard": "Aller au tableau de bord",
+      "invalid": "Ce lien de vérification est invalide ou a expiré.",
+      "resendPrompt": "Saisissez votre e-mail et nous vous enverrons un nouveau lien.",
+      "email": "E-mail",
+      "emailPlaceholder": "vous@exemple.com",
+      "resend": "Renvoyer le lien de vérification",
+      "resent": "Si un compte existe pour cet e-mail, un nouveau lien est en route."
+    },
+    "forgotPassword": {
+      "title": "Réinitialiser votre mot de passe",
+      "subtitle": "Saisissez votre e-mail et nous vous enverrons un lien de réinitialisation.",
+      "email": "E-mail",
+      "emailPlaceholder": "vous@exemple.com",
+      "submit": "Envoyer le lien",
+      "submitting": "Envoi…",
+      "sent": "Si un compte existe pour cet e-mail, un lien de réinitialisation est en route.",
+      "backToLogin": "Retour à la connexion"
+    },
+    "resetPassword": {
+      "title": "Choisissez un nouveau mot de passe",
+      "subtitle": "Le lien est valable 1 heure et utilisable une seule fois.",
+      "password": "Nouveau mot de passe",
+      "passwordPlaceholder": "Au moins 8 caractères",
+      "submit": "Définir le nouveau mot de passe",
+      "submitting": "Enregistrement…",
+      "success": "Mot de passe mis à jour. Connectez-vous avec votre nouveau mot de passe.",
+      "goToLogin": "Aller à la connexion",
+      "invalid": "Ce lien de réinitialisation est invalide ou a expiré.",
+      "requestNew": "Demander un nouveau lien"
+    },
+    "oauthComplete": {
+      "title": "Une dernière étape 🏓",
+      "subtitle": "Dites-nous comment vous utiliserez PlayWithPro",
+      "submit": "Terminer l'inscription",
+      "submitting": "Finalisation…",
+      "expired": "Votre session d'inscription a expiré. Veuillez recommencer.",
+      "backToLogin": "Retour à la connexion"
+    }
+  },
+  "dashboard": {
+    "greeting": "Bienvenue, {name} 👋",
+    "emptyTitle": "Rien ici pour l'instant",
+    "amateur": {
+      "title": "Mes séances",
+      "empty": "Les séances réservées avec des coachs apparaîtront ici.",
+      "nav": {
+        "sessions": "Mes séances",
+        "videos": "Mes vidéos",
+        "payments": "Paiements",
+        "settings": "Paramètres"
+      }
+    },
+    "professional": {
+      "title": "Aperçu",
+      "empty": "Vos réservations, disponibilités et revenus apparaîtront ici.",
+      "nav": {
+        "overview": "Aperçu",
+        "availability": "Disponibilités",
+        "bookings": "Réservations",
+        "earnings": "Revenus",
+        "profile": "Mon profil",
+        "settings": "Paramètres"
+      }
+    },
+    "admin": {
+      "title": "File de vérification",
+      "empty": "Les demandes de vérification des professionnels apparaîtront ici.",
+      "nav": {
+        "verification": "File de vérification",
+        "disputes": "Litiges",
+        "users": "Utilisateurs",
+        "transactions": "Transactions",
+        "analytics": "Statistiques"
+      }
+    }
+  },
+  "settings": {
+    "title": "Paramètres du compte",
+    "subtitle": "Votre profil, mot de passe et comptes liés",
+    "profile": {
+      "title": "Profil",
+      "displayName": "Nom affiché",
+      "locale": "Langue de l'interface",
+      "timezone": "Fuseau horaire",
+      "save": "Enregistrer les modifications",
+      "saving": "Enregistrement…",
+      "saved": "Profil mis à jour.",
+      "error": "Impossible d'enregistrer les modifications. Veuillez réessayer."
+    },
+    "password": {
+      "title": "Mot de passe",
+      "current": "Mot de passe actuel",
+      "new": "Nouveau mot de passe",
+      "newPlaceholder": "Au moins 8 caractères",
+      "submit": "Changer le mot de passe",
+      "submitting": "Modification…",
+      "changed": "Mot de passe changé. Les autres sessions ont été déconnectées.",
+      "wrongCurrent": "Le mot de passe actuel est incorrect.",
+      "noPassword": "Ce compte n'a pas encore de mot de passe. Utilisez « Mot de passe oublié ? » sur la page de connexion pour en définir un."
+    },
+    "google": {
+      "title": "Comptes liés",
+      "linked": "Compte Google lié",
+      "notLinked": "Aucun compte Google lié",
+      "link": "Lier un compte Google",
+      "unlink": "Délier",
+      "unlinking": "Suppression du lien…",
+      "needPassword": "Définissez d'abord un mot de passe pour ne pas perdre l'accès à votre compte.",
+      "unlinked": "Compte Google délié."
+    }
+  },
+  "home": {
+    "heroTitle": "Là où amateurs et <accent>pros</accent> jouent ensemble.",
+    "heroSubtitle": "Envoyez vos vidéos de jeu, réservez une séance vidéo avec un pro vérifié et recevez un retour personnalisé — dans votre langue.",
+    "ctaFindCoach": "Trouvez votre coach →",
+    "ctaProfessional": "Je suis professionnel",
+    "heroImageAlt": "Un amateur et un professionnel en plein échange au tennis de table",
+    "trustVerified": "Uniquement des pros <b>vérifiés</b>",
+    "trustEscrow": "Paiement conservé sous <b>séquestre</b>",
+    "trustVideo": "Appels vidéo, <b>aucun compte requis</b>",
+    "trustLanguages": "<b>5</b> langues",
+    "step1Title": "1. Envoyez votre vidéo",
+    "step1Body": "Filmez un match ou un entraînement et envoyez la vidéo. Le coach la regarde avant votre appel.",
+    "step2Title": "2. Choisissez un coach et un horaire",
+    "step2Body": "Filtrez les pros vérifiés par langue, service et prix. Réservez un créneau libre — il s'ajoute aux deux agendas avec un lien vidéo.",
+    "step3Title": "3. Rencontrez-vous et progressez",
+    "step3Body": "Rejoignez l'appel vidéo et recevez votre analyse. Le paiement n'est versé au coach qu'une fois la séance effectuée."
+  },
+  "meta": {
+    "title": "PlayWithPro — Là où amateurs et pros jouent ensemble",
+    "description": "Envoyez vos vidéos de jeu, réservez une séance vidéo avec un pro vérifié et recevez un retour personnalisé — dans votre langue.",
+    "loginTitle": "Connexion — PlayWithPro",
+    "registerTitle": "Créer un compte — PlayWithPro",
+    "verifyEmailTitle": "Vérification de l'e-mail — PlayWithPro",
+    "resetPasswordTitle": "Réinitialisation du mot de passe — PlayWithPro",
+    "dashboardTitle": "Tableau de bord — PlayWithPro",
+    "settingsTitle": "Paramètres du compte — PlayWithPro"
+  }
+}

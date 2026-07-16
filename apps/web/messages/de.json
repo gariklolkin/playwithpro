@@ -1,0 +1,199 @@
+{
+  "nav": {
+    "findCoach": "Coach finden",
+    "howItWorks": "So funktioniert's",
+    "forCoaches": "Für Coaches",
+    "language": "Sprache",
+    "login": "Anmelden",
+    "getStarted": "Loslegen",
+    "dashboard": "Dashboard",
+    "settings": "Einstellungen",
+    "logout": "Abmelden",
+    "verifyBanner": "Bitte bestätige deine E-Mail — sieh in deinem Posteingang nach.",
+    "verifyResend": "Link erneut senden",
+    "verifyResent": "Bestätigungslink gesendet."
+  },
+  "auth": {
+    "login": {
+      "title": "Willkommen zurück 👋",
+      "subtitle": "Melde dich bei deinem PlayWithPro-Konto an",
+      "google": "Mit Google fortfahren",
+      "orEmail": "oder per E-Mail",
+      "email": "E-Mail",
+      "emailPlaceholder": "du@beispiel.com",
+      "password": "Passwort",
+      "passwordPlaceholder": "••••••••",
+      "submit": "Anmelden",
+      "submitting": "Anmeldung läuft…",
+      "forgot": "Passwort vergessen?",
+      "invalid": "E-Mail oder Passwort ist falsch.",
+      "errorGoogle": "Die Google-Anmeldung wurde nicht abgeschlossen. Bitte versuche es erneut.",
+      "errorGoogleEmail": "Ein Konto mit dieser E-Mail existiert bereits. Melde dich mit deinem Passwort an und verknüpfe Google dann in den Einstellungen.",
+      "noAccount": "Neu bei PlayWithPro?",
+      "createAccount": "Konto erstellen"
+    },
+    "register": {
+      "title": "Konto erstellen",
+      "subtitle": "Kostenlos beitreten — du zahlst nur bei einer Buchung",
+      "rolePlayer": "Ich bin Spieler",
+      "rolePlayerDescription": "Buche Einheiten mit Profis",
+      "rolePro": "Ich bin Profi",
+      "roleProDescription": "Coache und verdiene",
+      "displayName": "Anzeigename",
+      "displayNamePlaceholder": "Garik L.",
+      "email": "E-Mail",
+      "emailPlaceholder": "du@beispiel.com",
+      "password": "Passwort",
+      "passwordPlaceholder": "Mindestens 8 Zeichen",
+      "submit": "Konto erstellen",
+      "submitting": "Konto wird erstellt…",
+      "or": "oder",
+      "google": "Mit Google registrieren",
+      "footer": "Wir senden dir einen Bestätigungslink · Kein Google-Konto erforderlich",
+      "failed": "Registrierung fehlgeschlagen. Prüfe die Angaben und versuche es erneut.",
+      "haveAccount": "Du hast schon ein Konto?",
+      "logIn": "Anmelden"
+    },
+    "verifyEmail": {
+      "title": "E-Mail-Bestätigung",
+      "verifying": "Deine E-Mail wird bestätigt…",
+      "success": "Deine E-Mail ist bestätigt. Alles bereit! ✅",
+      "goToDashboard": "Zum Dashboard",
+      "invalid": "Dieser Bestätigungslink ist ungültig oder abgelaufen.",
+      "resendPrompt": "Gib deine E-Mail ein und wir senden dir einen neuen Link.",
+      "email": "E-Mail",
+      "emailPlaceholder": "du@beispiel.com",
+      "resend": "Bestätigungslink erneut senden",
+      "resent": "Falls ein Konto mit dieser E-Mail existiert, ist ein neuer Link unterwegs."
+    },
+    "forgotPassword": {
+      "title": "Passwort zurücksetzen",
+      "subtitle": "Gib deine E-Mail ein und wir senden dir einen Link zum Zurücksetzen.",
+      "email": "E-Mail",
+      "emailPlaceholder": "du@beispiel.com",
+      "submit": "Link senden",
+      "submitting": "Wird gesendet…",
+      "sent": "Falls ein Konto mit dieser E-Mail existiert, ist ein Link zum Zurücksetzen unterwegs.",
+      "backToLogin": "Zurück zur Anmeldung"
+    },
+    "resetPassword": {
+      "title": "Wähle ein neues Passwort",
+      "subtitle": "Der Link ist 1 Stunde gültig und nur einmal verwendbar.",
+      "password": "Neues Passwort",
+      "passwordPlaceholder": "Mindestens 8 Zeichen",
+      "submit": "Neues Passwort speichern",
+      "submitting": "Wird gespeichert…",
+      "success": "Passwort aktualisiert. Melde dich mit deinem neuen Passwort an.",
+      "goToLogin": "Zur Anmeldung",
+      "invalid": "Dieser Link zum Zurücksetzen ist ungültig oder abgelaufen.",
+      "requestNew": "Neuen Link anfordern"
+    },
+    "oauthComplete": {
+      "title": "Ein letzter Schritt 🏓",
+      "subtitle": "Sag uns, wie du PlayWithPro nutzen wirst",
+      "submit": "Registrierung abschließen",
+      "submitting": "Wird abgeschlossen…",
+      "expired": "Deine Registrierungssitzung ist abgelaufen. Bitte starte erneut.",
+      "backToLogin": "Zurück zur Anmeldung"
+    }
+  },
+  "dashboard": {
+    "greeting": "Willkommen, {name} 👋",
+    "emptyTitle": "Hier ist noch nichts",
+    "amateur": {
+      "title": "Meine Einheiten",
+      "empty": "Gebuchte Einheiten mit Coaches erscheinen hier.",
+      "nav": {
+        "sessions": "Meine Einheiten",
+        "videos": "Meine Videos",
+        "payments": "Zahlungen",
+        "settings": "Einstellungen"
+      }
+    },
+    "professional": {
+      "title": "Überblick",
+      "empty": "Deine Buchungen, Verfügbarkeit und Einnahmen erscheinen hier.",
+      "nav": {
+        "overview": "Überblick",
+        "availability": "Verfügbarkeit",
+        "bookings": "Buchungen",
+        "earnings": "Einnahmen",
+        "profile": "Mein Profil",
+        "settings": "Einstellungen"
+      }
+    },
+    "admin": {
+      "title": "Verifizierungswarteschlange",
+      "empty": "Verifizierungsanfragen von Profis erscheinen hier.",
+      "nav": {
+        "verification": "Verifizierungswarteschlange",
+        "disputes": "Streitfälle",
+        "users": "Nutzer",
+        "transactions": "Transaktionen",
+        "analytics": "Statistiken"
+      }
+    }
+  },
+  "settings": {
+    "title": "Kontoeinstellungen",
+    "subtitle": "Dein Profil, Passwort und verknüpfte Konten",
+    "profile": {
+      "title": "Profil",
+      "displayName": "Anzeigename",
+      "locale": "Sprache der Oberfläche",
+      "timezone": "Zeitzone",
+      "save": "Änderungen speichern",
+      "saving": "Wird gespeichert…",
+      "saved": "Profil aktualisiert.",
+      "error": "Änderungen konnten nicht gespeichert werden. Bitte versuche es erneut."
+    },
+    "password": {
+      "title": "Passwort",
+      "current": "Aktuelles Passwort",
+      "new": "Neues Passwort",
+      "newPlaceholder": "Mindestens 8 Zeichen",
+      "submit": "Passwort ändern",
+      "submitting": "Wird geändert…",
+      "changed": "Passwort geändert. Andere Sitzungen wurden abgemeldet.",
+      "wrongCurrent": "Das aktuelle Passwort ist falsch.",
+      "noPassword": "Dieses Konto hat noch kein Passwort. Nutze „Passwort vergessen?“ auf der Anmeldeseite, um eines festzulegen."
+    },
+    "google": {
+      "title": "Verknüpfte Konten",
+      "linked": "Google-Konto verknüpft",
+      "notLinked": "Kein Google-Konto verknüpft",
+      "link": "Google-Konto verknüpfen",
+      "unlink": "Trennen",
+      "unlinking": "Wird getrennt…",
+      "needPassword": "Lege zuerst ein Passwort fest, damit du den Zugriff auf dein Konto nicht verlierst.",
+      "unlinked": "Google-Konto getrennt."
+    }
+  },
+  "home": {
+    "heroTitle": "Wo Amateure und <accent>Profis</accent> zusammen spielen.",
+    "heroSubtitle": "Lade deine Spielaufnahmen hoch, buche eine Videoeinheit mit einem verifizierten Profi und erhalte persönliches Feedback — in deiner Sprache.",
+    "ctaFindCoach": "Finde deinen Coach →",
+    "ctaProfessional": "Ich bin Profi",
+    "heroImageAlt": "Ein Amateur und ein Profi im Ballwechsel an der Tischtennisplatte",
+    "trustVerified": "Nur <b>verifizierte</b> Profis",
+    "trustEscrow": "Zahlung liegt im <b>Treuhandkonto</b>",
+    "trustVideo": "Videoanrufe, <b>kein Konto nötig</b>",
+    "trustLanguages": "<b>5</b> Sprachen",
+    "step1Title": "1. Lade dein Video hoch",
+    "step1Body": "Nimm ein Match oder eine Trainingsübung auf und lade sie hoch. Der Coach sieht sie sich vor eurem Gespräch an.",
+    "step2Title": "2. Wähle Coach & Termin",
+    "step2Body": "Filtere verifizierte Profis nach Sprache, Leistung und Preis. Buche einen freien Slot — er landet mit Videolink in beiden Kalendern.",
+    "step3Title": "3. Trefft euch & werde besser",
+    "step3Body": "Nimm am Videoanruf teil und erhalte deine Analyse. Deine Zahlung geht erst nach der Einheit an den Coach."
+  },
+  "meta": {
+    "title": "PlayWithPro — Wo Amateure und Profis zusammen spielen",
+    "description": "Lade deine Spielaufnahmen hoch, buche eine Videoeinheit mit einem verifizierten Profi und erhalte persönliches Feedback — in deiner Sprache.",
+    "loginTitle": "Anmelden — PlayWithPro",
+    "registerTitle": "Konto erstellen — PlayWithPro",
+    "verifyEmailTitle": "E-Mail bestätigen — PlayWithPro",
+    "resetPasswordTitle": "Passwort zurücksetzen — PlayWithPro",
+    "dashboardTitle": "Dashboard — PlayWithPro",
+    "settingsTitle": "Kontoeinstellungen — PlayWithPro"
+  }
+}

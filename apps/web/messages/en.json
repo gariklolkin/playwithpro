@@ -168,5 +168,32 @@
       "needPassword": "Set a password first so you don't lose access to your account.",
       "unlinked": "Google account unlinked."
     }
+  },
+  "home": {
+    "heroTitle": "Where amateurs and <accent>pros</accent> play together.",
+    "heroSubtitle": "Upload your game footage, book a video session with a verified pro, and get personal feedback — in your language.",
+    "ctaFindCoach": "Find your coach →",
+    "ctaProfessional": "I'm a professional",
+    "heroImageAlt": "An amateur and a professional in a table tennis rally",
+    "trustVerified": "<b>Verified</b> pros only",
+    "trustEscrow": "Payment held in <b>escrow</b>",
+    "trustVideo": "Video calls, <b>no account needed</b>",
+    "trustLanguages": "<b>5</b> languages",
+    "step1Title": "1. Upload your video",
+    "step1Body": "Record a match or training drill and upload it. The coach reviews it before your call.",
+    "step2Title": "2. Pick a coach & time",
+    "step2Body": "Filter verified pros by language, service and price. Book a free slot — it lands in both calendars with a video link.",
+    "step3Title": "3. Meet & improve",
+    "step3Body": "Join the video call, get your analysis. Your payment is only released to the coach after the session happens."
+  },
+  "meta": {
+    "title": "PlayWithPro — Where amateurs and pros play together",
+    "description": "Upload your game footage, book a video session with a verified pro, and get personal feedback — in your language.",
+    "loginTitle": "Log in — PlayWithPro",
+    "registerTitle": "Create account — PlayWithPro",
+    "verifyEmailTitle": "Verify email — PlayWithPro",
+    "resetPasswordTitle": "Reset password — PlayWithPro",
+    "dashboardTitle": "Dashboard — PlayWithPro",
+    "settingsTitle": "Account settings — PlayWithPro"
   }
 }
