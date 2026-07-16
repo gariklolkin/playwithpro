@@ -16,5 +16,5 @@
 
 ## 4. Verification & archive
 - [x] 4.1 Tests: catalog key parity, locale-aware middleware redirects, switcher behavior; existing suites updated and green
-- [ ] 4.2 `pnpm lint && pnpm typecheck && pnpm test && pnpm build` green; CI green
+- [x] 4.2 `pnpm lint && pnpm typecheck && pnpm test && pnpm build` green; CI green
 - [ ] 4.3 STOP — request owner review before archiving; archive only after approval
