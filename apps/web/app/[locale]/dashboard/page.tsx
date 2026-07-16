@@ -1,11 +1,14 @@
 import { Role } from "@playwithpro/shared";
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { redirect } from "@/i18n/navigation";
 import { VerifyEmailBanner } from "@/components/dashboard/verify-email-banner";
 import { getCurrentUser } from "@/lib/server-user";
 
-export const metadata: Metadata = { title: "Dashboard — PlayWithPro" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("meta");
+  return { title: t("dashboardTitle") };
+}
 
 const NAV_KEYS: Record<Role, { section: string; items: string[] }> = {
   [Role.Amateur]: {
@@ -49,7 +52,8 @@ const NAV_EMOJI: Record<string, string> = {
 export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) {
-    redirect("/login?next=/dashboard");
+    redirect({ href: "/login?next=/dashboard", locale: await getLocale() });
+    return null;
   }
 
   const t = await getTranslations("dashboard");

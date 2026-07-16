@@ -13,5 +13,12 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
+    server: {
+      deps: {
+        // next-intl ships ESM that imports extensionless "next/*" subpaths;
+        // inline it so Vite resolves those instead of Node ESM.
+        inline: ["next-intl", "use-intl"],
+      },
+    },
   },
 });

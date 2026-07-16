@@ -1,21 +1,36 @@
 import type { Metadata } from "next";
-import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages } from "next-intl/server";
+import { notFound } from "next/navigation";
+import { hasLocale, NextIntlClientProvider } from "next-intl";
+import { getMessages, getTranslations } from "next-intl/server";
 import { Navbar } from "@/components/navbar";
-import "./globals.css";
+import { routing } from "@/i18n/routing";
+import "../globals.css";
 
-export const metadata: Metadata = {
-  title: "PlayWithPro — Where amateurs and pros play together",
-  description:
-    "Upload your game footage, book a video session with a verified pro, and get personal feedback — in your language.",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta" });
+  return {
+    title: t("title"),
+    description: t("description"),
+  };
+}
 
-export default async function RootLayout({
+export default async function LocaleLayout({
   children,
+  params,
 }: Readonly<{
   children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 }>) {
-  const [locale, messages] = await Promise.all([getLocale(), getMessages()]);
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) {
+    notFound();
+  }
+  const messages = await getMessages();
 
   return (
     <html lang={locale} className="h-full antialiased font-sans">

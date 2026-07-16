@@ -15,6 +15,19 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => searchParams,
 }));
 
+vi.mock("@/i18n/navigation", () => ({
+  useRouter: () => ({ push, replace, refresh }),
+  Link: ({
+    href,
+    children,
+    ...props
+  }: React.ComponentProps<"a"> & { href: string }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
 function renderWithIntl(ui: React.ReactNode) {
   return render(
     <NextIntlClientProvider locale="en" messages={messages}>

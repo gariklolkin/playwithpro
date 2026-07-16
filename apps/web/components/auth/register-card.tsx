@@ -1,8 +1,8 @@
 "use client";
 
 import { Role, type SignupRole } from "@playwithpro/shared";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { apiFetch } from "@/lib/api";

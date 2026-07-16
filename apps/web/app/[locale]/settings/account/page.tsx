@@ -1,15 +1,22 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { redirect } from "@/i18n/navigation";
 import { AccountSettings } from "@/components/settings/account-settings";
 import { getCurrentUser } from "@/lib/server-user";
 
-export const metadata: Metadata = { title: "Account settings — PlayWithPro" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("meta");
+  return { title: t("settingsTitle") };
+}
 
 export default async function AccountSettingsPage() {
   const user = await getCurrentUser();
   if (!user) {
-    redirect("/login?next=/settings/account");
+    redirect({
+      href: "/login?next=/settings/account",
+      locale: await getLocale(),
+    });
+    return null;
   }
 
   const t = await getTranslations("settings");
