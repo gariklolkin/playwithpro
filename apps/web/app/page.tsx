@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { SUPPORTED_LOCALES } from "@playwithpro/shared";
 
 const LOCALE_LABELS: Record<string, string> = {
@@ -49,12 +50,18 @@ export default function Home() {
             and get personal feedback — in your language.
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
-            <button className="rounded-lg bg-[#2E7DE1] px-[22px] py-[11px] text-[15px] font-semibold text-white transition-colors hover:bg-[#2569C3]">
+            <Link
+              href="/register"
+              className="rounded-lg bg-[#2E7DE1] px-[22px] py-[11px] text-[15px] font-semibold text-white no-underline transition-colors hover:bg-[#2569C3]"
+            >
               Find your coach →
-            </button>
-            <button className="rounded-lg bg-[#EAF2FD] px-[22px] py-[11px] text-[15px] font-semibold text-[#2A5FC7] transition-colors hover:bg-[#DCEAFB]">
+            </Link>
+            <Link
+              href="/register?role=professional"
+              className="rounded-lg bg-[#EAF2FD] px-[22px] py-[11px] text-[15px] font-semibold text-[#2A5FC7] no-underline transition-colors hover:bg-[#DCEAFB]"
+            >
               I&apos;m a professional
-            </button>
+            </Link>
           </div>
 
           {/* Illustration — white-background artwork blends into the page (per design mockup) */}

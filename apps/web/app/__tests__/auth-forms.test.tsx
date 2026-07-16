@@ -139,6 +139,36 @@ describe("RegisterCard", () => {
     });
   });
 
+  it("preselects the professional role from ?role=professional", async () => {
+    searchParams = new URLSearchParams("role=professional");
+    fetchMock.mockResolvedValue({ ok: true, status: 201 });
+
+    renderWithIntl(<RegisterCard />);
+
+    expect(
+      screen.getByRole("button", { name: /I'm a professional/ }),
+    ).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.change(screen.getByLabelText("Display name"), {
+      target: { value: "Coach Ma" },
+    });
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "coach@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "password1" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/dashboard"));
+    const registerCall = fetchMock.mock.calls.find(([url]) =>
+      String(url).endsWith("/auth/register"),
+    );
+    expect(
+      JSON.parse((registerCall![1] as RequestInit).body as string).role,
+    ).toBe("professional");
+  });
+
   it("shows a generic error when registration fails", async () => {
     fetchMock.mockResolvedValue({ ok: false, status: 400 });
 

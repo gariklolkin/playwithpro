@@ -21,7 +21,7 @@ export async function Navbar() {
         {[
           { label: t("findCoach"), href: "#" },
           { label: t("howItWorks"), href: "/#how-it-works" },
-          { label: t("forCoaches"), href: "#" },
+          { label: t("forCoaches"), href: "/register?role=professional" },
         ].map((item) => (
           <a
             key={item.label}

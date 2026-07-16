@@ -28,7 +28,9 @@
       "forgot": "Forgot password?",
       "invalid": "Invalid email or password.",
       "errorGoogle": "Google sign-in didn't complete. Please try again.",
-      "errorGoogleEmail": "An account with this email already exists. Log in with your password, then link Google in settings."
+      "errorGoogleEmail": "An account with this email already exists. Log in with your password, then link Google in settings.",
+      "noAccount": "New to PlayWithPro?",
+      "createAccount": "Create account"
     },
     "register": {
       "title": "Create account",
@@ -48,7 +50,9 @@
       "or": "or",
       "google": "Sign up with Google",
       "footer": "We'll send a verification link · No Google account required",
-      "failed": "Registration failed. Check the details and try again."
+      "failed": "Registration failed. Check the details and try again.",
+      "haveAccount": "Already have an account?",
+      "logIn": "Log in"
     },
     "verifyEmail": {
       "title": "Email verification",

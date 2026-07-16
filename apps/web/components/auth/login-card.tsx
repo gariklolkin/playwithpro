@@ -113,6 +113,9 @@ export function LoginCard() {
       <AuthFooter>
         <Link href="/forgot-password">{t("forgot")}</Link>
       </AuthFooter>
+      <AuthFooter>
+        {t("noAccount")} <Link href="/register">{t("createAccount")}</Link>
+      </AuthFooter>
     </AuthCard>
   );
 }

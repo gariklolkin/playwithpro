@@ -1,7 +1,8 @@
 "use client";
 
 import { Role, type SignupRole } from "@playwithpro/shared";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { apiFetch } from "@/lib/api";
@@ -16,7 +17,12 @@ export function RegisterCard() {
   const t = useTranslations("auth.register");
   const router = useRouter();
 
-  const [role, setRole] = useState<SignupRole>(Role.Amateur);
+  // "For coaches" entry points deep-link here with ?role=professional.
+  const preselected =
+    useSearchParams().get("role") === Role.Professional
+      ? Role.Professional
+      : Role.Amateur;
+  const [role, setRole] = useState<SignupRole>(preselected);
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -89,6 +95,9 @@ export function RegisterCard() {
       <AuthDivider>{t("or")}</AuthDivider>
       <GoogleButton label={t("google")} />
       <AuthFooter>{t("footer")}</AuthFooter>
+      <AuthFooter>
+        {t("haveAccount")} <Link href="/login">{t("logIn")}</Link>
+      </AuthFooter>
     </AuthCard>
   );
 }
