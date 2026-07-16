@@ -35,4 +35,4 @@
 ## 6. Verification & archive
 - [x] 6.1 E2E happy paths (register→verify→login→me; google→complete→me; forgot→reset→login) against Tilt env; paste output in PR/commit message
 - [x] 6.2 `pnpm lint && pnpm typecheck && pnpm test && pnpm build` green; CI green
-- [ ] 6.3 STOP — request owner review (Cowork) before archiving; archive only after approval
+- [x] 6.3 STOP — request owner review (Cowork) before archiving; archive only after approval

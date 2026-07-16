@@ -49,9 +49,9 @@ Core value loop: an amateur uploads game footage → picks a verified pro by lan
 
 ## Roadmap (planned changes)
 
-1. `add-project-foundation` — monorepo scaffold, Tilt dev env, CI, empty web/api apps
-2. `add-auth-and-accounts` — email+password & Google OAuth, roles, sessions (JWT), account settings
-3. `add-i18n` — locale routing, message catalogs for 5 languages, language switcher
+1. `add-project-foundation` ✅ — monorepo scaffold, Tilt dev env, CI, empty web/api apps
+2. `add-auth-and-accounts` ✅ — email+password & Google OAuth, roles, sessions (JWT), account settings
+3. `add-i18n` ✅ — locale routing, message catalogs for 5 languages, language switcher
 4. `add-pro-profiles-verification` — coach profile CRUD, services & pricing (incl. city/venue for the in-person game service), credentials submission, admin verification queue
 5. `add-availability-scheduling` — coach availability slots, timezone handling
 6. `add-video-upload` — S3 pre-signed uploads, video library for amateurs
