@@ -38,8 +38,9 @@ export function toServiceResponse(service: ProService): ProServiceResponse {
     type: toSharedServiceType(service.type),
     priceMinor: service.priceMinor,
     currency: service.currency,
-    venueCity: service.venueCity,
-    venueClub: service.venueClub,
+    venueLabel: service.venueLabel,
+    venueLat: service.venueLat,
+    venueLng: service.venueLng,
     active: service.active,
   };
 }
@@ -51,9 +52,10 @@ export function toVerificationResponse(
     id: request.id,
     status: request.status.toLowerCase() as VerificationStatus,
     credentials: request.credentials,
-    links: request.links,
+    contact: request.contact,
     adminNote: request.adminNote,
     createdAt: request.createdAt.toISOString(),
+    callRequestedAt: request.callRequestedAt?.toISOString() ?? null,
     reviewedAt: request.reviewedAt?.toISOString() ?? null,
   };
 }
@@ -68,8 +70,6 @@ export function toProfileResponse(
     bio: profile.bio,
     achievements: profile.achievements,
     languages: profile.languages,
-    country: profile.country,
-    city: profile.city,
     services: profile.services.map(toServiceResponse),
     latestVerification: latest ? toVerificationResponse(latest) : null,
   };

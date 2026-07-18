@@ -24,7 +24,12 @@
 - [x] 5.1 `/dashboard/verification` page (admin-only guard): pending list, detail view, approve/reject with note
 - [x] 5.2 Wire admin dashboard nav item; strings ×5; component tests
 
+## 7. Review feedback (owner, 2026-07-18)
+- [x] 7.1 Drop profile country/city fields (UI, API, DB)
+- [x] 7.2 Replace evidence links with a required video-call contact; admin "Invite to video call" + email
+- [x] 7.3 Game venue via map: OSM/Nominatim address search + draggable pin (label + lat/lng)
+
 ## 6. Verification & archive
 - [x] 6.1 E2E happy path against Tilt env (fill profile → submit → admin approves → status verified; reject path with note)
-- [x] 6.2 `pnpm lint && pnpm typecheck && pnpm test && pnpm build` green; CI green
+- [ ] 6.2 `pnpm lint && pnpm typecheck && pnpm test && pnpm build` green; CI green
 - [ ] 6.3 STOP — request owner review before archiving; archive only after approval

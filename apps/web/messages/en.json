@@ -177,7 +177,7 @@
     "subtitle": "What amateurs will see once you're verified",
     "status": {
       "draft": "Draft — fill in your profile and submit it for verification.",
-      "pending_review": "Under review — we'll email you once it's checked.",
+      "pending_review": "Under review — we'll reach out for a short video call to verify your identity.",
       "verified": "Verified ✅ — amateurs will find you once booking opens.",
       "rejected": "Not approved. Reviewer note: {note}"
     },
@@ -188,8 +188,6 @@
       "achievements": "Achievements",
       "achievementsPlaceholder": "Titles, ratings, notable students…",
       "languages": "Languages you coach in",
-      "country": "Country",
-      "city": "City",
       "save": "Save profile",
       "saving": "Saving…",
       "saved": "Profile saved.",
@@ -205,24 +203,27 @@
       "gameDescription": "In-person sparring at your club",
       "price": "Hourly rate",
       "currency": "Currency",
-      "venueCity": "City",
-      "venueClub": "Club / venue",
       "save": "Save",
       "saving": "Saving…",
       "saved": "Saved.",
-      "error": "Could not save this service."
+      "error": "Could not save this service.",
+      "venue": "Venue",
+      "venuePlaceholder": "Search club or address…",
+      "venueSearching": "Searching…",
+      "venueHint": "Pick a suggestion — the pin can be dragged to the exact spot."
     },
     "verification": {
       "title": "Verification",
       "credentials": "Credentials",
       "credentialsPlaceholder": "Titles, federation licenses, coaching history…",
-      "links": "Evidence links (one per line)",
-      "linksPlaceholder": "https://…",
       "submit": "Submit for verification",
       "submitting": "Submitting…",
       "error": "Submission failed. Please try again.",
       "alreadyVerified": "Your profile is verified. Nothing else to do here. 🏓",
-      "pendingInfo": "Your request is in the review queue. We'll email you the result."
+      "pendingInfo": "Your request is in the review queue. We'll email you the result.",
+      "contact": "Contact for a video call",
+      "contactPlaceholder": "@username (Telegram), WhatsApp, phone…",
+      "contactHint": "We verify every coach in a short video call — leave the easiest way to reach you."
     }
   },
   "adminVerification": {
@@ -231,15 +232,16 @@
     "submitted": "Submitted {date}",
     "bio": "Bio",
     "credentials": "Credentials",
-    "location": "Location",
     "languages": "Languages",
     "services": "Services",
-    "links": "Evidence",
     "approve": "Approve",
     "reject": "Reject",
     "notePlaceholder": "Reason shown to the coach (required to reject)",
     "noteRequired": "Add a note before rejecting.",
-    "error": "Action failed. Please try again."
+    "error": "Action failed. Please try again.",
+    "contact": "Contact",
+    "requestCall": "Invite to video call",
+    "callRequested": "Call requested ✓"
   },
   "home": {
     "heroTitle": "Where amateurs and <accent>pros</accent> play together.",

@@ -28,14 +28,14 @@ register_pro() { # $1: email, $2: jar
 
 fill_profile() { # $1: jar
   curl -sf -b "$1" -X PATCH "$API/pros/me/profile" -H 'Content-Type: application/json' \
-    -d '{"bio":"20 years of coaching","achievements":"National champion","languages":["en","de"],"country":"Germany","city":"Berlin"}' >/dev/null
+    -d '{"bio":"20 years of coaching","achievements":"National champion","languages":["en","de"]}' >/dev/null
   curl -sf -b "$1" -X PUT "$API/pros/me/services/consultation" -H 'Content-Type: application/json' \
     -d '{"priceMinor":4000,"currency":"EUR"}' >/dev/null
 }
 
 submit_verification() { # $1: jar
   curl -sf -b "$1" -X POST "$API/pros/me/verification" -H 'Content-Type: application/json' \
-    -d '{"credentials":"ITTF licensed coach","links":["https://federation.example/coach/1"]}'
+    -d '{"credentials":"ITTF licensed coach","contact":"@coach_ma (Telegram)"}'
 }
 
 step "1. register pro -> lazy draft profile"
@@ -43,14 +43,17 @@ register_pro "$PRO_EMAIL" "$PRO_JAR"
 PROFILE=$(curl -sf -b "$PRO_JAR" "$API/pros/me/profile")
 echo "$PROFILE" | grep -q '"status":"draft"' || fail "expected draft profile"
 
-step "2. game service without venue is rejected"
+step "2. game service without a mapped venue is rejected; with venue it saves"
 CODE=$(curl -s -o /dev/null -w "%{http_code}" -b "$PRO_JAR" -X PUT "$API/pros/me/services/game" \
-  -H 'Content-Type: application/json' -d '{"priceMinor":3000,"currency":"EUR"}')
-[ "$CODE" = "400" ] || fail "expected 400 for game without venue, got $CODE"
+  -H 'Content-Type: application/json' -d '{"priceMinor":3000,"currency":"EUR","venueLabel":"TTC Berlin"}')
+[ "$CODE" = "400" ] || fail "expected 400 for game without coordinates, got $CODE"
+GAME=$(curl -sf -b "$PRO_JAR" -X PUT "$API/pros/me/services/game" -H 'Content-Type: application/json' \
+  -d '{"priceMinor":3000,"currency":"EUR","venueLabel":"TTC Berlin Mitte, Berlin","venueLat":52.53,"venueLng":13.4}')
+echo "$GAME" | grep -q '"venueLat":52.53' || fail "expected saved venue coordinates"
 
 step "3. incomplete profile cannot submit"
 CODE=$(curl -s -o /dev/null -w "%{http_code}" -b "$PRO_JAR" -X POST "$API/pros/me/verification" \
-  -H 'Content-Type: application/json' -d '{"credentials":"x"}')
+  -H 'Content-Type: application/json' -d '{"credentials":"x","contact":"@c"}')
 [ "$CODE" = "409" ] || fail "expected 409 for incomplete profile, got $CODE"
 
 step "4. fill profile + service -> submit -> pending_review"
@@ -60,7 +63,7 @@ echo "$SUBMITTED" | grep -q '"status":"pending_review"' || fail "expected pendin
 
 step "5. double submit is blocked"
 CODE=$(curl -s -o /dev/null -w "%{http_code}" -b "$PRO_JAR" -X POST "$API/pros/me/verification" \
-  -H 'Content-Type: application/json' -d '{"credentials":"again"}')
+  -H 'Content-Type: application/json' -d '{"credentials":"again","contact":"@c"}')
 [ "$CODE" = "409" ] || fail "expected 409 for double submit, got $CODE"
 
 step "6. admin sees the request in the queue"
@@ -69,6 +72,11 @@ curl -sf -c "$ADMIN_JAR" -X POST "$API/auth/login" -H 'Content-Type: application
 QUEUE=$(curl -sf -b "$ADMIN_JAR" "$API/admin/verification-requests")
 echo "$QUEUE" | grep -q "$PRO_EMAIL" || fail "pro not in admin queue"
 REQUEST_ID=$(echo "$QUEUE" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const q=JSON.parse(d);console.log(q.find(i=>i.user.email==='$PRO_EMAIL').requestId)})")
+
+step "6b. admin invites the coach to a video call"
+curl -sf -b "$ADMIN_JAR" -X POST "$API/admin/verification-requests/$REQUEST_ID/call" >/dev/null
+QUEUE=$(curl -sf -b "$ADMIN_JAR" "$API/admin/verification-requests")
+echo "$QUEUE" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const q=JSON.parse(d);const i=q.find(x=>x.requestId==='$REQUEST_ID');process.exit(i&&i.callRequestedAt?0:1)})" || fail "expected callRequestedAt set"
 
 step "7. pro cannot access the admin queue"
 CODE=$(curl -s -o /dev/null -w "%{http_code}" -b "$PRO_JAR" "$API/admin/verification-requests")

@@ -22,8 +22,6 @@ const draftProfile: ProProfileResponse = {
   bio: "",
   achievements: "",
   languages: [],
-  country: "",
-  city: "",
   services: [],
   latestVerification: null,
 };
@@ -95,14 +93,14 @@ describe("ProProfileEditor", () => {
     });
   });
 
-  it("shows the API error when the game service misses a venue", async () => {
+  it("shows the API error when the game service misses a mapped venue", async () => {
     fetchMock.mockResolvedValue({
       ok: false,
       status: 400,
       json: () =>
         Promise.resolve({
           message:
-            "The in-person game service requires a city and a club/venue.",
+            "The in-person game service requires a venue picked on the map.",
         }),
     });
     renderEditor();
@@ -114,11 +112,11 @@ describe("ProProfileEditor", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
     expect(
-      await screen.findByText(/requires a city and a club/),
+      await screen.findByText(/requires a venue picked on the map/),
     ).toBeInTheDocument();
   });
 
-  it("submits verification with credentials and one link per line", async () => {
+  it("submits verification with credentials and a call contact", async () => {
     fetchMock.mockResolvedValue({
       ok: true,
       status: 200,
@@ -133,8 +131,8 @@ describe("ProProfileEditor", () => {
     fireEvent.change(screen.getByLabelText("Credentials"), {
       target: { value: "National champion 2019" },
     });
-    fireEvent.change(screen.getByLabelText("Evidence links (one per line)"), {
-      target: { value: "https://a.example\n\nhttps://b.example\n" },
+    fireEvent.change(screen.getByLabelText("Contact for a video call"), {
+      target: { value: "@coach_ma (Telegram)" },
     });
     fireEvent.click(
       screen.getByRole("button", { name: "Submit for verification" }),
@@ -146,7 +144,7 @@ describe("ProProfileEditor", () => {
     );
     expect(JSON.parse((call![1] as RequestInit).body as string)).toEqual({
       credentials: "National champion 2019",
-      links: ["https://a.example", "https://b.example"],
+      contact: "@coach_ma (Telegram)",
     });
   });
 
@@ -158,9 +156,10 @@ describe("ProProfileEditor", () => {
         id: "req-1",
         status: "rejected" as never,
         credentials: "x",
-        links: [],
+        contact: "@x",
         adminNote: "No verifiable credentials",
         createdAt: new Date().toISOString(),
+        callRequestedAt: null,
         reviewedAt: new Date().toISOString(),
       },
     });

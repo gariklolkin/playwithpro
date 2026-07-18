@@ -34,6 +34,16 @@ export class AdminController {
     return this.admin.listPending();
   }
 
+  @Post('verification-requests/:id/call')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ description: 'Coach invited to an identity video call.' })
+  async requestCall(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<{ ok: true }> {
+    await this.admin.requestCall(id);
+    return { ok: true };
+  }
+
   @Post('verification-requests/:id/approve')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ description: 'Profile verified; coach notified.' })

@@ -77,11 +77,12 @@ describe('ProsService', () => {
     expect(profile.services).toEqual([]);
   });
 
-  it('rejects the game service without a venue', async () => {
+  it('rejects the game service without a mapped venue', async () => {
     await expect(
       service.upsertService('user-1', ServiceType.Game, {
         priceMinor: 5000,
         currency: 'EUR',
+        venueLabel: 'TTC Berlin',
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(prisma.proService.upsert).not.toHaveBeenCalled();
@@ -115,7 +116,10 @@ describe('ProsService', () => {
     });
 
     await expect(
-      service.submitVerification('user-1', { credentials: 'ITTF licensed' }),
+      service.submitVerification('user-1', {
+        credentials: 'ITTF licensed',
+        contact: '@coach',
+      }),
     ).rejects.toBeInstanceOf(ConflictException);
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
@@ -129,7 +133,7 @@ describe('ProsService', () => {
     });
 
     const error = await service
-      .submitVerification('user-1', { credentials: 'x' })
+      .submitVerification('user-1', { credentials: 'x', contact: '@c' })
       .catch((caught: ConflictException) => caught);
 
     expect(error).toBeInstanceOf(ConflictException);
@@ -146,7 +150,7 @@ describe('ProsService', () => {
 
     await service.submitVerification('user-1', {
       credentials: 'National champion 2019',
-      links: ['https://federation.example/profile/1'],
+      contact: '@coach_ma (Telegram)',
     });
 
     expect(prisma.verificationRequest.create).toHaveBeenCalledWith(

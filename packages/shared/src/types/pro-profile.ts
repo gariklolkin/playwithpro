@@ -7,7 +7,7 @@ import type { ServiceType } from "../enums/service-type";
 export const BIO_MAX_LENGTH = 2000;
 export const ACHIEVEMENTS_MAX_LENGTH = 2000;
 export const CREDENTIALS_MAX_LENGTH = 4000;
-export const MAX_EVIDENCE_LINKS = 10;
+export const CONTACT_MAX_LENGTH = 200;
 
 export interface ProServiceResponse {
   type: ServiceType;
@@ -15,8 +15,10 @@ export interface ProServiceResponse {
   priceMinor: number;
   /** ISO 4217 code. */
   currency: string;
-  venueCity: string;
-  venueClub: string;
+  /** GAME only: club/address as picked on the map. */
+  venueLabel: string;
+  venueLat: number | null;
+  venueLng: number | null;
   active: boolean;
 }
 
@@ -24,8 +26,9 @@ export interface UpsertProServiceRequest {
   priceMinor: number;
   currency: string;
   /** Required for the in-person game service. */
-  venueCity?: string;
-  venueClub?: string;
+  venueLabel?: string;
+  venueLat?: number;
+  venueLng?: number;
   active?: boolean;
 }
 
@@ -34,17 +37,17 @@ export interface UpdateProProfileRequest {
   achievements?: string;
   /** ISO 639-1 codes, subset of the platform's supported locales. */
   languages?: string[];
-  country?: string;
-  city?: string;
 }
 
 export interface VerificationRequestResponse {
   id: string;
   status: VerificationStatus;
   credentials: string;
-  links: string[];
+  /** Messenger/phone the coach left for the identity video call. */
+  contact: string;
   adminNote: string;
   createdAt: string;
+  callRequestedAt: string | null;
   reviewedAt: string | null;
 }
 
@@ -54,15 +57,14 @@ export interface ProProfileResponse {
   bio: string;
   achievements: string;
   languages: string[];
-  country: string;
-  city: string;
   services: ProServiceResponse[];
   latestVerification: VerificationRequestResponse | null;
 }
 
 export interface SubmitVerificationRequest {
   credentials: string;
-  links?: string[];
+  /** How the admin can reach the coach for a short identity video call. */
+  contact: string;
 }
 
 export interface RejectVerificationRequest {
@@ -74,7 +76,8 @@ export interface AdminVerificationItem {
   requestId: string;
   submittedAt: string;
   credentials: string;
-  links: string[];
+  contact: string;
+  callRequestedAt: string | null;
   profile: ProProfileResponse;
   user: {
     id: string;

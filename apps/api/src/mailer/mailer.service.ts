@@ -47,6 +47,25 @@ export class MailerService {
     );
   }
 
+  async sendVerificationCallEmail(
+    to: string,
+    displayName: string,
+    contact: string,
+  ): Promise<void> {
+    await this.send(
+      to,
+      'PlayWithPro verification: short video call',
+      [
+        `Hi ${displayName},`,
+        '',
+        'To finish verifying your professional profile we do a short video call.',
+        `We will reach out via the contact you left (${contact}) to agree on a time.`,
+        '',
+        'You can also just reply to this email with a time that suits you.',
+      ].join('\n'),
+    );
+  }
+
   async sendVerificationApprovedEmail(
     to: string,
     displayName: string,

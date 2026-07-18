@@ -101,8 +101,6 @@ model ProProfile {
   bio          String           @default("")
   achievements String           @default("")
   languages    String[]         @default([]) // ISO 639-1, subset of platform locales
-  country      String           @default("")
-  city         String           @default("")
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
   user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -117,8 +115,9 @@ model ProService {
   type       ServiceType
   priceMinor Int // money: integer minor units, never floats
   currency   String      @db.Char(3) // ISO 4217
-  venueCity  String      @default("") // GAME only
-  venueClub  String      @default("") // GAME only
+  venueLabel String      @default("") // GAME only: club/address picked on the map
+  venueLat   Float? // GAME only
+  venueLng   Float? // GAME only
   active     Boolean     @default(true)
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
@@ -129,16 +128,17 @@ model ProService {
 
 /// Audit trail of verification submissions; the newest PENDING one is the queue item.
 model VerificationRequest {
-  id           String             @id @default(uuid())
-  profileId    String
-  status       VerificationStatus @default(PENDING)
-  credentials  String
-  links        String[]           @default([])
-  adminNote    String             @default("")
-  reviewedById String?
-  reviewedAt   DateTime?
-  createdAt    DateTime           @default(now())
-  profile      ProProfile         @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  id              String             @id @default(uuid())
+  profileId       String
+  status          VerificationStatus @default(PENDING)
+  credentials     String
+  contact         String             @default("") // messenger/phone for the identity video call
+  adminNote       String             @default("")
+  reviewedById    String?
+  reviewedAt      DateTime?
+  callRequestedAt DateTime?
+  createdAt       DateTime           @default(now())
+  profile         ProProfile         @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@index([status, createdAt])
 }

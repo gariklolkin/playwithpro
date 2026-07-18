@@ -87,3 +87,9 @@ Two mailer templates (English): "You're verified 🎉" and "Verification update"
 - **No document upload** — links-only evidence weakens verification, acceptable for MVP; S3 plumbing arrives with `add-video-upload`, then a follow-up can add attachments.
 - **Lazy profile creation** avoids a signup-time migration/backfill for existing professional users.
 - Admin UI lives in the dashboard shell rather than a separate console — `add-admin-console` will absorb/extend it later.
+
+## Amendments after owner review (2026-07-18)
+
+- **No profile country/city** — the game venue carries location; profile fields dropped everywhere.
+- **Game venue = map pick**: OSM/Nominatim address search + draggable Leaflet pin; stored as `venueLabel` + `venueLat`/`venueLng` (floats are fine for coordinates; money stays integer). Feeds calendar invites and geo-search later.
+- **Verification includes an identity video call**: evidence links dropped; submission requires a contact (messenger/phone). Admin queue gets "Invite to video call" → stamps `callRequestedAt`, emails the coach. Upgrade path: once `add-session-rooms-calendar` lands, verification calls move into platform video rooms.

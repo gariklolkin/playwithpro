@@ -177,7 +177,7 @@
     "subtitle": "认证通过后，业余球员将看到这些信息",
     "status": {
       "draft": "草稿 — 填写资料并提交认证。",
-      "pending_review": "审核中 — 审核完成后我们会发邮件通知您。",
+      "pending_review": "审核中 — 我们将联系您进行简短视频通话以核实身份。",
       "verified": "已认证 ✅ — 预约功能上线后业余球员即可找到您。",
       "rejected": "未通过。审核备注：{note}"
     },
@@ -188,8 +188,6 @@
       "achievements": "成就",
       "achievementsPlaceholder": "冠军头衔、等级分、知名学员…",
       "languages": "您的执教语言",
-      "country": "国家",
-      "city": "城市",
       "save": "保存资料",
       "saving": "正在保存…",
       "saved": "资料已保存。",
@@ -205,24 +203,27 @@
       "gameDescription": "在您的俱乐部进行线下对练",
       "price": "每小时价格",
       "currency": "货币",
-      "venueCity": "城市",
-      "venueClub": "俱乐部 / 场馆",
       "save": "保存",
       "saving": "正在保存…",
       "saved": "已保存。",
-      "error": "无法保存该服务。"
+      "error": "无法保存该服务。",
+      "venue": "地点",
+      "venuePlaceholder": "搜索俱乐部或地址…",
+      "venueSearching": "正在搜索…",
+      "venueHint": "选择一个建议 — 图钉可拖动到精确位置。"
     },
     "verification": {
       "title": "认证",
       "credentials": "资质",
       "credentialsPlaceholder": "头衔、协会执照、执教经历…",
-      "links": "证明链接（每行一个）",
-      "linksPlaceholder": "https://…",
       "submit": "提交认证",
       "submitting": "正在提交…",
       "error": "提交失败，请重试。",
       "alreadyVerified": "您的资料已通过认证，这里无需其他操作。🏓",
-      "pendingInfo": "您的申请正在审核队列中，结果将通过邮件通知。"
+      "pendingInfo": "您的申请正在审核队列中，结果将通过邮件通知。",
+      "contact": "视频通话联系方式",
+      "contactPlaceholder": "@用户名（Telegram）、WhatsApp、电话…",
+      "contactHint": "我们会通过简短的视频通话验证每位教练 — 请留下最方便的联系方式。"
     }
   },
   "adminVerification": {
@@ -231,15 +232,16 @@
     "submitted": "提交于 {date}",
     "bio": "简介",
     "credentials": "资质",
-    "location": "所在地",
     "languages": "语言",
     "services": "服务",
-    "links": "证明材料",
     "approve": "通过",
     "reject": "拒绝",
     "notePlaceholder": "给教练的理由（拒绝时必填）",
     "noteRequired": "拒绝前请填写备注。",
-    "error": "操作失败，请重试。"
+    "error": "操作失败，请重试。",
+    "contact": "联系方式",
+    "requestCall": "邀请视频通话",
+    "callRequested": "已发出邀请 ✓"
   },
   "home": {
     "heroTitle": "业余球员与<accent>职业选手</accent>同场竞技。",

@@ -1,18 +1,10 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
+  CONTACT_MAX_LENGTH,
   CREDENTIALS_MAX_LENGTH,
-  MAX_EVIDENCE_LINKS,
 } from '@playwithpro/shared';
 import type { SubmitVerificationRequest } from '@playwithpro/shared';
-import {
-  ArrayMaxSize,
-  IsArray,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsUrl,
-  MaxLength,
-} from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 export class SubmitVerificationDto implements SubmitVerificationRequest {
   @ApiProperty({
@@ -24,13 +16,13 @@ export class SubmitVerificationDto implements SubmitVerificationRequest {
   @MaxLength(CREDENTIALS_MAX_LENGTH)
   credentials: string;
 
-  @ApiPropertyOptional({
-    description: 'Evidence URLs: federation profile, rating page, press.',
-    isArray: true,
+  @ApiProperty({
+    description:
+      'Messenger/phone where the admin can reach the coach for a short identity video call.',
+    maxLength: CONTACT_MAX_LENGTH,
   })
-  @IsOptional()
-  @IsArray()
-  @ArrayMaxSize(MAX_EVIDENCE_LINKS)
-  @IsUrl({ require_protocol: true }, { each: true })
-  links?: string[];
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(CONTACT_MAX_LENGTH)
+  contact: string;
 }

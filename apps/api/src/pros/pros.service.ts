@@ -58,8 +58,6 @@ export class ProsService {
         bio: dto.bio,
         achievements: dto.achievements,
         languages: dto.languages,
-        country: dto.country,
-        city: dto.city,
       },
       include: PROFILE_INCLUDE,
     });
@@ -73,10 +71,12 @@ export class ProsService {
   ): Promise<ProProfileResponse> {
     if (
       type === ServiceType.Game &&
-      (!dto.venueCity?.trim() || !dto.venueClub?.trim())
+      (!dto.venueLabel?.trim() ||
+        dto.venueLat === undefined ||
+        dto.venueLng === undefined)
     ) {
       throw new BadRequestException(
-        'The in-person game service requires a city and a club/venue.',
+        'The in-person game service requires a venue picked on the map.',
       );
     }
     const profile = await this.ensureProfile(userId);
@@ -84,8 +84,9 @@ export class ProsService {
     const data = {
       priceMinor: dto.priceMinor,
       currency: dto.currency.toUpperCase(),
-      venueCity: dto.venueCity?.trim() ?? '',
-      venueClub: dto.venueClub?.trim() ?? '',
+      venueLabel: dto.venueLabel?.trim() ?? '',
+      venueLat: dto.venueLat ?? null,
+      venueLng: dto.venueLng ?? null,
       active: dto.active ?? true,
     };
     await this.prisma.proService.upsert({
@@ -143,7 +144,7 @@ export class ProsService {
         data: {
           profileId: profile.id,
           credentials: dto.credentials.trim(),
-          links: dto.links ?? [],
+          contact: dto.contact.trim(),
         },
       }),
       this.prisma.proProfile.update({

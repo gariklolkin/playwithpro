@@ -9,7 +9,8 @@ const pendingRequest = {
   profileId: 'profile-1',
   status: 'PENDING',
   credentials: 'ITTF licensed coach',
-  links: [],
+  contact: '@coach_ma',
+  callRequestedAt: null,
   adminNote: '',
   reviewedById: null,
   reviewedAt: null,
@@ -41,6 +42,7 @@ describe('AdminService', () => {
   const mailer = {
     sendVerificationApprovedEmail: jest.fn(),
     sendVerificationRejectedEmail: jest.fn(),
+    sendVerificationCallEmail: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -98,6 +100,23 @@ describe('AdminService', () => {
       'coach@example.com',
       'Coach Ma',
       'No verifiable credentials.',
+    );
+  });
+
+  it('requestCall stamps the request and emails the coach', async () => {
+    prisma.verificationRequest.findUnique.mockResolvedValue(pendingRequest);
+
+    await service.requestCall('req-1');
+
+    expect(prisma.verificationRequest.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { callRequestedAt: expect.any(Date) as Date },
+      }),
+    );
+    expect(mailer.sendVerificationCallEmail).toHaveBeenCalledWith(
+      'coach@example.com',
+      'Coach Ma',
+      '@coach_ma',
     );
   });
 

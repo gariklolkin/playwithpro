@@ -22,6 +22,24 @@ export function VerificationQueue({
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [callRequested, setCallRequested] = useState<Record<string, boolean>>(
+    {},
+  );
+
+  async function requestCall(item: AdminVerificationItem) {
+    setBusy(item.requestId);
+    setErrors((current) => ({ ...current, [item.requestId]: "" }));
+    const response = await apiFetch(
+      `/admin/verification-requests/${item.requestId}/call`,
+      { method: "POST" },
+    );
+    setBusy(null);
+    if (!response.ok) {
+      setErrors((current) => ({ ...current, [item.requestId]: t("error") }));
+      return;
+    }
+    setCallRequested((current) => ({ ...current, [item.requestId]: true }));
+  }
 
   async function review(
     item: AdminVerificationItem,
@@ -105,12 +123,8 @@ export function VerificationQueue({
               </dd>
             </div>
             <div>
-              <dt className="text-text-tertiary">{t("location")}</dt>
-              <dd className="text-text">
-                {[item.profile.city, item.profile.country]
-                  .filter(Boolean)
-                  .join(", ") || "—"}
-              </dd>
+              <dt className="text-text-tertiary">{t("contact")}</dt>
+              <dd className="text-text">{item.contact || "—"}</dd>
             </div>
             <div>
               <dt className="text-text-tertiary">{t("languages")}</dt>
@@ -135,24 +149,6 @@ export function VerificationQueue({
                   .join(" · ") || "—"}
               </dd>
             </div>
-            <div>
-              <dt className="text-text-tertiary">{t("links")}</dt>
-              <dd className="text-text">
-                {item.links.length > 0
-                  ? item.links.map((link) => (
-                      <a
-                        key={link}
-                        href={link}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        className="block truncate text-[#2E7DE1]"
-                      >
-                        {link}
-                      </a>
-                    ))
-                  : "—"}
-              </dd>
-            </div>
           </dl>
 
           <div className="mt-4 border-t border-border pt-4">
@@ -168,7 +164,21 @@ export function VerificationQueue({
               }
               className="mb-3 w-full rounded-lg border border-border-strong bg-bg px-3 py-2 text-sm text-text"
             />
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                type="button"
+                variant="blueSoft"
+                disabled={
+                  busy === item.requestId ||
+                  Boolean(item.callRequestedAt) ||
+                  callRequested[item.requestId]
+                }
+                onClick={() => void requestCall(item)}
+              >
+                {Boolean(item.callRequestedAt) || callRequested[item.requestId]
+                  ? t("callRequested")
+                  : t("requestCall")}
+              </Button>
               <Button
                 type="button"
                 disabled={busy === item.requestId}

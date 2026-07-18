@@ -14,6 +14,7 @@ import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { VenuePicker } from "./venue-picker";
 
 const SERVICE_TYPES = [
   ServiceType.VideoAnalysis,
@@ -62,8 +63,9 @@ interface ServiceFormState {
   offered: boolean;
   price: string;
   currency: string;
-  venueCity: string;
-  venueClub: string;
+  venueLabel: string;
+  venueLat: number | null;
+  venueLng: number | null;
   status: "idle" | "saving" | "saved" | "error";
   error: string;
 }
@@ -75,8 +77,9 @@ function serviceFormFrom(
     offered: Boolean(service),
     price: service ? (service.priceMinor / 100).toString() : "",
     currency: service?.currency ?? "EUR",
-    venueCity: service?.venueCity ?? "",
-    venueClub: service?.venueClub ?? "",
+    venueLabel: service?.venueLabel ?? "",
+    venueLat: service?.venueLat ?? null,
+    venueLng: service?.venueLng ?? null,
     status: "idle",
     error: "",
   };
@@ -94,8 +97,6 @@ export function ProProfileEditor({
   const [bio, setBio] = useState(profile.bio);
   const [achievements, setAchievements] = useState(profile.achievements);
   const [languages, setLanguages] = useState<string[]>(profile.languages);
-  const [country, setCountry] = useState(profile.country);
-  const [city, setCity] = useState(profile.city);
   const [aboutStatus, setAboutStatus] = useState<
     "idle" | "saving" | "saved" | "error"
   >("idle");
@@ -115,8 +116,8 @@ export function ProProfileEditor({
   const [credentials, setCredentials] = useState(
     profile.latestVerification?.credentials ?? "",
   );
-  const [links, setLinks] = useState(
-    (profile.latestVerification?.links ?? []).join("\n"),
+  const [contact, setContact] = useState(
+    profile.latestVerification?.contact ?? "",
   );
   const [verifyStatus, setVerifyStatus] = useState<
     "idle" | "submitting" | "error"
@@ -135,7 +136,7 @@ export function ProProfileEditor({
     setAboutStatus("saving");
     const response = await apiFetch("/pros/me/profile", {
       method: "PATCH",
-      body: JSON.stringify({ bio, achievements, languages, country, city }),
+      body: JSON.stringify({ bio, achievements, languages }),
     });
     if (!response.ok) {
       setAboutStatus("error");
@@ -154,8 +155,9 @@ export function ProProfileEditor({
       body: JSON.stringify({
         priceMinor,
         currency: form.currency,
-        venueCity: form.venueCity,
-        venueClub: form.venueClub,
+        venueLabel: form.venueLabel,
+        venueLat: form.venueLat ?? undefined,
+        venueLng: form.venueLng ?? undefined,
         active: true,
       }),
     });
@@ -187,13 +189,9 @@ export function ProProfileEditor({
     event.preventDefault();
     setVerifyStatus("submitting");
     setVerifyError("");
-    const linkList = links
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean);
     const response = await apiFetch("/pros/me/verification", {
       method: "POST",
-      body: JSON.stringify({ credentials, links: linkList }),
+      body: JSON.stringify({ credentials, contact }),
     });
     if (!response.ok) {
       setVerifyStatus("error");
@@ -263,24 +261,6 @@ export function ProProfileEditor({
                   {LOCALE_LABELS[code]}
                 </label>
               ))}
-            </div>
-          </div>
-          <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="pro-country">{t("about.country")}</Label>
-              <Input
-                id="pro-country"
-                value={country}
-                onChange={(event) => setCountry(event.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="pro-city">{t("about.city")}</Label>
-              <Input
-                id="pro-city"
-                value={city}
-                onChange={(event) => setCity(event.target.value)}
-              />
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -364,39 +344,26 @@ export function ProProfileEditor({
                         ))}
                       </select>
                     </div>
-                    {type === ServiceType.Game ? (
-                      <>
-                        <div>
-                          <Label htmlFor={`venue-city-${type}`}>
-                            {t("services.venueCity")}
-                          </Label>
-                          <Input
-                            id={`venue-city-${type}`}
-                            value={form.venueCity}
-                            onChange={(event) =>
-                              patchService(type, {
-                                venueCity: event.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor={`venue-club-${type}`}>
-                            {t("services.venueClub")}
-                          </Label>
-                          <Input
-                            id={`venue-club-${type}`}
-                            value={form.venueClub}
-                            onChange={(event) =>
-                              patchService(type, {
-                                venueClub: event.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                      </>
-                    ) : null}
                   </div>
+                  {type === ServiceType.Game ? (
+                    <div className="mt-3">
+                      <VenuePicker
+                        id={`venue-${type}`}
+                        value={{
+                          label: form.venueLabel,
+                          lat: form.venueLat,
+                          lng: form.venueLng,
+                        }}
+                        onChange={(venue) =>
+                          patchService(type, {
+                            venueLabel: venue.label,
+                            venueLat: venue.lat,
+                            venueLng: venue.lng,
+                          })
+                        }
+                      />
+                    </div>
+                  ) : null}
                   <div className="mt-3 flex items-center gap-3">
                     <Button
                       type="button"
@@ -441,15 +408,18 @@ export function ProProfileEditor({
               onChange={(event) => setCredentials(event.target.value)}
               className="mb-3 w-full rounded-lg border border-border-strong bg-bg px-3 py-2 text-sm text-text"
             />
-            <Label htmlFor="pro-links">{t("verification.links")}</Label>
-            <textarea
-              id="pro-links"
-              rows={3}
-              placeholder={t("verification.linksPlaceholder")}
-              value={links}
-              onChange={(event) => setLinks(event.target.value)}
-              className="mb-3 w-full rounded-lg border border-border-strong bg-bg px-3 py-2 text-sm text-text"
+            <Label htmlFor="pro-contact">{t("verification.contact")}</Label>
+            <Input
+              id="pro-contact"
+              required
+              placeholder={t("verification.contactPlaceholder")}
+              value={contact}
+              onChange={(event) => setContact(event.target.value)}
+              className="mb-1"
             />
+            <p className="mb-3 text-[12px] text-text-tertiary">
+              {t("verification.contactHint")}
+            </p>
             <div className="flex items-center gap-3">
               <Button type="submit" disabled={verifyStatus === "submitting"}>
                 {verifyStatus === "submitting"

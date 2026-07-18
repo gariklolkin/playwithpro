@@ -39,7 +39,8 @@ export class AdminService {
       requestId: request.id,
       submittedAt: request.createdAt.toISOString(),
       credentials: request.credentials,
-      links: request.links,
+      contact: request.contact,
+      callRequestedAt: request.callRequestedAt?.toISOString() ?? null,
       profile: toProfileResponse(request.profile),
       user: {
         id: request.profile.user.id,
@@ -47,6 +48,20 @@ export class AdminService {
         displayName: request.profile.user.displayName,
       },
     }));
+  }
+
+  /** Marks the request and emails the coach that a video call is coming. */
+  async requestCall(requestId: string): Promise<void> {
+    const request = await this.pendingRequest(requestId);
+    await this.prisma.verificationRequest.update({
+      where: { id: request.id },
+      data: { callRequestedAt: new Date() },
+    });
+    await this.mailer.sendVerificationCallEmail(
+      request.profile.user.email,
+      request.profile.user.displayName,
+      request.contact,
+    );
   }
 
   async approve(requestId: string, reviewerId: string): Promise<void> {

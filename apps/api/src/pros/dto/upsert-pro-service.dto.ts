@@ -3,6 +3,7 @@ import type { UpsertProServiceRequest } from '@playwithpro/shared';
 import {
   IsBoolean,
   IsInt,
+  IsNumber,
   IsOptional,
   IsString,
   Matches,
@@ -23,17 +24,25 @@ export class UpsertProServiceDto implements UpsertProServiceRequest {
   @Matches(/^[A-Za-z]{3}$/)
   currency: string;
 
-  @ApiPropertyOptional({ example: 'Berlin' })
+  @ApiPropertyOptional({ example: 'TTC Berlin Mitte, Brunnenstr. 1, Berlin' })
   @IsOptional()
   @IsString()
-  @MaxLength(80)
-  venueCity?: string;
+  @MaxLength(200)
+  venueLabel?: string;
 
-  @ApiPropertyOptional({ example: 'TTC Berlin Mitte' })
+  @ApiPropertyOptional({ example: 52.53 })
   @IsOptional()
-  @IsString()
-  @MaxLength(120)
-  venueClub?: string;
+  @IsNumber()
+  @Min(-90)
+  @Max(90)
+  venueLat?: number;
+
+  @ApiPropertyOptional({ example: 13.4 })
+  @IsOptional()
+  @IsNumber()
+  @Min(-180)
+  @Max(180)
+  venueLng?: number;
 
   @ApiPropertyOptional({ default: true })
   @IsOptional()

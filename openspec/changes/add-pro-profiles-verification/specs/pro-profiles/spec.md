@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: Coach profile ownership
-Each user with the `professional` role SHALL have exactly one pro profile (bio, achievements, spoken languages, country, city) that only they — and admins — can read in full and only they can edit.
+Each user with the `professional` role SHALL have exactly one pro profile (bio, achievements, spoken languages) that only they — and admins — can read in full and only they can edit.
 
 #### Scenario: First access creates a draft
 - **WHEN** a professional opens their profile for the first time
@@ -25,11 +25,15 @@ A coach SHALL be able to offer up to three services — `video_analysis`, `consu
 - **THEN** the existing service is updated rather than duplicated
 
 ### Requirement: Venue for in-person game service
-The `game` service SHALL require a city and club/venue, since the session happens in person.
+The `game` service SHALL require a venue picked on a map: a human-readable label (club/address, via OpenStreetMap address search) plus latitude/longitude coordinates, since the session happens in person and later feeds calendar invites and geo-search.
 
-#### Scenario: Game service without venue
-- **WHEN** a coach saves the `game` service without a city or club
+#### Scenario: Game service without a mapped venue
+- **WHEN** a coach saves the `game` service without a venue label or coordinates
 - **THEN** the request is rejected with a validation error
+
+#### Scenario: Pin refinement
+- **WHEN** a coach picks an address suggestion and then drags the map pin
+- **THEN** the stored coordinates follow the pin while the label stays
 
 ### Requirement: Spoken languages
 A coach profile SHALL list at least one spoken language chosen from the platform's supported languages, for later catalog filtering.

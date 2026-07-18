@@ -177,7 +177,7 @@
     "subtitle": "So sehen dich Amateure nach der Verifizierung",
     "status": {
       "draft": "Entwurf — fülle dein Profil aus und reiche es zur Verifizierung ein.",
-      "pending_review": "In Prüfung — wir melden uns per E-Mail, sobald es geprüft ist.",
+      "pending_review": "In Prüfung — wir melden uns für einen kurzen Videoanruf, um deine Identität zu bestätigen.",
       "verified": "Verifiziert ✅ — Amateure finden dich, sobald Buchungen starten.",
       "rejected": "Nicht genehmigt. Anmerkung der Prüfung: {note}"
     },
@@ -188,8 +188,6 @@
       "achievements": "Erfolge",
       "achievementsPlaceholder": "Titel, Ranglisten, bekannte Schüler…",
       "languages": "Sprachen, in denen du coachst",
-      "country": "Land",
-      "city": "Stadt",
       "save": "Profil speichern",
       "saving": "Wird gespeichert…",
       "saved": "Profil gespeichert.",
@@ -205,24 +203,27 @@
       "gameDescription": "Sparring vor Ort in deinem Verein",
       "price": "Stundensatz",
       "currency": "Währung",
-      "venueCity": "Stadt",
-      "venueClub": "Verein / Halle",
       "save": "Speichern",
       "saving": "Wird gespeichert…",
       "saved": "Gespeichert.",
-      "error": "Diese Leistung konnte nicht gespeichert werden."
+      "error": "Diese Leistung konnte nicht gespeichert werden.",
+      "venue": "Ort",
+      "venuePlaceholder": "Verein oder Adresse suchen…",
+      "venueSearching": "Suche…",
+      "venueHint": "Wähle einen Vorschlag — der Pin lässt sich an die genaue Stelle ziehen."
     },
     "verification": {
       "title": "Verifizierung",
       "credentials": "Qualifikationen",
       "credentialsPlaceholder": "Titel, Verbandslizenzen, Trainerlaufbahn…",
-      "links": "Nachweis-Links (einer pro Zeile)",
-      "linksPlaceholder": "https://…",
       "submit": "Zur Verifizierung einreichen",
       "submitting": "Wird eingereicht…",
       "error": "Einreichen fehlgeschlagen. Bitte versuche es erneut.",
       "alreadyVerified": "Dein Profil ist verifiziert. Hier gibt es nichts mehr zu tun. 🏓",
-      "pendingInfo": "Deine Anfrage ist in der Prüfwarteschlange. Das Ergebnis kommt per E-Mail."
+      "pendingInfo": "Deine Anfrage ist in der Prüfwarteschlange. Das Ergebnis kommt per E-Mail.",
+      "contact": "Kontakt für einen Videoanruf",
+      "contactPlaceholder": "@name (Telegram), WhatsApp, Telefon…",
+      "contactHint": "Wir verifizieren jeden Coach in einem kurzen Videoanruf — hinterlasse den einfachsten Weg, dich zu erreichen."
     }
   },
   "adminVerification": {
@@ -231,15 +232,16 @@
     "submitted": "Eingereicht am {date}",
     "bio": "Bio",
     "credentials": "Qualifikationen",
-    "location": "Ort",
     "languages": "Sprachen",
     "services": "Leistungen",
-    "links": "Nachweise",
     "approve": "Genehmigen",
     "reject": "Ablehnen",
     "notePlaceholder": "Begründung für den Coach (zum Ablehnen erforderlich)",
     "noteRequired": "Füge vor dem Ablehnen eine Anmerkung hinzu.",
-    "error": "Aktion fehlgeschlagen. Bitte versuche es erneut."
+    "error": "Aktion fehlgeschlagen. Bitte versuche es erneut.",
+    "contact": "Kontakt",
+    "requestCall": "Zum Videoanruf einladen",
+    "callRequested": "Anruf angefragt ✓"
   },
   "home": {
     "heroTitle": "Wo Amateure und <accent>Profis</accent> zusammen spielen.",

@@ -33,16 +33,4 @@ export class UpdateProProfileDto implements UpdateProProfileRequest {
   @ArrayMaxSize(SUPPORTED_LOCALES.length)
   @IsIn(SUPPORTED_LOCALES, { each: true })
   languages?: string[];
-
-  @ApiPropertyOptional({ example: 'Germany' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(80)
-  country?: string;
-
-  @ApiPropertyOptional({ example: 'Berlin' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(80)
-  city?: string;
 }

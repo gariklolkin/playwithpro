@@ -177,7 +177,7 @@
     "subtitle": "Ce que les amateurs verront une fois votre profil vérifié",
     "status": {
       "draft": "Brouillon — complétez votre profil et soumettez-le à la vérification.",
-      "pending_review": "En cours d'examen — nous vous écrirons dès que c'est vérifié.",
+      "pending_review": "En cours d'examen — nous vous contacterons pour un court appel vidéo afin de vérifier votre identité.",
       "verified": "Vérifié ✅ — les amateurs vous trouveront dès l'ouverture des réservations.",
       "rejected": "Non approuvé. Note du réviseur : {note}"
     },
@@ -188,8 +188,6 @@
       "achievements": "Palmarès",
       "achievementsPlaceholder": "Titres, classements, élèves notables…",
       "languages": "Langues dans lesquelles vous coachez",
-      "country": "Pays",
-      "city": "Ville",
       "save": "Enregistrer le profil",
       "saving": "Enregistrement…",
       "saved": "Profil enregistré.",
@@ -205,24 +203,27 @@
       "gameDescription": "Sparring en présentiel dans votre club",
       "price": "Tarif horaire",
       "currency": "Devise",
-      "venueCity": "Ville",
-      "venueClub": "Club / salle",
       "save": "Enregistrer",
       "saving": "Enregistrement…",
       "saved": "Enregistré.",
-      "error": "Impossible d'enregistrer ce service."
+      "error": "Impossible d'enregistrer ce service.",
+      "venue": "Lieu",
+      "venuePlaceholder": "Cherchez un club ou une adresse…",
+      "venueSearching": "Recherche…",
+      "venueHint": "Choisissez une suggestion — l'épingle peut être déplacée à l'endroit exact."
     },
     "verification": {
       "title": "Vérification",
       "credentials": "Références",
       "credentialsPlaceholder": "Titres, licences fédérales, parcours d'entraîneur…",
-      "links": "Liens justificatifs (un par ligne)",
-      "linksPlaceholder": "https://…",
       "submit": "Soumettre à la vérification",
       "submitting": "Envoi…",
       "error": "Échec de l'envoi. Veuillez réessayer.",
       "alreadyVerified": "Votre profil est vérifié. Rien d'autre à faire ici. 🏓",
-      "pendingInfo": "Votre demande est dans la file d'examen. Le résultat arrivera par e-mail."
+      "pendingInfo": "Votre demande est dans la file d'examen. Le résultat arrivera par e-mail.",
+      "contact": "Contact pour un appel vidéo",
+      "contactPlaceholder": "@pseudo (Telegram), WhatsApp, téléphone…",
+      "contactHint": "Nous vérifions chaque coach lors d'un court appel vidéo — laissez le moyen le plus simple de vous joindre."
     }
   },
   "adminVerification": {
@@ -231,15 +232,16 @@
     "submitted": "Soumise le {date}",
     "bio": "Bio",
     "credentials": "Références",
-    "location": "Localisation",
     "languages": "Langues",
     "services": "Services",
-    "links": "Justificatifs",
     "approve": "Approuver",
     "reject": "Rejeter",
     "notePlaceholder": "Motif communiqué au coach (obligatoire pour rejeter)",
     "noteRequired": "Ajoutez une note avant de rejeter.",
-    "error": "Échec de l'action. Veuillez réessayer."
+    "error": "Échec de l'action. Veuillez réessayer.",
+    "contact": "Contact",
+    "requestCall": "Inviter à un appel vidéo",
+    "callRequested": "Appel demandé ✓"
   },
   "home": {
     "heroTitle": "Là où amateurs et <accent>pros</accent> jouent ensemble.",

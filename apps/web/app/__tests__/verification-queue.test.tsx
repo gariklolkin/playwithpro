@@ -23,22 +23,22 @@ const item: AdminVerificationItem = {
   requestId: "req-1",
   submittedAt: new Date("2026-07-18T10:00:00Z").toISOString(),
   credentials: "ITTF licensed coach",
-  links: ["https://federation.example/coach/1"],
+  contact: "@coach_ma (Telegram)",
+  callRequestedAt: null,
   profile: {
     id: "profile-1",
     status: ProProfileStatus.PendingReview,
     bio: "20 years of coaching",
     achievements: "",
     languages: ["en", "de"],
-    country: "Germany",
-    city: "Berlin",
     services: [
       {
         type: "consultation" as never,
         priceMinor: 4000,
         currency: "EUR",
-        venueCity: "",
-        venueClub: "",
+        venueLabel: "",
+        venueLat: null,
+        venueLng: null,
         active: true,
       },
     ],
@@ -102,5 +102,23 @@ describe("VerificationQueue", () => {
     renderQueue([]);
 
     expect(screen.getByText("No pending requests.")).toBeInTheDocument();
+  });
+
+  it("invites the coach to a video call", async () => {
+    fetchMock.mockResolvedValue({ ok: true, status: 200 });
+    renderQueue();
+
+    expect(screen.getByText("@coach_ma (Telegram)")).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Invite to video call" }),
+    );
+
+    expect(
+      await screen.findByRole("button", { name: "Call requested ✓" }),
+    ).toBeDisabled();
+    const call = fetchMock.mock.calls.find(([url]) =>
+      String(url).endsWith("/admin/verification-requests/req-1/call"),
+    );
+    expect(call).toBeDefined();
   });
 });

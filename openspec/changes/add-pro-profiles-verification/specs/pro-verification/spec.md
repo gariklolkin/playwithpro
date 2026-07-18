@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: Verification submission
-A coach SHALL be able to submit their profile for verification with free-text credentials and evidence links, but only when the profile is complete (non-empty bio, at least one language, at least one active service) and currently in `draft` or `rejected` status. Submission moves the profile to `pending_review`.
+A coach SHALL be able to submit their profile for verification with free-text credentials and a contact (messenger/phone) for an identity video call, but only when the profile is complete (non-empty bio, at least one language, at least one active service) and currently in `draft` or `rejected` status. Submission moves the profile to `pending_review`.
 
 #### Scenario: Incomplete profile
 - **WHEN** a coach with no active services submits for verification
@@ -16,6 +16,13 @@ A coach SHALL be able to submit their profile for verification with free-text cr
 #### Scenario: Double submission
 - **WHEN** a coach submits while a request is already pending
 - **THEN** the submission is rejected with a conflict error
+
+### Requirement: Identity video call
+Verification SHALL include a short video call: the admin can mark a pending request as "call requested", which emails the coach that they will be contacted via the contact they left. Approval is expected only after the call.
+
+#### Scenario: Call invitation
+- **WHEN** an admin clicks "Invite to video call" on a pending request
+- **THEN** the request records the invitation time and the coach receives an email mentioning their contact
 
 ### Requirement: Admin verification queue
 Admins SHALL be able to list pending verification requests with the associated profile and user summary, and approve or reject each one. Rejection requires a note; the note is visible to the coach. Approval marks the profile `verified`; rejection marks it `rejected`.
