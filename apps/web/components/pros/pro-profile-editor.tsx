@@ -95,7 +95,6 @@ export function ProProfileEditor({
 
   // About form
   const [bio, setBio] = useState(profile.bio);
-  const [achievements, setAchievements] = useState(profile.achievements);
   const [languages, setLanguages] = useState<string[]>(profile.languages);
   const [aboutStatus, setAboutStatus] = useState<
     "idle" | "saving" | "saved" | "error"
@@ -116,8 +115,11 @@ export function ProProfileEditor({
   const [credentials, setCredentials] = useState(
     profile.latestVerification?.credentials ?? "",
   );
-  const [contact, setContact] = useState(
-    profile.latestVerification?.contact ?? "",
+  const [contactTelegram, setContactTelegram] = useState(
+    profile.latestVerification?.contactTelegram ?? "",
+  );
+  const [contactPhone, setContactPhone] = useState(
+    profile.latestVerification?.contactPhone ?? "",
   );
   const [verifyStatus, setVerifyStatus] = useState<
     "idle" | "submitting" | "error"
@@ -136,7 +138,7 @@ export function ProProfileEditor({
     setAboutStatus("saving");
     const response = await apiFetch("/pros/me/profile", {
       method: "PATCH",
-      body: JSON.stringify({ bio, achievements, languages }),
+      body: JSON.stringify({ bio, languages }),
     });
     if (!response.ok) {
       setAboutStatus("error");
@@ -187,11 +189,16 @@ export function ProProfileEditor({
 
   async function handleVerifySubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (!contactTelegram.trim() && !contactPhone.trim()) {
+      setVerifyStatus("error");
+      setVerifyError(t("verification.contactRequired"));
+      return;
+    }
     setVerifyStatus("submitting");
     setVerifyError("");
     const response = await apiFetch("/pros/me/verification", {
       method: "POST",
-      body: JSON.stringify({ credentials, contact }),
+      body: JSON.stringify({ credentials, contactTelegram, contactPhone }),
     });
     if (!response.ok) {
       setVerifyStatus("error");
@@ -221,24 +228,18 @@ export function ProProfileEditor({
 
       <Card title={t("about.title")}>
         <form onSubmit={handleAboutSubmit} noValidate>
-          <Label htmlFor="pro-bio">{t("about.bio")}</Label>
+          <Label htmlFor="pro-bio">{t("about.text")}</Label>
           <textarea
             id="pro-bio"
-            rows={4}
-            placeholder={t("about.bioPlaceholder")}
+            rows={5}
+            placeholder={t("about.textPlaceholder")}
             value={bio}
             onChange={(event) => setBio(event.target.value)}
-            className="mb-3 w-full rounded-lg border border-border-strong bg-bg px-3 py-2 text-sm text-text"
+            className="mb-1 w-full rounded-lg border border-border-strong bg-bg px-3 py-2 text-sm text-text"
           />
-          <Label htmlFor="pro-achievements">{t("about.achievements")}</Label>
-          <textarea
-            id="pro-achievements"
-            rows={3}
-            placeholder={t("about.achievementsPlaceholder")}
-            value={achievements}
-            onChange={(event) => setAchievements(event.target.value)}
-            className="mb-3 w-full rounded-lg border border-border-strong bg-bg px-3 py-2 text-sm text-text"
-          />
+          <p className="mb-3 text-[12px] text-text-tertiary">
+            {t("about.optionalHint")}
+          </p>
           <div className="mb-3">
             <Label>{t("about.languages")}</Label>
             <div className="mt-1 flex flex-wrap gap-3">
@@ -408,15 +409,31 @@ export function ProProfileEditor({
               onChange={(event) => setCredentials(event.target.value)}
               className="mb-3 w-full rounded-lg border border-border-strong bg-bg px-3 py-2 text-sm text-text"
             />
-            <Label htmlFor="pro-contact">{t("verification.contact")}</Label>
-            <Input
-              id="pro-contact"
-              required
-              placeholder={t("verification.contactPlaceholder")}
-              value={contact}
-              onChange={(event) => setContact(event.target.value)}
-              className="mb-1"
-            />
+            <div className="mb-1 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="pro-contact-telegram">
+                  {t("verification.contactTelegram")}
+                </Label>
+                <Input
+                  id="pro-contact-telegram"
+                  placeholder="@username"
+                  value={contactTelegram}
+                  onChange={(event) => setContactTelegram(event.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="pro-contact-phone">
+                  {t("verification.contactPhone")}
+                </Label>
+                <Input
+                  id="pro-contact-phone"
+                  type="tel"
+                  placeholder="+49 151 1234567"
+                  value={contactPhone}
+                  onChange={(event) => setContactPhone(event.target.value)}
+                />
+              </div>
+            </div>
             <p className="mb-3 text-[12px] text-text-tertiary">
               {t("verification.contactHint")}
             </p>

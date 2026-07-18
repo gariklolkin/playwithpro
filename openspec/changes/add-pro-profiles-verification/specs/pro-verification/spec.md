@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: Verification submission
-A coach SHALL be able to submit their profile for verification with free-text credentials and a contact (messenger/phone) for an identity video call, but only when the profile is complete (non-empty bio, at least one language, at least one active service) and currently in `draft` or `rejected` status. Submission moves the profile to `pending_review`.
+A coach SHALL be able to submit their profile for verification with free-text credentials and at least one contact for an identity video call — Telegram and/or WhatsApp-phone (one field: WhatsApp is keyed by the phone number) — but only when the profile is complete (at least one language, at least one active service; the "about" text is optional) and currently in `draft` or `rejected` status. Submission moves the profile to `pending_review`.
 
 #### Scenario: Incomplete profile
 - **WHEN** a coach with no active services submits for verification
@@ -18,7 +18,11 @@ A coach SHALL be able to submit their profile for verification with free-text cr
 - **THEN** the submission is rejected with a conflict error
 
 ### Requirement: Identity video call
-Verification SHALL include a short video call: the admin can mark a pending request as "call requested", which emails the coach that they will be contacted via the contact they left. Approval is expected only after the call.
+Verification SHALL include a short video call: the admin can mark a pending request as "call requested", which emails the coach that they will be contacted via the contact they left. Approval is expected only after the call. Verification contacts SHALL be used solely for this call — they are visible to admins only and never published anywhere on the site; the submission form states this.
+
+#### Scenario: Contacts stay private
+- **WHEN** any non-admin user views a coach's profile or any public page
+- **THEN** the verification contacts are not present in the response
 
 #### Scenario: Call invitation
 - **WHEN** an admin clicks "Invite to video call" on a pending request

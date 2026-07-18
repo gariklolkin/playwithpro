@@ -56,7 +56,6 @@ export class ProsService {
       where: { id: profile.id },
       data: {
         bio: dto.bio,
-        achievements: dto.achievements,
         languages: dto.languages,
       },
       include: PROFILE_INCLUDE,
@@ -123,10 +122,13 @@ export class ProsService {
       throw new ConflictException('This profile is already verified.');
     }
 
-    const missing: string[] = [];
-    if (!profile.bio.trim()) {
-      missing.push('a bio');
+    if (!dto.contactTelegram?.trim() && !dto.contactPhone?.trim()) {
+      throw new BadRequestException(
+        'Leave at least one contact for the verification video call.',
+      );
     }
+
+    const missing: string[] = [];
     if (profile.languages.length === 0) {
       missing.push('at least one language');
     }
@@ -144,7 +146,8 @@ export class ProsService {
         data: {
           profileId: profile.id,
           credentials: dto.credentials.trim(),
-          contact: dto.contact.trim(),
+          contactTelegram: dto.contactTelegram?.trim() ?? '',
+          contactPhone: dto.contactPhone?.trim() ?? '',
         },
       }),
       this.prisma.proProfile.update({

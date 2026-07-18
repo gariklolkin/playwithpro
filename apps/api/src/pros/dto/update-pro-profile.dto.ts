@@ -1,9 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  ACHIEVEMENTS_MAX_LENGTH,
-  BIO_MAX_LENGTH,
-  SUPPORTED_LOCALES,
-} from '@playwithpro/shared';
+import { BIO_MAX_LENGTH, SUPPORTED_LOCALES } from '@playwithpro/shared';
 import type { UpdateProProfileRequest } from '@playwithpro/shared';
 import {
   ArrayMaxSize,
@@ -20,12 +16,6 @@ export class UpdateProProfileDto implements UpdateProProfileRequest {
   @IsString()
   @MaxLength(BIO_MAX_LENGTH)
   bio?: string;
-
-  @ApiPropertyOptional({ maxLength: ACHIEVEMENTS_MAX_LENGTH })
-  @IsOptional()
-  @IsString()
-  @MaxLength(ACHIEVEMENTS_MAX_LENGTH)
-  achievements?: string;
 
   @ApiPropertyOptional({ enum: SUPPORTED_LOCALES, isArray: true })
   @IsOptional()

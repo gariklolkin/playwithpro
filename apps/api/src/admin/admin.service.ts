@@ -39,7 +39,8 @@ export class AdminService {
       requestId: request.id,
       submittedAt: request.createdAt.toISOString(),
       credentials: request.credentials,
-      contact: request.contact,
+      contactTelegram: request.contactTelegram,
+      contactPhone: request.contactPhone,
       callRequestedAt: request.callRequestedAt?.toISOString() ?? null,
       profile: toProfileResponse(request.profile),
       user: {
@@ -60,7 +61,9 @@ export class AdminService {
     await this.mailer.sendVerificationCallEmail(
       request.profile.user.email,
       request.profile.user.displayName,
-      request.contact,
+      [request.contactTelegram, request.contactPhone]
+        .filter(Boolean)
+        .join(', '),
     );
   }
 

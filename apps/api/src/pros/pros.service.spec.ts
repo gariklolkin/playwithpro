@@ -9,10 +9,7 @@ const baseProfile = {
   userId: 'user-1',
   status: 'DRAFT',
   bio: 'Seasoned coach',
-  achievements: '',
   languages: ['en'],
-  country: '',
-  city: '',
   createdAt: new Date(),
   updatedAt: new Date(),
   services: [
@@ -118,7 +115,7 @@ describe('ProsService', () => {
     await expect(
       service.submitVerification('user-1', {
         credentials: 'ITTF licensed',
-        contact: '@coach',
+        contactTelegram: '@coach',
       }),
     ).rejects.toBeInstanceOf(ConflictException);
     expect(prisma.$transaction).not.toHaveBeenCalled();
@@ -133,13 +130,21 @@ describe('ProsService', () => {
     });
 
     const error = await service
-      .submitVerification('user-1', { credentials: 'x', contact: '@c' })
+      .submitVerification('user-1', { credentials: 'x', contactPhone: '+491' })
       .catch((caught: ConflictException) => caught);
 
     expect(error).toBeInstanceOf(ConflictException);
-    expect((error as ConflictException).message).toContain('bio');
     expect((error as ConflictException).message).toContain('language');
     expect((error as ConflictException).message).toContain('service');
+  });
+
+  it('rejects a submission without any contact', async () => {
+    prisma.proProfile.findUnique.mockResolvedValue(baseProfile);
+
+    await expect(
+      service.submitVerification('user-1', { credentials: 'ITTF licensed' }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
   it('allows resubmission after rejection and moves the profile to pending', async () => {
@@ -150,7 +155,7 @@ describe('ProsService', () => {
 
     await service.submitVerification('user-1', {
       credentials: 'National champion 2019',
-      contact: '@coach_ma (Telegram)',
+      contactTelegram: '@coach_ma',
     });
 
     expect(prisma.verificationRequest.create).toHaveBeenCalledWith(

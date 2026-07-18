@@ -183,15 +183,14 @@
     },
     "about": {
       "title": "Über dich",
-      "bio": "Bio",
-      "bioPlaceholder": "Spielerkarriere, Coaching-Stil, wem du am besten hilfst…",
-      "achievements": "Erfolge",
-      "achievementsPlaceholder": "Titel, Ranglisten, bekannte Schüler…",
       "languages": "Sprachen, in denen du coachst",
       "save": "Profil speichern",
       "saving": "Wird gespeichert…",
       "saved": "Profil gespeichert.",
-      "error": "Speichern fehlgeschlagen. Bitte versuche es erneut."
+      "error": "Speichern fehlgeschlagen. Bitte versuche es erneut.",
+      "text": "Über dich",
+      "textPlaceholder": "Spielerkarriere, Titel, Coaching-Stil, bekannte Schüler…",
+      "optionalHint": "Optional — bei bekannten Profis ist das ohnehin leicht zu finden."
     },
     "services": {
       "title": "Leistungen & Preise",
@@ -221,9 +220,10 @@
       "error": "Einreichen fehlgeschlagen. Bitte versuche es erneut.",
       "alreadyVerified": "Dein Profil ist verifiziert. Hier gibt es nichts mehr zu tun. 🏓",
       "pendingInfo": "Deine Anfrage ist in der Prüfwarteschlange. Das Ergebnis kommt per E-Mail.",
-      "contact": "Kontakt für einen Videoanruf",
-      "contactPlaceholder": "@name (Telegram), WhatsApp, Telefon…",
-      "contactHint": "Wir verifizieren jeden Coach in einem kurzen Videoanruf — hinterlasse den einfachsten Weg, dich zu erreichen."
+      "contactHint": "Wir verifizieren jeden Coach in einem kurzen Videoanruf — hinterlasse mindestens einen Kontaktweg. Wird nur zur Verifizierung genutzt und nie auf der Website angezeigt.",
+      "contactTelegram": "Telegram",
+      "contactPhone": "WhatsApp / Telefon",
+      "contactRequired": "Hinterlasse mindestens einen Kontakt."
     }
   },
   "adminVerification": {
@@ -239,9 +239,10 @@
     "notePlaceholder": "Begründung für den Coach (zum Ablehnen erforderlich)",
     "noteRequired": "Füge vor dem Ablehnen eine Anmerkung hinzu.",
     "error": "Aktion fehlgeschlagen. Bitte versuche es erneut.",
-    "contact": "Kontakt",
     "requestCall": "Zum Videoanruf einladen",
-    "callRequested": "Anruf angefragt ✓"
+    "callRequested": "Anruf angefragt ✓",
+    "contactTelegram": "Telegram",
+    "contactPhone": "WhatsApp / Telefon"
   },
   "home": {
     "heroTitle": "Wo Amateure und <accent>Profis</accent> zusammen spielen.",

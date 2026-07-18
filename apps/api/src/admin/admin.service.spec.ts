@@ -9,7 +9,8 @@ const pendingRequest = {
   profileId: 'profile-1',
   status: 'PENDING',
   credentials: 'ITTF licensed coach',
-  contact: '@coach_ma',
+  contactTelegram: '@coach_ma',
+  contactPhone: '+49 151 1234567',
   callRequestedAt: null,
   adminNote: '',
   reviewedById: null,
@@ -116,7 +117,7 @@ describe('AdminService', () => {
     expect(mailer.sendVerificationCallEmail).toHaveBeenCalledWith(
       'coach@example.com',
       'Coach Ma',
-      '@coach_ma',
+      '@coach_ma, +49 151 1234567',
     );
   });
 

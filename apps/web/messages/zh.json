@@ -183,15 +183,14 @@
     },
     "about": {
       "title": "关于您",
-      "bio": "简介",
-      "bioPlaceholder": "球员生涯、执教风格、最擅长帮助的人群…",
-      "achievements": "成就",
-      "achievementsPlaceholder": "冠军头衔、等级分、知名学员…",
       "languages": "您的执教语言",
       "save": "保存资料",
       "saving": "正在保存…",
       "saved": "资料已保存。",
-      "error": "无法保存，请重试。"
+      "error": "无法保存，请重试。",
+      "text": "关于您",
+      "textPlaceholder": "球员生涯、冠军头衔、执教风格、知名学员…",
+      "optionalHint": "选填 — 知名选手的信息本来就很容易查到。"
     },
     "services": {
       "title": "服务与价格",
@@ -221,9 +220,10 @@
       "error": "提交失败，请重试。",
       "alreadyVerified": "您的资料已通过认证，这里无需其他操作。🏓",
       "pendingInfo": "您的申请正在审核队列中，结果将通过邮件通知。",
-      "contact": "视频通话联系方式",
-      "contactPlaceholder": "@用户名（Telegram）、WhatsApp、电话…",
-      "contactHint": "我们会通过简短的视频通话验证每位教练 — 请留下最方便的联系方式。"
+      "contactHint": "我们会通过简短视频通话验证每位教练 — 请至少留下一种联系方式。联系方式仅用于验证，不会在网站上公开。",
+      "contactTelegram": "Telegram",
+      "contactPhone": "WhatsApp / 电话",
+      "contactRequired": "请至少留下一种联系方式。"
     }
   },
   "adminVerification": {
@@ -239,9 +239,10 @@
     "notePlaceholder": "给教练的理由（拒绝时必填）",
     "noteRequired": "拒绝前请填写备注。",
     "error": "操作失败，请重试。",
-    "contact": "联系方式",
     "requestCall": "邀请视频通话",
-    "callRequested": "已发出邀请 ✓"
+    "callRequested": "已发出邀请 ✓",
+    "contactTelegram": "Telegram",
+    "contactPhone": "WhatsApp / 电话"
   },
   "home": {
     "heroTitle": "业余球员与<accent>职业选手</accent>同场竞技。",

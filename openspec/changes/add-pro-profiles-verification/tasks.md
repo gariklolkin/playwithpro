@@ -28,8 +28,10 @@
 - [x] 7.1 Drop profile country/city fields (UI, API, DB)
 - [x] 7.2 Replace evidence links with a required video-call contact; admin "Invite to video call" + email
 - [x] 7.3 Game venue via map: OSM/Nominatim address search + draggable pin (label + lat/lng)
+- [x] 7.4 Merge bio+achievements into one optional "About you" block; completeness no longer requires it
+- [x] 7.5 Verification contacts as separate fields: Telegram + WhatsApp/phone (one field), at least one required
 
 ## 6. Verification & archive
 - [x] 6.1 E2E happy path against Tilt env (fill profile → submit → admin approves → status verified; reject path with note)
-- [x] 6.2 `pnpm lint && pnpm typecheck && pnpm test && pnpm build` green; CI green
+- [ ] 6.2 `pnpm lint && pnpm typecheck && pnpm test && pnpm build` green; CI green
 - [ ] 6.3 STOP — request owner review before archiving; archive only after approval

@@ -183,15 +183,14 @@
     },
     "about": {
       "title": "About you",
-      "bio": "Bio",
-      "bioPlaceholder": "Playing career, coaching style, who you help best…",
-      "achievements": "Achievements",
-      "achievementsPlaceholder": "Titles, ratings, notable students…",
       "languages": "Languages you coach in",
       "save": "Save profile",
       "saving": "Saving…",
       "saved": "Profile saved.",
-      "error": "Could not save. Please try again."
+      "error": "Could not save. Please try again.",
+      "text": "About you",
+      "textPlaceholder": "Playing career, titles, coaching style, notable students…",
+      "optionalHint": "Optional — for well-known pros this is easy to find anyway."
     },
     "services": {
       "title": "Services & pricing",
@@ -221,9 +220,10 @@
       "error": "Submission failed. Please try again.",
       "alreadyVerified": "Your profile is verified. Nothing else to do here. 🏓",
       "pendingInfo": "Your request is in the review queue. We'll email you the result.",
-      "contact": "Contact for a video call",
-      "contactPlaceholder": "@username (Telegram), WhatsApp, phone…",
-      "contactHint": "We verify every coach in a short video call — leave the easiest way to reach you."
+      "contactHint": "We verify every coach in a short video call — leave at least one way to reach you. Used only for verification and never shown on the site.",
+      "contactTelegram": "Telegram",
+      "contactPhone": "WhatsApp / phone",
+      "contactRequired": "Leave at least one contact."
     }
   },
   "adminVerification": {
@@ -239,9 +239,10 @@
     "notePlaceholder": "Reason shown to the coach (required to reject)",
     "noteRequired": "Add a note before rejecting.",
     "error": "Action failed. Please try again.",
-    "contact": "Contact",
     "requestCall": "Invite to video call",
-    "callRequested": "Call requested ✓"
+    "callRequested": "Call requested ✓",
+    "contactTelegram": "Telegram",
+    "contactPhone": "WhatsApp / phone"
   },
   "home": {
     "heroTitle": "Where amateurs and <accent>pros</accent> play together.",

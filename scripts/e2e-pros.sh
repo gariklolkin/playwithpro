@@ -28,14 +28,14 @@ register_pro() { # $1: email, $2: jar
 
 fill_profile() { # $1: jar
   curl -sf -b "$1" -X PATCH "$API/pros/me/profile" -H 'Content-Type: application/json' \
-    -d '{"bio":"20 years of coaching","achievements":"National champion","languages":["en","de"]}' >/dev/null
+    -d '{"bio":"20 years of coaching","languages":["en","de"]}' >/dev/null
   curl -sf -b "$1" -X PUT "$API/pros/me/services/consultation" -H 'Content-Type: application/json' \
     -d '{"priceMinor":4000,"currency":"EUR"}' >/dev/null
 }
 
 submit_verification() { # $1: jar
   curl -sf -b "$1" -X POST "$API/pros/me/verification" -H 'Content-Type: application/json' \
-    -d '{"credentials":"ITTF licensed coach","contact":"@coach_ma (Telegram)"}'
+    -d '{"credentials":"ITTF licensed coach","contactTelegram":"@coach_ma"}'
 }
 
 step "1. register pro -> lazy draft profile"
@@ -53,17 +53,20 @@ echo "$GAME" | grep -q '"venueLat":52.53' || fail "expected saved venue coordina
 
 step "3. incomplete profile cannot submit"
 CODE=$(curl -s -o /dev/null -w "%{http_code}" -b "$PRO_JAR" -X POST "$API/pros/me/verification" \
-  -H 'Content-Type: application/json' -d '{"credentials":"x","contact":"@c"}')
+  -H 'Content-Type: application/json' -d '{"credentials":"x","contactPhone":"+491511234567"}')
 [ "$CODE" = "409" ] || fail "expected 409 for incomplete profile, got $CODE"
 
-step "4. fill profile + service -> submit -> pending_review"
+step "4. fill profile + service -> submit -> pending_review (no contact -> 400)"
 fill_profile "$PRO_JAR"
+CODE=$(curl -s -o /dev/null -w "%{http_code}" -b "$PRO_JAR" -X POST "$API/pros/me/verification" \
+  -H 'Content-Type: application/json' -d '{"credentials":"x"}')
+[ "$CODE" = "400" ] || fail "expected 400 for submission without contacts, got $CODE"
 SUBMITTED=$(submit_verification "$PRO_JAR")
 echo "$SUBMITTED" | grep -q '"status":"pending_review"' || fail "expected pending_review"
 
 step "5. double submit is blocked"
 CODE=$(curl -s -o /dev/null -w "%{http_code}" -b "$PRO_JAR" -X POST "$API/pros/me/verification" \
-  -H 'Content-Type: application/json' -d '{"credentials":"again","contact":"@c"}')
+  -H 'Content-Type: application/json' -d '{"credentials":"again","contactTelegram":"@c"}')
 [ "$CODE" = "409" ] || fail "expected 409 for double submit, got $CODE"
 
 step "6. admin sees the request in the queue"

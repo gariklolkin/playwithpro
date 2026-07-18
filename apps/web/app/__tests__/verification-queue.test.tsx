@@ -23,13 +23,13 @@ const item: AdminVerificationItem = {
   requestId: "req-1",
   submittedAt: new Date("2026-07-18T10:00:00Z").toISOString(),
   credentials: "ITTF licensed coach",
-  contact: "@coach_ma (Telegram)",
+  contactTelegram: "@coach_ma",
+  contactPhone: "+49 151 1234567",
   callRequestedAt: null,
   profile: {
     id: "profile-1",
     status: ProProfileStatus.PendingReview,
     bio: "20 years of coaching",
-    achievements: "",
     languages: ["en", "de"],
     services: [
       {
@@ -108,7 +108,8 @@ describe("VerificationQueue", () => {
     fetchMock.mockResolvedValue({ ok: true, status: 200 });
     renderQueue();
 
-    expect(screen.getByText("@coach_ma (Telegram)")).toBeInTheDocument();
+    expect(screen.getByText("@coach_ma")).toBeInTheDocument();
+    expect(screen.getByText("+49 151 1234567")).toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", { name: "Invite to video call" }),
     );

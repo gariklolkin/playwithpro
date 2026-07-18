@@ -183,15 +183,14 @@
     },
     "about": {
       "title": "À propos de vous",
-      "bio": "Bio",
-      "bioPlaceholder": "Carrière de joueur, style de coaching, qui vous aidez le mieux…",
-      "achievements": "Palmarès",
-      "achievementsPlaceholder": "Titres, classements, élèves notables…",
       "languages": "Langues dans lesquelles vous coachez",
       "save": "Enregistrer le profil",
       "saving": "Enregistrement…",
       "saved": "Profil enregistré.",
-      "error": "Impossible d'enregistrer. Veuillez réessayer."
+      "error": "Impossible d'enregistrer. Veuillez réessayer.",
+      "text": "À propos de vous",
+      "textPlaceholder": "Carrière de joueur, titres, style de coaching, élèves notables…",
+      "optionalHint": "Facultatif — pour les pros connus, cette information se trouve facilement."
     },
     "services": {
       "title": "Services et tarifs",
@@ -221,9 +220,10 @@
       "error": "Échec de l'envoi. Veuillez réessayer.",
       "alreadyVerified": "Votre profil est vérifié. Rien d'autre à faire ici. 🏓",
       "pendingInfo": "Votre demande est dans la file d'examen. Le résultat arrivera par e-mail.",
-      "contact": "Contact pour un appel vidéo",
-      "contactPlaceholder": "@pseudo (Telegram), WhatsApp, téléphone…",
-      "contactHint": "Nous vérifions chaque coach lors d'un court appel vidéo — laissez le moyen le plus simple de vous joindre."
+      "contactHint": "Nous vérifions chaque coach lors d'un court appel vidéo — laissez au moins un moyen de vous joindre. Utilisé uniquement pour la vérification, jamais publié sur le site.",
+      "contactTelegram": "Telegram",
+      "contactPhone": "WhatsApp / téléphone",
+      "contactRequired": "Laissez au moins un contact."
     }
   },
   "adminVerification": {
@@ -239,9 +239,10 @@
     "notePlaceholder": "Motif communiqué au coach (obligatoire pour rejeter)",
     "noteRequired": "Ajoutez une note avant de rejeter.",
     "error": "Échec de l'action. Veuillez réessayer.",
-    "contact": "Contact",
     "requestCall": "Inviter à un appel vidéo",
-    "callRequested": "Appel demandé ✓"
+    "callRequested": "Appel demandé ✓",
+    "contactTelegram": "Telegram",
+    "contactPhone": "WhatsApp / téléphone"
   },
   "home": {
     "heroTitle": "Là où amateurs et <accent>pros</accent> jouent ensemble.",

@@ -95,15 +95,14 @@ enum VerificationStatus {
 
 /// Coach-owned public profile; 1:1 with a PROFESSIONAL user.
 model ProProfile {
-  id           String           @id @default(uuid())
-  userId       String           @unique
-  status       ProProfileStatus @default(DRAFT)
-  bio          String           @default("")
-  achievements String           @default("")
-  languages    String[]         @default([]) // ISO 639-1, subset of platform locales
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String           @id @default(uuid())
+  userId    String           @unique
+  status    ProProfileStatus @default(DRAFT)
+  bio       String           @default("") // single free-form "about" block; optional
+  languages String[]         @default([]) // ISO 639-1, subset of platform locales
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   services             ProService[]
   verificationRequests VerificationRequest[]
@@ -132,7 +131,8 @@ model VerificationRequest {
   profileId       String
   status          VerificationStatus @default(PENDING)
   credentials     String
-  contact         String             @default("") // messenger/phone for the identity video call
+  contactTelegram String             @default("") // for the identity video call
+  contactPhone    String             @default("") // doubles as WhatsApp (wa.me/<phone>)
   adminNote       String             @default("")
   reviewedById    String?
   reviewedAt      DateTime?

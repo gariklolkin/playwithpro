@@ -123,8 +123,12 @@ export function VerificationQueue({
               </dd>
             </div>
             <div>
-              <dt className="text-text-tertiary">{t("contact")}</dt>
-              <dd className="text-text">{item.contact || "—"}</dd>
+              <dt className="text-text-tertiary">{t("contactTelegram")}</dt>
+              <dd className="text-text">{item.contactTelegram || "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-text-tertiary">{t("contactPhone")}</dt>
+              <dd className="text-text">{item.contactPhone || "—"}</dd>
             </div>
             <div>
               <dt className="text-text-tertiary">{t("languages")}</dt>

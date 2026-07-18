@@ -4,8 +4,7 @@ import type {
 } from "../enums/pro-profile";
 import type { ServiceType } from "../enums/service-type";
 
-export const BIO_MAX_LENGTH = 2000;
-export const ACHIEVEMENTS_MAX_LENGTH = 2000;
+export const BIO_MAX_LENGTH = 4000;
 export const CREDENTIALS_MAX_LENGTH = 4000;
 export const CONTACT_MAX_LENGTH = 200;
 
@@ -33,8 +32,8 @@ export interface UpsertProServiceRequest {
 }
 
 export interface UpdateProProfileRequest {
+  /** Single free-form "about" block; optional. */
   bio?: string;
-  achievements?: string;
   /** ISO 639-1 codes, subset of the platform's supported locales. */
   languages?: string[];
 }
@@ -43,8 +42,9 @@ export interface VerificationRequestResponse {
   id: string;
   status: VerificationStatus;
   credentials: string;
-  /** Messenger/phone the coach left for the identity video call. */
-  contact: string;
+  contactTelegram: string;
+  /** Doubles as WhatsApp (wa.me/<phone>). */
+  contactPhone: string;
   adminNote: string;
   createdAt: string;
   callRequestedAt: string | null;
@@ -55,7 +55,6 @@ export interface ProProfileResponse {
   id: string;
   status: ProProfileStatus;
   bio: string;
-  achievements: string;
   languages: string[];
   services: ProServiceResponse[];
   latestVerification: VerificationRequestResponse | null;
@@ -63,8 +62,10 @@ export interface ProProfileResponse {
 
 export interface SubmitVerificationRequest {
   credentials: string;
-  /** How the admin can reach the coach for a short identity video call. */
-  contact: string;
+  /** At least one contact is required for the identity video call. */
+  contactTelegram?: string;
+  /** Doubles as WhatsApp (wa.me/<phone>). */
+  contactPhone?: string;
 }
 
 export interface RejectVerificationRequest {
@@ -76,7 +77,8 @@ export interface AdminVerificationItem {
   requestId: string;
   submittedAt: string;
   credentials: string;
-  contact: string;
+  contactTelegram: string;
+  contactPhone: string;
   callRequestedAt: string | null;
   profile: ProProfileResponse;
   user: {

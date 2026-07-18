@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: Coach profile ownership
-Each user with the `professional` role SHALL have exactly one pro profile (bio, achievements, spoken languages) that only they — and admins — can read in full and only they can edit.
+Each user with the `professional` role SHALL have exactly one pro profile (a single optional "about" text block and spoken languages) that only they — and admins — can read in full and only they can edit.
 
 #### Scenario: First access creates a draft
 - **WHEN** a professional opens their profile for the first time

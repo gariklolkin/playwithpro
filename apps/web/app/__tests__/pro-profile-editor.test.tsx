@@ -20,7 +20,6 @@ const draftProfile: ProProfileResponse = {
   id: "profile-1",
   status: ProProfileStatus.Draft,
   bio: "",
-  achievements: "",
   languages: [],
   services: [],
   latestVerification: null,
@@ -44,7 +43,7 @@ describe("ProProfileEditor", () => {
     });
     renderEditor();
 
-    fireEvent.change(screen.getByLabelText("Bio"), {
+    fireEvent.change(screen.getByLabelText("About you"), {
       target: { value: "20 years of coaching" },
     });
     fireEvent.click(screen.getByRole("checkbox", { name: "English" }));
@@ -131,8 +130,8 @@ describe("ProProfileEditor", () => {
     fireEvent.change(screen.getByLabelText("Credentials"), {
       target: { value: "National champion 2019" },
     });
-    fireEvent.change(screen.getByLabelText("Contact for a video call"), {
-      target: { value: "@coach_ma (Telegram)" },
+    fireEvent.change(screen.getByLabelText("Telegram"), {
+      target: { value: "@coach_ma" },
     });
     fireEvent.click(
       screen.getByRole("button", { name: "Submit for verification" }),
@@ -144,8 +143,25 @@ describe("ProProfileEditor", () => {
     );
     expect(JSON.parse((call![1] as RequestInit).body as string)).toEqual({
       credentials: "National champion 2019",
-      contact: "@coach_ma (Telegram)",
+      contactTelegram: "@coach_ma",
+      contactPhone: "",
     });
+  });
+
+  it("blocks verification submission without any contact", async () => {
+    renderEditor();
+
+    fireEvent.change(screen.getByLabelText("Credentials"), {
+      target: { value: "National champion 2019" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Submit for verification" }),
+    );
+
+    expect(
+      await screen.findByText("Leave at least one contact."),
+    ).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("shows the rejection note and allows resubmission", () => {
@@ -156,7 +172,8 @@ describe("ProProfileEditor", () => {
         id: "req-1",
         status: "rejected" as never,
         credentials: "x",
-        contact: "@x",
+        contactTelegram: "@x",
+        contactPhone: "",
         adminNote: "No verifiable credentials",
         createdAt: new Date().toISOString(),
         callRequestedAt: null,
