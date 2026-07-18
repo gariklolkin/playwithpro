@@ -16,13 +16,13 @@
 - [ ] 3.4 Unit tests: completeness rules, double-submit, resubmit-after-reject, admin transitions, note-required
 
 ## 4. Web — coach profile editor
-- [ ] 4.1 `/dashboard/profile` page (professional-only guard): profile form, three service cards, verification card with status banner + submit
-- [ ] 4.2 Wire professional dashboard nav item to the page
-- [ ] 4.3 Strings in all five catalogs; component tests for the editor and submit flow
+- [x] 4.1 `/dashboard/profile` page (professional-only guard): profile form, three service cards, verification card with status banner + submit
+- [x] 4.2 Wire professional dashboard nav item to the page
+- [x] 4.3 Strings in all five catalogs; component tests for the editor and submit flow
 
 ## 5. Web — admin verification queue
-- [ ] 5.1 `/dashboard/verification` page (admin-only guard): pending list, detail view, approve/reject with note
-- [ ] 5.2 Wire admin dashboard nav item; strings ×5; component tests
+- [x] 5.1 `/dashboard/verification` page (admin-only guard): pending list, detail view, approve/reject with note
+- [x] 5.2 Wire admin dashboard nav item; strings ×5; component tests
 
 ## 6. Verification & archive
 - [ ] 6.1 E2E happy path against Tilt env (fill profile → submit → admin approves → status verified; reject path with note)

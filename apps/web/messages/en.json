@@ -172,6 +172,75 @@
       "unlinked": "Google account unlinked."
     }
   },
+  "proProfile": {
+    "title": "My profile",
+    "subtitle": "What amateurs will see once you're verified",
+    "status": {
+      "draft": "Draft — fill in your profile and submit it for verification.",
+      "pending_review": "Under review — we'll email you once it's checked.",
+      "verified": "Verified ✅ — amateurs will find you once booking opens.",
+      "rejected": "Not approved. Reviewer note: {note}"
+    },
+    "about": {
+      "title": "About you",
+      "bio": "Bio",
+      "bioPlaceholder": "Playing career, coaching style, who you help best…",
+      "achievements": "Achievements",
+      "achievementsPlaceholder": "Titles, ratings, notable students…",
+      "languages": "Languages you coach in",
+      "country": "Country",
+      "city": "City",
+      "save": "Save profile",
+      "saving": "Saving…",
+      "saved": "Profile saved.",
+      "error": "Could not save. Please try again."
+    },
+    "services": {
+      "title": "Services & pricing",
+      "video_analysis": "Video analysis",
+      "video_analysisDescription": "Review uploaded footage together on a call",
+      "consultation": "Consultation",
+      "consultationDescription": "A plain video call — tactics, equipment, anything",
+      "game": "Practice game",
+      "gameDescription": "In-person sparring at your club",
+      "price": "Hourly rate",
+      "currency": "Currency",
+      "venueCity": "City",
+      "venueClub": "Club / venue",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "error": "Could not save this service."
+    },
+    "verification": {
+      "title": "Verification",
+      "credentials": "Credentials",
+      "credentialsPlaceholder": "Titles, federation licenses, coaching history…",
+      "links": "Evidence links (one per line)",
+      "linksPlaceholder": "https://…",
+      "submit": "Submit for verification",
+      "submitting": "Submitting…",
+      "error": "Submission failed. Please try again.",
+      "alreadyVerified": "Your profile is verified. Nothing else to do here. 🏓",
+      "pendingInfo": "Your request is in the review queue. We'll email you the result."
+    }
+  },
+  "adminVerification": {
+    "title": "Verification queue",
+    "empty": "No pending requests.",
+    "submitted": "Submitted {date}",
+    "bio": "Bio",
+    "credentials": "Credentials",
+    "location": "Location",
+    "languages": "Languages",
+    "services": "Services",
+    "links": "Evidence",
+    "approve": "Approve",
+    "reject": "Reject",
+    "notePlaceholder": "Reason shown to the coach (required to reject)",
+    "noteRequired": "Add a note before rejecting.",
+    "error": "Action failed. Please try again."
+  },
   "home": {
     "heroTitle": "Where amateurs and <accent>pros</accent> play together.",
     "heroSubtitle": "Upload your game footage, book a video session with a verified pro, and get personal feedback — in your language.",
@@ -197,6 +266,8 @@
     "verifyEmailTitle": "Verify email — PlayWithPro",
     "resetPasswordTitle": "Reset password — PlayWithPro",
     "dashboardTitle": "Dashboard — PlayWithPro",
-    "settingsTitle": "Account settings — PlayWithPro"
+    "settingsTitle": "Account settings — PlayWithPro",
+    "proProfileTitle": "My profile — PlayWithPro",
+    "verificationQueueTitle": "Verification queue — PlayWithPro"
   }
 }

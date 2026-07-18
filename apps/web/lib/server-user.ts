@@ -26,3 +26,20 @@ export async function getCurrentUser(): Promise<MeResponse | null> {
     return null;
   }
 }
+
+/** GET an API resource with the request cookies forwarded; null on any failure. */
+export async function serverApiGet<T>(path: string): Promise<T | null> {
+  const cookieStore = await cookies();
+  try {
+    const response = await fetch(`${serverApiUrl()}${path}`, {
+      headers: { Cookie: cookieStore.toString() },
+      cache: "no-store",
+    });
+    if (!response.ok) {
+      return null;
+    }
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
+}

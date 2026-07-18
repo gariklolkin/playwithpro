@@ -172,6 +172,75 @@
       "unlinked": "Google-Konto getrennt."
     }
   },
+  "proProfile": {
+    "title": "Mein Profil",
+    "subtitle": "So sehen dich Amateure nach der Verifizierung",
+    "status": {
+      "draft": "Entwurf — fülle dein Profil aus und reiche es zur Verifizierung ein.",
+      "pending_review": "In Prüfung — wir melden uns per E-Mail, sobald es geprüft ist.",
+      "verified": "Verifiziert ✅ — Amateure finden dich, sobald Buchungen starten.",
+      "rejected": "Nicht genehmigt. Anmerkung der Prüfung: {note}"
+    },
+    "about": {
+      "title": "Über dich",
+      "bio": "Bio",
+      "bioPlaceholder": "Spielerkarriere, Coaching-Stil, wem du am besten hilfst…",
+      "achievements": "Erfolge",
+      "achievementsPlaceholder": "Titel, Ranglisten, bekannte Schüler…",
+      "languages": "Sprachen, in denen du coachst",
+      "country": "Land",
+      "city": "Stadt",
+      "save": "Profil speichern",
+      "saving": "Wird gespeichert…",
+      "saved": "Profil gespeichert.",
+      "error": "Speichern fehlgeschlagen. Bitte versuche es erneut."
+    },
+    "services": {
+      "title": "Leistungen & Preise",
+      "video_analysis": "Videoanalyse",
+      "video_analysisDescription": "Gemeinsame Analyse deiner Aufnahmen im Videocall",
+      "consultation": "Beratung",
+      "consultationDescription": "Ein einfacher Videoanruf — Taktik, Material, alles",
+      "game": "Trainingsspiel",
+      "gameDescription": "Sparring vor Ort in deinem Verein",
+      "price": "Stundensatz",
+      "currency": "Währung",
+      "venueCity": "Stadt",
+      "venueClub": "Verein / Halle",
+      "save": "Speichern",
+      "saving": "Wird gespeichert…",
+      "saved": "Gespeichert.",
+      "error": "Diese Leistung konnte nicht gespeichert werden."
+    },
+    "verification": {
+      "title": "Verifizierung",
+      "credentials": "Qualifikationen",
+      "credentialsPlaceholder": "Titel, Verbandslizenzen, Trainerlaufbahn…",
+      "links": "Nachweis-Links (einer pro Zeile)",
+      "linksPlaceholder": "https://…",
+      "submit": "Zur Verifizierung einreichen",
+      "submitting": "Wird eingereicht…",
+      "error": "Einreichen fehlgeschlagen. Bitte versuche es erneut.",
+      "alreadyVerified": "Dein Profil ist verifiziert. Hier gibt es nichts mehr zu tun. 🏓",
+      "pendingInfo": "Deine Anfrage ist in der Prüfwarteschlange. Das Ergebnis kommt per E-Mail."
+    }
+  },
+  "adminVerification": {
+    "title": "Verifizierungswarteschlange",
+    "empty": "Keine offenen Anfragen.",
+    "submitted": "Eingereicht am {date}",
+    "bio": "Bio",
+    "credentials": "Qualifikationen",
+    "location": "Ort",
+    "languages": "Sprachen",
+    "services": "Leistungen",
+    "links": "Nachweise",
+    "approve": "Genehmigen",
+    "reject": "Ablehnen",
+    "notePlaceholder": "Begründung für den Coach (zum Ablehnen erforderlich)",
+    "noteRequired": "Füge vor dem Ablehnen eine Anmerkung hinzu.",
+    "error": "Aktion fehlgeschlagen. Bitte versuche es erneut."
+  },
   "home": {
     "heroTitle": "Wo Amateure und <accent>Profis</accent> zusammen spielen.",
     "heroSubtitle": "Lade deine Spielaufnahmen hoch, buche eine Videoeinheit mit einem verifizierten Profi und erhalte persönliches Feedback — in deiner Sprache.",
@@ -197,6 +266,8 @@
     "verifyEmailTitle": "E-Mail bestätigen — PlayWithPro",
     "resetPasswordTitle": "Passwort zurücksetzen — PlayWithPro",
     "dashboardTitle": "Dashboard — PlayWithPro",
-    "settingsTitle": "Kontoeinstellungen — PlayWithPro"
+    "settingsTitle": "Kontoeinstellungen — PlayWithPro",
+    "proProfileTitle": "Mein Profil — PlayWithPro",
+    "verificationQueueTitle": "Verifizierungswarteschlange — PlayWithPro"
   }
 }

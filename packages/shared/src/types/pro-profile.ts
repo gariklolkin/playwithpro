@@ -1,4 +1,7 @@
-import type { ProProfileStatus, VerificationStatus } from "../enums/pro-profile";
+import type {
+  ProProfileStatus,
+  VerificationStatus,
+} from "../enums/pro-profile";
 import type { ServiceType } from "../enums/service-type";
 
 export const BIO_MAX_LENGTH = 2000;

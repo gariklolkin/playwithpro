@@ -172,6 +172,75 @@
       "unlinked": "Compte Google délié."
     }
   },
+  "proProfile": {
+    "title": "Mon profil",
+    "subtitle": "Ce que les amateurs verront une fois votre profil vérifié",
+    "status": {
+      "draft": "Brouillon — complétez votre profil et soumettez-le à la vérification.",
+      "pending_review": "En cours d'examen — nous vous écrirons dès que c'est vérifié.",
+      "verified": "Vérifié ✅ — les amateurs vous trouveront dès l'ouverture des réservations.",
+      "rejected": "Non approuvé. Note du réviseur : {note}"
+    },
+    "about": {
+      "title": "À propos de vous",
+      "bio": "Bio",
+      "bioPlaceholder": "Carrière de joueur, style de coaching, qui vous aidez le mieux…",
+      "achievements": "Palmarès",
+      "achievementsPlaceholder": "Titres, classements, élèves notables…",
+      "languages": "Langues dans lesquelles vous coachez",
+      "country": "Pays",
+      "city": "Ville",
+      "save": "Enregistrer le profil",
+      "saving": "Enregistrement…",
+      "saved": "Profil enregistré.",
+      "error": "Impossible d'enregistrer. Veuillez réessayer."
+    },
+    "services": {
+      "title": "Services et tarifs",
+      "video_analysis": "Analyse vidéo",
+      "video_analysisDescription": "Analyse de vos vidéos ensemble en visio",
+      "consultation": "Consultation",
+      "consultationDescription": "Un simple appel vidéo — tactique, matériel, tout sujet",
+      "game": "Partie d'entraînement",
+      "gameDescription": "Sparring en présentiel dans votre club",
+      "price": "Tarif horaire",
+      "currency": "Devise",
+      "venueCity": "Ville",
+      "venueClub": "Club / salle",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "saved": "Enregistré.",
+      "error": "Impossible d'enregistrer ce service."
+    },
+    "verification": {
+      "title": "Vérification",
+      "credentials": "Références",
+      "credentialsPlaceholder": "Titres, licences fédérales, parcours d'entraîneur…",
+      "links": "Liens justificatifs (un par ligne)",
+      "linksPlaceholder": "https://…",
+      "submit": "Soumettre à la vérification",
+      "submitting": "Envoi…",
+      "error": "Échec de l'envoi. Veuillez réessayer.",
+      "alreadyVerified": "Votre profil est vérifié. Rien d'autre à faire ici. 🏓",
+      "pendingInfo": "Votre demande est dans la file d'examen. Le résultat arrivera par e-mail."
+    }
+  },
+  "adminVerification": {
+    "title": "File de vérification",
+    "empty": "Aucune demande en attente.",
+    "submitted": "Soumise le {date}",
+    "bio": "Bio",
+    "credentials": "Références",
+    "location": "Localisation",
+    "languages": "Langues",
+    "services": "Services",
+    "links": "Justificatifs",
+    "approve": "Approuver",
+    "reject": "Rejeter",
+    "notePlaceholder": "Motif communiqué au coach (obligatoire pour rejeter)",
+    "noteRequired": "Ajoutez une note avant de rejeter.",
+    "error": "Échec de l'action. Veuillez réessayer."
+  },
   "home": {
     "heroTitle": "Là où amateurs et <accent>pros</accent> jouent ensemble.",
     "heroSubtitle": "Envoyez vos vidéos de jeu, réservez une séance vidéo avec un pro vérifié et recevez un retour personnalisé — dans votre langue.",
@@ -197,6 +266,8 @@
     "verifyEmailTitle": "Vérification de l'e-mail — PlayWithPro",
     "resetPasswordTitle": "Réinitialisation du mot de passe — PlayWithPro",
     "dashboardTitle": "Tableau de bord — PlayWithPro",
-    "settingsTitle": "Paramètres du compte — PlayWithPro"
+    "settingsTitle": "Paramètres du compte — PlayWithPro",
+    "proProfileTitle": "Mon profil — PlayWithPro",
+    "verificationQueueTitle": "File de vérification — PlayWithPro"
   }
 }
