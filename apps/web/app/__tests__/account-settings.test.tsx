@@ -42,16 +42,31 @@ function renderSettings() {
 }
 
 describe("AccountSettings timezone", () => {
-  it("offers typeahead options from the supported zone list", () => {
+  it("opens the full zone list on click", () => {
     renderSettings();
 
-    const input = screen.getByLabelText("Timezone");
-    expect(input).toHaveAttribute("list", "settings-timezone-options");
+    fireEvent.click(screen.getByLabelText("Timezone"));
+
+    const options = screen.getAllByRole("option");
+    expect(options.length).toBeGreaterThan(100);
     expect(
-      document.querySelector(
-        '#settings-timezone-options option[value="Europe/Berlin"]',
-      ),
-    ).not.toBeNull();
+      screen.getByRole("option", { name: "Europe/Berlin" }),
+    ).toBeInTheDocument();
+  });
+
+  it("narrows the list while typing", () => {
+    renderSettings();
+
+    fireEvent.change(screen.getByLabelText("Timezone"), {
+      target: { value: "berl" },
+    });
+
+    expect(
+      screen.getByRole("option", { name: "Europe/Berlin" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: "Asia/Tokyo" }),
+    ).not.toBeInTheDocument();
   });
 
   it("blocks saving a value outside the supported zones", async () => {
@@ -68,7 +83,7 @@ describe("AccountSettings timezone", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("saves a valid timezone", async () => {
+  it("saves a timezone picked from the filtered list", async () => {
     fetchMock.mockResolvedValue({
       ok: true,
       status: 200,
@@ -77,8 +92,9 @@ describe("AccountSettings timezone", () => {
     renderSettings();
 
     fireEvent.change(screen.getByLabelText("Timezone"), {
-      target: { value: "Europe/Berlin" },
+      target: { value: "berl" },
     });
+    fireEvent.mouseDown(screen.getByRole("option", { name: "Europe/Berlin" }));
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
 
     expect(await screen.findByText("Profile updated.")).toBeInTheDocument();

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { GoogleLogo } from "@/components/ui/google-logo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { TimezoneSelect } from "@/components/ui/timezone-select";
 
 function SettingsCard({
   title,
@@ -147,19 +148,13 @@ export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
             </div>
             <div>
               <Label htmlFor="settings-timezone">{t("profile.timezone")}</Label>
-              <Input
+              <TimezoneSelect
                 id="settings-timezone"
-                list="settings-timezone-options"
-                autoComplete="off"
-                placeholder="Europe/Berlin"
                 value={timezone}
-                onChange={(event) => setTimezone(event.target.value)}
+                options={timezones}
+                onChange={setTimezone}
+                placeholder="Europe/Berlin"
               />
-              <datalist id="settings-timezone-options">
-                {timezones.map((value) => (
-                  <option key={value} value={value} />
-                ))}
-              </datalist>
             </div>
           </div>
           <div className="flex items-center gap-3">
