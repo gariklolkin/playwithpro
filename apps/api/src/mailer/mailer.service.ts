@@ -47,6 +47,43 @@ export class MailerService {
     );
   }
 
+  async sendVerificationApprovedEmail(
+    to: string,
+    displayName: string,
+  ): Promise<void> {
+    await this.send(
+      to,
+      "You're verified on PlayWithPro 🎉",
+      [
+        `Hi ${displayName},`,
+        '',
+        'Your professional profile has been verified. Amateurs can now find and book you once availability opens.',
+        '',
+        'See you at the table!',
+      ].join('\n'),
+    );
+  }
+
+  async sendVerificationRejectedEmail(
+    to: string,
+    displayName: string,
+    note: string,
+  ): Promise<void> {
+    await this.send(
+      to,
+      'Update on your PlayWithPro verification',
+      [
+        `Hi ${displayName},`,
+        '',
+        'We could not verify your professional profile this time.',
+        '',
+        `Reviewer note: ${note}`,
+        '',
+        'You can update your profile and submit again at any moment.',
+      ].join('\n'),
+    );
+  }
+
   /** Sends best-effort: a broken SMTP must not fail auth flows. */
   private async send(to: string, subject: string, text: string): Promise<void> {
     try {

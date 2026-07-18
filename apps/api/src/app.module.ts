@@ -7,6 +7,8 @@ import { validate } from './config/env.validation';
 import { HealthModule } from './health/health.module';
 import { MailerModule } from './mailer/mailer.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { AdminModule } from './admin/admin.module';
+import { ProsModule } from './pros/pros.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -22,6 +24,8 @@ import { UsersModule } from './users/users.module';
     MailerModule,
     AuthModule,
     UsersModule,
+    ProsModule,
+    AdminModule,
   ],
   providers: [
     {
