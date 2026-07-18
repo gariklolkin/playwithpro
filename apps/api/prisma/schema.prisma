@@ -34,6 +34,7 @@ model User {
   oauthAccounts      OAuthAccount[]
   refreshTokens      RefreshToken[]
   verificationTokens VerificationToken[]
+  proProfile         ProProfile?
 }
 
 model OAuthAccount {
@@ -71,4 +72,73 @@ model VerificationToken {
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, kind])
+}
+
+enum ProProfileStatus {
+  DRAFT
+  PENDING_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+enum ServiceType {
+  VIDEO_ANALYSIS
+  CONSULTATION
+  GAME
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// Coach-owned public profile; 1:1 with a PROFESSIONAL user.
+model ProProfile {
+  id           String           @id @default(uuid())
+  userId       String           @unique
+  status       ProProfileStatus @default(DRAFT)
+  bio          String           @default("")
+  achievements String           @default("")
+  languages    String[]         @default([]) // ISO 639-1, subset of platform locales
+  country      String           @default("")
+  city         String           @default("")
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  services             ProService[]
+  verificationRequests VerificationRequest[]
+}
+
+model ProService {
+  id         String      @id @default(uuid())
+  profileId  String
+  type       ServiceType
+  priceMinor Int // money: integer minor units, never floats
+  currency   String      @db.Char(3) // ISO 4217
+  venueCity  String      @default("") // GAME only
+  venueClub  String      @default("") // GAME only
+  active     Boolean     @default(true)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  profile    ProProfile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, type])
+}
+
+/// Audit trail of verification submissions; the newest PENDING one is the queue item.
+model VerificationRequest {
+  id           String             @id @default(uuid())
+  profileId    String
+  status       VerificationStatus @default(PENDING)
+  credentials  String
+  links        String[]           @default([])
+  adminNote    String             @default("")
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime           @default(now())
+  profile      ProProfile         @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
 }
