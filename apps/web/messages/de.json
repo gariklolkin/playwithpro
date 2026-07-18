@@ -35,7 +35,7 @@
     "register": {
       "title": "Konto erstellen",
       "subtitle": "Kostenlos beitreten — du zahlst nur bei einer Buchung",
-      "rolePlayer": "Ich bin Spieler",
+      "rolePlayer": "Ich bin Amateur",
       "rolePlayerDescription": "Buche Einheiten mit Profis",
       "rolePro": "Ich bin Profi",
       "roleProDescription": "Coache und verdiene",
@@ -152,11 +152,13 @@
       "title": "Passwort",
       "current": "Aktuelles Passwort",
       "new": "Neues Passwort",
+      "confirm": "Neues Passwort bestätigen",
       "newPlaceholder": "Mindestens 8 Zeichen",
       "submit": "Passwort ändern",
       "submitting": "Wird geändert…",
       "changed": "Passwort geändert. Andere Sitzungen wurden abgemeldet.",
       "wrongCurrent": "Das aktuelle Passwort ist falsch.",
+      "mismatch": "Die Passwörter stimmen nicht überein.",
       "noPassword": "Dieses Konto hat noch kein Passwort. Nutze „Passwort vergessen?“ auf der Anmeldeseite, um eines festzulegen."
     },
     "google": {

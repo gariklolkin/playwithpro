@@ -35,7 +35,7 @@
     "register": {
       "title": "Create account",
       "subtitle": "Free to join — pay only when you book",
-      "rolePlayer": "I'm a player",
+      "rolePlayer": "I'm an amateur",
       "rolePlayerDescription": "Book sessions with pros",
       "rolePro": "I'm a professional",
       "roleProDescription": "Coach and earn",
@@ -152,11 +152,13 @@
       "title": "Password",
       "current": "Current password",
       "new": "New password",
+      "confirm": "Confirm new password",
       "newPlaceholder": "At least 8 characters",
       "submit": "Change password",
       "submitting": "Changing…",
       "changed": "Password changed. Other sessions were signed out.",
       "wrongCurrent": "Current password is incorrect.",
+      "mismatch": "Passwords don't match.",
       "noPassword": "This account has no password yet. Use \"Forgot password?\" on the login page to set one."
     },
     "google": {

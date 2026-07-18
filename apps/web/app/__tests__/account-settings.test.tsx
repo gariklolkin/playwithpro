@@ -107,3 +107,25 @@ describe("AccountSettings timezone", () => {
     ).toBe("Europe/Berlin");
   });
 });
+
+describe("AccountSettings password", () => {
+  it("blocks the change when the confirmation does not match", async () => {
+    renderSettings();
+
+    fireEvent.change(screen.getByLabelText("Current password"), {
+      target: { value: "oldpass12" },
+    });
+    fireEvent.change(screen.getByLabelText("New password"), {
+      target: { value: "newpass12" },
+    });
+    fireEvent.change(screen.getByLabelText("Confirm new password"), {
+      target: { value: "newpass21" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Change password" }));
+
+    expect(
+      await screen.findByText("Passwords don't match."),
+    ).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});

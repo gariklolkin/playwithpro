@@ -56,8 +56,9 @@ export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
   // Password form
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordStatus, setPasswordStatus] = useState<
-    "idle" | "saving" | "changed" | "wrong"
+    "idle" | "saving" | "changed" | "wrong" | "mismatch"
   >("idle");
 
   // Google linking
@@ -91,6 +92,10 @@ export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
 
   async function handlePasswordSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (newPassword !== confirmPassword) {
+      setPasswordStatus("mismatch");
+      return;
+    }
     setPasswordStatus("saving");
     const response = await apiFetch("/users/me/password", {
       method: "PATCH",
@@ -102,6 +107,7 @@ export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
     }
     setCurrentPassword("");
     setNewPassword("");
+    setConfirmPassword("");
     setPasswordStatus("changed");
   }
 
@@ -209,6 +215,20 @@ export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
               onChange={(event) => setNewPassword(event.target.value)}
               className="mb-3"
             />
+            <Label htmlFor="settings-confirm-password">
+              {t("password.confirm")}
+            </Label>
+            <Input
+              id="settings-confirm-password"
+              type="password"
+              autoComplete="new-password"
+              required
+              minLength={8}
+              placeholder={t("password.newPlaceholder")}
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              className="mb-3"
+            />
             <div className="flex items-center gap-3">
               <Button type="submit" disabled={passwordStatus === "saving"}>
                 {passwordStatus === "saving"
@@ -223,6 +243,11 @@ export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
               {passwordStatus === "wrong" ? (
                 <span className="text-[13px] text-[#E03E3E]">
                   {t("password.wrongCurrent")}
+                </span>
+              ) : null}
+              {passwordStatus === "mismatch" ? (
+                <span className="text-[13px] text-[#E03E3E]">
+                  {t("password.mismatch")}
                 </span>
               ) : null}
             </div>

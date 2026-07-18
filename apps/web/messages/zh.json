@@ -35,7 +35,7 @@
     "register": {
       "title": "创建账户",
       "subtitle": "免费注册 — 只在预约时付费",
-      "rolePlayer": "我是球员",
+      "rolePlayer": "我是业余爱好者",
       "rolePlayerDescription": "预约职业选手课程",
       "rolePro": "我是职业选手",
       "roleProDescription": "执教并获得收入",
@@ -152,11 +152,13 @@
       "title": "密码",
       "current": "当前密码",
       "new": "新密码",
+      "confirm": "确认新密码",
       "newPlaceholder": "至少 8 个字符",
       "submit": "修改密码",
       "submitting": "正在修改…",
       "changed": "密码已修改。其他会话已退出登录。",
       "wrongCurrent": "当前密码不正确。",
+      "mismatch": "两次输入的密码不一致。",
       "noPassword": "此账户尚未设置密码。请在登录页面使用“忘记密码？”来设置。"
     },
     "google": {

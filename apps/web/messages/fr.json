@@ -35,7 +35,7 @@
     "register": {
       "title": "Créer un compte",
       "subtitle": "Inscription gratuite — payez uniquement à la réservation",
-      "rolePlayer": "Je suis joueur",
+      "rolePlayer": "Je suis amateur",
       "rolePlayerDescription": "Réservez des séances avec des pros",
       "rolePro": "Je suis professionnel",
       "roleProDescription": "Coachez et gagnez",
@@ -152,11 +152,13 @@
       "title": "Mot de passe",
       "current": "Mot de passe actuel",
       "new": "Nouveau mot de passe",
+      "confirm": "Confirmez le nouveau mot de passe",
       "newPlaceholder": "Au moins 8 caractères",
       "submit": "Changer le mot de passe",
       "submitting": "Modification…",
       "changed": "Mot de passe changé. Les autres sessions ont été déconnectées.",
       "wrongCurrent": "Le mot de passe actuel est incorrect.",
+      "mismatch": "Les mots de passe ne correspondent pas.",
       "noPassword": "Ce compte n'a pas encore de mot de passe. Utilisez « Mot de passe oublié ? » sur la page de connexion pour en définir un."
     },
     "google": {
