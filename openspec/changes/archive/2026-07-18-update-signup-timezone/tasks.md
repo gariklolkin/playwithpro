@@ -10,4 +10,4 @@
 - [x] 2.3 Component tests: register payload includes timezone; invalid settings value blocked
 
 ## 3. Verification
-- [ ] 3.1 `pnpm lint && pnpm typecheck && pnpm test && pnpm build` green; CI green; archive
+- [x] 3.1 `pnpm lint && pnpm typecheck && pnpm test && pnpm build` green; CI green; archive
