@@ -7,6 +7,8 @@ export interface RegisterRequest {
   password: string;
   displayName: string;
   role: SignupRole;
+  /** IANA zone reported by the browser; server falls back to UTC. */
+  timezone?: string;
 }
 
 export interface LoginRequest {
@@ -34,6 +36,8 @@ export interface ResetPasswordRequest {
 /** Completes signup for first-time Google users (role choice). */
 export interface OAuthCompleteRequest {
   role: SignupRole;
+  /** IANA zone reported by the browser; server falls back to UTC. */
+  timezone?: string;
 }
 
 export interface UpdateMeRequest {

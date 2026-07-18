@@ -145,7 +145,8 @@
       "save": "保存更改",
       "saving": "正在保存…",
       "saved": "资料已更新。",
-      "error": "无法保存更改，请重试。"
+      "error": "无法保存更改，请重试。",
+      "timezoneInvalid": "请从列表中选择时区。"
     },
     "password": {
       "title": "密码",

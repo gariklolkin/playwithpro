@@ -55,6 +55,7 @@ export class AuthService {
         passwordHash,
         role: toPrismaRole(dto.role),
         displayName: dto.displayName,
+        ...(dto.timezone ? { timezone: dto.timezone } : {}),
       },
       include: { oauthAccounts: true },
     });

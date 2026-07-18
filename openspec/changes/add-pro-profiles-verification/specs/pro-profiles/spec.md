@@ -1,0 +1,39 @@
+# pro-profiles — delta for add-pro-profiles-verification
+
+## ADDED Requirements
+
+### Requirement: Coach profile ownership
+Each user with the `professional` role SHALL have exactly one pro profile (bio, achievements, spoken languages, country, city) that only they — and admins — can read in full and only they can edit.
+
+#### Scenario: First access creates a draft
+- **WHEN** a professional opens their profile for the first time
+- **THEN** an empty profile in `draft` status is returned for them to fill in
+
+#### Scenario: Amateur cannot access coach profile endpoints
+- **WHEN** a user with the `amateur` role calls a `/pros/me/*` endpoint
+- **THEN** the request is rejected with a forbidden error
+
+### Requirement: Services and pricing
+A coach SHALL be able to offer up to three services — `video_analysis`, `consultation`, `game` — each with an hourly price stored as integer minor units plus an ISO 4217 currency code, and toggle each service active or inactive.
+
+#### Scenario: Price is stored in minor units
+- **WHEN** a coach sets the consultation price to €40/hour
+- **THEN** the service persists `priceMinor = 4000`, `currency = "EUR"` and is returned as such by the API
+
+#### Scenario: One service per type
+- **WHEN** a coach upserts the `consultation` service twice
+- **THEN** the existing service is updated rather than duplicated
+
+### Requirement: Venue for in-person game service
+The `game` service SHALL require a city and club/venue, since the session happens in person.
+
+#### Scenario: Game service without venue
+- **WHEN** a coach saves the `game` service without a city or club
+- **THEN** the request is rejected with a validation error
+
+### Requirement: Spoken languages
+A coach profile SHALL list at least one spoken language chosen from the platform's supported languages, for later catalog filtering.
+
+#### Scenario: Unsupported language code
+- **WHEN** a coach submits a language code outside the supported set
+- **THEN** the request is rejected with a validation error

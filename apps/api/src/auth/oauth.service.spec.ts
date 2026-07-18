@@ -146,6 +146,22 @@ describe('OAuthService', () => {
       });
       expect(auth.signIn).toHaveBeenCalled();
     });
+    it('stores the client timezone on the created user', async () => {
+      jwt.verify.mockReturnValue(pendingPayload);
+      prisma.user.findUnique.mockResolvedValue(null);
+      prisma.user.create.mockResolvedValue({
+        id: 'user-1',
+        oauthAccounts: [{ provider: 'google' }],
+      });
+
+      await service.completeSignup('pending-jwt', Role.Amateur, 'Asia/Tokyo');
+
+      expect(prisma.user.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ timezone: 'Asia/Tokyo' }) as object,
+        }),
+      );
+    });
 
     it('rejects a missing or invalid pending token', async () => {
       await expect(

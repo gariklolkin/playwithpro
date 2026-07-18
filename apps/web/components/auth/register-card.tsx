@@ -35,7 +35,13 @@ export function RegisterCard() {
     setError(null);
     const response = await apiFetch("/auth/register", {
       method: "POST",
-      body: JSON.stringify({ role, displayName, email, password }),
+      body: JSON.stringify({
+        role,
+        displayName,
+        email,
+        password,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      }),
     });
     if (response.ok) {
       router.push("/dashboard");

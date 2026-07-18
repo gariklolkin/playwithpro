@@ -145,7 +145,8 @@
       "save": "Enregistrer les modifications",
       "saving": "Enregistrement…",
       "saved": "Profil mis à jour.",
-      "error": "Impossible d'enregistrer les modifications. Veuillez réessayer."
+      "error": "Impossible d'enregistrer les modifications. Veuillez réessayer.",
+      "timezoneInvalid": "Choisissez un fuseau horaire dans la liste."
     },
     "password": {
       "title": "Mot de passe",

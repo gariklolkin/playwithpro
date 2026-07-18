@@ -49,7 +49,7 @@ export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
   const [locale, setLocale] = useState(user.locale);
   const [timezone, setTimezone] = useState(user.timezone);
   const [profileStatus, setProfileStatus] = useState<
-    "idle" | "saving" | "saved" | "error"
+    "idle" | "saving" | "saved" | "error" | "invalidTimezone"
   >("idle");
 
   // Password form
@@ -66,6 +66,10 @@ export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
 
   async function handleProfileSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (!timezones.includes(timezone)) {
+      setProfileStatus("invalidTimezone");
+      return;
+    }
     setProfileStatus("saving");
     const response = await apiFetch("/users/me", {
       method: "PATCH",
@@ -143,18 +147,19 @@ export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
             </div>
             <div>
               <Label htmlFor="settings-timezone">{t("profile.timezone")}</Label>
-              <select
+              <Input
                 id="settings-timezone"
+                list="settings-timezone-options"
+                autoComplete="off"
+                placeholder="Europe/Berlin"
                 value={timezone}
                 onChange={(event) => setTimezone(event.target.value)}
-                className="w-full rounded-lg border border-border-strong bg-bg px-3 py-[9px] text-sm text-text"
-              >
+              />
+              <datalist id="settings-timezone-options">
                 {timezones.map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
+                  <option key={value} value={value} />
                 ))}
-              </select>
+              </datalist>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -171,6 +176,11 @@ export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
             {profileStatus === "error" ? (
               <span className="text-[13px] text-[#E03E3E]">
                 {t("profile.error")}
+              </span>
+            ) : null}
+            {profileStatus === "invalidTimezone" ? (
+              <span className="text-[13px] text-[#E03E3E]">
+                {t("profile.timezoneInvalid")}
               </span>
             ) : null}
           </div>

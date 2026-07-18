@@ -22,7 +22,10 @@ export default function OAuthCompletePage() {
     setSubmitting(true);
     const response = await apiFetch("/auth/oauth/complete", {
       method: "POST",
-      body: JSON.stringify({ role }),
+      body: JSON.stringify({
+        role,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      }),
     });
     if (response.ok) {
       router.push("/dashboard");

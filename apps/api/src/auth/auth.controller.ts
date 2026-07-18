@@ -187,6 +187,7 @@ export class AuthController {
     const { user, tokens } = await this.oauth.completeSignup(
       this.cookie(req, OAUTH_PENDING_COOKIE),
       dto.role,
+      dto.timezone,
     );
     clearOAuthCookie(res, OAUTH_PENDING_COOKIE, this.secureCookies());
     setAuthCookies(res, tokens, this.secureCookies());

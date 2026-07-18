@@ -149,6 +149,7 @@ describe("RegisterCard", () => {
       displayName: "Coach Ma",
       email: "coach@example.com",
       password: "password1",
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
   });
 

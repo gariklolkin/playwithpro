@@ -145,7 +145,8 @@
       "save": "Save changes",
       "saving": "Saving…",
       "saved": "Profile updated.",
-      "error": "Could not save changes. Please try again."
+      "error": "Could not save changes. Please try again.",
+      "timezoneInvalid": "Pick a timezone from the list."
     },
     "password": {
       "title": "Password",

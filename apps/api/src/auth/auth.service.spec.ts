@@ -58,6 +58,62 @@ describe('AuthService', () => {
     expect(prisma.user.create).not.toHaveBeenCalled();
   });
 
+  it('register stores the client timezone on the new user', async () => {
+    prisma.user.findUnique.mockResolvedValue(null);
+    prisma.user.create.mockResolvedValue({
+      id: 'u1',
+      email: 'new@example.com',
+      role: 'AMATEUR',
+      displayName: 'N',
+      locale: 'en',
+      timezone: 'Europe/Berlin',
+      emailVerifiedAt: null,
+      passwordHash: 'hash',
+      oauthAccounts: [],
+    });
+
+    await service.register({
+      email: 'new@example.com',
+      password: 'password1',
+      displayName: 'N',
+      role: 'amateur',
+      timezone: 'Europe/Berlin',
+    } as never);
+
+    expect(prisma.user.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ timezone: 'Europe/Berlin' }) as object,
+      }),
+    );
+  });
+
+  it('register without a timezone leaves the database default', async () => {
+    prisma.user.findUnique.mockResolvedValue(null);
+    prisma.user.create.mockResolvedValue({
+      id: 'u1',
+      email: 'new@example.com',
+      role: 'AMATEUR',
+      displayName: 'N',
+      locale: 'en',
+      timezone: 'UTC',
+      emailVerifiedAt: null,
+      passwordHash: 'hash',
+      oauthAccounts: [],
+    });
+
+    await service.register({
+      email: 'new@example.com',
+      password: 'password1',
+      displayName: 'N',
+      role: 'amateur',
+    } as never);
+
+    const [createArg] = prisma.user.create.mock.calls[0] as [
+      { data: Record<string, unknown> },
+    ];
+    expect(createArg.data).not.toHaveProperty('timezone');
+  });
+
   it('login uses one generic error for unknown email and OAuth-only accounts', async () => {
     prisma.user.findUnique.mockResolvedValueOnce(null);
     const unknown = await service

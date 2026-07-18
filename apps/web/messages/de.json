@@ -145,7 +145,8 @@
       "save": "Änderungen speichern",
       "saving": "Wird gespeichert…",
       "saved": "Profil aktualisiert.",
-      "error": "Änderungen konnten nicht gespeichert werden. Bitte versuche es erneut."
+      "error": "Änderungen konnten nicht gespeichert werden. Bitte versuche es erneut.",
+      "timezoneInvalid": "Wähle eine Zeitzone aus der Liste."
     },
     "password": {
       "title": "Passwort",

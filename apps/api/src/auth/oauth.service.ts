@@ -97,6 +97,7 @@ export class OAuthService {
   async completeSignup(
     pendingToken: string | undefined,
     role: SignupRole,
+    timezone?: string,
   ): Promise<AuthResult> {
     if (!pendingToken) {
       throw new UnauthorizedException();
@@ -125,6 +126,7 @@ export class OAuthService {
         email: payload.email,
         role: toPrismaRole(role),
         displayName: payload.displayName,
+        ...(timezone ? { timezone } : {}),
         emailVerifiedAt: new Date(), // Google already verified the address
         oauthAccounts: {
           create: {

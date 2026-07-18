@@ -1,11 +1,13 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PASSWORD_MIN_LENGTH, SIGNUP_ROLES } from '@playwithpro/shared';
 import type { RegisterRequest, SignupRole } from '@playwithpro/shared';
 import {
   IsEmail,
   IsIn,
   IsNotEmpty,
+  IsOptional,
   IsString,
+  IsTimeZone,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -29,4 +31,9 @@ export class RegisterDto implements RegisterRequest {
   @ApiProperty({ enum: SIGNUP_ROLES })
   @IsIn(SIGNUP_ROLES)
   role: SignupRole;
+
+  @ApiPropertyOptional({ example: 'Europe/Berlin' })
+  @IsOptional()
+  @IsTimeZone()
+  timezone?: string;
 }
