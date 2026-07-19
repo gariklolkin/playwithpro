@@ -3,6 +3,7 @@
 set -euo pipefail
 
 API=http://localhost:4000
+MAILPIT=http://localhost:8025
 TS=$(date +%s)
 PRO_EMAIL="e2e.pro.${TS}@example.com"
 PRO2_EMAIL="e2e.pro2.${TS}@example.com"
@@ -21,9 +22,26 @@ json_field() { # $1: field
   node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{console.log(JSON.parse(d).$1)})"
 }
 
+verify_email() { # $1: email — confirms via the Mailpit-delivered token
+  local token=""
+  for _ in $(seq 1 10); do
+    token=$(curl -s "$MAILPIT/api/v1/search?query=to:$1" \
+      | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{const m=JSON.parse(d).messages;console.log(m&&m.length?m[0].ID:"")})' \
+      | xargs -I{} curl -s "$MAILPIT/api/v1/message/{}" \
+      | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const m=(JSON.parse(d).Text||'').match(/verify-email\?token=([\w-]+)/);console.log(m?m[1]:'')})")
+    [ -n "$token" ] && break
+    sleep 1
+  done
+  [ -n "$token" ] || fail "no verification email for $1"
+  curl -sf -X POST "$API/auth/email/verify" -H 'Content-Type: application/json' -d "{\"token\":\"$token\"}" >/dev/null
+}
+
 register_pro() { # $1: email, $2: jar
-  curl -sf -c "$2" -X POST "$API/auth/register" -H 'Content-Type: application/json' \
+  curl -sf -X POST "$API/auth/register" -H 'Content-Type: application/json' \
     -d "{\"email\":\"$1\",\"password\":\"$PASSWORD\",\"displayName\":\"E2E Coach\",\"role\":\"professional\"}" >/dev/null
+  verify_email "$1"
+  curl -sf -c "$2" -X POST "$API/auth/login" -H 'Content-Type: application/json' \
+    -d "{\"email\":\"$1\",\"password\":\"$PASSWORD\"}" >/dev/null
 }
 
 fill_profile() { # $1: jar
@@ -35,7 +53,7 @@ fill_profile() { # $1: jar
 
 submit_verification() { # $1: jar
   curl -sf -b "$1" -X POST "$API/pros/me/verification" -H 'Content-Type: application/json' \
-    -d '{"credentials":"ITTF licensed coach","contactTelegram":"@coach_ma"}'
+    -d '{"credentials":"ITTF licensed coach"}'
 }
 
 step "1. register pro -> lazy draft profile"
@@ -53,20 +71,18 @@ echo "$GAME" | grep -q '"venueLat":52.53' || fail "expected saved venue coordina
 
 step "3. incomplete profile cannot submit"
 CODE=$(curl -s -o /dev/null -w "%{http_code}" -b "$PRO_JAR" -X POST "$API/pros/me/verification" \
-  -H 'Content-Type: application/json' -d '{"credentials":"x","contactPhone":"+491511234567"}')
+  -H 'Content-Type: application/json' -d '{"credentials":"x"}')
 [ "$CODE" = "409" ] || fail "expected 409 for incomplete profile, got $CODE"
 
-step "4. fill profile + service -> submit -> pending_review (no contact -> 400)"
+step "4. fill profile + service -> submit -> pending_review, awaiting scheduling"
 fill_profile "$PRO_JAR"
-CODE=$(curl -s -o /dev/null -w "%{http_code}" -b "$PRO_JAR" -X POST "$API/pros/me/verification" \
-  -H 'Content-Type: application/json' -d '{"credentials":"x"}')
-[ "$CODE" = "400" ] || fail "expected 400 for submission without contacts, got $CODE"
 SUBMITTED=$(submit_verification "$PRO_JAR")
 echo "$SUBMITTED" | grep -q '"status":"pending_review"' || fail "expected pending_review"
+echo "$SUBMITTED" | grep -q '"state":"awaiting_scheduling"' || fail "expected awaiting_scheduling state"
 
 step "5. double submit is blocked"
 CODE=$(curl -s -o /dev/null -w "%{http_code}" -b "$PRO_JAR" -X POST "$API/pros/me/verification" \
-  -H 'Content-Type: application/json' -d '{"credentials":"again","contactTelegram":"@c"}')
+  -H 'Content-Type: application/json' -d '{"credentials":"again"}')
 [ "$CODE" = "409" ] || fail "expected 409 for double submit, got $CODE"
 
 step "6. admin sees the request in the queue"
@@ -76,16 +92,22 @@ QUEUE=$(curl -sf -b "$ADMIN_JAR" "$API/admin/verification-requests")
 echo "$QUEUE" | grep -q "$PRO_EMAIL" || fail "pro not in admin queue"
 REQUEST_ID=$(echo "$QUEUE" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const q=JSON.parse(d);console.log(q.find(i=>i.user.email==='$PRO_EMAIL').requestId)})")
 
-step "6b. admin invites the coach to a video call"
-curl -sf -b "$ADMIN_JAR" -X POST "$API/admin/verification-requests/$REQUEST_ID/call" >/dev/null
-QUEUE=$(curl -sf -b "$ADMIN_JAR" "$API/admin/verification-requests")
-echo "$QUEUE" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const q=JSON.parse(d);const i=q.find(x=>x.requestId==='$REQUEST_ID');process.exit(i&&i.callRequestedAt?0:1)})" || fail "expected callRequestedAt set"
+step "6b. approve before a call is scheduled is blocked"
+CODE=$(curl -s -o /dev/null -w "%{http_code}" -b "$ADMIN_JAR" -X POST "$API/admin/verification-requests/$REQUEST_ID/approve")
+[ "$CODE" = "409" ] || fail "expected 409 for approve without a scheduled call, got $CODE"
 
 step "7. pro cannot access the admin queue"
 CODE=$(curl -s -o /dev/null -w "%{http_code}" -b "$PRO_JAR" "$API/admin/verification-requests")
 [ "$CODE" = "403" ] || fail "expected 403 for pro on admin endpoint, got $CODE"
 
-step "8. approve -> profile verified"
+step "8. publish slot -> coach books -> approve -> profile verified"
+START=$(node -e "console.log(new Date(Date.now()+26*3600e3).toISOString())")
+END=$(node -e "console.log(new Date(Date.now()+26*3600e3+15*60e3).toISOString())")
+curl -sf -b "$ADMIN_JAR" -X POST "$API/admin/verification-slots" -H 'Content-Type: application/json' \
+  -d "{\"slots\":[{\"startsAt\":\"$START\",\"endsAt\":\"$END\"}]}" >/dev/null
+SLOT_ID=$(curl -sf -b "$PRO_JAR" "$API/verification/slots" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{console.log(JSON.parse(d)[0].id)})")
+BOOKED=$(curl -sf -b "$PRO_JAR" -X POST "$API/verification/bookings" -H 'Content-Type: application/json' -d "{\"slotId\":\"$SLOT_ID\"}")
+echo "$BOOKED" | grep -q '"state":"scheduled"' || fail "expected scheduled state after booking"
 curl -sf -b "$ADMIN_JAR" -X POST "$API/admin/verification-requests/$REQUEST_ID/approve" >/dev/null
 PROFILE=$(curl -sf -b "$PRO_JAR" "$API/pros/me/profile")
 echo "$PROFILE" | grep -q '"status":"verified"' || fail "expected verified profile"

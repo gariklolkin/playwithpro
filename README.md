@@ -44,6 +44,32 @@ pnpm test        # unit tests for all workspaces
 pnpm build       # build all workspaces
 ```
 
+## Verification call scheduling (Google Meet)
+
+Coaches book their identity video call from published slots; each booking gets a
+Google Calendar event with a Meet link on a platform-owned calendar. The
+marketplace database is the source of truth — calendar sync is asynchronous,
+retried by a cron, and never blocks booking. Locally the API runs with a fake
+meeting provider (no Google setup needed).
+
+Production deploy checklist:
+
+1. Google Cloud: create a service account, enable the **Google Calendar API**,
+   download its JSON key.
+2. Workspace Admin console: grant the service account **domain-wide
+   delegation** with scope `https://www.googleapis.com/auth/calendar`.
+3. Pick (or create) the Workspace user owning the verification calendar, e.g.
+   `verify@yourdomain.com`, and **share that calendar with every admin**
+   ("See all event details") — verification calls then show up in each
+   admin's own Google Calendar.
+4. Set the env vars `GOOGLE_SA_KEY`, `GOOGLE_IMPERSONATE_SUBJECT`,
+   `GOOGLE_CALENDAR_ID` (see `.env.example`).
+5. Workspace Admin > Apps > **Google Meet**: allow external / anonymous
+   participants to knock and be admitted — coaches without Google accounts
+   join from the browser and the admin lets them in.
+6. Smoke-test with a non-Google mailbox: book a slot, receive the confirmation
+   with the `.ics` attachment, join the Meet as an anonymous guest, approve.
+
 ## Commit convention
 
 Commit messages are written in English, imperative mood, scoped when helpful (e.g. `api: add health endpoint`).
