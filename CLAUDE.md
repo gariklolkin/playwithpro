@@ -6,7 +6,7 @@ Two-sided marketplace: amateur players book paid sessions with verified table te
 
 - Read `openspec/AGENTS.md` (workflow rules) and `openspec/project.md` (stack, conventions, roadmap) before any work.
 - Work strictly by change packages in `openspec/changes/<change-id>/`: follow `proposal.md` + `design.md`, implement per `tasks.md`, check off tasks as you go (`- [x]`).
-- Do not invent features outside the active change. `add-project-foundation` is archived; next planned change: `add-auth-and-accounts`.
+- Do not invent features outside the active change. Changes 1–4 of the roadmap (through pro profiles/verification, incl. verification scheduling and email codes) are archived; next planned change: `add-availability-scheduling`.
 - After a change is done and verified, archive it per `openspec/AGENTS.md`.
 
 ## Key references
