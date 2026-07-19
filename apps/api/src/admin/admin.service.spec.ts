@@ -16,7 +16,6 @@ const scheduledRequest = {
   id: 'req-1',
   profileId: 'profile-1',
   state: 'SCHEDULED',
-  credentials: 'ITTF licensed coach',
   adminNote: '',
   noShowCount: 0,
   reviewedById: null,

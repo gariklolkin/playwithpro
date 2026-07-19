@@ -4,7 +4,6 @@ import type { BookingStatus, VerificationState } from "../enums/verification";
 import type { VerificationBookingResponse } from "./verification";
 
 export const BIO_MAX_LENGTH = 4000;
-export const CREDENTIALS_MAX_LENGTH = 4000;
 
 export interface ProServiceResponse {
   type: ServiceType;
@@ -39,7 +38,6 @@ export interface UpdateProProfileRequest {
 export interface VerificationRequestResponse {
   id: string;
   state: VerificationState;
-  credentials: string;
   adminNote: string;
   noShowCount: number;
   /** Outcome of the latest finished booking; drives the "pick a new time" banner. */
@@ -59,11 +57,6 @@ export interface ProProfileResponse {
   latestVerification: VerificationRequestResponse | null;
 }
 
-/** The reviewed material is the profile itself; extra notes are optional. */
-export interface SubmitVerificationRequest {
-  credentials?: string;
-}
-
 export interface RejectVerificationRequest {
   note: string;
 }
@@ -73,7 +66,6 @@ export interface RejectVerificationRequest {
 export interface AdminVerificationItem {
   requestId: string;
   submittedAt: string;
-  credentials: string;
   state: VerificationState;
   /** The scheduled call, when one is booked. */
   meeting: {

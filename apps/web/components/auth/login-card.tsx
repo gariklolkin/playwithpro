@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { API_URL, apiFetch } from "@/lib/api";
 import { AuthCard, AuthDivider, AuthFooter } from "./auth-card";
+import { PENDING_EMAIL_KEY } from "./email-code-form";
 import { GoogleButton } from "./google-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +23,6 @@ export function LoginCard() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [unverified, setUnverified] = useState(false);
-  const [resent, setResent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Silent session restore: a returning visitor with only a refresh cookie
@@ -52,7 +52,6 @@ export function LoginCard() {
     setSubmitting(true);
     setError(null);
     setUnverified(false);
-    setResent(false);
     const response = await apiFetch("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
@@ -64,19 +63,21 @@ export function LoginCard() {
     }
     setSubmitting(false);
     if (response.status === 403) {
-      // Right password, unconfirmed email — offer to resend the link.
+      // Right password, unconfirmed email — offer to confirm with a code.
       setUnverified(true);
       return;
     }
     setError(t("invalid"));
   }
 
-  async function handleResend() {
+  /** Sends a fresh code and moves to the code-entry screen. */
+  async function handleGetCode() {
+    sessionStorage.setItem(PENDING_EMAIL_KEY, email);
     await apiFetch("/auth/email/resend", {
       method: "POST",
       body: JSON.stringify({ email }),
     });
-    setResent(true);
+    router.push("/verify-email");
   }
 
   const oauthErrorMessage =
@@ -125,20 +126,14 @@ export function LoginCard() {
         ) : null}
         {unverified ? (
           <div className="mb-3 rounded-lg bg-[#FDECC8] px-3 py-2 text-[13px] text-[#402C1B]">
-            {resent ? (
-              t("verifyResent")
-            ) : (
-              <>
-                {t("unverified")}{" "}
-                <button
-                  type="button"
-                  onClick={() => void handleResend()}
-                  className="cursor-pointer font-semibold underline"
-                >
-                  {t("resendLink")}
-                </button>
-              </>
-            )}
+            {t("unverified")}{" "}
+            <button
+              type="button"
+              onClick={() => void handleGetCode()}
+              className="cursor-pointer font-semibold underline"
+            >
+              {t("getCode")}
+            </button>
           </div>
         ) : null}
         <Button type="submit" size="full" disabled={submitting}>

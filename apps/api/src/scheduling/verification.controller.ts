@@ -58,17 +58,6 @@ export class VerificationController {
     return this.scheduling.reschedule(user.id, dto.slotId);
   }
 
-  @Post('bookings/cancel')
-  @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({
-    description: 'Meeting cancelled; the request awaits a new slot.',
-  })
-  async cancelBooking(
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<ProProfileResponse> {
-    return this.scheduling.cancelByPro(user.id);
-  }
-
   @Post('withdraw')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ description: 'Verification request withdrawn entirely.' })

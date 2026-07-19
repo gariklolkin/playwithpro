@@ -16,8 +16,12 @@ export interface LoginRequest {
   password: string;
 }
 
+export const EMAIL_CODE_LENGTH = 6;
+
 export interface VerifyEmailRequest {
-  token: string;
+  email: string;
+  /** The emailed 6-digit confirmation code. */
+  code: string;
 }
 
 export interface ResendVerificationRequest {

@@ -8,8 +8,7 @@ import {
 } from "@playwithpro/shared";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api";
 import { browserTimezone, formatDay, formatTime } from "@/lib/timezones";
 import { SlotPicker } from "./slot-picker";
@@ -35,10 +34,10 @@ export function VerificationScheduler({
 }) {
   const t = useTranslations("verification");
   const locale = useLocale();
+  const router = useRouter();
   const [profile, setProfile] = useState(initialProfile);
   const [slots, setSlots] = useState(initialSlots);
   const [timezone, setTimezone] = useState(browserTimezone);
-  const [rescheduling, setRescheduling] = useState(false);
   const [busySlotId, setBusySlotId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
@@ -54,7 +53,12 @@ export function VerificationScheduler({
 
   async function act(
     path: string,
-    options: { busySlot?: string; refreshOnConflict?: boolean } = {},
+    options: {
+      busySlot?: string;
+      refreshOnConflict?: boolean;
+      /** Booked/rescheduled: the profile card shows the result — go home. */
+      goToProfile?: boolean;
+    } = {},
   ): Promise<void> {
     setBusySlotId(options.busySlot ?? "-");
     setError("");
@@ -64,16 +68,22 @@ export function VerificationScheduler({
         ? JSON.stringify({ slotId: options.busySlot })
         : undefined,
     });
-    setBusySlotId(null);
     if (!response.ok) {
+      setBusySlotId(null);
       setError((await serverMessage(response)) || t("error"));
       if (options.refreshOnConflict && response.status === 409) {
         void refreshSlots();
       }
       return;
     }
+    if (options.goToProfile) {
+      // Keep the pressed slot in its busy state during the transition.
+      router.push("/dashboard/profile");
+      router.refresh();
+      return;
+    }
+    setBusySlotId(null);
     setProfile((await response.json()) as ProProfileResponse);
-    setRescheduling(false);
     void refreshSlots();
   }
 
@@ -103,16 +113,17 @@ export function VerificationScheduler({
     <p className="mb-4 text-[13px] text-[#E03E3E]">{error}</p>
   ) : null;
 
+  // The way out when no slot fits (or none are open): drop the request.
   const withdrawLink = (
     <button
       type="button"
       disabled={busySlotId !== null}
       onClick={() => {
         if (window.confirm(t("withdrawConfirm"))) {
-          void act("/verification/withdraw");
+          void act("/verification/withdraw", { goToProfile: true });
         }
       }}
-      className="mt-6 cursor-pointer text-[13px] text-text-tertiary underline"
+      className="mt-6 block cursor-pointer text-[13px] text-text-tertiary underline"
     >
       {t("withdraw")}
     </button>
@@ -140,6 +151,7 @@ export function VerificationScheduler({
             void act("/verification/bookings", {
               busySlot: slotId,
               refreshOnConflict: true,
+              goToProfile: true,
             })
           }
         />
@@ -153,106 +165,87 @@ export function VerificationScheduler({
     return <EmptyCard text={t("error")} />;
   }
 
-  if (rescheduling) {
+  // In progress, or locked inside the reschedule cutoff: nothing to change,
+  // just show the meeting.
+  if (
+    request.state === VerificationState.InProgress ||
+    !booking.canReschedule
+  ) {
     return (
-      <div>
-        <h2 className="mb-4 text-lg font-semibold text-text">
-          {t("rescheduleTitle")}
-        </h2>
-        {errorLine}
-        <SlotPicker
-          slots={slots.filter((slot) => slot.startsAt !== booking.startsAt)}
-          timezone={timezone}
-          onTimezoneChange={setTimezone}
-          busySlotId={busySlotId}
-          onPick={(slotId) =>
-            void act("/verification/bookings/reschedule", {
-              busySlot: slotId,
-              refreshOnConflict: true,
-            })
-          }
-        />
-        <button
-          type="button"
-          onClick={() => {
-            setRescheduling(false);
-            setError("");
-          }}
-          className="mt-4 cursor-pointer text-sm text-text-secondary underline"
-        >
-          {t("backToBooking")}
-        </button>
+      <div className="max-w-[480px]">
+        <div className="rounded-card bg-bg p-6 shadow-card">
+          <p className="text-[13px] font-medium uppercase tracking-[0.5px] text-text-tertiary">
+            {request.state === VerificationState.InProgress
+              ? t("inProgress")
+              : t("scheduledTitle")}
+          </p>
+          <p className="mt-3 text-xl font-semibold capitalize text-text">
+            {formatDay(booking.startsAt, timezone, locale)}
+          </p>
+          <p className="text-3xl font-bold text-text">
+            {formatTime(booking.startsAt, timezone, locale)}
+          </p>
+          <p className="mt-1 text-[13px] text-text-tertiary">{timezone}</p>
+          <div className="mt-5">
+            {booking.meetUrl ? (
+              <a
+                href={booking.meetUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center rounded-lg bg-[#2E7DE1] px-3.5 py-[9px] text-sm font-semibold text-white no-underline hover:bg-[#2569C3]"
+              >
+                🎥 {t("join")}
+              </a>
+            ) : (
+              <span className="text-sm text-text-secondary">
+                {t("linkPending")}
+              </span>
+            )}
+          </div>
+          {request.state === VerificationState.Scheduled ? (
+            <p className="mt-4 text-[12px] text-text-tertiary">
+              {t("cutoffLocked")}
+            </p>
+          ) : null}
+        </div>
       </div>
     );
   }
 
+  // Scheduled and still changeable: straight into the picker — the current
+  // time lives on the profile card, no need to repeat it as a screen.
   return (
-    <div className="max-w-[480px]">
+    <div>
+      <h2 className="mb-1 text-lg font-semibold text-text">
+        {t("rescheduleTitle")}
+      </h2>
+      <p className="mb-4 text-sm capitalize text-text-secondary">
+        {t("currentBooking", {
+          day: formatDay(booking.startsAt, timezone, locale),
+          time: formatTime(booking.startsAt, timezone, locale),
+        })}
+      </p>
       {errorLine}
-      <div className="rounded-card bg-bg p-6 shadow-card">
-        <p className="text-[13px] font-medium uppercase tracking-[0.5px] text-text-tertiary">
-          {request.state === VerificationState.InProgress
-            ? t("inProgress")
-            : t("scheduledTitle")}
-        </p>
-        <p className="mt-3 text-xl font-semibold capitalize text-text">
-          {formatDay(booking.startsAt, timezone, locale)}
-        </p>
-        <p className="text-3xl font-bold text-text">
-          {formatTime(booking.startsAt, timezone, locale)}
-        </p>
-        <p className="mt-1 text-[13px] text-text-tertiary">{timezone}</p>
-
-        <div className="mt-5 flex flex-wrap items-center gap-3">
-          {booking.meetUrl ? (
-            <a
-              href={booking.meetUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center rounded-lg bg-[#2E7DE1] px-3.5 py-[9px] text-sm font-semibold text-white no-underline hover:bg-[#2569C3]"
-            >
-              🎥 {t("join")}
-            </a>
-          ) : (
-            <span className="text-sm text-text-secondary">
-              {t("linkPending")}
-            </span>
-          )}
-          {booking.canReschedule ? (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                setRescheduling(true);
-                setError("");
-                void refreshSlots();
-              }}
-            >
-              {t("reschedule")}
-            </Button>
-          ) : null}
-          {booking.canCancel ? (
-            <Button
-              type="button"
-              variant="ghost"
-              disabled={busySlotId !== null}
-              onClick={() => {
-                if (window.confirm(t("cancelConfirm"))) {
-                  void act("/verification/bookings/cancel");
-                }
-              }}
-            >
-              {t("cancelBooking")}
-            </Button>
-          ) : null}
-        </div>
-        {request.state === VerificationState.Scheduled ? (
-          <p className="mt-4 text-[12px] text-text-tertiary">
-            {t("cutoffHint")}
-          </p>
-        ) : null}
-      </div>
-      {request.state === VerificationState.Scheduled ? withdrawLink : null}
+      <SlotPicker
+        slots={slots.filter((slot) => slot.startsAt !== booking.startsAt)}
+        timezone={timezone}
+        onTimezoneChange={setTimezone}
+        busySlotId={busySlotId}
+        onPick={(slotId) =>
+          void act("/verification/bookings/reschedule", {
+            busySlot: slotId,
+            refreshOnConflict: true,
+            goToProfile: true,
+          })
+        }
+      />
+      <Link
+        href="/dashboard/profile"
+        className="mt-4 inline-block text-sm text-text-secondary underline"
+      >
+        {t("keepTime")}
+      </Link>
+      {withdrawLink}
     </div>
   );
 }

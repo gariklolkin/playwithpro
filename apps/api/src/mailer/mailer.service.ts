@@ -17,15 +17,18 @@ export class MailerService {
     this.from = config.get<string>('SMTP_FROM') ?? 'no-reply@playwithpro.local';
   }
 
-  async sendVerificationEmail(to: string, link: string): Promise<void> {
+  async sendVerificationEmail(to: string, code: string): Promise<void> {
     await this.send(
       to,
-      'Verify your PlayWithPro email',
+      `${code} is your PlayWithPro confirmation code`,
       [
         'Welcome to PlayWithPro! 🏓',
         '',
-        'Confirm your email address by opening the link below (valid for 1 hour):',
-        link,
+        'Your confirmation code (valid for 15 minutes):',
+        '',
+        `    ${code}`,
+        '',
+        'Enter it on the screen where you signed up.',
         '',
         "If you didn't create an account, you can ignore this email.",
       ].join('\n'),
@@ -66,7 +69,7 @@ export class MailerService {
         '',
         ...meetLinkLines(input.meetUrl, input.manageUrl),
         '',
-        `Need a different time? Reschedule or cancel here: ${input.manageUrl}`,
+        `Need a different time? Reschedule here: ${input.manageUrl}`,
         '',
         'The attached invite adds the call to any calendar app.',
       ].join('\n'),
@@ -99,7 +102,7 @@ export class MailerService {
         '',
         ...meetLinkLines(input.meetUrl, input.manageUrl),
         '',
-        `Reschedule or cancel here: ${input.manageUrl}`,
+        `Reschedule here: ${input.manageUrl}`,
       ].join('\n'),
     );
   }
@@ -123,7 +126,7 @@ export class MailerService {
         '',
         ...meetLinkLines(input.meetUrl, input.manageUrl),
         '',
-        `Reschedule or cancel here: ${input.manageUrl}`,
+        `Reschedule here: ${input.manageUrl}`,
       ].join('\n'),
       [
         {

@@ -47,7 +47,7 @@ After booking, the system SHALL create a calendar event with a Google Meet link 
 - **THEN** the same working Meet URL is present in each place
 
 ### Requirement: Confirmation and reminder emails
-The system SHALL email the coach a booking confirmation with an `.ics` calendar attachment, and reminders 24 hours and 1 hour before the meeting. Every meeting email SHALL include the date, time, the coach's timezone, the Meet link, and reschedule and cancel links that lead to the authenticated verification page. Reminders SHALL be idempotent (sent at most once per booking per window) and survive service restarts.
+The system SHALL email the coach a booking confirmation with an `.ics` calendar attachment, and reminders 24 hours and 1 hour before the meeting. Every meeting email SHALL include the date, time, the coach's timezone, the Meet link, and a reschedule link that leads to the authenticated verification page. Reminders SHALL be idempotent (sent at most once per booking per window) and survive service restarts.
 
 #### Scenario: Reminder idempotency
 - **WHEN** the reminder job runs repeatedly within the 24-hour window for the same booking
@@ -55,7 +55,7 @@ The system SHALL email the coach a booking confirmation with an `.ics` calendar 
 
 #### Scenario: Confirmation content
 - **WHEN** a coach books a slot
-- **THEN** the confirmation email contains date, time, timezone, Meet link, reschedule link, cancel link, and an `.ics` attachment
+- **THEN** the confirmation email contains date, time, timezone, Meet link, reschedule link, and an `.ics` attachment
 
 ### Requirement: Rescheduling as atomic rebook
 A coach SHALL be able to reschedule until 1 hour before the meeting by picking a new slot first; in one transaction the new slot is booked, the previous booking is marked rescheduled, and the previous slot returns to `OPEN`. The provider event SHALL be updated in place (same event id, same Meet link) rather than duplicated.
@@ -69,15 +69,15 @@ A coach SHALL be able to reschedule until 1 hour before the meeting by picking a
 - **THEN** the request is rejected and the UI directs them to contact support / wait for the admin
 
 ### Requirement: Cancellation by either party
-A coach SHALL be able to cancel their booking (returning the request to `AWAITING_SCHEDULING` and reopening the slot) or withdraw the request entirely (`CANCELLED`). An admin SHALL be able to cancel any booking. In all cases the slot reopens, the provider event is cancelled best-effort, and the other party is notified by email.
+A coach SHALL be able to withdraw the request entirely (`CANCELLED`, releasing any booked slot); a request without a chosen slot has no standalone meaning, so there is no coach-facing "cancel the meeting but keep the request" action — changing the time is a reschedule, leaving is a withdrawal. An admin SHALL be able to cancel any booking. In all cases the slot reopens, the provider event is cancelled best-effort, and the other party is notified by email.
 
 #### Scenario: Admin cancels
 - **WHEN** an admin cancels a coach's booking
 - **THEN** the slot reopens, the request returns to `AWAITING_SCHEDULING`, and the coach receives an email asking to pick a new time
 
-#### Scenario: Coach cancels booking only
-- **WHEN** a coach cancels the meeting but not the request
-- **THEN** the slot reopens and the request returns to `AWAITING_SCHEDULING` with slot selection available
+#### Scenario: Coach withdraws while scheduled
+- **WHEN** a coach withdraws a request that has a booked call
+- **THEN** the slot reopens, the request becomes `CANCELLED`, and admins are notified
 
 ### Requirement: Verification meeting state machine
 A verification request SHALL move through explicit states: `AWAITING_SCHEDULING → SCHEDULED → IN_PROGRESS → VERIFIED | REJECTED`, with terminal `CANCELLED`. No-show and admin cancellation are booking outcomes that return the request to `AWAITING_SCHEDULING`; each booking attempt is preserved as an audit record with its outcome. A second no-show SHALL automatically move the request to `CANCELLED`, requiring re-submission.

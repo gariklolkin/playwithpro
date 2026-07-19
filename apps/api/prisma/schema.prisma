@@ -66,6 +66,8 @@ model VerificationToken {
   userId    String
   kind      String // "email_verify" | "password_reset"
   tokenHash String    @unique
+  /// Wrong email-code entries; the code is burned after the limit.
+  attempts  Int       @default(0)
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime  @default(now())
@@ -154,7 +156,6 @@ model VerificationRequest {
   id           String            @id @default(uuid())
   profileId    String
   state        VerificationState @default(AWAITING_SCHEDULING)
-  credentials  String
   adminNote    String            @default("")
   noShowCount  Int               @default(0)
   reviewedById String?

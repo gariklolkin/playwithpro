@@ -31,9 +31,8 @@
       "errorGoogleEmail": "Un compte existe déjà avec cet e-mail. Connectez-vous avec votre mot de passe, puis liez Google dans les paramètres.",
       "noAccount": "Nouveau sur PlayWithPro ?",
       "createAccount": "Créer un compte",
-      "unverified": "Votre e-mail n'est pas encore confirmé — le lien est dans votre boîte de réception.",
-      "resendLink": "Renvoyer l'e-mail",
-      "verifyResent": "E-mail de confirmation renvoyé — vérifiez votre boîte de réception."
+      "unverified": "Votre e-mail n'est pas encore confirmé.",
+      "getCode": "Recevoir un code de confirmation"
     },
     "register": {
       "title": "Créer un compte",
@@ -54,22 +53,25 @@
       "google": "S'inscrire avec Google",
       "footer": "Nous vous enverrons un lien de vérification · Compte Google non requis",
       "failed": "L'inscription a échoué. Vérifiez les informations et réessayez.",
+      "emailTaken": "Cet e-mail est déjà enregistré — connectez-vous via le lien ci-dessous.",
       "haveAccount": "Vous avez déjà un compte ?",
       "logIn": "Se connecter",
       "checkInboxTitle": "Vérifiez votre boîte mail",
-      "checkInbox": "Presque terminé ! Nous avons envoyé un lien de confirmation à {email}. Ouvrez-le pour activer votre compte et vous connecter."
+      "checkInbox": "Presque fini ! Nous avons envoyé un code à 6 chiffres à {email} — saisissez-le ci-dessous pour activer votre compte."
     },
     "verifyEmail": {
-      "title": "Vérification de l'e-mail",
-      "verifying": "Vérification de votre e-mail…",
-      "success": "Votre e-mail est vérifié. Tout est prêt ! ✅",
-      "goToDashboard": "Aller au tableau de bord",
-      "invalid": "Ce lien de vérification est invalide ou a expiré.",
-      "resendPrompt": "Saisissez votre e-mail et nous vous enverrons un nouveau lien.",
+      "title": "Confirmez votre e-mail",
+      "info": "Saisissez le code à 6 chiffres reçu par e-mail.",
       "email": "E-mail",
-      "emailPlaceholder": "vous@exemple.com",
-      "resend": "Renvoyer le lien de vérification",
-      "resent": "Si un compte existe pour cet e-mail, un nouveau lien est en route."
+      "emailPlaceholder": "vous@exemple.fr",
+      "codeLabel": "Code de confirmation",
+      "submit": "Confirmer",
+      "submitting": "Vérification…",
+      "invalid": "Ce code n'a pas fonctionné — il a peut-être expiré. Vérifiez-le ou demandez-en un nouveau.",
+      "tooMany": "Trop de tentatives — attendez une minute et réessayez.",
+      "noCode": "Rien reçu ?",
+      "resend": "Envoyer un nouveau code",
+      "resent": "Si un compte existe pour cet e-mail, un nouveau code est en route."
     },
     "forgotPassword": {
       "title": "Réinitialiser votre mot de passe",
@@ -124,8 +126,7 @@
         "bookings": "Réservations",
         "earnings": "Revenus",
         "profile": "Mon profil",
-        "settings": "Paramètres",
-        "verification": "Vérification"
+        "settings": "Paramètres"
       }
     },
     "admin": {
@@ -226,7 +227,7 @@
       "callScheduled": "Votre appel de vérification est planifié",
       "join": "Rejoindre la réunion",
       "linkPending": "Le lien de la réunion apparaîtra ici sous peu.",
-      "manage": "Reprogrammer ou annuler",
+      "manage": "Modifier ou retirer",
       "schedulePrompt": "Une dernière étape : réservez un court appel vidéo pour confirmer votre identité.",
       "scheduleCta": "Choisir un horaire",
       "readyInfo": "Votre profil contient tout ce qu'il nous faut pour la vérification. Soumettez-le et choisissez un horaire pour un court appel vidéo (5–15 min).",
@@ -238,7 +239,6 @@
     "empty": "Aucune demande en attente.",
     "submitted": "Soumise le {date}",
     "bio": "Bio",
-    "credentials": "Références",
     "languages": "Langues",
     "services": "Services",
     "approve": "Approuver",
@@ -255,7 +255,7 @@
     "heroImageAlt": "Un amateur et un professionnel en plein échange au tennis de table",
     "trustVerified": "Uniquement des pros <b>vérifiés</b>",
     "trustEscrow": "Paiement conservé sous <b>séquestre</b>",
-    "trustVideo": "Appels vidéo, <b>aucun compte requis</b>",
+    "trustVideo": "Appels vidéo — <b>accès par lien</b>",
     "trustLanguages": "<b>5</b> langues",
     "step1Title": "1. Envoyez votre vidéo",
     "step1Body": "Filmez un match ou un entraînement et envoyez la vidéo. Le pro la regarde avant votre appel.",
@@ -293,17 +293,15 @@
     "inProgress": "Votre appel est en cours",
     "join": "Rejoindre la réunion",
     "linkPending": "Le lien de la réunion apparaîtra ici sous peu.",
-    "reschedule": "Reprogrammer",
-    "cancelBooking": "Annuler la réunion",
-    "cancelConfirm": "Annuler cette réunion ? Le créneau sera libéré et vous en choisirez un autre.",
     "rescheduleTitle": "Choisir un nouvel horaire",
-    "backToBooking": "Garder l'horaire actuel",
     "bannerNoShow": "Vous avez manqué votre appel — choisissez un nouvel horaire.",
     "bannerCancelledByAdmin": "Votre appel a été annulé par l'administrateur — choisissez un nouvel horaire.",
-    "cutoffHint": "Vous pouvez reprogrammer ou annuler jusqu'à 1 heure avant l'appel.",
+    "error": "Un problème est survenu. Veuillez réessayer.",
+    "currentBooking": "Votre appel est actuellement prévu le {day} · {time}.",
+    "keepTime": "Garder l'horaire actuel",
+    "cutoffLocked": "L'horaire ne peut plus être modifié moins d'1 heure avant l'appel — à tout de suite !",
     "withdraw": "Retirer la demande de vérification",
-    "withdrawConfirm": "Retirer complètement votre demande ? Vous pourrez en soumettre une nouvelle plus tard.",
-    "error": "Un problème est survenu. Veuillez réessayer."
+    "withdrawConfirm": "Retirer complètement votre demande ? Vous pourrez en soumettre une nouvelle plus tard."
   },
   "adminScheduling": {
     "tabs": {

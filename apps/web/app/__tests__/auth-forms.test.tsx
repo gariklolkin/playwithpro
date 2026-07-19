@@ -155,7 +155,68 @@ describe("RegisterCard", () => {
     });
   });
 
-  it("offers to resend the confirmation on unverified login", async () => {
+  it("verifies the emailed code and goes straight to the dashboard", async () => {
+    fetchMock.mockResolvedValue({ ok: true, status: 200 });
+
+    renderWithIntl(<RegisterCard />);
+
+    fireEvent.change(screen.getByLabelText("Display name"), {
+      target: { value: "X" },
+    });
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "new@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "password1" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+    await screen.findByText(/Almost there/);
+
+    fireEvent.change(screen.getByLabelText("Confirmation code"), {
+      target: { value: "123456" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/dashboard"));
+    const verify = fetchMock.mock.calls.find(([url]) =>
+      String(url).endsWith("/auth/email/verify"),
+    );
+    expect(JSON.parse((verify![1] as RequestInit).body as string)).toEqual({
+      email: "new@example.com",
+      code: "123456",
+    });
+  });
+
+  it("shows an error for a wrong code", async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true, status: 201 });
+
+    renderWithIntl(<RegisterCard />);
+
+    fireEvent.change(screen.getByLabelText("Display name"), {
+      target: { value: "X" },
+    });
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "new@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "password1" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+    await screen.findByText(/Almost there/);
+
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 400 });
+    fireEvent.change(screen.getByLabelText("Confirmation code"), {
+      target: { value: "000000" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
+
+    expect(
+      await screen.findByText(/That code didn't work/),
+    ).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("offers a confirmation code on unverified login", async () => {
     fetchMock.mockResolvedValue({ ok: false, status: 403 });
 
     renderWithIntl(<LoginCard />);
@@ -171,14 +232,20 @@ describe("RegisterCard", () => {
     expect(
       await screen.findByText(/email is not confirmed/),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Resend the email" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Get a confirmation code" }),
+    );
     await waitFor(() => {
       const resend = fetchMock.mock.calls.find(([url]) =>
         String(url).endsWith("/auth/email/resend"),
       );
       expect(resend).toBeDefined();
     });
-    expect(push).not.toHaveBeenCalled();
+    // The email travels via sessionStorage, never in the URL.
+    expect(sessionStorage.getItem("pendingVerificationEmail")).toBe(
+      "player@example.com",
+    );
+    expect(push).toHaveBeenCalledWith("/verify-email");
   });
 
   it("preselects the professional role from ?role=professional", async () => {
@@ -209,6 +276,27 @@ describe("RegisterCard", () => {
     expect(
       JSON.parse((registerCall![1] as RequestInit).body as string).role,
     ).toBe("professional");
+  });
+
+  it("tells the user the email is taken on a conflict", async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 409 });
+
+    renderWithIntl(<RegisterCard />);
+
+    fireEvent.change(screen.getByLabelText("Display name"), {
+      target: { value: "X" },
+    });
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "taken@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "password1" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+
+    expect(
+      await screen.findByText(/This email is already registered/),
+    ).toBeInTheDocument();
   });
 
   it("shows a generic error when registration fails", async () => {

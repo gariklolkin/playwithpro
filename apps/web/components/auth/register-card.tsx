@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { AuthCard, AuthDivider, AuthFooter } from "./auth-card";
+import { EmailCodeForm, PENDING_EMAIL_KEY } from "./email-code-form";
 import { GoogleButton } from "./google-button";
 import { RolePicker } from "./role-picker";
 import { Button } from "@/components/ui/button";
@@ -45,17 +46,19 @@ export function RegisterCard() {
     });
     setSubmitting(false);
     if (response.ok) {
-      // No session yet — the account activates via the emailed link.
+      // No session yet — the account activates once the emailed code is typed.
+      sessionStorage.setItem(PENDING_EMAIL_KEY, email);
       setDone(true);
       return;
     }
-    setError(t("failed"));
+    setError(response.status === 409 ? t("emailTaken") : t("failed"));
   }
 
   if (done) {
     return (
       <AuthCard title={t("checkInboxTitle")}>
-        <p className="text-sm text-text">{t("checkInbox", { email })}</p>
+        <p className="mb-4 text-sm text-text">{t("checkInbox", { email })}</p>
+        <EmailCodeForm email={email} />
         <AuthFooter>
           {t("haveAccount")} <Link href="/login">{t("logIn")}</Link>
         </AuthFooter>

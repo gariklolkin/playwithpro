@@ -34,4 +34,4 @@
 ## 6. Verification & archive
 - [x] 6.1 E2E happy path against Tilt env (fill profile → submit → admin approves → status verified; reject path with note)
 - [x] 6.2 `pnpm lint && pnpm typecheck && pnpm test && pnpm build` green; CI green
-- [ ] 6.3 STOP — request owner review before archiving; archive only after approval
+- [x] 6.3 STOP — request owner review before archiving; archive only after approval

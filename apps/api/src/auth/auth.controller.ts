@@ -95,12 +95,14 @@ export class AuthController {
 
   @Post('email/verify')
   @HttpCode(HttpStatus.OK)
+  // Strict per-IP limit: 6-digit codes must not be brute-forceable.
+  @Throttle(AUTH_THROTTLE)
   @ApiOkResponse({ description: 'Email confirmed; signed in, cookies set.' })
   async verifyEmail(
     @Body() dto: VerifyEmailDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
-    const { user, tokens } = await this.auth.verifyEmail(dto.token);
+    const { user, tokens } = await this.auth.verifyEmail(dto.email, dto.code);
     setAuthCookies(res, tokens, this.secureCookies());
     return { user };
   }

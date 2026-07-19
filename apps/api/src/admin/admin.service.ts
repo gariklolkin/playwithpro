@@ -73,7 +73,6 @@ export class AdminService {
       return {
         requestId: request.id,
         submittedAt: request.createdAt.toISOString(),
-        credentials: request.credentials,
         state: request.state.toLowerCase() as SharedVerificationState,
         meeting: booking
           ? {

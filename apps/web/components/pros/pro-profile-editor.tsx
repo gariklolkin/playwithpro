@@ -447,7 +447,8 @@ export function ProProfileEditor({
   );
 }
 
-/** Compact verification state for the profile page; managing happens on /dashboard/verification. */
+/** Compact verification state for the profile page; managing (time changes,
+ *  withdrawal) happens on /dashboard/verification. */
 function VerificationStatusView({ profile }: { profile: ProProfileResponse }) {
   const t = useTranslations("proProfile");
   const locale = useLocale();

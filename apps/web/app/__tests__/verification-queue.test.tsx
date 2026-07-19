@@ -23,7 +23,6 @@ afterEach(() => {
 const item: AdminVerificationItem = {
   requestId: "req-1",
   submittedAt: new Date("2026-07-18T10:00:00Z").toISOString(),
-  credentials: "ITTF licensed coach",
   state: VerificationState.AwaitingScheduling,
   meeting: null,
   profile: {

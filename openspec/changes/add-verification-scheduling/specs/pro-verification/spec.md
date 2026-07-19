@@ -5,7 +5,7 @@ Base: the `pro-verification` spec introduced by `add-pro-profiles-verification` 
 ## MODIFIED Requirements
 
 ### Requirement: Verification submission
-A coach SHALL be able to submit their profile for verification in one action — the profile itself (about, languages, services) is the material admins review; no extra free-text input is required (the API MAY accept optional notes) — but only when the coach's email address is verified, the profile is complete (at least one language, at least one active service; the "about" text is optional), and the profile is currently in `draft` or `rejected` status. Submission moves the profile to `pending_review` and the verification request to `AWAITING_SCHEDULING`. No messenger or phone contact is collected; the platform email is the only communication channel — which is why it must be confirmed before submission (and, defensively, before booking a slot). Any personal data shown to admins in the verification flow SHALL carry the note that it is visible to admins only and never published.
+A coach SHALL be able to submit their profile for verification in one action — the profile itself (about, languages, services) is the material admins review; no extra free-text input is collected — but only when the coach's email address is verified, the profile is complete (at least one language, at least one active service; the "about" text is optional), and the profile is currently in `draft` or `rejected` status. Submission moves the profile to `pending_review` and the verification request to `AWAITING_SCHEDULING`. No messenger or phone contact is collected; the platform email is the only communication channel — which is why it must be confirmed before submission (and, defensively, before booking a slot). Any personal data shown to admins in the verification flow SHALL carry the note that it is visible to admins only and never published.
 
 #### Scenario: Unconfirmed email
 - **WHEN** a coach whose email is not yet verified tries to submit for verification
@@ -58,11 +58,11 @@ Admins SHALL be able to list active verification requests with the associated pr
 - **THEN** the request is rejected with a forbidden error
 
 ### Requirement: Verification status visibility
-A coach SHALL always see their current verification status in their profile view: profile status (`draft`, `pending_review`, `verified`, `rejected` with the admin's note) and, while `pending_review`, the request state — awaiting scheduling (with a prompt to book), scheduled (date, time, timezone, Join meeting / Reschedule / Cancel), in progress, or returned to scheduling after a no-show or an admin cancellation (with the reason).
+A coach SHALL always see their current verification status in their profile view: profile status (`draft`, `pending_review`, `verified`, `rejected` with the admin's note) and, while `pending_review`, the request state — awaiting scheduling (with a prompt to book), scheduled (date, time, timezone, Join meeting and a single Change-or-withdraw link to the management page), in progress, or returned to scheduling after a no-show or an admin cancellation (with the reason).
 
 #### Scenario: Scheduled card
 - **WHEN** a coach with a booked call opens their profile
-- **THEN** they see the meeting date and time in their timezone with Join meeting, Reschedule, and Cancel actions
+- **THEN** they see the meeting date and time in their timezone with Join meeting and a link that leads to changing the time or withdrawing the request
 
 #### Scenario: Rejected coach sees the reason
 - **WHEN** a coach opens their profile after a rejection

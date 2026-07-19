@@ -18,9 +18,8 @@ export interface VerificationBookingResponse {
   endsAt: string;
   /** Null while the calendar provider sync is still pending. */
   meetUrl: string | null;
-  /** False once inside the reschedule/cancel cutoff. */
+  /** False once inside the reschedule cutoff. */
   canReschedule: boolean;
-  canCancel: boolean;
 }
 
 export interface BookSlotRequest {
@@ -51,6 +50,5 @@ export interface AdminBookingItem {
   syncStatus: MeetingSyncStatus;
   meetUrl: string | null;
   noShowCount: number;
-  credentials: string;
   coach: { id: string; email: string; displayName: string };
 }

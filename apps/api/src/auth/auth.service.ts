@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   UnauthorizedException,
@@ -26,9 +27,10 @@ export interface AuthResult {
 }
 
 const INVALID_CREDENTIALS = 'Invalid email or password.';
-// Deliberately vague: must not reveal whether the email is registered.
-const REGISTRATION_FAILED =
-  'Registration failed. Check the details and try again.';
+// Matches the OAuth conflict message; we accept revealing that the email is
+// taken (the OAuth flow already does) in exchange for a clear signup error.
+const EMAIL_TAKEN =
+  'An account with this email already exists. Log in instead.';
 const EMAIL_NOT_VERIFIED =
   'Confirm your email address to sign in — check your inbox for the link.';
 
@@ -48,7 +50,7 @@ export class AuthService {
       where: { email: dto.email },
     });
     if (existing) {
-      throw new BadRequestException(REGISTRATION_FAILED);
+      throw new ConflictException(EMAIL_TAKEN);
     }
 
     const passwordHash = await argon2.hash(dto.password, {
@@ -121,13 +123,15 @@ export class AuthService {
 
   /** Confirms the address and signs the user in — possessing the emailed
    *  token proves ownership of the mailbox. */
-  async verifyEmail(token: string): Promise<AuthResult> {
-    const { userId } = await this.tokens.consumeVerificationToken(
-      token,
-      'email_verify',
-    );
+  async verifyEmail(email: string, code: string): Promise<AuthResult> {
+    const account = await this.prisma.user.findUnique({ where: { email } });
+    // Same error as a wrong code — no account enumeration.
+    if (!account || account.emailVerifiedAt) {
+      throw new BadRequestException('This code is invalid or has expired.');
+    }
+    await this.tokens.consumeEmailCode(account.id, code);
     const user = await this.prisma.user.update({
-      where: { id: userId },
+      where: { id: account.id },
       data: { emailVerifiedAt: new Date() },
       include: { oauthAccounts: true },
     });
@@ -189,14 +193,8 @@ export class AuthService {
     userId: string,
     email: string,
   ): Promise<void> {
-    const token = await this.tokens.createVerificationToken(
-      userId,
-      'email_verify',
-    );
-    await this.mailer.sendVerificationEmail(
-      email,
-      `${this.webAppUrl()}/verify-email?token=${token}`,
-    );
+    const code = await this.tokens.createEmailCode(userId);
+    await this.mailer.sendVerificationEmail(email, code);
   }
 
   private webAppUrl(): string {

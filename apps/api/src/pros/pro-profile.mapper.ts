@@ -89,7 +89,6 @@ export function toVerificationResponse(
   return {
     id: request.id,
     state: request.state.toLowerCase() as SharedVerificationState,
-    credentials: request.credentials,
     adminNote: request.adminNote,
     noShowCount: request.noShowCount,
     lastBookingOutcome:
@@ -105,7 +104,6 @@ export function toVerificationResponse(
           endsAt: active.slot.endsAt.toISOString(),
           meetUrl: active.meetUrl,
           canReschedule: canManage,
-          canCancel: canManage,
         }
       : null,
     createdAt: request.createdAt.toISOString(),

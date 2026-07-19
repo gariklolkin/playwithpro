@@ -31,9 +31,8 @@
       "errorGoogleEmail": "Ein Konto mit dieser E-Mail existiert bereits. Melde dich mit deinem Passwort an und verknüpfe Google dann in den Einstellungen.",
       "noAccount": "Neu bei PlayWithPro?",
       "createAccount": "Konto erstellen",
-      "unverified": "Ihre E-Mail ist noch nicht bestätigt — der Link liegt in Ihrem Postfach.",
-      "resendLink": "E-Mail erneut senden",
-      "verifyResent": "Bestätigungs-E-Mail erneut gesendet — prüfen Sie Ihr Postfach."
+      "unverified": "Deine E-Mail ist noch nicht bestätigt.",
+      "getCode": "Bestätigungscode anfordern"
     },
     "register": {
       "title": "Konto erstellen",
@@ -54,22 +53,25 @@
       "google": "Mit Google registrieren",
       "footer": "Wir senden dir einen Bestätigungslink · Kein Google-Konto erforderlich",
       "failed": "Registrierung fehlgeschlagen. Prüfe die Angaben und versuche es erneut.",
+      "emailTaken": "Diese E-Mail ist bereits registriert – melde dich stattdessen unten an.",
       "haveAccount": "Du hast schon ein Konto?",
       "logIn": "Anmelden",
       "checkInboxTitle": "Postfach prüfen",
-      "checkInbox": "Fast geschafft! Wir haben einen Bestätigungslink an {email} gesendet. Öffnen Sie ihn, um Ihr Konto zu aktivieren und sich anzumelden."
+      "checkInbox": "Fast geschafft! Wir haben einen 6-stelligen Code an {email} geschickt – gib ihn unten ein, um dein Konto zu aktivieren."
     },
     "verifyEmail": {
-      "title": "E-Mail-Bestätigung",
-      "verifying": "Deine E-Mail wird bestätigt…",
-      "success": "Deine E-Mail ist bestätigt. Alles bereit! ✅",
-      "goToDashboard": "Zum Dashboard",
-      "invalid": "Dieser Bestätigungslink ist ungültig oder abgelaufen.",
-      "resendPrompt": "Gib deine E-Mail ein und wir senden dir einen neuen Link.",
+      "title": "E-Mail bestätigen",
+      "info": "Gib den 6-stelligen Code aus der E-Mail ein, die wir dir geschickt haben.",
       "email": "E-Mail",
-      "emailPlaceholder": "du@beispiel.com",
-      "resend": "Bestätigungslink erneut senden",
-      "resent": "Falls ein Konto mit dieser E-Mail existiert, ist ein neuer Link unterwegs."
+      "emailPlaceholder": "du@beispiel.de",
+      "codeLabel": "Bestätigungscode",
+      "submit": "Bestätigen",
+      "submitting": "Wird geprüft…",
+      "invalid": "Der Code hat nicht funktioniert – er ist evtl. abgelaufen. Prüfe ihn oder fordere einen neuen an.",
+      "tooMany": "Zu viele Versuche – warte eine Minute und versuche es erneut.",
+      "noCode": "Nichts erhalten?",
+      "resend": "Neuen Code senden",
+      "resent": "Falls ein Konto mit dieser E-Mail existiert, ist ein neuer Code unterwegs."
     },
     "forgotPassword": {
       "title": "Passwort zurücksetzen",
@@ -124,8 +126,7 @@
         "bookings": "Buchungen",
         "earnings": "Einnahmen",
         "profile": "Mein Profil",
-        "settings": "Einstellungen",
-        "verification": "Verifizierung"
+        "settings": "Einstellungen"
       }
     },
     "admin": {
@@ -226,7 +227,7 @@
       "callScheduled": "Ihr Verifizierungsanruf ist geplant",
       "join": "Meeting beitreten",
       "linkPending": "Der Meeting-Link erscheint hier in Kürze.",
-      "manage": "Verschieben oder absagen",
+      "manage": "Ändern oder zurückziehen",
       "schedulePrompt": "Noch ein Schritt: Buchen Sie einen kurzen Videoanruf zur Identitätsprüfung.",
       "scheduleCta": "Termin wählen",
       "readyInfo": "Ihr Profil enthält alles, was wir für die Prüfung brauchen. Reichen Sie es ein und wählen Sie eine Zeit für einen kurzen (5–15 Min.) Videoanruf.",
@@ -238,7 +239,6 @@
     "empty": "Keine offenen Anfragen.",
     "submitted": "Eingereicht am {date}",
     "bio": "Bio",
-    "credentials": "Qualifikationen",
     "languages": "Sprachen",
     "services": "Leistungen",
     "approve": "Genehmigen",
@@ -255,7 +255,7 @@
     "heroImageAlt": "Ein Amateur und ein Profi im Ballwechsel an der Tischtennisplatte",
     "trustVerified": "Nur <b>verifizierte</b> Profis",
     "trustEscrow": "Zahlung liegt im <b>Treuhandkonto</b>",
-    "trustVideo": "Videoanrufe, <b>kein Konto nötig</b>",
+    "trustVideo": "Videoanrufe – <b>Beitritt per Link</b>",
     "trustLanguages": "<b>5</b> Sprachen",
     "step1Title": "1. Lade dein Video hoch",
     "step1Body": "Nimm ein Match oder eine Trainingsübung auf und lade sie hoch. Der Pro sieht sie sich vor eurem Gespräch an.",
@@ -293,17 +293,15 @@
     "inProgress": "Ihr Anruf läuft",
     "join": "Meeting beitreten",
     "linkPending": "Der Meeting-Link erscheint hier in Kürze.",
-    "reschedule": "Verschieben",
-    "cancelBooking": "Meeting absagen",
-    "cancelConfirm": "Dieses Meeting absagen? Der Termin wird freigegeben und Sie wählen einen neuen.",
     "rescheduleTitle": "Neue Zeit wählen",
-    "backToBooking": "Aktuelle Zeit behalten",
     "bannerNoShow": "Sie haben Ihren Anruf verpasst — bitte wählen Sie eine neue Zeit.",
     "bannerCancelledByAdmin": "Ihr Anruf wurde vom Administrator abgesagt — bitte wählen Sie eine neue Zeit.",
-    "cutoffHint": "Verschieben oder absagen ist bis 1 Stunde vor dem Anruf möglich.",
+    "error": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "currentBooking": "Dein Anruf ist aktuell am {day} · {time}.",
+    "keepTime": "Aktuelle Zeit behalten",
+    "cutoffLocked": "Innerhalb 1 Stunde vor dem Anruf kann die Zeit nicht mehr geändert werden – bis gleich!",
     "withdraw": "Verifizierungsanfrage zurückziehen",
-    "withdrawConfirm": "Anfrage vollständig zurückziehen? Sie können später eine neue stellen.",
-    "error": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+    "withdrawConfirm": "Anfrage vollständig zurückziehen? Sie können später eine neue stellen."
   },
   "adminScheduling": {
     "tabs": {

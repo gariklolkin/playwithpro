@@ -1,4 +1,5 @@
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { createHash } from 'node:crypto';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import { PrismaService } from '../prisma/prisma.service';
@@ -17,8 +18,11 @@ describe('TokenService', () => {
     verificationToken: {
       create: jest.fn(),
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       update: jest.fn(),
+      deleteMany: jest.fn(),
     },
+    $transaction: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -151,6 +155,87 @@ describe('TokenService', () => {
 
       await expect(
         service.consumeVerificationToken('raw', 'password_reset'),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+  });
+
+  describe('email codes', () => {
+    const hash = (userId: string, code: string) =>
+      createHash('sha256').update(`${userId}:${code}`).digest('hex');
+    const activeRecord = (code: string) => ({
+      id: 'vt-1',
+      userId: 'user-1',
+      kind: 'email_verify',
+      tokenHash: hash('user-1', code),
+      attempts: 0,
+      usedAt: null,
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+
+    it('createEmailCode invalidates previous codes and returns 6 digits', async () => {
+      const code = await service.createEmailCode('user-1');
+
+      expect(code).toMatch(/^\d{6}$/);
+      expect(prisma.verificationToken.deleteMany).toHaveBeenCalledWith({
+        where: { userId: 'user-1', kind: 'email_verify' },
+      });
+      expect(prisma.verificationToken.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          userId: 'user-1',
+          kind: 'email_verify',
+          tokenHash: hash('user-1', code),
+        }) as object,
+      });
+    });
+
+    it('accepts the right code and marks it used', async () => {
+      prisma.verificationToken.findFirst.mockResolvedValue(
+        activeRecord('123456'),
+      );
+
+      await service.consumeEmailCode('user-1', '123456');
+
+      expect(prisma.verificationToken.update).toHaveBeenCalledWith({
+        where: { id: 'vt-1' },
+        data: { usedAt: expect.any(Date) as Date },
+      });
+    });
+
+    it('counts a wrong code and burns it on the final attempt', async () => {
+      prisma.verificationToken.findFirst.mockResolvedValue({
+        ...activeRecord('123456'),
+        attempts: 4,
+      });
+
+      await expect(
+        service.consumeEmailCode('user-1', '999999'),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(prisma.verificationToken.update).toHaveBeenCalledWith({
+        where: { id: 'vt-1' },
+        data: { attempts: 5, usedAt: expect.any(Date) as Date },
+      });
+    });
+
+    it('rejects a burned code even when the guess is right', async () => {
+      prisma.verificationToken.findFirst.mockResolvedValue({
+        ...activeRecord('123456'),
+        attempts: 5,
+      });
+
+      await expect(
+        service.consumeEmailCode('user-1', '123456'),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(prisma.verificationToken.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects an expired code', async () => {
+      prisma.verificationToken.findFirst.mockResolvedValue({
+        ...activeRecord('123456'),
+        expiresAt: new Date(Date.now() - 1_000),
+      });
+
+      await expect(
+        service.consumeEmailCode('user-1', '123456'),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
   });

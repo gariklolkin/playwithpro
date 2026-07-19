@@ -31,9 +31,8 @@
       "errorGoogleEmail": "该邮箱已注册账户。请使用密码登录，然后在设置中关联 Google。",
       "noAccount": "第一次使用 PlayWithPro？",
       "createAccount": "创建账户",
-      "unverified": "您的邮箱尚未确认——登录链接在您的收件箱中。",
-      "resendLink": "重新发送邮件",
-      "verifyResent": "确认邮件已重新发送——请查收。"
+      "unverified": "您的邮箱尚未确认。",
+      "getCode": "获取验证码"
     },
     "register": {
       "title": "创建账户",
@@ -54,22 +53,25 @@
       "google": "使用 Google 注册",
       "footer": "我们将发送验证链接 · 无需 Google 账户",
       "failed": "注册失败。请检查信息后重试。",
+      "emailTaken": "该邮箱已注册——请使用下方链接登录。",
       "haveAccount": "已有账户？",
       "logIn": "登录",
       "checkInboxTitle": "请查收邮件",
-      "checkInbox": "就快完成了！我们已向 {email} 发送确认链接。打开链接即可激活账户并登录。"
+      "checkInbox": "快完成了！我们已将 6 位验证码发送至 {email}——请在下方输入以激活账户。"
     },
     "verifyEmail": {
-      "title": "邮箱验证",
-      "verifying": "正在验证您的邮箱…",
-      "success": "您的邮箱已验证。一切就绪！✅",
-      "goToDashboard": "前往控制台",
-      "invalid": "此验证链接无效或已过期。",
-      "resendPrompt": "输入您的邮箱，我们将发送新的链接。",
+      "title": "确认您的邮箱",
+      "info": "请输入我们发送到您邮箱的 6 位验证码。",
       "email": "邮箱",
       "emailPlaceholder": "you@example.com",
-      "resend": "重新发送验证链接",
-      "resent": "如果该邮箱已注册账户，新链接正在发送中。"
+      "codeLabel": "验证码",
+      "submit": "确认",
+      "submitting": "正在验证…",
+      "invalid": "验证码无效——可能已过期。请检查或重新获取。",
+      "tooMany": "尝试次数过多——请稍等一分钟后重试。",
+      "noCode": "没有收到？",
+      "resend": "重新发送验证码",
+      "resent": "如果该邮箱已注册，新验证码已在路上。"
     },
     "forgotPassword": {
       "title": "重置密码",
@@ -124,8 +126,7 @@
         "bookings": "预约",
         "earnings": "收入",
         "profile": "我的主页",
-        "settings": "设置",
-        "verification": "认证"
+        "settings": "设置"
       }
     },
     "admin": {
@@ -226,7 +227,7 @@
       "callScheduled": "您的认证通话已安排",
       "join": "加入会议",
       "linkPending": "会议链接稍后将显示在这里。",
-      "manage": "改期或取消",
+      "manage": "更改或撤回",
       "schedulePrompt": "只差一步：预约一次简短的视频通话以核实身份。",
       "scheduleCta": "选择时间",
       "readyInfo": "您的资料已包含审核所需的全部信息。提交后请选择一个简短（5–15 分钟）视频通话的时间。",
@@ -238,7 +239,6 @@
     "empty": "暂无待审申请。",
     "submitted": "提交于 {date}",
     "bio": "简介",
-    "credentials": "资质",
     "languages": "语言",
     "services": "服务",
     "approve": "通过",
@@ -255,7 +255,7 @@
     "heroImageAlt": "一位业余球员与一位职业选手在乒乓球对打中",
     "trustVerified": "仅限<b>认证</b>职业选手",
     "trustEscrow": "款项由<b>第三方托管</b>",
-    "trustVideo": "视频通话，<b>无需额外账户</b>",
+    "trustVideo": "视频通话，<b>点击链接加入</b>",
     "trustLanguages": "<b>5</b> 种语言",
     "step1Title": "1. 上传视频",
     "step1Body": "录制比赛或训练片段并上传。职业选手会在通话前观看。",
@@ -293,17 +293,15 @@
     "inProgress": "通话进行中",
     "join": "加入会议",
     "linkPending": "会议链接稍后将显示在这里。",
-    "reschedule": "改期",
-    "cancelBooking": "取消会议",
-    "cancelConfirm": "取消此会议？该时段将被释放，您可以另选时间。",
     "rescheduleTitle": "选择新时间",
-    "backToBooking": "保留当前时间",
     "bannerNoShow": "您错过了通话——请选择新的时间。",
     "bannerCancelledByAdmin": "管理员取消了通话——请选择新的时间。",
-    "cutoffHint": "最晚可在通话前 1 小时改期或取消。",
+    "error": "出了点问题，请重试。",
+    "currentBooking": "您的通话目前定于 {day} · {time}。",
+    "keepTime": "保留当前时间",
+    "cutoffLocked": "通话前 1 小时内无法更改时间——到时见！",
     "withdraw": "撤回认证申请",
-    "withdrawConfirm": "完全撤回认证申请？之后可以重新提交。",
-    "error": "出了点问题，请重试。"
+    "withdrawConfirm": "完全撤回认证申请？之后可以重新提交。"
   },
   "adminScheduling": {
     "tabs": {

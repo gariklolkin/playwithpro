@@ -18,6 +18,7 @@ export function VerificationQueue({
   initialItems: AdminVerificationItem[];
 }) {
   const t = useTranslations("adminVerification");
+  const tServices = useTranslations("proProfile.services");
   const tState = useTranslations("adminScheduling.bookings.state");
   const tBookings = useTranslations("adminScheduling.bookings");
   const locale = useLocale();
@@ -127,12 +128,6 @@ export function VerificationQueue({
               </dd>
             </div>
             <div>
-              <dt className="text-text-tertiary">{t("credentials")}</dt>
-              <dd className="whitespace-pre-wrap text-text">
-                {item.credentials || "—"}
-              </dd>
-            </div>
-            <div>
               <dt className="text-text-tertiary">{t("languages")}</dt>
               <dd className="text-text">
                 {item.profile.languages
@@ -150,7 +145,7 @@ export function VerificationQueue({
                   .filter((service) => service.active)
                   .map(
                     (service) =>
-                      `${service.type}: ${formatPrice(service.priceMinor, service.currency)}/h`,
+                      `${tServices(service.type)}: ${formatPrice(service.priceMinor, service.currency)}/h`,
                   )
                   .join(" · ") || "—"}
               </dd>

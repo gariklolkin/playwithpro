@@ -17,7 +17,6 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { SubmitVerificationDto } from './dto/submit-verification.dto';
 import { UpdateProProfileDto } from './dto/update-pro-profile.dto';
 import { UpsertProServiceDto } from './dto/upsert-pro-service.dto';
 import { ProsService } from './pros.service';
@@ -69,8 +68,7 @@ export class ProsController {
   @ApiOkResponse({ description: 'Verification submitted; profile pending.' })
   async submitVerification(
     @CurrentUser() user: AuthenticatedUser,
-    @Body() dto: SubmitVerificationDto,
   ): Promise<ProProfileResponse> {
-    return this.pros.submitVerification(user.id, dto);
+    return this.pros.submitVerification(user.id);
   }
 }

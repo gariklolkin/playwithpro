@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -29,6 +30,8 @@ describe('AuthService', () => {
     revokeAllRefreshTokens: jest.fn(),
     createVerificationToken: jest.fn().mockResolvedValue('one-time'),
     consumeVerificationToken: jest.fn(),
+    createEmailCode: jest.fn().mockResolvedValue('123456'),
+    consumeEmailCode: jest.fn(),
   };
   const mailer = {
     sendVerificationEmail: jest.fn(),
@@ -59,7 +62,7 @@ describe('AuthService', () => {
         displayName: 'X',
         role: 'amateur',
       } as never),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    ).rejects.toBeInstanceOf(ConflictException);
     expect(prisma.user.create).not.toHaveBeenCalled();
   });
 
@@ -170,7 +173,11 @@ describe('AuthService', () => {
   });
 
   it('verifyEmail confirms the address and signs the user in', async () => {
-    tokens.consumeVerificationToken.mockResolvedValue({ userId: 'u1' });
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u1',
+      email: 'n@e.c',
+      emailVerifiedAt: null,
+    });
     prisma.user.update.mockResolvedValue({
       id: 'u1',
       email: 'n@e.c',
@@ -183,8 +190,9 @@ describe('AuthService', () => {
       oauthAccounts: [],
     });
 
-    const result = await service.verifyEmail('one-time');
+    const result = await service.verifyEmail('n@e.c', '123456');
 
+    expect(tokens.consumeEmailCode).toHaveBeenCalledWith('u1', '123456');
     expect(prisma.user.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: { emailVerifiedAt: expect.any(Date) as Date },
@@ -192,6 +200,15 @@ describe('AuthService', () => {
     );
     expect(result.user.emailVerified).toBe(true);
     expect(result.tokens.refreshToken).toBe('refresh');
+  });
+
+  it('verifyEmail fails identically for unknown or already-verified emails', async () => {
+    prisma.user.findUnique.mockResolvedValue(null);
+
+    await expect(
+      service.verifyEmail('ghost@example.com', '123456'),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(tokens.consumeEmailCode).not.toHaveBeenCalled();
   });
 
   it('refresh kills sessions of unverified accounts', async () => {

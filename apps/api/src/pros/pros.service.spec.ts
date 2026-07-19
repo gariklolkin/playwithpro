@@ -120,9 +120,9 @@ describe('ProsService', () => {
     prisma.user.findUniqueOrThrow.mockResolvedValue({ emailVerifiedAt: null });
     prisma.proProfile.findUnique.mockResolvedValue(baseProfile);
 
-    await expect(
-      service.submitVerification('user-1', { credentials: 'x' }),
-    ).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(service.submitVerification('user-1')).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
@@ -132,11 +132,9 @@ describe('ProsService', () => {
       status: 'PENDING_REVIEW',
     });
 
-    await expect(
-      service.submitVerification('user-1', {
-        credentials: 'ITTF licensed',
-      }),
-    ).rejects.toBeInstanceOf(ConflictException);
+    await expect(service.submitVerification('user-1')).rejects.toBeInstanceOf(
+      ConflictException,
+    );
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
@@ -149,7 +147,7 @@ describe('ProsService', () => {
     });
 
     const error = await service
-      .submitVerification('user-1', { credentials: 'x' })
+      .submitVerification('user-1')
       .catch((caught: ConflictException) => caught);
 
     expect(error).toBeInstanceOf(ConflictException);
@@ -163,15 +161,12 @@ describe('ProsService', () => {
       status: 'REJECTED',
     });
 
-    await service.submitVerification('user-1', {
-      credentials: 'National champion 2019',
-    });
+    await service.submitVerification('user-1');
 
     expect(prisma.verificationRequest.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           profileId: 'profile-1',
-          credentials: 'National champion 2019',
         }) as object,
       }),
     );

@@ -218,7 +218,6 @@ describe("ProProfileEditor", () => {
       latestVerification: {
         id: "req-1",
         state: VerificationState.AwaitingScheduling,
-        credentials: "x",
         adminNote: "",
         noShowCount: 0,
         lastBookingOutcome: null,
@@ -241,7 +240,6 @@ describe("ProProfileEditor", () => {
       latestVerification: {
         id: "req-1",
         state: VerificationState.Scheduled,
-        credentials: "x",
         adminNote: "",
         noShowCount: 0,
         lastBookingOutcome: null,
@@ -251,7 +249,6 @@ describe("ProProfileEditor", () => {
           endsAt: new Date("2026-07-21T12:45:00Z").toISOString(),
           meetUrl: "https://meet.google.com/abc-defg-hij",
           canReschedule: true,
-          canCancel: true,
         },
         createdAt: new Date().toISOString(),
         reviewedAt: null,
@@ -263,7 +260,7 @@ describe("ProProfileEditor", () => {
       "https://meet.google.com/abc-defg-hij",
     );
     expect(
-      screen.getByRole("link", { name: "Reschedule or cancel" }),
+      screen.getByRole("link", { name: "Change or withdraw" }),
     ).toBeInTheDocument();
   });
 
@@ -274,7 +271,6 @@ describe("ProProfileEditor", () => {
       latestVerification: {
         id: "req-1",
         state: VerificationState.Rejected,
-        credentials: "x",
         adminNote: "No verifiable credentials",
         noShowCount: 0,
         lastBookingOutcome: null,

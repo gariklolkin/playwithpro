@@ -43,4 +43,4 @@
 ## 7. Rollout
 
 - [x] 7.1 Deploy checklist: Workspace service account + delegation scopes, calendar, Meet external-guest settings; document in README/infra notes
-- [ ] 7.2 Verify full flow on staging with a non-Google email: book → confirmation + .ics → join as anonymous guest → approve; and no-show/reschedule paths
+- [ ] 7.2 (deferred by owner 2026-07-19 — archive now, verify on staging when Workspace is set up) Verify full flow on staging with a non-Google email: book → confirmation + .ics → join as anonymous guest → approve; and no-show/reschedule paths

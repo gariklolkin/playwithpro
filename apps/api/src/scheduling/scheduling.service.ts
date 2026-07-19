@@ -139,34 +139,6 @@ export class SchedulingService {
     return this.profileResponse(userId);
   }
 
-  async cancelByPro(userId: string): Promise<ProProfileResponse> {
-    const { profile, request } = await this.coachRequest(userId);
-    const current = this.activeBooking(request);
-    this.assertManageable(current.slot.startsAt, 'cancel');
-
-    await this.prisma.$transaction([
-      this.prisma.verificationBooking.update({
-        where: { id: current.id },
-        data: { status: BookingStatus.CANCELLED_BY_PRO },
-      }),
-      this.prisma.verificationSlot.update({
-        where: { id: current.slotId },
-        data: { status: SlotStatus.OPEN },
-      }),
-      this.prisma.verificationRequest.update({
-        where: { id: request.id },
-        data: { state: VerificationState.AWAITING_SCHEDULING },
-      }),
-    ]);
-
-    await this.sync.cancelEvent(current.googleEventId);
-    await this.notify.coachCancelled(
-      profile.user,
-      `cancelled the verification call scheduled for ${current.slot.startsAt.toISOString()}; the slot is open again.`,
-    );
-    return this.profileResponse(userId);
-  }
-
   async withdraw(userId: string): Promise<ProProfileResponse> {
     const { profile, request } = await this.coachRequest(userId);
     if (
@@ -529,7 +501,6 @@ export class SchedulingService {
       syncStatus: booking.syncStatus.toLowerCase() as SharedMeetingSyncStatus,
       meetUrl: booking.meetUrl,
       noShowCount: request.noShowCount,
-      credentials: request.credentials,
       coach: {
         id: request.profile.user.id,
         email: request.profile.user.email,

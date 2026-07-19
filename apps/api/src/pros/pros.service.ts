@@ -7,7 +7,6 @@ import {
 import {
   ProProfileResponse,
   ServiceType,
-  SubmitVerificationRequest,
   UpdateProProfileRequest,
   UpsertProServiceRequest,
 } from '@playwithpro/shared';
@@ -105,10 +104,7 @@ export class ProsService {
     return this.getProfile(userId);
   }
 
-  async submitVerification(
-    userId: string,
-    dto: SubmitVerificationRequest,
-  ): Promise<ProProfileResponse> {
+  async submitVerification(userId: string): Promise<ProProfileResponse> {
     // The whole verification flow (booking confirmations, reminders, the
     // meeting invite) runs over email — it must be confirmed first.
     const user = await this.prisma.user.findUniqueOrThrow({
@@ -145,10 +141,7 @@ export class ProsService {
 
     await this.prisma.$transaction([
       this.prisma.verificationRequest.create({
-        data: {
-          profileId: profile.id,
-          credentials: dto.credentials?.trim() ?? '',
-        },
+        data: { profileId: profile.id },
       }),
       this.prisma.proProfile.update({
         where: { id: profile.id },
