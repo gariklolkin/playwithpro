@@ -54,6 +54,20 @@ class EnvironmentVariables {
   @IsOptional()
   @IsString()
   GOOGLE_CLIENT_SECRET?: string;
+
+  /** Service-account JSON key (whole file); absent = fake meeting provider. */
+  @IsOptional()
+  @IsString()
+  GOOGLE_SA_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  GOOGLE_CALENDAR_ID?: string;
+
+  /** Workspace user the service account impersonates (calendar owner). */
+  @IsOptional()
+  @IsString()
+  GOOGLE_IMPERSONATE_SUBJECT?: string;
 }
 
 export function validate(

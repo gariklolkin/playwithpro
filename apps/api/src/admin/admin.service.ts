@@ -3,20 +3,42 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { AdminVerificationItem } from '@playwithpro/shared';
 import {
+  AdminVerificationItem,
+  VerificationState as SharedVerificationState,
+} from '@playwithpro/shared';
+import {
+  BookingStatus,
   ProProfileStatus,
-  VerificationStatus as PrismaVerificationStatus,
+  SlotStatus,
+  VerificationState,
 } from '@prisma/client';
 import { MailerService } from '../mailer/mailer.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { toProfileResponse } from '../pros/pro-profile.mapper';
+import { PROFILE_INCLUDE, toProfileResponse } from '../pros/pro-profile.mapper';
+import { MeetingSyncService } from '../scheduling/meeting/meeting-sync.service';
+
+/** States an admin can still act on. */
+const ACTIVE_STATES: VerificationState[] = [
+  VerificationState.AWAITING_SCHEDULING,
+  VerificationState.SCHEDULED,
+  VerificationState.IN_PROGRESS,
+];
+
+/** Approval is expected only around the identity call. */
+const APPROVABLE_STATES: VerificationState[] = [
+  VerificationState.SCHEDULED,
+  VerificationState.IN_PROGRESS,
+];
 
 const QUEUE_INCLUDE = {
+  bookings: {
+    orderBy: { createdAt: 'desc' as const },
+    include: { slot: true },
+  },
   profile: {
     include: {
-      services: { orderBy: { type: 'asc' } },
-      verificationRequests: { orderBy: { createdAt: 'desc' }, take: 1 },
+      ...PROFILE_INCLUDE,
       user: true,
     },
   },
@@ -27,62 +49,82 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailer: MailerService,
+    private readonly sync: MeetingSyncService,
   ) {}
 
-  async listPending(): Promise<AdminVerificationItem[]> {
+  async listQueue(): Promise<AdminVerificationItem[]> {
     const requests = await this.prisma.verificationRequest.findMany({
-      where: { status: PrismaVerificationStatus.PENDING },
+      where: { state: { in: ACTIVE_STATES } },
       orderBy: { createdAt: 'asc' },
       include: QUEUE_INCLUDE,
     });
-    return requests.map((request) => ({
-      requestId: request.id,
-      submittedAt: request.createdAt.toISOString(),
-      credentials: request.credentials,
-      contactTelegram: request.contactTelegram,
-      contactPhone: request.contactPhone,
-      callRequestedAt: request.callRequestedAt?.toISOString() ?? null,
-      profile: toProfileResponse(request.profile),
-      user: {
-        id: request.profile.user.id,
-        email: request.profile.user.email,
-        displayName: request.profile.user.displayName,
-      },
-    }));
-  }
-
-  /** Marks the request and emails the coach that a video call is coming. */
-  async requestCall(requestId: string): Promise<void> {
-    const request = await this.pendingRequest(requestId);
-    await this.prisma.verificationRequest.update({
-      where: { id: request.id },
-      data: { callRequestedAt: new Date() },
-    });
-    await this.mailer.sendVerificationCallEmail(
-      request.profile.user.email,
-      request.profile.user.displayName,
-      [request.contactTelegram, request.contactPhone]
-        .filter(Boolean)
-        .join(', '),
+    // Soonest meeting first; requests without a booking need no admin action
+    // yet, so they follow, oldest submission first.
+    const meetingTime = (request: (typeof requests)[number]) =>
+      this.scheduledBooking(request)?.slot.startsAt.getTime() ??
+      Number.POSITIVE_INFINITY;
+    requests.sort(
+      (a, b) =>
+        meetingTime(a) - meetingTime(b) ||
+        a.createdAt.getTime() - b.createdAt.getTime(),
     );
+    return requests.map((request) => {
+      const booking = this.scheduledBooking(request);
+      return {
+        requestId: request.id,
+        submittedAt: request.createdAt.toISOString(),
+        credentials: request.credentials,
+        state: request.state.toLowerCase() as SharedVerificationState,
+        meeting: booking
+          ? {
+              bookingId: booking.id,
+              startsAt: booking.slot.startsAt.toISOString(),
+              endsAt: booking.slot.endsAt.toISOString(),
+              meetUrl: booking.meetUrl,
+            }
+          : null,
+        profile: toProfileResponse(request.profile),
+        user: {
+          id: request.profile.user.id,
+          email: request.profile.user.email,
+          displayName: request.profile.user.displayName,
+        },
+      };
+    });
   }
 
   async approve(requestId: string, reviewerId: string): Promise<void> {
-    const request = await this.pendingRequest(requestId);
-    await this.prisma.$transaction([
-      this.prisma.verificationRequest.update({
+    const request = await this.activeRequest(requestId);
+    if (!APPROVABLE_STATES.includes(request.state)) {
+      throw new ConflictException(
+        'Approval happens on the identity call — the coach has not scheduled one yet.',
+      );
+    }
+    const booking = this.scheduledBooking(request);
+    await this.prisma.$transaction(async (tx) => {
+      await tx.verificationRequest.update({
         where: { id: request.id },
         data: {
-          status: PrismaVerificationStatus.APPROVED,
+          state: VerificationState.VERIFIED,
           reviewedById: reviewerId,
           reviewedAt: new Date(),
         },
-      }),
-      this.prisma.proProfile.update({
+      });
+      await tx.proProfile.update({
         where: { id: request.profileId },
         data: { status: ProProfileStatus.VERIFIED },
-      }),
-    ]);
+      });
+      if (booking) {
+        await tx.verificationBooking.update({
+          where: { id: booking.id },
+          data: { status: BookingStatus.COMPLETED },
+        });
+        await tx.verificationSlot.update({
+          where: { id: booking.slotId },
+          data: { status: SlotStatus.REMOVED },
+        });
+      }
+    });
     await this.mailer.sendVerificationApprovedEmail(
       request.profile.user.email,
       request.profile.user.displayName,
@@ -94,22 +136,36 @@ export class AdminService {
     reviewerId: string,
     note: string,
   ): Promise<void> {
-    const request = await this.pendingRequest(requestId);
-    await this.prisma.$transaction([
-      this.prisma.verificationRequest.update({
+    const request = await this.activeRequest(requestId);
+    const booking = this.scheduledBooking(request);
+    await this.prisma.$transaction(async (tx) => {
+      await tx.verificationRequest.update({
         where: { id: request.id },
         data: {
-          status: PrismaVerificationStatus.REJECTED,
+          state: VerificationState.REJECTED,
           adminNote: note.trim(),
           reviewedById: reviewerId,
           reviewedAt: new Date(),
         },
-      }),
-      this.prisma.proProfile.update({
+      });
+      await tx.proProfile.update({
         where: { id: request.profileId },
         data: { status: ProProfileStatus.REJECTED },
-      }),
-    ]);
+      });
+      if (booking) {
+        await tx.verificationBooking.update({
+          where: { id: booking.id },
+          data: { status: BookingStatus.CANCELLED_BY_ADMIN },
+        });
+        await tx.verificationSlot.update({
+          where: { id: booking.slotId },
+          data: { status: SlotStatus.OPEN },
+        });
+      }
+    });
+    if (booking) {
+      await this.sync.cancelEvent(booking.googleEventId);
+    }
     await this.mailer.sendVerificationRejectedEmail(
       request.profile.user.email,
       request.profile.user.displayName,
@@ -117,17 +173,28 @@ export class AdminService {
     );
   }
 
-  private async pendingRequest(requestId: string) {
+  private async activeRequest(requestId: string) {
     const request = await this.prisma.verificationRequest.findUnique({
       where: { id: requestId },
-      include: { profile: { include: { user: true } } },
+      include: {
+        bookings: true,
+        profile: { include: { user: true } },
+      },
     });
     if (!request) {
       throw new NotFoundException();
     }
-    if (request.status !== PrismaVerificationStatus.PENDING) {
-      throw new ConflictException('This request has already been reviewed.');
+    if (!ACTIVE_STATES.includes(request.state)) {
+      throw new ConflictException('This request has already been resolved.');
     }
     return request;
+  }
+
+  private scheduledBooking<T extends { status: BookingStatus }>(request: {
+    bookings: T[];
+  }): T | undefined {
+    return request.bookings.find(
+      (booking) => booking.status === BookingStatus.SCHEDULED,
+    );
   }
 }

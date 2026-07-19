@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
 } from '@nestjs/common';
 import {
@@ -13,16 +14,11 @@ import {
 import { ProProfileStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
+  PROFILE_INCLUDE,
   ProfileWithRelations,
   toPrismaServiceType,
   toProfileResponse,
 } from './pro-profile.mapper';
-
-/** Latest verification request first; that's the one shown to the coach. */
-const PROFILE_INCLUDE = {
-  services: { orderBy: { type: 'asc' } },
-  verificationRequests: { orderBy: { createdAt: 'desc' }, take: 1 },
-} as const;
 
 @Injectable()
 export class ProsService {
@@ -113,6 +109,18 @@ export class ProsService {
     userId: string,
     dto: SubmitVerificationRequest,
   ): Promise<ProProfileResponse> {
+    // The whole verification flow (booking confirmations, reminders, the
+    // meeting invite) runs over email — it must be confirmed first.
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { emailVerifiedAt: true },
+    });
+    if (!user.emailVerifiedAt) {
+      throw new ForbiddenException(
+        'Confirm your email address before submitting for verification.',
+      );
+    }
+
     const profile = await this.ensureProfile(userId);
 
     if (profile.status === ProProfileStatus.PENDING_REVIEW) {
@@ -120,12 +128,6 @@ export class ProsService {
     }
     if (profile.status === ProProfileStatus.VERIFIED) {
       throw new ConflictException('This profile is already verified.');
-    }
-
-    if (!dto.contactTelegram?.trim() && !dto.contactPhone?.trim()) {
-      throw new BadRequestException(
-        'Leave at least one contact for the verification video call.',
-      );
     }
 
     const missing: string[] = [];
@@ -145,9 +147,7 @@ export class ProsService {
       this.prisma.verificationRequest.create({
         data: {
           profileId: profile.id,
-          credentials: dto.credentials.trim(),
-          contactTelegram: dto.contactTelegram?.trim() ?? '',
-          contactPhone: dto.contactPhone?.trim() ?? '',
+          credentials: dto.credentials?.trim() ?? '',
         },
       }),
       this.prisma.proProfile.update({

@@ -1,12 +1,10 @@
-import type {
-  ProProfileStatus,
-  VerificationStatus,
-} from "../enums/pro-profile";
+import type { ProProfileStatus } from "../enums/pro-profile";
 import type { ServiceType } from "../enums/service-type";
+import type { BookingStatus, VerificationState } from "../enums/verification";
+import type { VerificationBookingResponse } from "./verification";
 
 export const BIO_MAX_LENGTH = 4000;
 export const CREDENTIALS_MAX_LENGTH = 4000;
-export const CONTACT_MAX_LENGTH = 200;
 
 export interface ProServiceResponse {
   type: ServiceType;
@@ -40,14 +38,15 @@ export interface UpdateProProfileRequest {
 
 export interface VerificationRequestResponse {
   id: string;
-  status: VerificationStatus;
+  state: VerificationState;
   credentials: string;
-  contactTelegram: string;
-  /** Doubles as WhatsApp (wa.me/<phone>). */
-  contactPhone: string;
   adminNote: string;
+  noShowCount: number;
+  /** Outcome of the latest finished booking; drives the "pick a new time" banner. */
+  lastBookingOutcome: BookingStatus | null;
+  /** The active (scheduled) booking, when state is `scheduled`/`in_progress`. */
+  booking: VerificationBookingResponse | null;
   createdAt: string;
-  callRequestedAt: string | null;
   reviewedAt: string | null;
 }
 
@@ -60,26 +59,29 @@ export interface ProProfileResponse {
   latestVerification: VerificationRequestResponse | null;
 }
 
+/** The reviewed material is the profile itself; extra notes are optional. */
 export interface SubmitVerificationRequest {
-  credentials: string;
-  /** At least one contact is required for the identity video call. */
-  contactTelegram?: string;
-  /** Doubles as WhatsApp (wa.me/<phone>). */
-  contactPhone?: string;
+  credentials?: string;
 }
 
 export interface RejectVerificationRequest {
   note: string;
 }
 
-/** Admin queue item: pending request with profile and user summary. */
+/** Admin queue item: request with profile and user summary.
+ *  Ordered by meeting time (soonest first); unscheduled requests follow. */
 export interface AdminVerificationItem {
   requestId: string;
   submittedAt: string;
   credentials: string;
-  contactTelegram: string;
-  contactPhone: string;
-  callRequestedAt: string | null;
+  state: VerificationState;
+  /** The scheduled call, when one is booked. */
+  meeting: {
+    bookingId: string;
+    startsAt: string;
+    endsAt: string;
+    meetUrl: string | null;
+  } | null;
   profile: ProProfileResponse;
   user: {
     id: string;

@@ -1,4 +1,8 @@
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { ServiceType } from '@playwithpro/shared';
 import { PrismaService } from '../prisma/prisma.service';
@@ -45,11 +49,17 @@ describe('ProsService', () => {
     verificationRequest: {
       create: jest.fn(),
     },
+    user: {
+      findUniqueOrThrow: jest.fn(),
+    },
     $transaction: jest.fn().mockResolvedValue([]),
   };
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    prisma.user.findUniqueOrThrow.mockResolvedValue({
+      emailVerifiedAt: new Date(),
+    });
     const moduleRef = await Test.createTestingModule({
       providers: [ProsService, { provide: PrismaService, useValue: prisma }],
     }).compile();
@@ -106,6 +116,16 @@ describe('ProsService', () => {
     );
   });
 
+  it('blocks verification submission until the email is confirmed', async () => {
+    prisma.user.findUniqueOrThrow.mockResolvedValue({ emailVerifiedAt: null });
+    prisma.proProfile.findUnique.mockResolvedValue(baseProfile);
+
+    await expect(
+      service.submitVerification('user-1', { credentials: 'x' }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
   it('blocks verification submission while a request is pending', async () => {
     prisma.proProfile.findUnique.mockResolvedValue({
       ...baseProfile,
@@ -115,7 +135,6 @@ describe('ProsService', () => {
     await expect(
       service.submitVerification('user-1', {
         credentials: 'ITTF licensed',
-        contactTelegram: '@coach',
       }),
     ).rejects.toBeInstanceOf(ConflictException);
     expect(prisma.$transaction).not.toHaveBeenCalled();
@@ -130,21 +149,12 @@ describe('ProsService', () => {
     });
 
     const error = await service
-      .submitVerification('user-1', { credentials: 'x', contactPhone: '+491' })
+      .submitVerification('user-1', { credentials: 'x' })
       .catch((caught: ConflictException) => caught);
 
     expect(error).toBeInstanceOf(ConflictException);
     expect((error as ConflictException).message).toContain('language');
     expect((error as ConflictException).message).toContain('service');
-  });
-
-  it('rejects a submission without any contact', async () => {
-    prisma.proProfile.findUnique.mockResolvedValue(baseProfile);
-
-    await expect(
-      service.submitVerification('user-1', { credentials: 'ITTF licensed' }),
-    ).rejects.toBeInstanceOf(BadRequestException);
-    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
   it('allows resubmission after rejection and moves the profile to pending', async () => {
@@ -155,7 +165,6 @@ describe('ProsService', () => {
 
     await service.submitVerification('user-1', {
       credentials: 'National champion 2019',
-      contactTelegram: '@coach_ma',
     });
 
     expect(prisma.verificationRequest.create).toHaveBeenCalledWith(

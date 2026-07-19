@@ -87,10 +87,34 @@ enum ServiceType {
   GAME
 }
 
-enum VerificationStatus {
-  PENDING
-  APPROVED
+enum VerificationState {
+  AWAITING_SCHEDULING
+  SCHEDULED
+  IN_PROGRESS
+  VERIFIED
   REJECTED
+  CANCELLED
+}
+
+enum SlotStatus {
+  OPEN
+  BOOKED
+  REMOVED
+}
+
+enum BookingStatus {
+  SCHEDULED
+  COMPLETED
+  RESCHEDULED
+  NO_SHOW
+  CANCELLED_BY_PRO
+  CANCELLED_BY_ADMIN
+}
+
+enum MeetingSyncStatus {
+  PENDING
+  SYNCED
+  FAILED
 }
 
 /// Coach-owned public profile; 1:1 with a PROFESSIONAL user.
@@ -125,20 +149,59 @@ model ProService {
   @@unique([profileId, type])
 }
 
-/// Audit trail of verification submissions; the newest PENDING one is the queue item.
+/// Audit trail of verification submissions; the newest active one drives the flow.
 model VerificationRequest {
-  id              String             @id @default(uuid())
-  profileId       String
-  status          VerificationStatus @default(PENDING)
-  credentials     String
-  contactTelegram String             @default("") // for the identity video call
-  contactPhone    String             @default("") // doubles as WhatsApp (wa.me/<phone>)
-  adminNote       String             @default("")
-  reviewedById    String?
-  reviewedAt      DateTime?
-  callRequestedAt DateTime?
-  createdAt       DateTime           @default(now())
-  profile         ProProfile         @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  id           String            @id @default(uuid())
+  profileId    String
+  state        VerificationState @default(AWAITING_SCHEDULING)
+  credentials  String
+  adminNote    String            @default("")
+  noShowCount  Int               @default(0)
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime          @default(now())
+  profile      ProProfile        @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
-  @@index([status, createdAt])
+  bookings VerificationBooking[]
+
+  @@index([state, createdAt])
+}
+
+/// Admin-published verification call slot. Times are UTC.
+model VerificationSlot {
+  id          String     @id @default(uuid())
+  startsAt    DateTime
+  endsAt      DateTime
+  status      SlotStatus @default(OPEN)
+  createdById String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  bookings VerificationBooking[]
+
+  @@index([status, startsAt])
+}
+
+/// One booking attempt per row; outcomes (no-show, cancellations) stay as audit trail.
+/// A partial unique index (raw SQL in the migration) allows at most one
+/// SCHEDULED booking per slot while keeping finished attempts as history.
+model VerificationBooking {
+  id                String              @id @default(uuid())
+  slotId            String
+  requestId         String
+  status            BookingStatus       @default(SCHEDULED)
+  googleEventId     String?
+  meetUrl           String?
+  syncStatus        MeetingSyncStatus   @default(PENDING)
+  syncAttempts      Int                 @default(0)
+  reminder24hSentAt DateTime?
+  reminder1hSentAt  DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  slot              VerificationSlot    @relation(fields: [slotId], references: [id])
+  request           VerificationRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([slotId])
+  @@index([requestId])
+  @@index([status, syncStatus])
 }

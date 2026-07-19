@@ -3,5 +3,7 @@ export * from "./enums/service-type";
 export * from "./enums/locale";
 export * from "./enums/role";
 export * from "./enums/pro-profile";
+export * from "./enums/verification";
 export * from "./types/auth";
 export * from "./types/pro-profile";
+export * from "./types/verification";

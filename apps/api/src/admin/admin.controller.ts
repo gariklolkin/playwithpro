@@ -28,20 +28,10 @@ export class AdminController {
 
   @Get('verification-requests')
   @ApiOkResponse({
-    description: 'Pending verification requests, oldest first.',
+    description: 'Active verification requests, oldest first.',
   })
-  async listPending(): Promise<AdminVerificationItem[]> {
-    return this.admin.listPending();
-  }
-
-  @Post('verification-requests/:id/call')
-  @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ description: 'Coach invited to an identity video call.' })
-  async requestCall(
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<{ ok: true }> {
-    await this.admin.requestCall(id);
-    return { ok: true };
+  async listQueue(): Promise<AdminVerificationItem[]> {
+    return this.admin.listQueue();
   }
 
   @Post('verification-requests/:id/approve')

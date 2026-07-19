@@ -47,22 +47,149 @@ export class MailerService {
     );
   }
 
-  async sendVerificationCallEmail(
-    to: string,
-    displayName: string,
-    contact: string,
-  ): Promise<void> {
+  async sendBookingConfirmedEmail(input: {
+    to: string;
+    displayName: string;
+    whenLine: string;
+    meetUrl: string | null;
+    manageUrl: string;
+    ics: string;
+  }): Promise<void> {
     await this.send(
-      to,
-      'PlayWithPro verification: short video call',
+      input.to,
+      'Your PlayWithPro verification call is booked',
       [
-        `Hi ${displayName},`,
+        `Hi ${input.displayName},`,
         '',
-        'To finish verifying your professional profile we do a short video call.',
-        `We will reach out via the contact you left (${contact}) to agree on a time.`,
+        'Your identity video call is scheduled:',
+        input.whenLine,
         '',
-        'You can also just reply to this email with a time that suits you.',
+        ...meetLinkLines(input.meetUrl, input.manageUrl),
+        '',
+        `Need a different time? Reschedule or cancel here: ${input.manageUrl}`,
+        '',
+        'The attached invite adds the call to any calendar app.',
       ].join('\n'),
+      [
+        {
+          filename: 'verification-call.ics',
+          content: input.ics,
+          contentType: 'text/calendar; charset=utf-8; method=REQUEST',
+        },
+      ],
+    );
+  }
+
+  async sendBookingReminderEmail(input: {
+    to: string;
+    displayName: string;
+    whenLine: string;
+    meetUrl: string | null;
+    manageUrl: string;
+    hoursBefore: number;
+  }): Promise<void> {
+    await this.send(
+      input.to,
+      `Reminder: PlayWithPro verification call in ${input.hoursBefore === 1 ? '1 hour' : `${input.hoursBefore} hours`}`,
+      [
+        `Hi ${input.displayName},`,
+        '',
+        'Your identity video call is coming up:',
+        input.whenLine,
+        '',
+        ...meetLinkLines(input.meetUrl, input.manageUrl),
+        '',
+        `Reschedule or cancel here: ${input.manageUrl}`,
+      ].join('\n'),
+    );
+  }
+
+  async sendBookingRescheduledEmail(input: {
+    to: string;
+    displayName: string;
+    whenLine: string;
+    meetUrl: string | null;
+    manageUrl: string;
+    ics: string;
+  }): Promise<void> {
+    await this.send(
+      input.to,
+      'Your PlayWithPro verification call was rescheduled',
+      [
+        `Hi ${input.displayName},`,
+        '',
+        'Your identity video call has a new time:',
+        input.whenLine,
+        '',
+        ...meetLinkLines(input.meetUrl, input.manageUrl),
+        '',
+        `Reschedule or cancel here: ${input.manageUrl}`,
+      ].join('\n'),
+      [
+        {
+          filename: 'verification-call.ics',
+          content: input.ics,
+          contentType: 'text/calendar; charset=utf-8; method=REQUEST',
+        },
+      ],
+    );
+  }
+
+  async sendBookingCancelledByAdminEmail(input: {
+    to: string;
+    displayName: string;
+    whenLine: string;
+    manageUrl: string;
+  }): Promise<void> {
+    await this.send(
+      input.to,
+      'Your PlayWithPro verification call was cancelled',
+      [
+        `Hi ${input.displayName},`,
+        '',
+        `We had to cancel your verification call scheduled for:`,
+        input.whenLine,
+        '',
+        `Sorry about that — please pick a new time here: ${input.manageUrl}`,
+      ].join('\n'),
+    );
+  }
+
+  async sendBookingNoShowEmail(input: {
+    to: string;
+    displayName: string;
+    requestCancelled: boolean;
+    manageUrl: string;
+  }): Promise<void> {
+    await this.send(
+      input.to,
+      'We missed you at your PlayWithPro verification call',
+      [
+        `Hi ${input.displayName},`,
+        '',
+        'You did not join your scheduled verification call.',
+        '',
+        input.requestCancelled
+          ? 'Because this was the second missed call, your verification request was cancelled. You can submit a new request from your profile at any time.'
+          : `No problem — please pick a new time here: ${input.manageUrl}`,
+      ].join('\n'),
+    );
+  }
+
+  /** Heads-up to admins when a pro cancels or withdraws. */
+  async sendCoachCancelledNoticeEmail(
+    adminEmails: string[],
+    coachName: string,
+    detail: string,
+  ): Promise<void> {
+    await Promise.all(
+      adminEmails.map((to) =>
+        this.send(
+          to,
+          'PlayWithPro: a verification call was cancelled by the pro',
+          [`${coachName}: ${detail}`].join('\n'),
+        ),
+      ),
     );
   }
 
@@ -103,12 +230,36 @@ export class MailerService {
     );
   }
 
-  /** Sends best-effort: a broken SMTP must not fail auth flows. */
-  private async send(to: string, subject: string, text: string): Promise<void> {
+  /** Sends best-effort: a broken SMTP must not fail application flows. */
+  private async send(
+    to: string,
+    subject: string,
+    text: string,
+    attachments?: Array<{
+      filename: string;
+      content: string;
+      contentType: string;
+    }>,
+  ): Promise<void> {
     try {
-      await this.transporter.sendMail({ from: this.from, to, subject, text });
+      await this.transporter.sendMail({
+        from: this.from,
+        to,
+        subject,
+        text,
+        attachments,
+      });
     } catch (error) {
       this.logger.error(`Failed to send "${subject}" to ${to}`, error as Error);
     }
   }
+}
+
+/** The Meet link may still be syncing right after booking. */
+function meetLinkLines(meetUrl: string | null, manageUrl: string): string[] {
+  return meetUrl
+    ? [`Join the meeting: ${meetUrl}`]
+    : [
+        `The meeting link will appear on your verification page shortly: ${manageUrl}`,
+      ];
 }
