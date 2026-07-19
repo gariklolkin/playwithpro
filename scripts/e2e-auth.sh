@@ -28,18 +28,21 @@ mail_token() { # $1: recipient, $2: path prefix (verify-email|reset-password)
   fail "no email for $1"
 }
 
-step "1. register -> me (unverified)"
-curl -sf -c "$JAR" -X POST "$API/auth/register" -H 'Content-Type: application/json' \
+step "1. register -> no session until the email is confirmed"
+curl -sf -X POST "$API/auth/register" -H 'Content-Type: application/json' \
   -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\",\"displayName\":\"E2E Player\",\"role\":\"amateur\"}" >/dev/null
+CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$API/auth/login" -H 'Content-Type: application/json' \
+  -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}")
+[ "$CODE" = "403" ] || fail "expected 403 for unverified login, got $CODE"
+echo "unverified login -> 403 OK"
+
+step "2. verify email via Mailpit link -> signed in -> me (verified + amateur)"
+TOKEN=$(mail_token "$EMAIL" "verify-email")
+curl -sf -c "$JAR" -X POST "$API/auth/email/verify" -H 'Content-Type: application/json' -d "{\"token\":\"$TOKEN\"}" >/dev/null
 ME=$(curl -sf -b "$JAR" "$API/users/me")
 echo "$ME"
-echo "$ME" | grep -q '"emailVerified":false' || fail "expected unverified"
+echo "$ME" | grep -q '"emailVerified":true' || fail "verify did not stick"
 echo "$ME" | grep -q '"role":"amateur"' || fail "expected amateur role"
-
-step "2. verify email via Mailpit link -> me (verified)"
-TOKEN=$(mail_token "$EMAIL" "verify-email")
-curl -sf -X POST "$API/auth/email/verify" -H 'Content-Type: application/json' -d "{\"token\":\"$TOKEN\"}" >/dev/null
-curl -sf -b "$JAR" "$API/users/me" | grep -q '"emailVerified":true' || fail "verify did not stick"
 echo "verified OK; reusing the link must fail:"
 curl -s -o /dev/null -w '  second use -> %{http_code}\n' -X POST "$API/auth/email/verify" -H 'Content-Type: application/json' -d "{\"token\":\"$TOKEN\"}"
 

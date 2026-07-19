@@ -2,7 +2,7 @@
 
 import { Role, type SignupRole } from "@playwithpro/shared";
 import { useSearchParams } from "next/navigation";
-import { Link, useRouter } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { apiFetch } from "@/lib/api";
@@ -15,9 +15,8 @@ import { Label } from "@/components/ui/label";
 
 export function RegisterCard() {
   const t = useTranslations("auth.register");
-  const router = useRouter();
 
-  // "For coaches" entry points deep-link here with ?role=professional.
+  // "For pros" entry points deep-link here with ?role=professional.
   const preselected =
     useSearchParams().get("role") === Role.Professional
       ? Role.Professional
@@ -28,6 +27,7 @@ export function RegisterCard() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -43,13 +43,24 @@ export function RegisterCard() {
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       }),
     });
+    setSubmitting(false);
     if (response.ok) {
-      router.push("/dashboard");
-      router.refresh();
+      // No session yet — the account activates via the emailed link.
+      setDone(true);
       return;
     }
-    setSubmitting(false);
     setError(t("failed"));
+  }
+
+  if (done) {
+    return (
+      <AuthCard title={t("checkInboxTitle")}>
+        <p className="text-sm text-text">{t("checkInbox", { email })}</p>
+        <AuthFooter>
+          {t("haveAccount")} <Link href="/login">{t("logIn")}</Link>
+        </AuthFooter>
+      </AuthCard>
+    );
   }
 
   return (

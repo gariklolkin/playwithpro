@@ -21,6 +21,8 @@ export function LoginCard() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [unverified, setUnverified] = useState(false);
+  const [resent, setResent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Silent session restore: a returning visitor with only a refresh cookie
@@ -49,6 +51,8 @@ export function LoginCard() {
     event.preventDefault();
     setSubmitting(true);
     setError(null);
+    setUnverified(false);
+    setResent(false);
     const response = await apiFetch("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
@@ -59,7 +63,20 @@ export function LoginCard() {
       return;
     }
     setSubmitting(false);
+    if (response.status === 403) {
+      // Right password, unconfirmed email — offer to resend the link.
+      setUnverified(true);
+      return;
+    }
     setError(t("invalid"));
+  }
+
+  async function handleResend() {
+    await apiFetch("/auth/email/resend", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+    setResent(true);
   }
 
   const oauthErrorMessage =
@@ -105,6 +122,24 @@ export function LoginCard() {
           <p role="alert" className="mb-3 text-[13px] text-[#E03E3E]">
             {error}
           </p>
+        ) : null}
+        {unverified ? (
+          <div className="mb-3 rounded-lg bg-[#FDECC8] px-3 py-2 text-[13px] text-[#402C1B]">
+            {resent ? (
+              t("verifyResent")
+            ) : (
+              <>
+                {t("unverified")}{" "}
+                <button
+                  type="button"
+                  onClick={() => void handleResend()}
+                  className="cursor-pointer font-semibold underline"
+                >
+                  {t("resendLink")}
+                </button>
+              </>
+            )}
+          </div>
         ) : null}
         <Button type="submit" size="full" disabled={submitting}>
           {submitting ? t("submitting") : t("submit")}

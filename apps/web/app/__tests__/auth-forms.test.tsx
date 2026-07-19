@@ -138,7 +138,9 @@ describe("RegisterCard", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/dashboard"));
+    // No session yet: the form switches to the check-your-inbox screen.
+    expect(await screen.findByText(/Almost there/)).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
     const registerCall = fetchMock.mock.calls.find(([url]) =>
       String(url).endsWith("/auth/register"),
     );
@@ -151,6 +153,32 @@ describe("RegisterCard", () => {
       password: "password1",
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
+  });
+
+  it("offers to resend the confirmation on unverified login", async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 403 });
+
+    renderWithIntl(<LoginCard />);
+
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "player@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "password1" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Log in" }));
+
+    expect(
+      await screen.findByText(/email is not confirmed/),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Resend the email" }));
+    await waitFor(() => {
+      const resend = fetchMock.mock.calls.find(([url]) =>
+        String(url).endsWith("/auth/email/resend"),
+      );
+      expect(resend).toBeDefined();
+    });
+    expect(push).not.toHaveBeenCalled();
   });
 
   it("preselects the professional role from ?role=professional", async () => {
@@ -174,7 +202,7 @@ describe("RegisterCard", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/dashboard"));
+    expect(await screen.findByText(/Almost there/)).toBeInTheDocument();
     const registerCall = fetchMock.mock.calls.find(([url]) =>
       String(url).endsWith("/auth/register"),
     );

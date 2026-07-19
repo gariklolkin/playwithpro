@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -28,6 +29,8 @@ const INVALID_CREDENTIALS = 'Invalid email or password.';
 // Deliberately vague: must not reveal whether the email is registered.
 const REGISTRATION_FAILED =
   'Registration failed. Check the details and try again.';
+const EMAIL_NOT_VERIFIED =
+  'Confirm your email address to sign in — check your inbox for the link.';
 
 @Injectable()
 export class AuthService {
@@ -38,7 +41,9 @@ export class AuthService {
     private readonly config: ConfigService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<AuthResult> {
+  /** Creates the account and sends the confirmation link — no session yet:
+   *  the account becomes usable only after the email is verified. */
+  async register(dto: RegisterDto): Promise<void> {
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -57,11 +62,9 @@ export class AuthService {
         displayName: dto.displayName,
         ...(dto.timezone ? { timezone: dto.timezone } : {}),
       },
-      include: { oauthAccounts: true },
     });
 
     await this.sendVerificationEmail(user.id, user.email);
-    return this.signIn(user);
   }
 
   async login(dto: LoginDto): Promise<AuthResult> {
@@ -76,6 +79,10 @@ export class AuthService {
     if (!valid) {
       throw new UnauthorizedException(INVALID_CREDENTIALS);
     }
+    if (!user.emailVerifiedAt) {
+      // Correct password, unconfirmed address: 403 so the UI can offer resend.
+      throw new ForbiddenException(EMAIL_NOT_VERIFIED);
+    }
     return this.signIn(user);
   }
 
@@ -89,7 +96,9 @@ export class AuthService {
       where: { id: userId },
       include: { oauthAccounts: true },
     });
-    if (!user) {
+    // Unverified accounts cannot keep a session alive: any lingering
+    // pre-verification session dies at the next rotation.
+    if (!user || !user.emailVerifiedAt) {
       throw new UnauthorizedException();
     }
     return {
@@ -110,15 +119,19 @@ export class AuthService {
     }
   }
 
-  async verifyEmail(token: string): Promise<void> {
+  /** Confirms the address and signs the user in — possessing the emailed
+   *  token proves ownership of the mailbox. */
+  async verifyEmail(token: string): Promise<AuthResult> {
     const { userId } = await this.tokens.consumeVerificationToken(
       token,
       'email_verify',
     );
-    await this.prisma.user.update({
+    const user = await this.prisma.user.update({
       where: { id: userId },
       data: { emailVerifiedAt: new Date() },
+      include: { oauthAccounts: true },
     });
+    return this.signIn(user);
   }
 
   /** Always resolves — no user enumeration. */

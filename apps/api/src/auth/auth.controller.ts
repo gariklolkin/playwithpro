@@ -49,14 +49,13 @@ export class AuthController {
 
   @Post('register')
   @Throttle(AUTH_THROTTLE)
-  @ApiOkResponse({ description: 'Account created and signed in.' })
-  async register(
-    @Body() dto: RegisterDto,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<AuthResponse> {
-    const { user, tokens } = await this.auth.register(dto);
-    setAuthCookies(res, tokens, this.secureCookies());
-    return { user };
+  @ApiOkResponse({
+    description:
+      'Account created; confirmation email sent. No session until the email is verified.',
+  })
+  async register(@Body() dto: RegisterDto): Promise<{ ok: true }> {
+    await this.auth.register(dto);
+    return { ok: true };
   }
 
   @Post('login')
@@ -96,9 +95,14 @@ export class AuthController {
 
   @Post('email/verify')
   @HttpCode(HttpStatus.OK)
-  async verifyEmail(@Body() dto: VerifyEmailDto): Promise<{ ok: true }> {
-    await this.auth.verifyEmail(dto.token);
-    return { ok: true };
+  @ApiOkResponse({ description: 'Email confirmed; signed in, cookies set.' })
+  async verifyEmail(
+    @Body() dto: VerifyEmailDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthResponse> {
+    const { user, tokens } = await this.auth.verifyEmail(dto.token);
+    setAuthCookies(res, tokens, this.secureCookies());
+    return { user };
   }
 
   @Post('email/resend')
