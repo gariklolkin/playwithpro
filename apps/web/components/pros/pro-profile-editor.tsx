@@ -11,7 +11,7 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { LOCALE_LABELS } from "@/i18n/locale-labels";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api";
 import { browserTimezone, formatDay, formatTime } from "@/lib/timezones";
 import { Button } from "@/components/ui/button";
@@ -69,7 +69,7 @@ interface ServiceFormState {
   venueLabel: string;
   venueLat: number | null;
   venueLng: number | null;
-  status: "idle" | "saving" | "saved" | "error";
+  status: "idle" | "saving" | "error";
   error: string;
 }
 
@@ -88,6 +88,28 @@ function serviceFormFrom(
   };
 }
 
+function sameLanguages(a: string[], b: string[]): boolean {
+  return a.length === b.length && a.every((code) => b.includes(code));
+}
+
+/** True when the form differs from what the server has — Save stays disabled otherwise. */
+function serviceDirty(
+  form: ServiceFormState,
+  saved: ProServiceResponse | undefined,
+): boolean {
+  if (!saved) {
+    return true; // offered but never saved
+  }
+  const priceMinor = Math.round(Number(form.price.replace(",", ".")) * 100);
+  return (
+    priceMinor !== saved.priceMinor ||
+    form.currency !== saved.currency ||
+    form.venueLabel !== saved.venueLabel ||
+    (form.venueLat ?? null) !== saved.venueLat ||
+    (form.venueLng ?? null) !== saved.venueLng
+  );
+}
+
 export function ProProfileEditor({
   initialProfile,
   emailVerified,
@@ -96,14 +118,15 @@ export function ProProfileEditor({
   emailVerified: boolean;
 }) {
   const t = useTranslations("proProfile");
+  const router = useRouter();
   const [profile, setProfile] = useState(initialProfile);
 
   // About form
   const [bio, setBio] = useState(profile.bio);
   const [languages, setLanguages] = useState<string[]>(profile.languages);
-  const [aboutStatus, setAboutStatus] = useState<
-    "idle" | "saving" | "saved" | "error"
-  >("idle");
+  const [aboutStatus, setAboutStatus] = useState<"idle" | "saving" | "error">(
+    "idle",
+  );
 
   // Services
   const [services, setServices] = useState<Record<string, ServiceFormState>>(
@@ -121,6 +144,10 @@ export function ProProfileEditor({
     "idle" | "submitting" | "error"
   >("idle");
   const [verifyError, setVerifyError] = useState("");
+
+  // Save buttons stay disabled while the form matches the server state.
+  const aboutDirty =
+    bio !== profile.bio || !sameLanguages(languages, profile.languages);
 
   function patchService(type: string, patch: Partial<ServiceFormState>) {
     setServices((current) => ({
@@ -141,7 +168,8 @@ export function ProProfileEditor({
       return;
     }
     setProfile((await response.json()) as ProProfileResponse);
-    setAboutStatus("saved");
+    // The re-disabled Save button is the "saved" signal — no extra note.
+    setAboutStatus("idle");
   }
 
   async function handleServiceSave(type: ServiceType) {
@@ -167,7 +195,7 @@ export function ProProfileEditor({
       return;
     }
     setProfile((await response.json()) as ProProfileResponse);
-    patchService(type, { status: "saved" });
+    patchService(type, { status: "idle" });
   }
 
   async function handleServiceRemove(type: ServiceType) {
@@ -196,8 +224,9 @@ export function ProProfileEditor({
       setVerifyError(await errorMessage(response));
       return;
     }
-    setProfile((await response.json()) as ProProfileResponse);
-    setVerifyStatus("idle");
+    // One intent, one screen: keep the button in its submitting state and go
+    // straight to the slot picker — no intermediate card flash.
+    router.push("/dashboard/verification");
   }
 
   const canSubmitVerification =
@@ -256,14 +285,12 @@ export function ProProfileEditor({
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Button type="submit" disabled={aboutStatus === "saving"}>
+            <Button
+              type="submit"
+              disabled={aboutStatus === "saving" || !aboutDirty}
+            >
               {aboutStatus === "saving" ? t("about.saving") : t("about.save")}
             </Button>
-            {aboutStatus === "saved" ? (
-              <span className="text-[13px] text-text-secondary">
-                {t("about.saved")}
-              </span>
-            ) : null}
             {aboutStatus === "error" ? (
               <span className="text-[13px] text-[#E03E3E]">
                 {t("about.error")}
@@ -360,18 +387,19 @@ export function ProProfileEditor({
                     <Button
                       type="button"
                       size="sm"
-                      disabled={form.status === "saving"}
+                      disabled={
+                        form.status === "saving" ||
+                        !serviceDirty(
+                          form,
+                          profile.services.find((s) => s.type === type),
+                        )
+                      }
                       onClick={() => void handleServiceSave(type)}
                     >
                       {form.status === "saving"
                         ? t("services.saving")
                         : t("services.save")}
                     </Button>
-                    {form.status === "saved" ? (
-                      <span className="text-[13px] text-text-secondary">
-                        {t("services.saved")}
-                      </span>
-                    ) : null}
                     {form.status === "error" ? (
                       <span className="text-[13px] text-[#E03E3E]">
                         {form.error || t("services.error")}

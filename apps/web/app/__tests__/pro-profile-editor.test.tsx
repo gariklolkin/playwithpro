@@ -9,6 +9,21 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import messages from "../../messages/en.json";
 import { ProProfileEditor } from "@/components/pros/pro-profile-editor";
 
+const push = vi.fn();
+
+vi.mock("@/i18n/navigation", () => ({
+  useRouter: () => ({ push, replace: vi.fn(), refresh: vi.fn() }),
+  Link: ({
+    href,
+    children,
+    ...props
+  }: React.ComponentProps<"a"> & { href: string }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
 const fetchMock = vi.fn();
 
 beforeEach(() => {
@@ -49,7 +64,11 @@ describe("ProProfileEditor", () => {
       ok: true,
       status: 200,
       json: () =>
-        Promise.resolve({ ...draftProfile, bio: "20 years of coaching" }),
+        Promise.resolve({
+          ...draftProfile,
+          bio: "20 years of coaching",
+          languages: ["en", "de"],
+        }),
     });
     renderEditor();
 
@@ -60,7 +79,12 @@ describe("ProProfileEditor", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: "Deutsch" }));
     fireEvent.click(screen.getByRole("button", { name: "Save profile" }));
 
-    expect(await screen.findByText("Profile saved.")).toBeInTheDocument();
+    // Saved state = the Save button disables again (no separate note).
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Save profile" }),
+      ).toBeDisabled(),
+    );
     const call = fetchMock.mock.calls.find(([url]) =>
       String(url).endsWith("/pros/me/profile"),
     );
@@ -71,6 +95,26 @@ describe("ProProfileEditor", () => {
     };
     expect(body.bio).toBe("20 years of coaching");
     expect(body.languages).toEqual(["en", "de"]);
+  });
+
+  it("keeps Save disabled until something changes and after a successful save", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ ...draftProfile, bio: "New bio" }),
+    });
+    renderEditor();
+
+    const save = screen.getByRole("button", { name: "Save profile" });
+    expect(save).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText("About you"), {
+      target: { value: "New bio" },
+    });
+    expect(save).toBeEnabled();
+
+    fireEvent.click(save);
+    await waitFor(() => expect(save).toBeDisabled());
   });
 
   it("sends the hourly price converted to minor units", async () => {
@@ -148,7 +192,10 @@ describe("ProProfileEditor", () => {
       screen.getByRole("button", { name: "Submit for verification" }),
     );
 
-    expect(await screen.findByText(/Under review/)).toBeInTheDocument();
+    // One intent, one step: submission leads straight to the slot picker.
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith("/dashboard/verification"),
+    );
     const call = fetchMock.mock.calls.find(([url]) =>
       String(url).endsWith("/pros/me/verification"),
     );
