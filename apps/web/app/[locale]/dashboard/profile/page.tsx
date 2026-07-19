@@ -38,7 +38,10 @@ export default async function ProProfilePage() {
         <h1 className="text-[28px] font-bold text-text">🏆 {t("title")}</h1>
         <p className="mt-1 text-text-secondary">{t("subtitle")}</p>
       </header>
-      <ProProfileEditor initialProfile={profile} />
+      <ProProfileEditor
+        initialProfile={profile}
+        emailVerified={user.emailVerified}
+      />
     </div>
   );
 }

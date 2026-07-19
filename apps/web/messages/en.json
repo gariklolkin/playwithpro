@@ -1,8 +1,8 @@
 {
   "nav": {
-    "findCoach": "Find a coach",
+    "findCoach": "Find a pro",
     "howItWorks": "How it works",
-    "forCoaches": "For coaches",
+    "forCoaches": "For pros",
     "language": "Language",
     "login": "Log in",
     "getStarted": "Get started",
@@ -30,7 +30,10 @@
       "errorGoogle": "Google sign-in didn't complete. Please try again.",
       "errorGoogleEmail": "An account with this email already exists. Log in with your password, then link Google in settings.",
       "noAccount": "New to PlayWithPro?",
-      "createAccount": "Create account"
+      "createAccount": "Create account",
+      "unverified": "Your email is not confirmed yet — the sign-in link is in your inbox.",
+      "resendLink": "Resend the email",
+      "verifyResent": "Confirmation email sent again — check your inbox."
     },
     "register": {
       "title": "Create account",
@@ -52,7 +55,9 @@
       "footer": "We'll send a verification link · No Google account required",
       "failed": "Registration failed. Check the details and try again.",
       "haveAccount": "Already have an account?",
-      "logIn": "Log in"
+      "logIn": "Log in",
+      "checkInboxTitle": "Check your inbox",
+      "checkInbox": "Almost there! We sent a confirmation link to {email}. Open it to activate your account and sign in."
     },
     "verifyEmail": {
       "title": "Email verification",
@@ -102,7 +107,7 @@
     "emptyTitle": "Nothing here yet",
     "amateur": {
       "title": "My sessions",
-      "empty": "Booked sessions with coaches will appear here.",
+      "empty": "Booked sessions with pros will appear here.",
       "nav": {
         "sessions": "My sessions",
         "videos": "My videos",
@@ -119,7 +124,8 @@
         "bookings": "Bookings",
         "earnings": "Earnings",
         "profile": "My profile",
-        "settings": "Settings"
+        "settings": "Settings",
+        "verification": "Verification"
       }
     },
     "admin": {
@@ -177,7 +183,7 @@
     "subtitle": "What amateurs will see once you're verified",
     "status": {
       "draft": "Draft — fill in your profile and submit it for verification.",
-      "pending_review": "Under review — we'll reach out for a short video call to verify your identity.",
+      "pending_review": "Under review — book a short video call to verify your identity.",
       "verified": "Verified ✅ — amateurs will find you once booking opens.",
       "rejected": "Not approved. Reviewer note: {note}"
     },
@@ -213,17 +219,20 @@
     },
     "verification": {
       "title": "Verification",
-      "credentials": "Credentials",
-      "credentialsPlaceholder": "Titles, federation licenses, coaching history…",
       "submit": "Submit for verification",
       "submitting": "Submitting…",
       "error": "Submission failed. Please try again.",
       "alreadyVerified": "Your profile is verified. Nothing else to do here. 🏓",
       "pendingInfo": "Your request is in the review queue. We'll email you the result.",
-      "contactHint": "We verify every coach in a short video call — leave at least one way to reach you. Used only for verification and never shown on the site.",
-      "contactTelegram": "Telegram",
-      "contactPhone": "WhatsApp / phone",
-      "contactRequired": "Leave at least one contact."
+      "privacyNote": "Everything you submit here is visible to administrators only and is never published on the site.",
+      "callScheduled": "Your verification call is scheduled",
+      "join": "Join meeting",
+      "linkPending": "The meeting link will appear here shortly.",
+      "manage": "Reschedule or cancel",
+      "schedulePrompt": "One step left: book a short video call to verify your identity.",
+      "scheduleCta": "Pick a time",
+      "readyInfo": "Your profile has everything we need for the review. Submit it and pick a time for a short (5–15 min) video call.",
+      "confirmEmailFirst": "Confirm your email address first — the booking confirmation, reminders and the meeting invite all go there. Check your inbox for the confirmation link."
     }
   },
   "adminVerification": {
@@ -236,18 +245,14 @@
     "services": "Services",
     "approve": "Approve",
     "reject": "Reject",
-    "notePlaceholder": "Reason shown to the coach (required to reject)",
+    "notePlaceholder": "Reason shown to the pro (required to reject)",
     "noteRequired": "Add a note before rejecting.",
-    "error": "Action failed. Please try again.",
-    "requestCall": "Invite to video call",
-    "callRequested": "Call requested ✓",
-    "contactTelegram": "Telegram",
-    "contactPhone": "WhatsApp / phone"
+    "error": "Action failed. Please try again."
   },
   "home": {
     "heroTitle": "Where amateurs and <accent>pros</accent> play together.",
     "heroSubtitle": "Upload your game footage, book a video session with a verified pro, and get personal feedback — in your language.",
-    "ctaFindCoach": "Find your coach →",
+    "ctaFindCoach": "Find your pro →",
     "ctaProfessional": "I'm a professional",
     "heroImageAlt": "An amateur and a professional in a table tennis rally",
     "trustVerified": "<b>Verified</b> pros only",
@@ -255,11 +260,11 @@
     "trustVideo": "Video calls, <b>no account needed</b>",
     "trustLanguages": "<b>5</b> languages",
     "step1Title": "1. Upload your video",
-    "step1Body": "Record a match or training drill and upload it. The coach reviews it before your call.",
-    "step2Title": "2. Pick a coach & time",
+    "step1Body": "Record a match or training drill and upload it. The pro reviews it before your call.",
+    "step2Title": "2. Pick a pro & time",
     "step2Body": "Filter verified pros by language, service and price. Book a free slot — it lands in both calendars with a video link.",
     "step3Title": "3. Meet & improve",
-    "step3Body": "Join the video call, get your analysis. Your payment is only released to the coach after the session happens."
+    "step3Body": "Join the video call, get your analysis. Your payment is only released to the pro after the session happens."
   },
   "meta": {
     "title": "PlayWithPro — Where amateurs and pros play together",
@@ -271,6 +276,93 @@
     "dashboardTitle": "Dashboard — PlayWithPro",
     "settingsTitle": "Account settings — PlayWithPro",
     "proProfileTitle": "My profile — PlayWithPro",
-    "verificationQueueTitle": "Verification queue — PlayWithPro"
+    "verificationTitle": "Verification"
+  },
+  "verification": {
+    "title": "Verification",
+    "notSubmitted": "Submit your profile for verification first — then book your identity call here.",
+    "goToProfile": "Open my profile",
+    "verifiedInfo": "You are verified. Amateurs will find you once booking opens. 🏓",
+    "rejectedInfo": "Your request was not approved. Reviewer note: {note}",
+    "timezoneLabel": "Times shown in",
+    "pickTitle": "Pick a time for your verification call",
+    "noSlots": "No open slots right now — we publish new times regularly, check back soon.",
+    "confirmSlot": "{day}, {time} — book this slot?",
+    "confirm": "Confirm booking",
+    "booking": "Booking…",
+    "cancelAction": "Cancel",
+    "scheduledTitle": "Your verification call",
+    "inProgress": "Your call is in progress",
+    "join": "Join meeting",
+    "linkPending": "The meeting link will appear here shortly.",
+    "reschedule": "Reschedule",
+    "cancelBooking": "Cancel meeting",
+    "cancelConfirm": "Cancel this meeting? The slot will be released and you'll pick a new one.",
+    "rescheduleTitle": "Pick a new time",
+    "backToBooking": "Keep the current time",
+    "bannerNoShow": "You missed your call — please pick a new time.",
+    "bannerCancelledByAdmin": "Your call was cancelled by the administrator — please pick a new time.",
+    "cutoffHint": "You can reschedule or cancel up to 1 hour before the call.",
+    "withdraw": "Withdraw verification request",
+    "withdrawConfirm": "Withdraw your verification request entirely? You can submit a new one later.",
+    "error": "Something went wrong. Please try again."
+  },
+  "adminScheduling": {
+    "tabs": {
+      "queue": "Queue",
+      "slots": "Slots",
+      "bookings": "Bookings"
+    },
+    "slots": {
+      "publishTitle": "Publish slots",
+      "timezoneHint": "Times are in your timezone ({tz}); pros see them in theirs.",
+      "from": "From",
+      "to": "To",
+      "windowStart": "Day start",
+      "windowEnd": "Day end",
+      "duration": "Slot length",
+      "minutes": "{minutes} min",
+      "skipWeekends": "Skip weekends",
+      "publish": "Publish {count} slot(s)",
+      "nothingToPublish": "Nothing to publish — check the dates and window.",
+      "error": "Action failed. Please try again.",
+      "empty": "No published slots yet.",
+      "removeBookedConfirm": "This slot is booked. Removing it cancels the meeting and notifies the pro. Continue?",
+      "remove": "Remove slot"
+    },
+    "bookings": {
+      "empty": "No bookings yet.",
+      "today": "Today",
+      "join": "Join meeting",
+      "syncFailed": "Calendar sync failed",
+      "retry": "Retry",
+      "noShowCount": "No-shows: {count}",
+      "start": "Start",
+      "approve": "Approve",
+      "reject": "Reject",
+      "noShow": "No-show",
+      "cancel": "Cancel meeting",
+      "noShowConfirm": "Mark the pro as a no-show? After the second miss the request is cancelled automatically.",
+      "cancelConfirm": "Cancel this meeting? The pro will be asked to pick a new time.",
+      "rejectNotePrompt": "Reason shown to the pro:",
+      "noteRequired": "A note is required to reject.",
+      "error": "Action failed. Please try again.",
+      "state": {
+        "awaiting_scheduling": "Awaiting scheduling",
+        "scheduled": "Scheduled",
+        "in_progress": "In progress",
+        "verified": "Verified",
+        "rejected": "Rejected",
+        "cancelled": "Cancelled"
+      },
+      "outcome": {
+        "scheduled": "Scheduled",
+        "completed": "Completed",
+        "rescheduled": "Rescheduled",
+        "no_show": "No-show",
+        "cancelled_by_pro": "Cancelled by pro",
+        "cancelled_by_admin": "Cancelled by admin"
+      }
+    }
   }
 }

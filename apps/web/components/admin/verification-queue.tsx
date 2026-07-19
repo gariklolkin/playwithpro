@@ -1,10 +1,11 @@
 "use client";
 
 import type { AdminVerificationItem } from "@playwithpro/shared";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { LOCALE_LABELS } from "@/i18n/locale-labels";
 import { apiFetch } from "@/lib/api";
+import { browserTimezone, formatDay, formatTime } from "@/lib/timezones";
 import { Button } from "@/components/ui/button";
 
 function formatPrice(priceMinor: number, currency: string): string {
@@ -17,29 +18,15 @@ export function VerificationQueue({
   initialItems: AdminVerificationItem[];
 }) {
   const t = useTranslations("adminVerification");
+  const tState = useTranslations("adminScheduling.bookings.state");
+  const tBookings = useTranslations("adminScheduling.bookings");
+  const locale = useLocale();
+  const timezone = browserTimezone();
   const format = useFormatter();
   const [items, setItems] = useState(initialItems);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [callRequested, setCallRequested] = useState<Record<string, boolean>>(
-    {},
-  );
-
-  async function requestCall(item: AdminVerificationItem) {
-    setBusy(item.requestId);
-    setErrors((current) => ({ ...current, [item.requestId]: "" }));
-    const response = await apiFetch(
-      `/admin/verification-requests/${item.requestId}/call`,
-      { method: "POST" },
-    );
-    setBusy(null);
-    if (!response.ok) {
-      setErrors((current) => ({ ...current, [item.requestId]: t("error") }));
-      return;
-    }
-    setCallRequested((current) => ({ ...current, [item.requestId]: true }));
-  }
 
   async function review(
     item: AdminVerificationItem,
@@ -98,6 +85,9 @@ export function VerificationQueue({
               </span>{" "}
               <span className="text-sm text-text-tertiary">
                 {item.user.email}
+              </span>{" "}
+              <span className="rounded bg-bg-secondary px-2 py-0.5 text-[12px] text-text-secondary">
+                {tState(item.state)}
               </span>
             </div>
             <span className="text-[13px] text-text-tertiary">
@@ -109,6 +99,26 @@ export function VerificationQueue({
             </span>
           </header>
 
+          {item.meeting ? (
+            <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg bg-[#EAF2FD] px-3 py-2 text-sm">
+              <span className="font-medium capitalize text-[#2A5FC7]">
+                📅 {formatDay(item.meeting.startsAt, timezone, locale)} ·{" "}
+                {formatTime(item.meeting.startsAt, timezone, locale)}–
+                {formatTime(item.meeting.endsAt, timezone, locale)}
+              </span>
+              {item.meeting.meetUrl ? (
+                <a
+                  href={item.meeting.meetUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-semibold text-[#2A5FC7] underline"
+                >
+                  {tBookings("join")}
+                </a>
+              ) : null}
+            </div>
+          ) : null}
+
           <dl className="mt-4 grid grid-cols-1 gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
             <div>
               <dt className="text-text-tertiary">{t("bio")}</dt>
@@ -119,16 +129,8 @@ export function VerificationQueue({
             <div>
               <dt className="text-text-tertiary">{t("credentials")}</dt>
               <dd className="whitespace-pre-wrap text-text">
-                {item.credentials}
+                {item.credentials || "—"}
               </dd>
-            </div>
-            <div>
-              <dt className="text-text-tertiary">{t("contactTelegram")}</dt>
-              <dd className="text-text">{item.contactTelegram || "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-text-tertiary">{t("contactPhone")}</dt>
-              <dd className="text-text">{item.contactPhone || "—"}</dd>
             </div>
             <div>
               <dt className="text-text-tertiary">{t("languages")}</dt>
@@ -169,20 +171,6 @@ export function VerificationQueue({
               className="mb-3 w-full rounded-lg border border-border-strong bg-bg px-3 py-2 text-sm text-text"
             />
             <div className="flex flex-wrap items-center gap-3">
-              <Button
-                type="button"
-                variant="blueSoft"
-                disabled={
-                  busy === item.requestId ||
-                  Boolean(item.callRequestedAt) ||
-                  callRequested[item.requestId]
-                }
-                onClick={() => void requestCall(item)}
-              >
-                {Boolean(item.callRequestedAt) || callRequested[item.requestId]
-                  ? t("callRequested")
-                  : t("requestCall")}
-              </Button>
               <Button
                 type="button"
                 disabled={busy === item.requestId}

@@ -1,8 +1,8 @@
 {
   "nav": {
-    "findCoach": "Coach finden",
+    "findCoach": "Pro finden",
     "howItWorks": "So funktioniert's",
-    "forCoaches": "Für Coaches",
+    "forCoaches": "Für Pros",
     "language": "Sprache",
     "login": "Anmelden",
     "getStarted": "Loslegen",
@@ -30,7 +30,10 @@
       "errorGoogle": "Die Google-Anmeldung wurde nicht abgeschlossen. Bitte versuche es erneut.",
       "errorGoogleEmail": "Ein Konto mit dieser E-Mail existiert bereits. Melde dich mit deinem Passwort an und verknüpfe Google dann in den Einstellungen.",
       "noAccount": "Neu bei PlayWithPro?",
-      "createAccount": "Konto erstellen"
+      "createAccount": "Konto erstellen",
+      "unverified": "Ihre E-Mail ist noch nicht bestätigt — der Link liegt in Ihrem Postfach.",
+      "resendLink": "E-Mail erneut senden",
+      "verifyResent": "Bestätigungs-E-Mail erneut gesendet — prüfen Sie Ihr Postfach."
     },
     "register": {
       "title": "Konto erstellen",
@@ -52,7 +55,9 @@
       "footer": "Wir senden dir einen Bestätigungslink · Kein Google-Konto erforderlich",
       "failed": "Registrierung fehlgeschlagen. Prüfe die Angaben und versuche es erneut.",
       "haveAccount": "Du hast schon ein Konto?",
-      "logIn": "Anmelden"
+      "logIn": "Anmelden",
+      "checkInboxTitle": "Postfach prüfen",
+      "checkInbox": "Fast geschafft! Wir haben einen Bestätigungslink an {email} gesendet. Öffnen Sie ihn, um Ihr Konto zu aktivieren und sich anzumelden."
     },
     "verifyEmail": {
       "title": "E-Mail-Bestätigung",
@@ -102,7 +107,7 @@
     "emptyTitle": "Hier ist noch nichts",
     "amateur": {
       "title": "Meine Einheiten",
-      "empty": "Gebuchte Einheiten mit Coaches erscheinen hier.",
+      "empty": "Gebuchte Einheiten mit Pros erscheinen hier.",
       "nav": {
         "sessions": "Meine Einheiten",
         "videos": "Meine Videos",
@@ -119,7 +124,8 @@
         "bookings": "Buchungen",
         "earnings": "Einnahmen",
         "profile": "Mein Profil",
-        "settings": "Einstellungen"
+        "settings": "Einstellungen",
+        "verification": "Verifizierung"
       }
     },
     "admin": {
@@ -177,7 +183,7 @@
     "subtitle": "So sehen dich Amateure nach der Verifizierung",
     "status": {
       "draft": "Entwurf — fülle dein Profil aus und reiche es zur Verifizierung ein.",
-      "pending_review": "In Prüfung — wir melden uns für einen kurzen Videoanruf, um deine Identität zu bestätigen.",
+      "pending_review": "In Prüfung — buchen Sie einen kurzen Videoanruf zur Identitätsprüfung.",
       "verified": "Verifiziert ✅ — Amateure finden dich, sobald Buchungen starten.",
       "rejected": "Nicht genehmigt. Anmerkung der Prüfung: {note}"
     },
@@ -213,17 +219,20 @@
     },
     "verification": {
       "title": "Verifizierung",
-      "credentials": "Qualifikationen",
-      "credentialsPlaceholder": "Titel, Verbandslizenzen, Trainerlaufbahn…",
       "submit": "Zur Verifizierung einreichen",
       "submitting": "Wird eingereicht…",
       "error": "Einreichen fehlgeschlagen. Bitte versuche es erneut.",
       "alreadyVerified": "Dein Profil ist verifiziert. Hier gibt es nichts mehr zu tun. 🏓",
-      "pendingInfo": "Deine Anfrage ist in der Prüfwarteschlange. Das Ergebnis kommt per E-Mail.",
-      "contactHint": "Wir verifizieren jeden Coach in einem kurzen Videoanruf — hinterlasse mindestens einen Kontaktweg. Wird nur zur Verifizierung genutzt und nie auf der Website angezeigt.",
-      "contactTelegram": "Telegram",
-      "contactPhone": "WhatsApp / Telefon",
-      "contactRequired": "Hinterlasse mindestens einen Kontakt."
+      "pendingInfo": "Ihre Anfrage ist in der Prüfwarteschlange. Das Ergebnis erhalten Sie per E-Mail.",
+      "privacyNote": "Alles, was Sie hier einreichen, sehen nur Administratoren — es wird nie auf der Website veröffentlicht.",
+      "callScheduled": "Ihr Verifizierungsanruf ist geplant",
+      "join": "Meeting beitreten",
+      "linkPending": "Der Meeting-Link erscheint hier in Kürze.",
+      "manage": "Verschieben oder absagen",
+      "schedulePrompt": "Noch ein Schritt: Buchen Sie einen kurzen Videoanruf zur Identitätsprüfung.",
+      "scheduleCta": "Termin wählen",
+      "readyInfo": "Ihr Profil enthält alles, was wir für die Prüfung brauchen. Reichen Sie es ein und wählen Sie eine Zeit für einen kurzen (5–15 Min.) Videoanruf.",
+      "confirmEmailFirst": "Bestätigen Sie zuerst Ihre E-Mail-Adresse — Buchungsbestätigung, Erinnerungen und die Meeting-Einladung gehen dorthin. Der Bestätigungslink ist in Ihrem Postfach."
     }
   },
   "adminVerification": {
@@ -236,18 +245,14 @@
     "services": "Leistungen",
     "approve": "Genehmigen",
     "reject": "Ablehnen",
-    "notePlaceholder": "Begründung für den Coach (zum Ablehnen erforderlich)",
+    "notePlaceholder": "Begründung für den Pro (zum Ablehnen erforderlich)",
     "noteRequired": "Füge vor dem Ablehnen eine Anmerkung hinzu.",
-    "error": "Aktion fehlgeschlagen. Bitte versuche es erneut.",
-    "requestCall": "Zum Videoanruf einladen",
-    "callRequested": "Anruf angefragt ✓",
-    "contactTelegram": "Telegram",
-    "contactPhone": "WhatsApp / Telefon"
+    "error": "Aktion fehlgeschlagen. Bitte versuche es erneut."
   },
   "home": {
     "heroTitle": "Wo Amateure und <accent>Profis</accent> zusammen spielen.",
     "heroSubtitle": "Lade deine Spielaufnahmen hoch, buche eine Videoeinheit mit einem verifizierten Profi und erhalte persönliches Feedback — in deiner Sprache.",
-    "ctaFindCoach": "Finde deinen Coach →",
+    "ctaFindCoach": "Finde deinen Pro →",
     "ctaProfessional": "Ich bin Profi",
     "heroImageAlt": "Ein Amateur und ein Profi im Ballwechsel an der Tischtennisplatte",
     "trustVerified": "Nur <b>verifizierte</b> Profis",
@@ -255,11 +260,11 @@
     "trustVideo": "Videoanrufe, <b>kein Konto nötig</b>",
     "trustLanguages": "<b>5</b> Sprachen",
     "step1Title": "1. Lade dein Video hoch",
-    "step1Body": "Nimm ein Match oder eine Trainingsübung auf und lade sie hoch. Der Coach sieht sie sich vor eurem Gespräch an.",
-    "step2Title": "2. Wähle Coach & Termin",
+    "step1Body": "Nimm ein Match oder eine Trainingsübung auf und lade sie hoch. Der Pro sieht sie sich vor eurem Gespräch an.",
+    "step2Title": "2. Wähle Pro & Termin",
     "step2Body": "Filtere verifizierte Profis nach Sprache, Leistung und Preis. Buche einen freien Slot — er landet mit Videolink in beiden Kalendern.",
     "step3Title": "3. Trefft euch & werde besser",
-    "step3Body": "Nimm am Videoanruf teil und erhalte deine Analyse. Deine Zahlung geht erst nach der Einheit an den Coach."
+    "step3Body": "Nimm am Videoanruf teil und erhalte deine Analyse. Deine Zahlung geht erst nach der Einheit an den Pro."
   },
   "meta": {
     "title": "PlayWithPro — Wo Amateure und Profis zusammen spielen",
@@ -271,6 +276,93 @@
     "dashboardTitle": "Dashboard — PlayWithPro",
     "settingsTitle": "Kontoeinstellungen — PlayWithPro",
     "proProfileTitle": "Mein Profil — PlayWithPro",
-    "verificationQueueTitle": "Verifizierungswarteschlange — PlayWithPro"
+    "verificationTitle": "Verifizierung"
+  },
+  "verification": {
+    "title": "Verifizierung",
+    "notSubmitted": "Reichen Sie zuerst Ihr Profil zur Verifizierung ein — danach buchen Sie hier Ihren Anruf.",
+    "goToProfile": "Mein Profil öffnen",
+    "verifiedInfo": "Sie sind verifiziert. Amateure finden Sie, sobald Buchungen starten. 🏓",
+    "rejectedInfo": "Ihre Anfrage wurde nicht genehmigt. Anmerkung: {note}",
+    "timezoneLabel": "Zeiten angezeigt in",
+    "pickTitle": "Wählen Sie eine Zeit für Ihren Verifizierungsanruf",
+    "noSlots": "Derzeit keine freien Termine — wir veröffentlichen regelmäßig neue, schauen Sie bald wieder vorbei.",
+    "confirmSlot": "{day}, {time} — diesen Termin buchen?",
+    "confirm": "Buchung bestätigen",
+    "booking": "Wird gebucht…",
+    "cancelAction": "Abbrechen",
+    "scheduledTitle": "Ihr Verifizierungsanruf",
+    "inProgress": "Ihr Anruf läuft",
+    "join": "Meeting beitreten",
+    "linkPending": "Der Meeting-Link erscheint hier in Kürze.",
+    "reschedule": "Verschieben",
+    "cancelBooking": "Meeting absagen",
+    "cancelConfirm": "Dieses Meeting absagen? Der Termin wird freigegeben und Sie wählen einen neuen.",
+    "rescheduleTitle": "Neue Zeit wählen",
+    "backToBooking": "Aktuelle Zeit behalten",
+    "bannerNoShow": "Sie haben Ihren Anruf verpasst — bitte wählen Sie eine neue Zeit.",
+    "bannerCancelledByAdmin": "Ihr Anruf wurde vom Administrator abgesagt — bitte wählen Sie eine neue Zeit.",
+    "cutoffHint": "Verschieben oder absagen ist bis 1 Stunde vor dem Anruf möglich.",
+    "withdraw": "Verifizierungsanfrage zurückziehen",
+    "withdrawConfirm": "Anfrage vollständig zurückziehen? Sie können später eine neue stellen.",
+    "error": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+  },
+  "adminScheduling": {
+    "tabs": {
+      "queue": "Warteschlange",
+      "slots": "Termine",
+      "bookings": "Buchungen"
+    },
+    "slots": {
+      "publishTitle": "Termine veröffentlichen",
+      "timezoneHint": "Zeiten in Ihrer Zeitzone ({tz}); Pros sehen sie in ihrer.",
+      "from": "Von",
+      "to": "Bis",
+      "windowStart": "Tagesbeginn",
+      "windowEnd": "Tagesende",
+      "duration": "Dauer",
+      "minutes": "{minutes} Min.",
+      "skipWeekends": "Wochenenden überspringen",
+      "publish": "{count} Termin(e) veröffentlichen",
+      "nothingToPublish": "Nichts zu veröffentlichen — Daten und Zeitfenster prüfen.",
+      "error": "Aktion fehlgeschlagen. Bitte erneut versuchen.",
+      "empty": "Noch keine Termine veröffentlicht.",
+      "removeBookedConfirm": "Dieser Termin ist gebucht. Entfernen sagt das Meeting ab und benachrichtigt den Pro. Fortfahren?",
+      "remove": "Termin entfernen"
+    },
+    "bookings": {
+      "empty": "Noch keine Buchungen.",
+      "today": "Heute",
+      "join": "Meeting beitreten",
+      "syncFailed": "Kalender-Sync fehlgeschlagen",
+      "retry": "Erneut",
+      "noShowCount": "Nicht erschienen: {count}",
+      "start": "Starten",
+      "approve": "Genehmigen",
+      "reject": "Ablehnen",
+      "noShow": "Nicht erschienen",
+      "cancel": "Meeting absagen",
+      "noShowConfirm": "Pro als nicht erschienen markieren? Nach dem zweiten Mal wird die Anfrage automatisch storniert.",
+      "cancelConfirm": "Dieses Meeting absagen? Der Pro wird gebeten, eine neue Zeit zu wählen.",
+      "rejectNotePrompt": "Grund, den der Pro sieht:",
+      "noteRequired": "Zum Ablehnen ist eine Anmerkung nötig.",
+      "error": "Aktion fehlgeschlagen. Bitte erneut versuchen.",
+      "state": {
+        "awaiting_scheduling": "Terminwahl offen",
+        "scheduled": "Geplant",
+        "in_progress": "Läuft",
+        "verified": "Verifiziert",
+        "rejected": "Abgelehnt",
+        "cancelled": "Storniert"
+      },
+      "outcome": {
+        "scheduled": "Geplant",
+        "completed": "Abgeschlossen",
+        "rescheduled": "Verschoben",
+        "no_show": "Nicht erschienen",
+        "cancelled_by_pro": "Vom Pro storniert",
+        "cancelled_by_admin": "Vom Admin storniert"
+      }
+    }
   }
 }

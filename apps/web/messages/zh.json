@@ -1,8 +1,8 @@
 {
   "nav": {
-    "findCoach": "寻找教练",
+    "findCoach": "寻找职业选手",
     "howItWorks": "运作方式",
-    "forCoaches": "教练入驻",
+    "forCoaches": "职业选手入驻",
     "language": "语言",
     "login": "登录",
     "getStarted": "立即开始",
@@ -30,7 +30,10 @@
       "errorGoogle": "Google 登录未完成，请重试。",
       "errorGoogleEmail": "该邮箱已注册账户。请使用密码登录，然后在设置中关联 Google。",
       "noAccount": "第一次使用 PlayWithPro？",
-      "createAccount": "创建账户"
+      "createAccount": "创建账户",
+      "unverified": "您的邮箱尚未确认——登录链接在您的收件箱中。",
+      "resendLink": "重新发送邮件",
+      "verifyResent": "确认邮件已重新发送——请查收。"
     },
     "register": {
       "title": "创建账户",
@@ -52,7 +55,9 @@
       "footer": "我们将发送验证链接 · 无需 Google 账户",
       "failed": "注册失败。请检查信息后重试。",
       "haveAccount": "已有账户？",
-      "logIn": "登录"
+      "logIn": "登录",
+      "checkInboxTitle": "请查收邮件",
+      "checkInbox": "就快完成了！我们已向 {email} 发送确认链接。打开链接即可激活账户并登录。"
     },
     "verifyEmail": {
       "title": "邮箱验证",
@@ -102,7 +107,7 @@
     "emptyTitle": "这里还没有内容",
     "amateur": {
       "title": "我的课程",
-      "empty": "预约的教练课程将显示在这里。",
+      "empty": "预约的职业选手课程将显示在这里。",
       "nav": {
         "sessions": "我的课程",
         "videos": "我的视频",
@@ -119,7 +124,8 @@
         "bookings": "预约",
         "earnings": "收入",
         "profile": "我的主页",
-        "settings": "设置"
+        "settings": "设置",
+        "verification": "认证"
       }
     },
     "admin": {
@@ -177,7 +183,7 @@
     "subtitle": "认证通过后，业余球员将看到这些信息",
     "status": {
       "draft": "草稿 — 填写资料并提交认证。",
-      "pending_review": "审核中 — 我们将联系您进行简短视频通话以核实身份。",
+      "pending_review": "审核中——请预约一次简短的视频通话以核实身份。",
       "verified": "已认证 ✅ — 预约功能上线后业余球员即可找到您。",
       "rejected": "未通过。审核备注：{note}"
     },
@@ -213,17 +219,20 @@
     },
     "verification": {
       "title": "认证",
-      "credentials": "资质",
-      "credentialsPlaceholder": "头衔、协会执照、执教经历…",
       "submit": "提交认证",
       "submitting": "正在提交…",
       "error": "提交失败，请重试。",
       "alreadyVerified": "您的资料已通过认证，这里无需其他操作。🏓",
-      "pendingInfo": "您的申请正在审核队列中，结果将通过邮件通知。",
-      "contactHint": "我们会通过简短视频通话验证每位教练 — 请至少留下一种联系方式。联系方式仅用于验证，不会在网站上公开。",
-      "contactTelegram": "Telegram",
-      "contactPhone": "WhatsApp / 电话",
-      "contactRequired": "请至少留下一种联系方式。"
+      "pendingInfo": "您的申请正在审核队列中，结果将通过邮件通知您。",
+      "privacyNote": "您在此提交的所有内容仅管理员可见，绝不会在网站上公开。",
+      "callScheduled": "您的认证通话已安排",
+      "join": "加入会议",
+      "linkPending": "会议链接稍后将显示在这里。",
+      "manage": "改期或取消",
+      "schedulePrompt": "只差一步：预约一次简短的视频通话以核实身份。",
+      "scheduleCta": "选择时间",
+      "readyInfo": "您的资料已包含审核所需的全部信息。提交后请选择一个简短（5–15 分钟）视频通话的时间。",
+      "confirmEmailFirst": "请先确认您的邮箱——预约确认、提醒和会议邀请都会发送到该邮箱。确认链接已发送至您的收件箱。"
     }
   },
   "adminVerification": {
@@ -236,18 +245,14 @@
     "services": "服务",
     "approve": "通过",
     "reject": "拒绝",
-    "notePlaceholder": "给教练的理由（拒绝时必填）",
+    "notePlaceholder": "给职业选手的理由（拒绝时必填）",
     "noteRequired": "拒绝前请填写备注。",
-    "error": "操作失败，请重试。",
-    "requestCall": "邀请视频通话",
-    "callRequested": "已发出邀请 ✓",
-    "contactTelegram": "Telegram",
-    "contactPhone": "WhatsApp / 电话"
+    "error": "操作失败，请重试。"
   },
   "home": {
     "heroTitle": "业余球员与<accent>职业选手</accent>同场竞技。",
     "heroSubtitle": "上传您的比赛视频，预约经过认证的职业选手进行视频课程，获得个性化点评 — 使用您的语言。",
-    "ctaFindCoach": "寻找您的教练 →",
+    "ctaFindCoach": "寻找您的职业选手 →",
     "ctaProfessional": "我是职业选手",
     "heroImageAlt": "一位业余球员与一位职业选手在乒乓球对打中",
     "trustVerified": "仅限<b>认证</b>职业选手",
@@ -255,11 +260,11 @@
     "trustVideo": "视频通话，<b>无需额外账户</b>",
     "trustLanguages": "<b>5</b> 种语言",
     "step1Title": "1. 上传视频",
-    "step1Body": "录制比赛或训练片段并上传。教练会在通话前观看。",
-    "step2Title": "2. 选择教练和时间",
+    "step1Body": "录制比赛或训练片段并上传。职业选手会在通话前观看。",
+    "step2Title": "2. 选择职业选手和时间",
     "step2Body": "按语言、服务和价格筛选认证职业选手。预订空闲时段 — 它会连同视频链接出现在双方日历中。",
     "step3Title": "3. 见面并提升",
-    "step3Body": "加入视频通话，获得分析点评。课程完成后，款项才会支付给教练。"
+    "step3Body": "加入视频通话，获得分析点评。课程完成后，款项才会支付给职业选手。"
   },
   "meta": {
     "title": "PlayWithPro — 业余球员与职业选手同场竞技",
@@ -271,6 +276,93 @@
     "dashboardTitle": "控制台 — PlayWithPro",
     "settingsTitle": "账户设置 — PlayWithPro",
     "proProfileTitle": "我的主页 — PlayWithPro",
-    "verificationQueueTitle": "认证队列 — PlayWithPro"
+    "verificationTitle": "认证"
+  },
+  "verification": {
+    "title": "认证",
+    "notSubmitted": "请先提交个人资料进行认证，然后在此预约视频通话。",
+    "goToProfile": "打开我的资料",
+    "verifiedInfo": "您已通过认证。预约功能开放后，业余爱好者即可找到您。🏓",
+    "rejectedInfo": "您的申请未获批准。审核备注：{note}",
+    "timezoneLabel": "时间显示时区",
+    "pickTitle": "选择认证通话的时间",
+    "noSlots": "当前没有可用时段——我们会定期发布新时段，请稍后再来。",
+    "confirmSlot": "{day} {time} — 预约此时段？",
+    "confirm": "确认预约",
+    "booking": "预约中…",
+    "cancelAction": "取消",
+    "scheduledTitle": "您的认证通话",
+    "inProgress": "通话进行中",
+    "join": "加入会议",
+    "linkPending": "会议链接稍后将显示在这里。",
+    "reschedule": "改期",
+    "cancelBooking": "取消会议",
+    "cancelConfirm": "取消此会议？该时段将被释放，您可以另选时间。",
+    "rescheduleTitle": "选择新时间",
+    "backToBooking": "保留当前时间",
+    "bannerNoShow": "您错过了通话——请选择新的时间。",
+    "bannerCancelledByAdmin": "管理员取消了通话——请选择新的时间。",
+    "cutoffHint": "最晚可在通话前 1 小时改期或取消。",
+    "withdraw": "撤回认证申请",
+    "withdrawConfirm": "完全撤回认证申请？之后可以重新提交。",
+    "error": "出了点问题，请重试。"
+  },
+  "adminScheduling": {
+    "tabs": {
+      "queue": "队列",
+      "slots": "时段",
+      "bookings": "预约"
+    },
+    "slots": {
+      "publishTitle": "发布时段",
+      "timezoneHint": "时间为您的时区（{tz}）；职业选手将看到自己时区的时间。",
+      "from": "从",
+      "to": "至",
+      "windowStart": "每天开始",
+      "windowEnd": "每天结束",
+      "duration": "时长",
+      "minutes": "{minutes} 分钟",
+      "skipWeekends": "跳过周末",
+      "publish": "发布 {count} 个时段",
+      "nothingToPublish": "没有可发布的时段——请检查日期和时间窗口。",
+      "error": "操作失败，请重试。",
+      "empty": "尚未发布任何时段。",
+      "removeBookedConfirm": "该时段已被预约。删除将取消会议并通知职业选手。继续？",
+      "remove": "删除时段"
+    },
+    "bookings": {
+      "empty": "暂无预约。",
+      "today": "今天",
+      "join": "加入会议",
+      "syncFailed": "日历同步失败",
+      "retry": "重试",
+      "noShowCount": "未出席次数：{count}",
+      "start": "开始",
+      "approve": "通过",
+      "reject": "拒绝",
+      "noShow": "未出席",
+      "cancel": "取消会议",
+      "noShowConfirm": "将职业选手标记为未出席？第二次未出席后申请将自动取消。",
+      "cancelConfirm": "取消此会议？职业选手需要另选时间。",
+      "rejectNotePrompt": "职业选手将看到的原因：",
+      "noteRequired": "拒绝时必须填写备注。",
+      "error": "操作失败，请重试。",
+      "state": {
+        "awaiting_scheduling": "待预约",
+        "scheduled": "已安排",
+        "in_progress": "进行中",
+        "verified": "已认证",
+        "rejected": "已拒绝",
+        "cancelled": "已取消"
+      },
+      "outcome": {
+        "scheduled": "已安排",
+        "completed": "已完成",
+        "rescheduled": "已改期",
+        "no_show": "未出席",
+        "cancelled_by_pro": "职业选手已取消",
+        "cancelled_by_admin": "管理员已取消"
+      }
+    }
   }
 }

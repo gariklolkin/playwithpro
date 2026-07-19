@@ -1,8 +1,8 @@
 {
   "nav": {
-    "findCoach": "Trouver un coach",
+    "findCoach": "Trouver un pro",
     "howItWorks": "Comment ça marche",
-    "forCoaches": "Pour les coachs",
+    "forCoaches": "Pour les pros",
     "language": "Langue",
     "login": "Se connecter",
     "getStarted": "Commencer",
@@ -30,7 +30,10 @@
       "errorGoogle": "La connexion Google n'a pas abouti. Veuillez réessayer.",
       "errorGoogleEmail": "Un compte existe déjà avec cet e-mail. Connectez-vous avec votre mot de passe, puis liez Google dans les paramètres.",
       "noAccount": "Nouveau sur PlayWithPro ?",
-      "createAccount": "Créer un compte"
+      "createAccount": "Créer un compte",
+      "unverified": "Votre e-mail n'est pas encore confirmé — le lien est dans votre boîte de réception.",
+      "resendLink": "Renvoyer l'e-mail",
+      "verifyResent": "E-mail de confirmation renvoyé — vérifiez votre boîte de réception."
     },
     "register": {
       "title": "Créer un compte",
@@ -52,7 +55,9 @@
       "footer": "Nous vous enverrons un lien de vérification · Compte Google non requis",
       "failed": "L'inscription a échoué. Vérifiez les informations et réessayez.",
       "haveAccount": "Vous avez déjà un compte ?",
-      "logIn": "Se connecter"
+      "logIn": "Se connecter",
+      "checkInboxTitle": "Vérifiez votre boîte mail",
+      "checkInbox": "Presque terminé ! Nous avons envoyé un lien de confirmation à {email}. Ouvrez-le pour activer votre compte et vous connecter."
     },
     "verifyEmail": {
       "title": "Vérification de l'e-mail",
@@ -102,7 +107,7 @@
     "emptyTitle": "Rien ici pour l'instant",
     "amateur": {
       "title": "Mes séances",
-      "empty": "Les séances réservées avec des coachs apparaîtront ici.",
+      "empty": "Les séances réservées avec des pros apparaîtront ici.",
       "nav": {
         "sessions": "Mes séances",
         "videos": "Mes vidéos",
@@ -119,7 +124,8 @@
         "bookings": "Réservations",
         "earnings": "Revenus",
         "profile": "Mon profil",
-        "settings": "Paramètres"
+        "settings": "Paramètres",
+        "verification": "Vérification"
       }
     },
     "admin": {
@@ -177,7 +183,7 @@
     "subtitle": "Ce que les amateurs verront une fois votre profil vérifié",
     "status": {
       "draft": "Brouillon — complétez votre profil et soumettez-le à la vérification.",
-      "pending_review": "En cours d'examen — nous vous contacterons pour un court appel vidéo afin de vérifier votre identité.",
+      "pending_review": "En cours de vérification — réservez un court appel vidéo pour confirmer votre identité.",
       "verified": "Vérifié ✅ — les amateurs vous trouveront dès l'ouverture des réservations.",
       "rejected": "Non approuvé. Note du réviseur : {note}"
     },
@@ -213,17 +219,20 @@
     },
     "verification": {
       "title": "Vérification",
-      "credentials": "Références",
-      "credentialsPlaceholder": "Titres, licences fédérales, parcours d'entraîneur…",
       "submit": "Soumettre à la vérification",
       "submitting": "Envoi…",
       "error": "Échec de l'envoi. Veuillez réessayer.",
       "alreadyVerified": "Votre profil est vérifié. Rien d'autre à faire ici. 🏓",
-      "pendingInfo": "Votre demande est dans la file d'examen. Le résultat arrivera par e-mail.",
-      "contactHint": "Nous vérifions chaque coach lors d'un court appel vidéo — laissez au moins un moyen de vous joindre. Utilisé uniquement pour la vérification, jamais publié sur le site.",
-      "contactTelegram": "Telegram",
-      "contactPhone": "WhatsApp / téléphone",
-      "contactRequired": "Laissez au moins un contact."
+      "pendingInfo": "Votre demande est dans la file de vérification. Nous vous enverrons le résultat par e-mail.",
+      "privacyNote": "Tout ce que vous soumettez ici n'est visible que par les administrateurs et n'est jamais publié sur le site.",
+      "callScheduled": "Votre appel de vérification est planifié",
+      "join": "Rejoindre la réunion",
+      "linkPending": "Le lien de la réunion apparaîtra ici sous peu.",
+      "manage": "Reprogrammer ou annuler",
+      "schedulePrompt": "Une dernière étape : réservez un court appel vidéo pour confirmer votre identité.",
+      "scheduleCta": "Choisir un horaire",
+      "readyInfo": "Votre profil contient tout ce qu'il nous faut pour la vérification. Soumettez-le et choisissez un horaire pour un court appel vidéo (5–15 min).",
+      "confirmEmailFirst": "Confirmez d'abord votre adresse e-mail — la confirmation de réservation, les rappels et l'invitation à la réunion y seront envoyés. Le lien de confirmation est dans votre boîte de réception."
     }
   },
   "adminVerification": {
@@ -236,18 +245,14 @@
     "services": "Services",
     "approve": "Approuver",
     "reject": "Rejeter",
-    "notePlaceholder": "Motif communiqué au coach (obligatoire pour rejeter)",
+    "notePlaceholder": "Motif communiqué au pro (obligatoire pour rejeter)",
     "noteRequired": "Ajoutez une note avant de rejeter.",
-    "error": "Échec de l'action. Veuillez réessayer.",
-    "requestCall": "Inviter à un appel vidéo",
-    "callRequested": "Appel demandé ✓",
-    "contactTelegram": "Telegram",
-    "contactPhone": "WhatsApp / téléphone"
+    "error": "Échec de l'action. Veuillez réessayer."
   },
   "home": {
     "heroTitle": "Là où amateurs et <accent>pros</accent> jouent ensemble.",
     "heroSubtitle": "Envoyez vos vidéos de jeu, réservez une séance vidéo avec un pro vérifié et recevez un retour personnalisé — dans votre langue.",
-    "ctaFindCoach": "Trouvez votre coach →",
+    "ctaFindCoach": "Trouvez votre pro →",
     "ctaProfessional": "Je suis professionnel",
     "heroImageAlt": "Un amateur et un professionnel en plein échange au tennis de table",
     "trustVerified": "Uniquement des pros <b>vérifiés</b>",
@@ -255,11 +260,11 @@
     "trustVideo": "Appels vidéo, <b>aucun compte requis</b>",
     "trustLanguages": "<b>5</b> langues",
     "step1Title": "1. Envoyez votre vidéo",
-    "step1Body": "Filmez un match ou un entraînement et envoyez la vidéo. Le coach la regarde avant votre appel.",
-    "step2Title": "2. Choisissez un coach et un horaire",
+    "step1Body": "Filmez un match ou un entraînement et envoyez la vidéo. Le pro la regarde avant votre appel.",
+    "step2Title": "2. Choisissez un pro et un horaire",
     "step2Body": "Filtrez les pros vérifiés par langue, service et prix. Réservez un créneau libre — il s'ajoute aux deux agendas avec un lien vidéo.",
     "step3Title": "3. Rencontrez-vous et progressez",
-    "step3Body": "Rejoignez l'appel vidéo et recevez votre analyse. Le paiement n'est versé au coach qu'une fois la séance effectuée."
+    "step3Body": "Rejoignez l'appel vidéo et recevez votre analyse. Le paiement n'est versé au pro qu'une fois la séance effectuée."
   },
   "meta": {
     "title": "PlayWithPro — Là où amateurs et pros jouent ensemble",
@@ -271,6 +276,93 @@
     "dashboardTitle": "Tableau de bord — PlayWithPro",
     "settingsTitle": "Paramètres du compte — PlayWithPro",
     "proProfileTitle": "Mon profil — PlayWithPro",
-    "verificationQueueTitle": "File de vérification — PlayWithPro"
+    "verificationTitle": "Vérification"
+  },
+  "verification": {
+    "title": "Vérification",
+    "notSubmitted": "Soumettez d'abord votre profil à la vérification — puis réservez votre appel ici.",
+    "goToProfile": "Ouvrir mon profil",
+    "verifiedInfo": "Vous êtes vérifié. Les amateurs vous trouveront dès l'ouverture des réservations. 🏓",
+    "rejectedInfo": "Votre demande n'a pas été approuvée. Note du vérificateur : {note}",
+    "timezoneLabel": "Heures affichées en",
+    "pickTitle": "Choisissez un horaire pour votre appel de vérification",
+    "noSlots": "Aucun créneau libre pour le moment — nous en publions régulièrement, revenez bientôt.",
+    "confirmSlot": "{day}, {time} — réserver ce créneau ?",
+    "confirm": "Confirmer la réservation",
+    "booking": "Réservation…",
+    "cancelAction": "Annuler",
+    "scheduledTitle": "Votre appel de vérification",
+    "inProgress": "Votre appel est en cours",
+    "join": "Rejoindre la réunion",
+    "linkPending": "Le lien de la réunion apparaîtra ici sous peu.",
+    "reschedule": "Reprogrammer",
+    "cancelBooking": "Annuler la réunion",
+    "cancelConfirm": "Annuler cette réunion ? Le créneau sera libéré et vous en choisirez un autre.",
+    "rescheduleTitle": "Choisir un nouvel horaire",
+    "backToBooking": "Garder l'horaire actuel",
+    "bannerNoShow": "Vous avez manqué votre appel — choisissez un nouvel horaire.",
+    "bannerCancelledByAdmin": "Votre appel a été annulé par l'administrateur — choisissez un nouvel horaire.",
+    "cutoffHint": "Vous pouvez reprogrammer ou annuler jusqu'à 1 heure avant l'appel.",
+    "withdraw": "Retirer la demande de vérification",
+    "withdrawConfirm": "Retirer complètement votre demande ? Vous pourrez en soumettre une nouvelle plus tard.",
+    "error": "Un problème est survenu. Veuillez réessayer."
+  },
+  "adminScheduling": {
+    "tabs": {
+      "queue": "File",
+      "slots": "Créneaux",
+      "bookings": "Réservations"
+    },
+    "slots": {
+      "publishTitle": "Publier des créneaux",
+      "timezoneHint": "Heures dans votre fuseau ({tz}) ; les pros les voient dans le leur.",
+      "from": "Du",
+      "to": "Au",
+      "windowStart": "Début de journée",
+      "windowEnd": "Fin de journée",
+      "duration": "Durée",
+      "minutes": "{minutes} min",
+      "skipWeekends": "Ignorer les week-ends",
+      "publish": "Publier {count} créneau(x)",
+      "nothingToPublish": "Rien à publier — vérifiez les dates et la plage.",
+      "error": "Échec de l'action. Veuillez réessayer.",
+      "empty": "Aucun créneau publié pour l'instant.",
+      "removeBookedConfirm": "Ce créneau est réservé. Le supprimer annule la réunion et prévient le pro. Continuer ?",
+      "remove": "Supprimer le créneau"
+    },
+    "bookings": {
+      "empty": "Aucune réservation pour l'instant.",
+      "today": "Aujourd'hui",
+      "join": "Rejoindre la réunion",
+      "syncFailed": "Échec de la synchro agenda",
+      "retry": "Réessayer",
+      "noShowCount": "Absences : {count}",
+      "start": "Démarrer",
+      "approve": "Approuver",
+      "reject": "Refuser",
+      "noShow": "Absence",
+      "cancel": "Annuler la réunion",
+      "noShowConfirm": "Marquer le pro comme absent ? Après la deuxième absence, la demande est annulée automatiquement.",
+      "cancelConfirm": "Annuler cette réunion ? Le pro devra choisir un nouvel horaire.",
+      "rejectNotePrompt": "Raison visible par le pro :",
+      "noteRequired": "Une note est requise pour refuser.",
+      "error": "Échec de l'action. Veuillez réessayer.",
+      "state": {
+        "awaiting_scheduling": "En attente de créneau",
+        "scheduled": "Planifié",
+        "in_progress": "En cours",
+        "verified": "Vérifié",
+        "rejected": "Refusé",
+        "cancelled": "Annulé"
+      },
+      "outcome": {
+        "scheduled": "Planifiée",
+        "completed": "Terminée",
+        "rescheduled": "Reprogrammée",
+        "no_show": "Absence",
+        "cancelled_by_pro": "Annulée par le pro",
+        "cancelled_by_admin": "Annulée par l'admin"
+      }
+    }
   }
 }

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import {
   ProProfileStatus,
+  VerificationState,
   type AdminVerificationItem,
 } from "@playwithpro/shared";
 import { NextIntlClientProvider } from "next-intl";
@@ -23,9 +24,8 @@ const item: AdminVerificationItem = {
   requestId: "req-1",
   submittedAt: new Date("2026-07-18T10:00:00Z").toISOString(),
   credentials: "ITTF licensed coach",
-  contactTelegram: "@coach_ma",
-  contactPhone: "+49 151 1234567",
-  callRequestedAt: null,
+  state: VerificationState.AwaitingScheduling,
+  meeting: null,
   profile: {
     id: "profile-1",
     status: ProProfileStatus.PendingReview,
@@ -84,7 +84,7 @@ describe("VerificationQueue", () => {
     fetchMock.mockResolvedValue({ ok: true, status: 200 });
     renderQueue();
 
-    fireEvent.change(screen.getByPlaceholderText(/Reason shown to the coach/), {
+    fireEvent.change(screen.getByPlaceholderText(/Reason shown to the pro/), {
       target: { value: "Links do not open" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Reject" }));
@@ -104,22 +104,31 @@ describe("VerificationQueue", () => {
     expect(screen.getByText("No pending requests.")).toBeInTheDocument();
   });
 
-  it("invites the coach to a video call", async () => {
-    fetchMock.mockResolvedValue({ ok: true, status: 200 });
+  it("shows the request state instead of messenger contacts", () => {
     renderQueue();
 
-    expect(screen.getByText("@coach_ma")).toBeInTheDocument();
-    expect(screen.getByText("+49 151 1234567")).toBeInTheDocument();
-    fireEvent.click(
-      screen.getByRole("button", { name: "Invite to video call" }),
-    );
+    expect(screen.getByText("Awaiting scheduling")).toBeInTheDocument();
+    expect(screen.queryByText(/Telegram/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/WhatsApp/)).not.toBeInTheDocument();
+  });
 
-    expect(
-      await screen.findByRole("button", { name: "Call requested ✓" }),
-    ).toBeDisabled();
-    const call = fetchMock.mock.calls.find(([url]) =>
-      String(url).endsWith("/admin/verification-requests/req-1/call"),
+  it("shows the meeting time and join link for a scheduled request", () => {
+    renderQueue([
+      {
+        ...item,
+        state: VerificationState.Scheduled,
+        meeting: {
+          bookingId: "booking-1",
+          startsAt: new Date("2026-07-21T12:30:00Z").toISOString(),
+          endsAt: new Date("2026-07-21T12:45:00Z").toISOString(),
+          meetUrl: "https://meet.jit.si/PlayWithProVerify-booking-1",
+        },
+      },
+    ]);
+
+    expect(screen.getByRole("link", { name: "Join meeting" })).toHaveAttribute(
+      "href",
+      "https://meet.jit.si/PlayWithProVerify-booking-1",
     );
-    expect(call).toBeDefined();
   });
 });

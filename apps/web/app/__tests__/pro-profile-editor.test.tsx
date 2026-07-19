@@ -1,5 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { ProProfileStatus, type ProProfileResponse } from "@playwithpro/shared";
+import {
+  ProProfileStatus,
+  VerificationState,
+  type ProProfileResponse,
+} from "@playwithpro/shared";
 import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import messages from "../../messages/en.json";
@@ -25,10 +29,16 @@ const draftProfile: ProProfileResponse = {
   latestVerification: null,
 };
 
-function renderEditor(profile: ProProfileResponse = draftProfile) {
+function renderEditor(
+  profile: ProProfileResponse = draftProfile,
+  emailVerified = true,
+) {
   return render(
     <NextIntlClientProvider locale="en" messages={messages}>
-      <ProProfileEditor initialProfile={profile} />
+      <ProProfileEditor
+        initialProfile={profile}
+        emailVerified={emailVerified}
+      />
     </NextIntlClientProvider>,
   );
 }
@@ -115,7 +125,7 @@ describe("ProProfileEditor", () => {
     ).toBeInTheDocument();
   });
 
-  it("submits verification with credentials and a call contact", async () => {
+  it("submits verification with one click and shows the privacy note", async () => {
     fetchMock.mockResolvedValue({
       ok: true,
       status: 200,
@@ -127,12 +137,13 @@ describe("ProProfileEditor", () => {
     });
     renderEditor();
 
-    fireEvent.change(screen.getByLabelText("Credentials"), {
-      target: { value: "National champion 2019" },
-    });
-    fireEvent.change(screen.getByLabelText("Telegram"), {
-      target: { value: "@coach_ma" },
-    });
+    expect(
+      screen.getByText(/visible to administrators only/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/everything we need for the review/),
+    ).toBeInTheDocument();
+
     fireEvent.click(
       screen.getByRole("button", { name: "Submit for verification" }),
     );
@@ -141,27 +152,72 @@ describe("ProProfileEditor", () => {
     const call = fetchMock.mock.calls.find(([url]) =>
       String(url).endsWith("/pros/me/verification"),
     );
-    expect(JSON.parse((call![1] as RequestInit).body as string)).toEqual({
-      credentials: "National champion 2019",
-      contactTelegram: "@coach_ma",
-      contactPhone: "",
-    });
+    expect(JSON.parse((call![1] as RequestInit).body as string)).toEqual({});
   });
 
-  it("blocks verification submission without any contact", async () => {
-    renderEditor();
+  it("asks to confirm the email instead of offering submission", () => {
+    renderEditor(draftProfile, false);
 
-    fireEvent.change(screen.getByLabelText("Credentials"), {
-      target: { value: "National champion 2019" },
-    });
-    fireEvent.click(
-      screen.getByRole("button", { name: "Submit for verification" }),
-    );
-
+    expect(screen.getByText(/Confirm your email address/)).toBeInTheDocument();
     expect(
-      await screen.findByText("Leave at least one contact."),
+      screen.queryByRole("button", { name: "Submit for verification" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("prompts the coach to book the call while awaiting scheduling", () => {
+    renderEditor({
+      ...draftProfile,
+      status: ProProfileStatus.PendingReview,
+      latestVerification: {
+        id: "req-1",
+        state: VerificationState.AwaitingScheduling,
+        credentials: "x",
+        adminNote: "",
+        noShowCount: 0,
+        lastBookingOutcome: null,
+        booking: null,
+        createdAt: new Date().toISOString(),
+        reviewedAt: null,
+      },
+    });
+
+    expect(screen.getByText(/One step left/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Pick a time" }),
     ).toBeInTheDocument();
-    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("shows the scheduled call with a join link", () => {
+    renderEditor({
+      ...draftProfile,
+      status: ProProfileStatus.PendingReview,
+      latestVerification: {
+        id: "req-1",
+        state: VerificationState.Scheduled,
+        credentials: "x",
+        adminNote: "",
+        noShowCount: 0,
+        lastBookingOutcome: null,
+        booking: {
+          id: "booking-1",
+          startsAt: new Date("2026-07-21T12:30:00Z").toISOString(),
+          endsAt: new Date("2026-07-21T12:45:00Z").toISOString(),
+          meetUrl: "https://meet.google.com/abc-defg-hij",
+          canReschedule: true,
+          canCancel: true,
+        },
+        createdAt: new Date().toISOString(),
+        reviewedAt: null,
+      },
+    });
+
+    expect(screen.getByRole("link", { name: /Join meeting/ })).toHaveAttribute(
+      "href",
+      "https://meet.google.com/abc-defg-hij",
+    );
+    expect(
+      screen.getByRole("link", { name: "Reschedule or cancel" }),
+    ).toBeInTheDocument();
   });
 
   it("shows the rejection note and allows resubmission", () => {
@@ -170,13 +226,13 @@ describe("ProProfileEditor", () => {
       status: ProProfileStatus.Rejected,
       latestVerification: {
         id: "req-1",
-        status: "rejected" as never,
+        state: VerificationState.Rejected,
         credentials: "x",
-        contactTelegram: "@x",
-        contactPhone: "",
         adminNote: "No verifiable credentials",
+        noShowCount: 0,
+        lastBookingOutcome: null,
+        booking: null,
         createdAt: new Date().toISOString(),
-        callRequestedAt: null,
         reviewedAt: new Date().toISOString(),
       },
     });

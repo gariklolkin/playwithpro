@@ -28,6 +28,7 @@ const NAV: Record<
       { key: "bookings", emoji: "📒" },
       { key: "earnings", emoji: "💰" },
       { key: "profile", emoji: "🏆", href: "/dashboard/profile" },
+      { key: "verification", emoji: "🛡️", href: "/dashboard/verification" },
       { key: "settings", emoji: "⚙️", href: "/settings/account" },
     ],
   },

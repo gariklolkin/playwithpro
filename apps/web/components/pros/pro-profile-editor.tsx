@@ -4,13 +4,16 @@ import {
   ProProfileStatus,
   SUPPORTED_LOCALES,
   ServiceType,
+  VerificationState,
   type ProProfileResponse,
   type ProServiceResponse,
 } from "@playwithpro/shared";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { LOCALE_LABELS } from "@/i18n/locale-labels";
+import { Link } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api";
+import { browserTimezone, formatDay, formatTime } from "@/lib/timezones";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,8 +90,10 @@ function serviceFormFrom(
 
 export function ProProfileEditor({
   initialProfile,
+  emailVerified,
 }: {
   initialProfile: ProProfileResponse;
+  emailVerified: boolean;
 }) {
   const t = useTranslations("proProfile");
   const [profile, setProfile] = useState(initialProfile);
@@ -111,16 +116,7 @@ export function ProProfileEditor({
       ),
   );
 
-  // Verification form
-  const [credentials, setCredentials] = useState(
-    profile.latestVerification?.credentials ?? "",
-  );
-  const [contactTelegram, setContactTelegram] = useState(
-    profile.latestVerification?.contactTelegram ?? "",
-  );
-  const [contactPhone, setContactPhone] = useState(
-    profile.latestVerification?.contactPhone ?? "",
-  );
+  // Verification submission
   const [verifyStatus, setVerifyStatus] = useState<
     "idle" | "submitting" | "error"
   >("idle");
@@ -189,16 +185,11 @@ export function ProProfileEditor({
 
   async function handleVerifySubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (!contactTelegram.trim() && !contactPhone.trim()) {
-      setVerifyStatus("error");
-      setVerifyError(t("verification.contactRequired"));
-      return;
-    }
     setVerifyStatus("submitting");
     setVerifyError("");
     const response = await apiFetch("/pros/me/verification", {
       method: "POST",
-      body: JSON.stringify({ credentials, contactTelegram, contactPhone }),
+      body: JSON.stringify({}),
     });
     if (!response.ok) {
       setVerifyStatus("error");
@@ -395,47 +386,17 @@ export function ProProfileEditor({
       </Card>
 
       <Card title={t("verification.title")}>
-        {canSubmitVerification ? (
+        {canSubmitVerification && !emailVerified ? (
+          <p className="text-sm text-text-secondary">
+            ✉️ {t("verification.confirmEmailFirst")}
+          </p>
+        ) : canSubmitVerification ? (
           <form onSubmit={handleVerifySubmit} noValidate>
-            <Label htmlFor="pro-credentials">
-              {t("verification.credentials")}
-            </Label>
-            <textarea
-              id="pro-credentials"
-              rows={3}
-              required
-              placeholder={t("verification.credentialsPlaceholder")}
-              value={credentials}
-              onChange={(event) => setCredentials(event.target.value)}
-              className="mb-3 w-full rounded-lg border border-border-strong bg-bg px-3 py-2 text-sm text-text"
-            />
-            <div className="mb-1 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="pro-contact-telegram">
-                  {t("verification.contactTelegram")}
-                </Label>
-                <Input
-                  id="pro-contact-telegram"
-                  placeholder="@username"
-                  value={contactTelegram}
-                  onChange={(event) => setContactTelegram(event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="pro-contact-phone">
-                  {t("verification.contactPhone")}
-                </Label>
-                <Input
-                  id="pro-contact-phone"
-                  type="tel"
-                  placeholder="+49 151 1234567"
-                  value={contactPhone}
-                  onChange={(event) => setContactPhone(event.target.value)}
-                />
-              </div>
-            </div>
+            <p className="mb-1 text-sm text-text-secondary">
+              {t("verification.readyInfo")}
+            </p>
             <p className="mb-3 text-[12px] text-text-tertiary">
-              {t("verification.contactHint")}
+              {t("verification.privacyNote")}
             </p>
             <div className="flex items-center gap-3">
               <Button type="submit" disabled={verifyStatus === "submitting"}>
@@ -451,13 +412,85 @@ export function ProProfileEditor({
             </div>
           </form>
         ) : (
-          <p className="text-sm text-text-secondary">
-            {profile.status === ProProfileStatus.Verified
-              ? t("verification.alreadyVerified")
-              : t("verification.pendingInfo")}
-          </p>
+          <VerificationStatusView profile={profile} />
         )}
       </Card>
     </>
+  );
+}
+
+/** Compact verification state for the profile page; managing happens on /dashboard/verification. */
+function VerificationStatusView({ profile }: { profile: ProProfileResponse }) {
+  const t = useTranslations("proProfile");
+  const locale = useLocale();
+  const timezone = browserTimezone();
+  const request = profile.latestVerification;
+  const booking = request?.booking ?? null;
+
+  if (profile.status === ProProfileStatus.Verified) {
+    return (
+      <p className="text-sm text-text-secondary">
+        {t("verification.alreadyVerified")}
+      </p>
+    );
+  }
+
+  if (booking) {
+    return (
+      <div>
+        <p className="text-sm font-medium text-text">
+          {t("verification.callScheduled")}
+        </p>
+        <p className="mt-2 text-lg font-semibold capitalize text-text">
+          {formatDay(booking.startsAt, timezone, locale)} ·{" "}
+          {formatTime(booking.startsAt, timezone, locale)}
+        </p>
+        <p className="text-[12px] text-text-tertiary">{timezone}</p>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          {booking.meetUrl ? (
+            <a
+              href={booking.meetUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center rounded-lg bg-[#2E7DE1] px-3.5 py-[9px] text-sm font-semibold text-white no-underline hover:bg-[#2569C3]"
+            >
+              🎥 {t("verification.join")}
+            </a>
+          ) : (
+            <span className="text-sm text-text-secondary">
+              {t("verification.linkPending")}
+            </span>
+          )}
+          <Link
+            href="/dashboard/verification"
+            className="text-sm font-medium text-[#2A5FC7] underline"
+          >
+            {t("verification.manage")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (request?.state === VerificationState.AwaitingScheduling) {
+    return (
+      <div>
+        <p className="text-sm text-text-secondary">
+          {t("verification.schedulePrompt")}
+        </p>
+        <Link
+          href="/dashboard/verification"
+          className="mt-3 inline-flex items-center rounded-lg bg-[#2E7DE1] px-3.5 py-[9px] text-sm font-semibold text-white no-underline hover:bg-[#2569C3]"
+        >
+          {t("verification.scheduleCta")}
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <p className="text-sm text-text-secondary">
+      {t("verification.pendingInfo")}
+    </p>
   );
 }
