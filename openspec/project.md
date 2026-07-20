@@ -24,7 +24,7 @@ Core value loop: an amateur uploads game footage → picks a verified pro by lan
 - **Backend:** NestJS + TypeScript, Prisma ORM, PostgreSQL
 - **Monorepo:** pnpm workspaces + Turborepo (`apps/web`, `apps/api`, `packages/*`)
 - **Video storage:** S3-compatible (AWS S3 in prod, MinIO locally), pre-signed upload URLs
-- **Video calls:** `VideoProvider` abstraction — Google Meet when the coach has Google connected, embedded Jitsi room as the default fallback (no Google account required for any user). Join always goes through a platform session-room page so attendance is logged.
+- **Video calls:** `VideoProvider` abstraction. Decision (2026-07-20): **pro–amateur sessions use embedded Jitsi** (iframe API) — the call and the video player live side by side on the session-room page, no Google account required, and the Jitsi data channel is the future path for synced playback; **admin verification calls keep Google Meet** (existing flow via Calendar API). Google Meet is never embedded (Google forbids iframing); if a Meet-based session type ever returns, it is a "Join" button on the room page. Join always goes through a platform session-room page so attendance is logged — calendar invites carry the session-room URL, never a direct Meet/Jitsi link.
 - **Calendar:** `CalendarProvider` abstraction — Google Calendar API for users who connected Google, universal `.ics` email invites otherwise
 - **Payments:** `PaymentProvider` abstraction with escrow semantics (`hold` / `release` / `refund`); mock provider in MVP, real provider (candidate: Stripe Connect) to be decided later
 - **Local dev:** Tilt + Docker Compose (postgres, minio, mailpit, api, web)
@@ -57,7 +57,7 @@ Core value loop: an amateur uploads game footage → picks a verified pro by lan
 5a. `add-player-profiles` ✅ — amateur player profile (level, experience, style, about), account-level avatar via S3 pre-signed uploads (first S3 usage; `StorageModule` reused by video upload), player card for coaches/admins
 6. `add-video-upload` — S3 pre-signed uploads, video library for amateurs
 7. `add-booking-escrow` — booking flow, PaymentProvider abstraction + mock, escrow hold
-8. `add-session-rooms-calendar` — session room page, VideoProvider (Meet/Jitsi), CalendarProvider (Google/.ics), attendance logging; in-person game sessions get a venue-address invite instead of a video room
+8. `add-session-rooms-calendar` — session room page with **embedded Jitsi** (call + video player side by side for video-analysis sessions), CalendarProvider (Google/.ics) with invites pointing at the session-room URL, attendance logging; in-person game sessions get a venue-address invite instead of a video room. v2 candidate spun off from here: `add-synced-playback` (shared player control over the Jitsi data channel)
 9. `add-confirmation-payouts-disputes` — mutual confirmation, auto-confirm window, release/refund, dispute flow
 10. `add-reviews-ratings` — post-session reviews
 11. `add-admin-console` — users, transactions, disputes, analytics
