@@ -19,8 +19,13 @@ export async function Navbar() {
         🏓 PlayWithPro
       </Link>
       <div className="ml-3 hidden gap-1 sm:flex">
+        <Link
+          href="/coaches"
+          className="rounded-md px-2.5 py-1.5 text-sm text-text-secondary no-underline transition-colors hover:bg-bg-hover hover:text-text"
+        >
+          {t("findCoach")}
+        </Link>
         {[
-          { label: t("findCoach"), href: "#" },
           { label: t("howItWorks"), href: "/#how-it-works" },
           { label: t("forCoaches"), href: "/register?role=professional" },
         ].map((item) => (

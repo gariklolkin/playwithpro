@@ -326,7 +326,10 @@
     "verificationTitle": "Verification",
     "availabilityTitle": "Availability — PlayWithPro",
     "videosTitle": "My videos — PlayWithPro",
-    "videoUploadTitle": "Upload video — PlayWithPro"
+    "videoUploadTitle": "Upload video — PlayWithPro",
+    "coachesTitle": "Find a coach — PlayWithPro",
+    "checkoutTitle": "Checkout — PlayWithPro",
+    "sessionsTitle": "Sessions — PlayWithPro"
   },
   "verification": {
     "title": "Verification",
@@ -454,16 +457,6 @@
       "saved": "Profile updated.",
       "error": "Could not save changes. Please try again."
     },
-    "videos": {
-      "title": "My videos",
-      "empty": "Your uploaded game videos will appear here.",
-      "uploadFirst": "Upload your first video",
-      "viewAll": "All videos ({count})"
-    },
-    "sessions": {
-      "title": "My sessions",
-      "empty": "Booked sessions with pros will appear here."
-    },
     "card": {
       "years": "{years} yrs of play"
     }
@@ -506,6 +499,118 @@
       "loadFailed": "Could not load the video. Refresh the page to try again.",
       "downloadHint": "For frame-by-frame analysis, download the untouched original file.",
       "downloadOriginal": "Download original"
+    }
+  },
+  "catalog": {
+    "title": "Find your coach",
+    "subtitle": "Verified table tennis professionals, ready to book.",
+    "filters": {
+      "title": "Filters",
+      "language": "Language",
+      "service": "Service",
+      "maxPrice": "Max price per hour",
+      "maxPricePlaceholder": "e.g. 50",
+      "reset": "Reset filters"
+    },
+    "service": {
+      "video_analysis": "Video analysis",
+      "consultation": "Consultation",
+      "game": "In-person game"
+    },
+    "card": {
+      "verified": "Verified",
+      "from": "From",
+      "hour": "hour",
+      "nextSlot": "Next free slot:",
+      "noSlots": "No open slots right now",
+      "viewProfile": "View profile"
+    },
+    "empty": {
+      "title": "No coaches match these filters",
+      "subtitle": "Try removing a filter or raising the price cap."
+    },
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    }
+  },
+  "coach": {
+    "backToCatalog": "All coaches",
+    "aboutTitle": "About",
+    "servicesTitle": "Services & pricing",
+    "booking": {
+      "title": "Book a session",
+      "chooseService": "1. Service",
+      "serviceShort": {
+        "video_analysis": "📹 Video analysis",
+        "consultation": "💬 Consultation",
+        "game": "🏓 Game"
+      },
+      "chooseSlot": "2. Pick a time",
+      "yourTime": "(your time)",
+      "noSlots": "This coach has no open slots at the moment. Check back later.",
+      "attachVideo": "3. Attach your game footage",
+      "noVideos": "No ready videos in your library yet.",
+      "uploadCta": "Upload a video",
+      "price": "Price (1 hour)",
+      "escrowNotice": "Your payment is held in escrow and released to the coach only after the session is confirmed.",
+      "bookCta": "Book & continue to payment",
+      "bookFailed": "Could not create the booking. Please try again.",
+      "slotTaken": "That slot was just taken — the times have been refreshed.",
+      "loginCta": "Log in to book",
+      "coachesCannotBook": "Booking is available to player accounts.",
+      "openSheet": "Book a session",
+      "close": "Close"
+    }
+  },
+  "checkout": {
+    "title": "Checkout",
+    "orderSummary": "Order summary",
+    "coach": "Coach",
+    "service": "Service",
+    "video": "Video",
+    "dateTime": "Date & time",
+    "yourTime": "(your time)",
+    "total": "Total",
+    "escrowNotice": "Funds are held in escrow. The coach is paid only after the session is confirmed; otherwise you get a refund.",
+    "payCta": "Pay {amount}",
+    "countdown": "Time left to complete payment: {time}",
+    "payFailed": "The payment could not be processed. Please try again.",
+    "declined": {
+      "card_declined": "Your card was declined. No money was taken — please try again."
+    },
+    "devDeclineToggle": "Simulate a declined payment (dev)",
+    "paidTitle": "Payment received — session booked!",
+    "paidSubtitle": "The money is safely held in escrow until your session is confirmed.",
+    "goToSessions": "Go to my sessions",
+    "expiredTitle": "This booking has expired",
+    "expiredSubtitle": "The payment window closed and the slot was released. You can pick a new time.",
+    "backToCoach": "Back to the coach"
+  },
+  "sessions": {
+    "title": "Sessions",
+    "subtitlePlayer": "Your booked sessions with coaches.",
+    "subtitleCoach": "Sessions players have booked with you.",
+    "findCoachCta": "Find a coach",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "noneUpcoming": "No upcoming sessions.",
+    "emptyTitle": "No sessions yet",
+    "emptySubtitlePlayer": "Find a coach and book your first session.",
+    "emptySubtitleCoach": "Once players book your open slots, sessions appear here.",
+    "yourTime": "(your time)",
+    "payCta": "Pay now",
+    "status": {
+      "draft": "Draft",
+      "pending_payment": "Awaiting payment",
+      "paid_escrow": "Paid · in escrow",
+      "in_progress": "In progress",
+      "awaiting_confirmation": "Awaiting confirmation",
+      "completed_paid": "Completed · paid out",
+      "disputed": "Disputed",
+      "resolved": "Resolved",
+      "cancelled": "Cancelled"
     }
   }
 }

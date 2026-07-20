@@ -326,7 +326,10 @@
     "verificationTitle": "认证",
     "availabilityTitle": "可预约时间 — PlayWithPro",
     "videosTitle": "我的视频 — PlayWithPro",
-    "videoUploadTitle": "上传视频 — PlayWithPro"
+    "videoUploadTitle": "上传视频 — PlayWithPro",
+    "coachesTitle": "寻找教练 — PlayWithPro",
+    "checkoutTitle": "支付 — PlayWithPro",
+    "sessionsTitle": "课程 — PlayWithPro"
   },
   "verification": {
     "title": "认证",
@@ -454,16 +457,6 @@
       "saved": "资料已更新。",
       "error": "无法保存更改，请重试。"
     },
-    "videos": {
-      "title": "我的视频",
-      "empty": "您上传的比赛视频将显示在这里。",
-      "uploadFirst": "上传第一个视频",
-      "viewAll": "全部视频（{count}）"
-    },
-    "sessions": {
-      "title": "我的课程",
-      "empty": "已预约的专业课程将显示在这里。"
-    },
     "card": {
       "years": "球龄 {years} 年"
     }
@@ -506,6 +499,118 @@
       "loadFailed": "无法加载视频。请刷新页面重试。",
       "downloadHint": "如需逐帧分析，请下载未经处理的原始文件。",
       "downloadOriginal": "下载原始文件"
+    }
+  },
+  "catalog": {
+    "title": "找到你的教练",
+    "subtitle": "经过认证的乒乓球职业选手，随时可预约。",
+    "filters": {
+      "title": "筛选",
+      "language": "语言",
+      "service": "服务",
+      "maxPrice": "每小时最高价格",
+      "maxPricePlaceholder": "例如 50",
+      "reset": "重置筛选"
+    },
+    "service": {
+      "video_analysis": "视频分析",
+      "consultation": "咨询",
+      "game": "线下对练"
+    },
+    "card": {
+      "verified": "已认证",
+      "from": "起价",
+      "hour": "小时",
+      "nextSlot": "最近空闲时段：",
+      "noSlots": "目前没有空闲时段",
+      "viewProfile": "查看主页"
+    },
+    "empty": {
+      "title": "没有符合条件的教练",
+      "subtitle": "试试移除某个筛选条件或提高价格上限。"
+    },
+    "pagination": {
+      "prev": "上一页",
+      "next": "下一页",
+      "pageOf": "第 {page} 页，共 {total} 页"
+    }
+  },
+  "coach": {
+    "backToCatalog": "全部教练",
+    "aboutTitle": "关于教练",
+    "servicesTitle": "服务与价格",
+    "booking": {
+      "title": "预约课程",
+      "chooseService": "1. 服务",
+      "serviceShort": {
+        "video_analysis": "📹 视频分析",
+        "consultation": "💬 咨询",
+        "game": "🏓 对练"
+      },
+      "chooseSlot": "2. 选择时间",
+      "yourTime": "（你的时间）",
+      "noSlots": "该教练目前没有空闲时段，请稍后再来看看。",
+      "attachVideo": "3. 附上你的比赛视频",
+      "noVideos": "你的视频库中还没有可用的视频。",
+      "uploadCta": "上传视频",
+      "price": "价格（1 小时）",
+      "escrowNotice": "你的付款将由平台托管，课程确认后才会转给教练。",
+      "bookCta": "预约并前往支付",
+      "bookFailed": "无法创建预约，请重试。",
+      "slotTaken": "该时段刚被抢先预约——时间已刷新。",
+      "loginCta": "登录后预约",
+      "coachesCannotBook": "仅球员账号可以预约。",
+      "openSheet": "预约课程",
+      "close": "关闭"
+    }
+  },
+  "checkout": {
+    "title": "支付",
+    "orderSummary": "订单摘要",
+    "coach": "教练",
+    "service": "服务",
+    "video": "视频",
+    "dateTime": "日期与时间",
+    "yourTime": "（你的时间）",
+    "total": "合计",
+    "escrowNotice": "款项由平台托管。课程确认后教练才会收到付款；否则将退款给你。",
+    "payCta": "支付 {amount}",
+    "countdown": "剩余支付时间：{time}",
+    "payFailed": "支付失败，请重试。",
+    "declined": {
+      "card_declined": "银行卡被拒绝。未扣款——请重试。"
+    },
+    "devDeclineToggle": "模拟支付被拒（开发）",
+    "paidTitle": "支付成功——课程已预约！",
+    "paidSubtitle": "款项已安全托管，直到课程确认完成。",
+    "goToSessions": "查看我的课程",
+    "expiredTitle": "预约已过期",
+    "expiredSubtitle": "支付时限已过，该时段已重新开放。你可以另选时间。",
+    "backToCoach": "返回教练主页"
+  },
+  "sessions": {
+    "title": "课程",
+    "subtitlePlayer": "你预约的教练课程。",
+    "subtitleCoach": "球员向你预约的课程。",
+    "findCoachCta": "寻找教练",
+    "upcoming": "即将开始",
+    "past": "已结束",
+    "noneUpcoming": "没有即将开始的课程。",
+    "emptyTitle": "还没有课程",
+    "emptySubtitlePlayer": "找一位教练，预约你的第一节课。",
+    "emptySubtitleCoach": "球员预约你的空闲时段后，课程会显示在这里。",
+    "yourTime": "（你的时间）",
+    "payCta": "去支付",
+    "status": {
+      "draft": "草稿",
+      "pending_payment": "待支付",
+      "paid_escrow": "已支付 · 托管中",
+      "in_progress": "进行中",
+      "awaiting_confirmation": "待确认",
+      "completed_paid": "已完成 · 已结算",
+      "disputed": "争议中",
+      "resolved": "已解决",
+      "cancelled": "已取消"
     }
   }
 }

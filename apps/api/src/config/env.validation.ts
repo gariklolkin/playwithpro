@@ -100,6 +100,18 @@ class EnvironmentVariables {
   @IsInt()
   @Min(1)
   VIDEO_MAX_DURATION_MIN = 30;
+
+  /** Coach-side fee percentage withheld from the payout at release. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  PLATFORM_FEE_PERCENT = 10;
+
+  /** Minutes a pending booking holds its slot before payment expires it. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  BOOKING_PAYMENT_TTL_MIN = 15;
 }
 
 export function validate(

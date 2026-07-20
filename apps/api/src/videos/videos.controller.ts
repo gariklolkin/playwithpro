@@ -31,14 +31,16 @@ import { RenameVideoDto } from './dto/rename-video.dto';
 import { SignVideoPartsDto } from './dto/sign-video-parts.dto';
 import { VideosService } from './videos.service';
 
+// Management is amateur-only (per-method); viewing (detail + playback) also
+// admits professionals — the service scopes them to their paid sessions.
 @ApiTags('videos')
 @Controller('videos')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.Amateur)
 export class VideosController {
   constructor(private readonly videos: VideosService) {}
 
   @Post()
+  @Roles(Role.Amateur)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ description: 'Multipart upload initiated.' })
   async createUpload(
@@ -49,6 +51,7 @@ export class VideosController {
   }
 
   @Post(':id/parts')
+  @Roles(Role.Amateur)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ description: 'Pre-signed PUT URLs for the given parts.' })
   async signParts(
@@ -60,6 +63,7 @@ export class VideosController {
   }
 
   @Post(':id/complete')
+  @Roles(Role.Amateur)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ description: 'Upload finalized; processing started.' })
   async completeUpload(
@@ -71,6 +75,7 @@ export class VideosController {
   }
 
   @Get()
+  @Roles(Role.Amateur)
   @ApiOkResponse({ description: 'Own video library, newest first.' })
   async list(
     @CurrentUser() user: AuthenticatedUser,
@@ -79,6 +84,7 @@ export class VideosController {
   }
 
   @Get(':id')
+  @Roles(Role.Amateur, Role.Professional)
   @ApiOkResponse({ description: 'Video detail with status and metadata.' })
   async get(
     @CurrentUser() user: AuthenticatedUser,
@@ -88,6 +94,7 @@ export class VideosController {
   }
 
   @Patch(':id')
+  @Roles(Role.Amateur)
   @ApiOkResponse({ description: 'Video renamed.' })
   async rename(
     @CurrentUser() user: AuthenticatedUser,
@@ -98,6 +105,7 @@ export class VideosController {
   }
 
   @Delete(':id')
+  @Roles(Role.Amateur)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOkResponse({ description: 'Video (or in-flight upload) deleted.' })
   async delete(
@@ -108,6 +116,7 @@ export class VideosController {
   }
 
   @Get(':id/playback-url')
+  @Roles(Role.Amateur, Role.Professional)
   @ApiOkResponse({ description: 'Short-lived streaming URL (Range-capable).' })
   async playbackUrl(
     @CurrentUser() user: AuthenticatedUser,
@@ -117,6 +126,7 @@ export class VideosController {
   }
 
   @Get(':id/download-url')
+  @Roles(Role.Amateur)
   @ApiOkResponse({ description: 'Short-lived download URL for the original.' })
   async downloadUrl(
     @CurrentUser() user: AuthenticatedUser,

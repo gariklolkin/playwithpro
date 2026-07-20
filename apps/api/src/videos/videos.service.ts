@@ -18,6 +18,7 @@ import type { Video } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { COACH_ACCESS_STATUSES } from '../bookings/session-access';
 import { CompleteVideoUploadDto } from './dto/complete-video-upload.dto';
 import { CreateVideoUploadDto } from './dto/create-video-upload.dto';
 import { RenameVideoDto } from './dto/rename-video.dto';
@@ -140,7 +141,7 @@ export class VideosService {
   }
 
   async get(userId: string, videoId: string): Promise<VideoResponse> {
-    return toVideoResponse(await this.requireOwned(userId, videoId));
+    return toVideoResponse(await this.requireViewable(userId, videoId));
   }
 
   async rename(
@@ -176,7 +177,10 @@ export class VideosService {
     userId: string,
     videoId: string,
   ): Promise<VideoUrlResponse> {
-    const video = await this.requireReady(userId, videoId);
+    const video = await this.requireViewable(userId, videoId);
+    if (video.status !== 'READY') {
+      throw new ConflictException('This video is not ready yet.');
+    }
     return {
       url: await this.storage.presignGet(
         video.playbackKey ?? video.originalKey,
@@ -208,6 +212,38 @@ export class VideosService {
       where: { id: videoId },
     });
     if (!video || video.ownerId !== userId) {
+      throw new NotFoundException();
+    }
+    return video;
+  }
+
+  /**
+   * Viewing (metadata + playback) is owner-or-session-coach; everything else
+   * stays owner-only. Coach access starts at payment and survives the session
+   * lifecycle, but never covers cancelled or unpaid bookings.
+   */
+  private async requireViewable(
+    userId: string,
+    videoId: string,
+  ): Promise<Video> {
+    const video = await this.prisma.video.findUnique({
+      where: { id: videoId },
+    });
+    if (!video) {
+      throw new NotFoundException();
+    }
+    if (video.ownerId === userId) {
+      return video;
+    }
+    const qualifying = await this.prisma.session.findFirst({
+      where: {
+        videoId,
+        proProfile: { userId },
+        status: { in: COACH_ACCESS_STATUSES },
+      },
+      select: { id: true },
+    });
+    if (!qualifying) {
       throw new NotFoundException();
     }
     return video;

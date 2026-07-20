@@ -25,6 +25,9 @@ describe('VideosService', () => {
       >(),
       delete: jest.fn(),
     },
+    session: {
+      findFirst: jest.fn<Promise<unknown>, [unknown]>(),
+    },
   };
   const storage = {
     createMultipartUpload: jest.fn(),
@@ -283,6 +286,71 @@ describe('VideosService', () => {
         3600,
         'match.mp4',
       );
+    });
+  });
+
+  describe('per-session coach access', () => {
+    const readyVideo = {
+      ...uploadingVideo,
+      status: 'READY',
+      s3UploadId: null,
+      playbackKey: 'videos/user-1/video-1/playback.mp4',
+    };
+
+    it('grants playback to the coach of a qualifying session', async () => {
+      prisma.video.findUnique.mockResolvedValue(readyVideo);
+      prisma.session.findFirst.mockResolvedValue({ id: 'session-1' });
+      storage.presignGet.mockResolvedValue('https://signed/get');
+
+      await expect(
+        service.playbackUrl('coach-1', 'video-1'),
+      ).resolves.toBeDefined();
+      expect(prisma.session.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            videoId: 'video-1',
+            proProfile: { userId: 'coach-1' },
+          }) as object,
+        }),
+      );
+    });
+
+    it('scopes the qualifying-session lookup to paid, non-cancelled states', async () => {
+      prisma.video.findUnique.mockResolvedValue(readyVideo);
+      prisma.session.findFirst.mockResolvedValue(null);
+
+      await expect(service.get('coach-1', 'video-1')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+      const args = prisma.session.findFirst.mock.calls[0][0] as {
+        where: { status: { in: string[] } };
+      };
+      expect(args.where.status.in).toContain('PAID_ESCROW');
+      expect(args.where.status.in).not.toContain('PENDING_PAYMENT');
+      expect(args.where.status.in).not.toContain('CANCELLED');
+    });
+
+    it('keeps management owner-only even for the session coach', async () => {
+      prisma.video.findUnique.mockResolvedValue(readyVideo);
+      prisma.session.findFirst.mockResolvedValue({ id: 'session-1' });
+
+      await expect(
+        service.rename('coach-1', 'video-1', { title: 'x' }),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.delete('coach-1', 'video-1')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+      await expect(
+        service.downloadUrl('coach-1', 'video-1'),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('owner access does not consult sessions', async () => {
+      prisma.video.findUnique.mockResolvedValue(readyVideo);
+
+      await service.get('user-1', 'video-1');
+
+      expect(prisma.session.findFirst).not.toHaveBeenCalled();
     });
   });
 });

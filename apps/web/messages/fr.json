@@ -326,7 +326,10 @@
     "verificationTitle": "Vérification",
     "availabilityTitle": "Disponibilités — PlayWithPro",
     "videosTitle": "Mes vidéos — PlayWithPro",
-    "videoUploadTitle": "Importer une vidéo — PlayWithPro"
+    "videoUploadTitle": "Importer une vidéo — PlayWithPro",
+    "coachesTitle": "Trouver un coach — PlayWithPro",
+    "checkoutTitle": "Paiement — PlayWithPro",
+    "sessionsTitle": "Séances — PlayWithPro"
   },
   "verification": {
     "title": "Vérification",
@@ -454,16 +457,6 @@
       "saved": "Profil mis à jour.",
       "error": "Impossible d'enregistrer. Réessayez."
     },
-    "videos": {
-      "title": "Mes vidéos",
-      "empty": "Vos vidéos de match apparaîtront ici.",
-      "uploadFirst": "Importer une première vidéo",
-      "viewAll": "Toutes les vidéos ({count})"
-    },
-    "sessions": {
-      "title": "Mes séances",
-      "empty": "Vos séances réservées avec des pros apparaîtront ici."
-    },
     "card": {
       "years": "{years} ans de jeu"
     }
@@ -506,6 +499,118 @@
       "loadFailed": "Impossible de charger la vidéo. Actualisez la page pour réessayer.",
       "downloadHint": "Pour une analyse image par image, téléchargez l'original intact.",
       "downloadOriginal": "Télécharger l'original"
+    }
+  },
+  "catalog": {
+    "title": "Trouvez votre coach",
+    "subtitle": "Des professionnels de tennis de table vérifiés, prêts à être réservés.",
+    "filters": {
+      "title": "Filtres",
+      "language": "Langue",
+      "service": "Service",
+      "maxPrice": "Prix max par heure",
+      "maxPricePlaceholder": "ex. 50",
+      "reset": "Réinitialiser les filtres"
+    },
+    "service": {
+      "video_analysis": "Analyse vidéo",
+      "consultation": "Consultation",
+      "game": "Match en personne"
+    },
+    "card": {
+      "verified": "Vérifié",
+      "from": "À partir de",
+      "hour": "heure",
+      "nextSlot": "Prochain créneau libre :",
+      "noSlots": "Aucun créneau ouvert pour le moment",
+      "viewProfile": "Voir le profil"
+    },
+    "empty": {
+      "title": "Aucun coach ne correspond à ces filtres",
+      "subtitle": "Essayez de retirer un filtre ou d'augmenter le prix maximum."
+    },
+    "pagination": {
+      "prev": "Précédent",
+      "next": "Suivant",
+      "pageOf": "Page {page} sur {total}"
+    }
+  },
+  "coach": {
+    "backToCatalog": "Tous les coachs",
+    "aboutTitle": "À propos",
+    "servicesTitle": "Services et tarifs",
+    "booking": {
+      "title": "Réserver une séance",
+      "chooseService": "1. Service",
+      "serviceShort": {
+        "video_analysis": "📹 Analyse vidéo",
+        "consultation": "💬 Consultation",
+        "game": "🏓 Match"
+      },
+      "chooseSlot": "2. Choisissez un horaire",
+      "yourTime": "(votre heure)",
+      "noSlots": "Ce coach n'a aucun créneau ouvert pour le moment. Revenez plus tard.",
+      "attachVideo": "3. Joignez votre vidéo de jeu",
+      "noVideos": "Aucune vidéo prête dans votre bibliothèque.",
+      "uploadCta": "Téléverser une vidéo",
+      "price": "Prix (1 heure)",
+      "escrowNotice": "Votre paiement est placé sous séquestre et versé au coach uniquement après confirmation de la séance.",
+      "bookCta": "Réserver et passer au paiement",
+      "bookFailed": "Impossible de créer la réservation. Veuillez réessayer.",
+      "slotTaken": "Ce créneau vient d'être pris — les horaires ont été actualisés.",
+      "loginCta": "Connectez-vous pour réserver",
+      "coachesCannotBook": "La réservation est réservée aux comptes joueurs.",
+      "openSheet": "Réserver une séance",
+      "close": "Fermer"
+    }
+  },
+  "checkout": {
+    "title": "Paiement",
+    "orderSummary": "Récapitulatif",
+    "coach": "Coach",
+    "service": "Service",
+    "video": "Vidéo",
+    "dateTime": "Date et heure",
+    "yourTime": "(votre heure)",
+    "total": "Total",
+    "escrowNotice": "Les fonds sont placés sous séquestre. Le coach n'est payé qu'après confirmation de la séance ; sinon vous êtes remboursé.",
+    "payCta": "Payer {amount}",
+    "countdown": "Temps restant pour payer : {time}",
+    "payFailed": "Le paiement n'a pas pu être traité. Veuillez réessayer.",
+    "declined": {
+      "card_declined": "Votre carte a été refusée. Aucun montant n'a été prélevé — veuillez réessayer."
+    },
+    "devDeclineToggle": "Simuler un paiement refusé (dev)",
+    "paidTitle": "Paiement reçu — séance réservée !",
+    "paidSubtitle": "L'argent est conservé sous séquestre jusqu'à la confirmation de votre séance.",
+    "goToSessions": "Voir mes séances",
+    "expiredTitle": "Cette réservation a expiré",
+    "expiredSubtitle": "Le délai de paiement est écoulé et le créneau a été libéré. Vous pouvez choisir un nouvel horaire.",
+    "backToCoach": "Retour au coach"
+  },
+  "sessions": {
+    "title": "Séances",
+    "subtitlePlayer": "Vos séances réservées avec des coachs.",
+    "subtitleCoach": "Les séances que les joueurs ont réservées avec vous.",
+    "findCoachCta": "Trouver un coach",
+    "upcoming": "À venir",
+    "past": "Passées",
+    "noneUpcoming": "Aucune séance à venir.",
+    "emptyTitle": "Pas encore de séance",
+    "emptySubtitlePlayer": "Trouvez un coach et réservez votre première séance.",
+    "emptySubtitleCoach": "Dès qu'un joueur réserve un de vos créneaux, la séance apparaît ici.",
+    "yourTime": "(votre heure)",
+    "payCta": "Payer",
+    "status": {
+      "draft": "Brouillon",
+      "pending_payment": "En attente de paiement",
+      "paid_escrow": "Payé · sous séquestre",
+      "in_progress": "En cours",
+      "awaiting_confirmation": "En attente de confirmation",
+      "completed_paid": "Terminée · payée",
+      "disputed": "En litige",
+      "resolved": "Résolue",
+      "cancelled": "Annulée"
     }
   }
 }

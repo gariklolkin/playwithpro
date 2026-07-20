@@ -326,7 +326,10 @@
     "verificationTitle": "Verifizierung",
     "availabilityTitle": "Verfügbarkeit — PlayWithPro",
     "videosTitle": "Meine Videos — PlayWithPro",
-    "videoUploadTitle": "Video hochladen — PlayWithPro"
+    "videoUploadTitle": "Video hochladen — PlayWithPro",
+    "coachesTitle": "Trainer finden — PlayWithPro",
+    "checkoutTitle": "Bezahlung — PlayWithPro",
+    "sessionsTitle": "Sessions — PlayWithPro"
   },
   "verification": {
     "title": "Verifizierung",
@@ -454,16 +457,6 @@
       "saved": "Profil aktualisiert.",
       "error": "Änderungen konnten nicht gespeichert werden. Bitte erneut versuchen."
     },
-    "videos": {
-      "title": "Meine Videos",
-      "empty": "Ihre hochgeladenen Spielvideos erscheinen hier.",
-      "uploadFirst": "Erstes Video hochladen",
-      "viewAll": "Alle Videos ({count})"
-    },
-    "sessions": {
-      "title": "Meine Einheiten",
-      "empty": "Gebuchte Einheiten mit Profis erscheinen hier."
-    },
     "card": {
       "years": "{years} Jahre Spielpraxis"
     }
@@ -506,6 +499,118 @@
       "loadFailed": "Das Video konnte nicht geladen werden. Lade die Seite neu und versuche es erneut.",
       "downloadHint": "Für die Bild-für-Bild-Analyse lade die unveränderte Originaldatei herunter.",
       "downloadOriginal": "Original herunterladen"
+    }
+  },
+  "catalog": {
+    "title": "Finde deinen Trainer",
+    "subtitle": "Verifizierte Tischtennis-Profis, direkt buchbar.",
+    "filters": {
+      "title": "Filter",
+      "language": "Sprache",
+      "service": "Leistung",
+      "maxPrice": "Maximaler Stundenpreis",
+      "maxPricePlaceholder": "z. B. 50",
+      "reset": "Filter zurücksetzen"
+    },
+    "service": {
+      "video_analysis": "Videoanalyse",
+      "consultation": "Beratung",
+      "game": "Spiel vor Ort"
+    },
+    "card": {
+      "verified": "Verifiziert",
+      "from": "Ab",
+      "hour": "Std.",
+      "nextSlot": "Nächster freier Termin:",
+      "noSlots": "Derzeit keine freien Termine",
+      "viewProfile": "Profil ansehen"
+    },
+    "empty": {
+      "title": "Keine Trainer entsprechen diesen Filtern",
+      "subtitle": "Entferne einen Filter oder erhöhe die Preisgrenze."
+    },
+    "pagination": {
+      "prev": "Zurück",
+      "next": "Weiter",
+      "pageOf": "Seite {page} von {total}"
+    }
+  },
+  "coach": {
+    "backToCatalog": "Alle Trainer",
+    "aboutTitle": "Über mich",
+    "servicesTitle": "Leistungen & Preise",
+    "booking": {
+      "title": "Session buchen",
+      "chooseService": "1. Leistung",
+      "serviceShort": {
+        "video_analysis": "📹 Videoanalyse",
+        "consultation": "💬 Beratung",
+        "game": "🏓 Spiel"
+      },
+      "chooseSlot": "2. Zeit wählen",
+      "yourTime": "(deine Zeit)",
+      "noSlots": "Dieser Trainer hat aktuell keine freien Termine. Schau später wieder vorbei.",
+      "attachVideo": "3. Spielvideo anhängen",
+      "noVideos": "Noch keine fertigen Videos in deiner Bibliothek.",
+      "uploadCta": "Video hochladen",
+      "price": "Preis (1 Stunde)",
+      "escrowNotice": "Deine Zahlung wird treuhänderisch verwahrt und erst nach Bestätigung der Session an den Trainer ausgezahlt.",
+      "bookCta": "Buchen & zur Zahlung",
+      "bookFailed": "Die Buchung konnte nicht erstellt werden. Bitte versuche es erneut.",
+      "slotTaken": "Dieser Termin wurde gerade vergeben — die Zeiten wurden aktualisiert.",
+      "loginCta": "Zum Buchen anmelden",
+      "coachesCannotBook": "Buchungen sind Spielerkonten vorbehalten.",
+      "openSheet": "Session buchen",
+      "close": "Schließen"
+    }
+  },
+  "checkout": {
+    "title": "Bezahlung",
+    "orderSummary": "Bestellübersicht",
+    "coach": "Trainer",
+    "service": "Leistung",
+    "video": "Video",
+    "dateTime": "Datum & Uhrzeit",
+    "yourTime": "(deine Zeit)",
+    "total": "Gesamt",
+    "escrowNotice": "Das Geld wird treuhänderisch verwahrt. Der Trainer wird erst nach Bestätigung der Session bezahlt; andernfalls erhältst du eine Rückerstattung.",
+    "payCta": "{amount} bezahlen",
+    "countdown": "Verbleibende Zeit für die Zahlung: {time}",
+    "payFailed": "Die Zahlung konnte nicht verarbeitet werden. Bitte versuche es erneut.",
+    "declined": {
+      "card_declined": "Deine Karte wurde abgelehnt. Es wurde nichts abgebucht — bitte versuche es erneut."
+    },
+    "devDeclineToggle": "Abgelehnte Zahlung simulieren (Dev)",
+    "paidTitle": "Zahlung eingegangen — Session gebucht!",
+    "paidSubtitle": "Das Geld liegt sicher im Treuhandkonto, bis deine Session bestätigt ist.",
+    "goToSessions": "Zu meinen Sessions",
+    "expiredTitle": "Diese Buchung ist abgelaufen",
+    "expiredSubtitle": "Das Zahlungsfenster wurde geschlossen und der Termin freigegeben. Du kannst eine neue Zeit wählen.",
+    "backToCoach": "Zurück zum Trainer"
+  },
+  "sessions": {
+    "title": "Sessions",
+    "subtitlePlayer": "Deine gebuchten Sessions mit Trainern.",
+    "subtitleCoach": "Sessions, die Spieler bei dir gebucht haben.",
+    "findCoachCta": "Trainer finden",
+    "upcoming": "Bevorstehend",
+    "past": "Vergangen",
+    "noneUpcoming": "Keine bevorstehenden Sessions.",
+    "emptyTitle": "Noch keine Sessions",
+    "emptySubtitlePlayer": "Finde einen Trainer und buche deine erste Session.",
+    "emptySubtitleCoach": "Sobald Spieler deine freien Termine buchen, erscheinen die Sessions hier.",
+    "yourTime": "(deine Zeit)",
+    "payCta": "Jetzt bezahlen",
+    "status": {
+      "draft": "Entwurf",
+      "pending_payment": "Zahlung ausstehend",
+      "paid_escrow": "Bezahlt · Treuhand",
+      "in_progress": "Läuft",
+      "awaiting_confirmation": "Bestätigung ausstehend",
+      "completed_paid": "Abgeschlossen · ausgezahlt",
+      "disputed": "Im Streitfall",
+      "resolved": "Geklärt",
+      "cancelled": "Storniert"
     }
   }
 }

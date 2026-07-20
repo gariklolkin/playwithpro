@@ -14,7 +14,7 @@ const NAV: Record<
   [Role.Amateur]: {
     section: "amateur",
     items: [
-      { key: "sessions", emoji: "🗓️" },
+      { key: "sessions", emoji: "🗓️", href: "/dashboard/sessions" },
       { key: "videos", emoji: "📹", href: "/dashboard/videos" },
       { key: "payments", emoji: "💳" },
       { key: "profile", emoji: "🏓", href: "/dashboard/profile" },
@@ -26,7 +26,7 @@ const NAV: Record<
     items: [
       { key: "overview", emoji: "📊" },
       { key: "availability", emoji: "🗓️", href: "/dashboard/availability" },
-      { key: "bookings", emoji: "📒" },
+      { key: "bookings", emoji: "📒", href: "/dashboard/sessions" },
       { key: "earnings", emoji: "💰" },
       { key: "profile", emoji: "🏆", href: "/dashboard/profile" },
       { key: "settings", emoji: "⚙️", href: "/settings/account" },

@@ -42,6 +42,7 @@ Core value loop: an amateur uploads game footage → picks a verified pro by lan
 - Testing: unit tests colocated; e2e for booking/payment flows are mandatory before a change is archived.
 - Session lifecycle (canonical state machine):
   `draft → pending_payment → paid_escrow → in_progress → awaiting_confirmation → completed_paid | disputed → resolved`
+  Implementation notes (2026-07-20): `draft` is never persisted (booking config is client-side; `POST /bookings` creates the session directly in `pending_payment` while atomically claiming the slot); a `cancelled` terminal state exists for unpaid/expired bookings only (15-minute payment window, config `BOOKING_PAYMENT_TTL_MIN`) — post-payment cancellation semantics belong to the disputes change.
 
 ## Tech debt / known issues
 
@@ -56,7 +57,7 @@ Core value loop: an amateur uploads game footage → picks a verified pro by lan
 5. `add-availability-scheduling` ✅ — coach weekly availability template, materialized bookable slots, timezone handling, public open-slot listing
 5a. `add-player-profiles` ✅ — amateur player profile (level, experience, style, about), account-level avatar via S3 pre-signed uploads (first S3 usage; `StorageModule` reused by video upload), player card for coaches/admins
 6. `add-video-upload` ✅ — S3 multipart pre-signed uploads (Uppy), ffprobe validation + conditional H.264 transcode, video library for amateurs, profile videos summary
-7. `add-booking-escrow` — booking flow, PaymentProvider abstraction + mock, escrow hold
+7. `add-booking-escrow` ✅ — public coach catalog + coach page, booking flow with atomic slot claiming and payment expiry, `PaymentProvider` abstraction + mock with escrow hold, per-session coach access to attached videos, session lists for both roles
 8. `add-session-rooms-calendar` — session room page with **embedded Jitsi** (call + video player side by side for video-analysis sessions), CalendarProvider (Google/.ics) with invites pointing at the session-room URL, attendance logging; in-person game sessions get a venue-address invite instead of a video room. v2 candidate spun off from here: `add-synced-playback` (shared player control over the Jitsi data channel)
 9. `add-confirmation-payouts-disputes` — mutual confirmation, auto-confirm window, release/refund, dispute flow
 10. `add-reviews-ratings` — post-session reviews

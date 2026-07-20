@@ -38,6 +38,7 @@ model User {
   proProfile         ProProfile?
   playerProfile      PlayerProfile?
   videos             Video[]
+  playerSessions     Session[]
 }
 
 enum PlayerLevel {
@@ -108,6 +109,7 @@ model Video {
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   owner           User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  sessions        Session[]
 
   @@index([ownerId, createdAt])
   @@index([status, updatedAt])
@@ -195,6 +197,30 @@ enum MeetingSyncStatus {
   FAILED
 }
 
+/// Canonical session lifecycle. DRAFT is never persisted (booking config is
+/// client-side); CANCELLED is the terminal state for unpaid/expired bookings.
+/// States from IN_PROGRESS on are defined for later changes and unreachable here.
+enum SessionStatus {
+  DRAFT
+  PENDING_PAYMENT
+  PAID_ESCROW
+  IN_PROGRESS
+  AWAITING_CONFIRMATION
+  COMPLETED_PAID
+  DISPUTED
+  RESOLVED
+  CANCELLED
+}
+
+/// RELEASED / REFUNDED are reserved for the payout/dispute change.
+enum PaymentStatus {
+  REQUIRES_HOLD
+  HELD
+  FAILED
+  RELEASED
+  REFUNDED
+}
+
 /// Coach-owned public profile; 1:1 with a PROFESSIONAL user.
 model ProProfile {
   id        String           @id @default(uuid())
@@ -210,6 +236,7 @@ model ProProfile {
   verificationRequests VerificationRequest[]
   availabilityRules    AvailabilityRule[]
   availabilitySlots    AvailabilitySlot[]
+  sessions             Session[]
 }
 
 model ProService {
@@ -295,9 +322,61 @@ model AvailabilitySlot {
   createdAt DateTime               @default(now())
   updatedAt DateTime               @updatedAt
   profile   ProProfile             @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  session   Session?
 
   @@unique([profileId, startsAt])
   @@index([profileId, status, startsAt])
+}
+
+/// A booked (or being-booked) coaching session. Service type, price, fee, and
+/// slot times are snapshotted at booking so later coach edits never affect
+/// existing bookings. Party FKs are Restrict to preserve the audit trail.
+model Session {
+  id               String        @id @default(uuid())
+  playerId         String
+  proProfileId     String
+  serviceType      ServiceType
+  priceMinor       Int // money: integer minor units, never floats
+  currency         String        @db.Char(3) // ISO 4217
+  /// Coach-side fee for the future payout (release − fee), snapshotted at booking.
+  platformFeeMinor Int
+  slotId           String        @unique
+  videoId          String? // VIDEO_ANALYSIS only
+  status           SessionStatus @default(PENDING_PAYMENT)
+  startsAt         DateTime
+  endsAt           DateTime
+  /// Payment deadline while PENDING_PAYMENT; cleared once paid.
+  expiresAt        DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  player     User             @relation(fields: [playerId], references: [id])
+  proProfile ProProfile       @relation(fields: [proProfileId], references: [id])
+  slot       AvailabilitySlot @relation(fields: [slotId], references: [id])
+  video      Video?           @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  payments   Payment[]
+
+  @@index([playerId, startsAt])
+  @@index([proProfileId, startsAt])
+  @@index([status, expiresAt])
+}
+
+/// One payment attempt per row (failed attempts kept as audit trail).
+model Payment {
+  id          String        @id @default(uuid())
+  sessionId   String
+  provider    String // "mock" in MVP
+  providerRef String?
+  amountMinor Int
+  currency    String        @db.Char(3)
+  /// Fee snapshot at attempt time, mirrors Session.platformFeeMinor.
+  feeMinor    Int
+  status      PaymentStatus @default(REQUIRES_HOLD)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  session     Session       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
 }
 
 /// One booking attempt per row; outcomes (no-show, cancellations) stay as audit trail.

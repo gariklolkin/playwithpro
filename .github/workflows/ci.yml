@@ -61,5 +61,8 @@ jobs:
       - name: Test
         run: pnpm test
 
+      - name: API e2e
+        run: pnpm --filter @playwithpro/api test:e2e
+
       - name: Build
         run: pnpm build
