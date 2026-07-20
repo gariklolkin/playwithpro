@@ -33,3 +33,6 @@ apps/api/prisma/dev.db
 
 # tilt
 tilt_modules/
+
+# Local Claude Code permissions
+.claude/settings.local.json
