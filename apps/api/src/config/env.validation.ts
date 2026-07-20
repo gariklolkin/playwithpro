@@ -68,6 +68,26 @@ class EnvironmentVariables {
   @IsOptional()
   @IsString()
   GOOGLE_IMPERSONATE_SUBJECT?: string;
+
+  /** S3 endpoint the API talks to (in-cluster for MinIO). */
+  @IsUrl({ require_tld: false })
+  S3_ENDPOINT = 'http://localhost:9000';
+
+  /** Browser-facing S3 endpoint; pre-signed URLs are signed against it. */
+  @IsUrl({ require_tld: false })
+  S3_PUBLIC_URL = 'http://localhost:9000';
+
+  @IsString()
+  S3_REGION = 'us-east-1';
+
+  @IsString()
+  S3_BUCKET = 'playwithpro-videos';
+
+  @IsString()
+  S3_ACCESS_KEY = 'playwithpro';
+
+  @IsString()
+  S3_SECRET_KEY = 'playwithpro123';
 }
 
 export function validate(

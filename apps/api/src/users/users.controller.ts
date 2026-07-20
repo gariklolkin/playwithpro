@@ -6,19 +6,23 @@ import {
   HttpCode,
   HttpStatus,
   Patch,
+  Post,
+  Put,
   Res,
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { MeResponse } from '@playwithpro/shared';
+import { AvatarUploadUrlResponse, MeResponse } from '@playwithpro/shared';
 import type { Response } from 'express';
 import { setAuthCookies } from '../auth/auth-cookies';
 import type { AuthenticatedUser } from '../auth/auth-cookies';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TokenService } from '../auth/token.service';
+import { AvatarUploadUrlDto } from './dto/avatar-upload-url.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { ConfirmAvatarDto } from './dto/confirm-avatar.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
 import { UsersService } from './users.service';
 
@@ -73,6 +77,33 @@ export class UsersController {
       this.config.get<string>('NODE_ENV') === 'production',
     );
     return { ok: true };
+  }
+
+  @Post('me/avatar/upload-url')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ description: 'Pre-signed PUT URL for the avatar upload.' })
+  async createAvatarUploadUrl(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: AvatarUploadUrlDto,
+  ): Promise<AvatarUploadUrlResponse> {
+    return this.users.createAvatarUploadUrl(user.id, dto);
+  }
+
+  @Put('me/avatar')
+  @ApiOkResponse({ description: 'Avatar attached to the account.' })
+  async confirmAvatar(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: ConfirmAvatarDto,
+  ): Promise<MeResponse> {
+    return this.users.confirmAvatar(user.id, dto.key);
+  }
+
+  @Delete('me/avatar')
+  @ApiOkResponse({ description: 'Avatar removed.' })
+  async removeAvatar(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<MeResponse> {
+    return this.users.removeAvatar(user.id);
   }
 
   @Delete('me/oauth/google')

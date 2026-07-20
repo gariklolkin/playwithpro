@@ -38,6 +38,7 @@ export async function Navbar() {
         {user ? (
           <UserMenu
             displayName={user.displayName}
+            avatarUrl={user.avatarUrl}
             labels={{
               dashboard: t("dashboard"),
               settings: t("settings"),

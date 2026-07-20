@@ -31,6 +31,7 @@ const user: MeResponse = {
   emailVerified: true,
   hasPassword: true,
   googleLinked: false,
+  avatarUrl: null,
 };
 
 function renderSettings() {

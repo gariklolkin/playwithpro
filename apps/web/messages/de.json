@@ -114,6 +114,7 @@
         "sessions": "Meine Einheiten",
         "videos": "Meine Videos",
         "payments": "Zahlungen",
+        "profile": "Mein Profil",
         "settings": "Einstellungen"
       }
     },
@@ -177,6 +178,18 @@
       "unlinking": "Wird getrennt…",
       "needPassword": "Lege zuerst ein Passwort fest, damit du den Zugriff auf dein Konto nicht verlierst.",
       "unlinked": "Google-Konto getrennt."
+    },
+    "avatar": {
+      "title": "Profilfoto",
+      "upload": "Foto hochladen",
+      "change": "Foto ändern",
+      "remove": "Entfernen",
+      "uploading": "Wird hochgeladen…",
+      "removing": "Wird entfernt…",
+      "hint": "JPEG, PNG oder WebP, bis 5 MB.",
+      "badType": "Nur JPEG-, PNG- oder WebP-Bilder sind erlaubt.",
+      "tooLarge": "Das Bild ist größer als 5 MB.",
+      "error": "Foto konnte nicht aktualisiert werden. Bitte erneut versuchen."
     }
   },
   "proProfile": {
@@ -389,6 +402,59 @@
         "cancelled_by_pro": "Vom Pro storniert",
         "cancelled_by_admin": "Vom Admin storniert"
       }
+    }
+  },
+  "playerProfile": {
+    "title": "Mein Profil",
+    "subtitle": "Erzählen Sie Trainern vor der ersten Einheit von Ihrem Spiel",
+    "avatar": {
+      "title": "Profilfoto"
+    },
+    "details": {
+      "title": "Spielerdaten",
+      "level": "Spielniveau",
+      "levels": {
+        "beginner": "Anfänger",
+        "intermediate": "Fortgeschritten",
+        "advanced": "Weit fortgeschritten",
+        "competitive": "Wettkampf"
+      },
+      "style": "Spielstil",
+      "styles": {
+        "offensive": "Offensiv",
+        "all_round": "Allround",
+        "defensive": "Defensiv"
+      },
+      "years": "Jahre Erfahrung",
+      "yearsPlaceholder": "z. B. 5",
+      "handedness": "Spielhand",
+      "handednessOptions": {
+        "left": "Linkshänder",
+        "right": "Rechtshänder"
+      },
+      "grip": "Griff",
+      "gripOptions": {
+        "shakehand": "Shakehand",
+        "penhold": "Penholder"
+      },
+      "notSpecified": "Keine Angabe",
+      "about": "Über Sie",
+      "aboutPlaceholder": "Ihr Spielstil, Ihre Ziele, was Sie verbessern möchten…",
+      "save": "Änderungen speichern",
+      "saving": "Wird gespeichert…",
+      "saved": "Profil aktualisiert.",
+      "error": "Änderungen konnten nicht gespeichert werden. Bitte erneut versuchen."
+    },
+    "videos": {
+      "title": "Meine Videos",
+      "empty": "Ihre hochgeladenen Spielvideos erscheinen hier."
+    },
+    "sessions": {
+      "title": "Meine Einheiten",
+      "empty": "Gebuchte Einheiten mit Profis erscheinen hier."
+    },
+    "card": {
+      "years": "{years} Jahre Spielpraxis"
     }
   }
 }

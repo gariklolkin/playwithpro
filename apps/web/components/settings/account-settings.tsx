@@ -10,6 +10,7 @@ import { useMemo, useState } from "react";
 import { LOCALE_LABELS } from "@/i18n/locale-labels";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { API_URL, apiFetch } from "@/lib/api";
+import { AvatarUploader } from "@/components/settings/avatar-uploader";
 import { Button } from "@/components/ui/button";
 import { GoogleLogo } from "@/components/ui/google-logo";
 import { Input } from "@/components/ui/input";
@@ -126,6 +127,16 @@ export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
 
   return (
     <>
+      <SettingsCard title={t("avatar.title")}>
+        <AvatarUploader
+          user={user}
+          onUserChange={(next) => {
+            setUser(next);
+            router.refresh();
+          }}
+        />
+      </SettingsCard>
+
       <SettingsCard title={t("profile.title")}>
         <form onSubmit={handleProfileSubmit} noValidate>
           <Label htmlFor="settings-name">{t("profile.displayName")}</Label>

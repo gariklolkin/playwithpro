@@ -10,6 +10,7 @@ import { MeResponse } from '@playwithpro/shared';
 import * as argon2 from 'argon2';
 import { MailerService } from '../mailer/mailer.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
 import {
   toMeResponse,
   toPrismaRole,
@@ -41,7 +42,11 @@ export class AuthService {
     private readonly tokens: TokenService,
     private readonly mailer: MailerService,
     private readonly config: ConfigService,
+    private readonly storage: StorageService,
   ) {}
+
+  private readonly avatarUrlOf = (key: string): string =>
+    this.storage.objectUrl(key);
 
   /** Creates the account and sends the confirmation link — no session yet:
    *  the account becomes usable only after the email is verified. */
@@ -104,7 +109,7 @@ export class AuthService {
       throw new UnauthorizedException();
     }
     return {
-      user: toMeResponse(user),
+      user: toMeResponse(user, this.avatarUrlOf),
       tokens: {
         accessToken: this.tokens.signAccessToken(
           user.id,
@@ -178,7 +183,7 @@ export class AuthService {
 
   async signIn(user: UserWithOAuth): Promise<AuthResult> {
     return {
-      user: toMeResponse(user),
+      user: toMeResponse(user, this.avatarUrlOf),
       tokens: {
         accessToken: this.tokens.signAccessToken(
           user.id,

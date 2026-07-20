@@ -114,6 +114,7 @@
         "sessions": "Mes séances",
         "videos": "Mes vidéos",
         "payments": "Paiements",
+        "profile": "Mon profil",
         "settings": "Paramètres"
       }
     },
@@ -177,6 +178,18 @@
       "unlinking": "Suppression du lien…",
       "needPassword": "Définissez d'abord un mot de passe pour ne pas perdre l'accès à votre compte.",
       "unlinked": "Compte Google délié."
+    },
+    "avatar": {
+      "title": "Photo de profil",
+      "upload": "Importer une photo",
+      "change": "Changer la photo",
+      "remove": "Supprimer",
+      "uploading": "Envoi…",
+      "removing": "Suppression…",
+      "hint": "JPEG, PNG ou WebP, jusqu'à 5 Mo.",
+      "badType": "Seules les images JPEG, PNG ou WebP sont acceptées.",
+      "tooLarge": "L'image dépasse 5 Mo.",
+      "error": "Impossible de mettre à jour la photo. Réessayez."
     }
   },
   "proProfile": {
@@ -389,6 +402,59 @@
         "cancelled_by_pro": "Annulée par le pro",
         "cancelled_by_admin": "Annulée par l'admin"
       }
+    }
+  },
+  "playerProfile": {
+    "title": "Mon profil",
+    "subtitle": "Présentez votre jeu aux entraîneurs avant votre première séance",
+    "avatar": {
+      "title": "Photo de profil"
+    },
+    "details": {
+      "title": "Détails de jeu",
+      "level": "Niveau de jeu",
+      "levels": {
+        "beginner": "Débutant",
+        "intermediate": "Intermédiaire",
+        "advanced": "Avancé",
+        "competitive": "Compétition"
+      },
+      "style": "Style de jeu",
+      "styles": {
+        "offensive": "Offensif",
+        "all_round": "Polyvalent",
+        "defensive": "Défensif"
+      },
+      "years": "Années d'expérience",
+      "yearsPlaceholder": "p. ex. 5",
+      "handedness": "Main de jeu",
+      "handednessOptions": {
+        "left": "Gaucher",
+        "right": "Droitier"
+      },
+      "grip": "Prise",
+      "gripOptions": {
+        "shakehand": "Prise orthodoxe",
+        "penhold": "Prise porte-plume"
+      },
+      "notSpecified": "Non précisé",
+      "about": "À propos de vous",
+      "aboutPlaceholder": "Votre style de jeu, vos objectifs, ce que vous voulez améliorer…",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "saved": "Profil mis à jour.",
+      "error": "Impossible d'enregistrer. Réessayez."
+    },
+    "videos": {
+      "title": "Mes vidéos",
+      "empty": "Vos vidéos de match apparaîtront ici."
+    },
+    "sessions": {
+      "title": "Mes séances",
+      "empty": "Vos séances réservées avec des pros apparaîtront ici."
+    },
+    "card": {
+      "years": "{years} ans de jeu"
     }
   }
 }

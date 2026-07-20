@@ -9,6 +9,7 @@ import * as argon2 from 'argon2';
 import { TokenService } from '../auth/token.service';
 import { AvailabilityMaterializerService } from '../availability/availability-materializer.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
 import { UsersService } from './users.service';
 
 describe('UsersService', () => {
@@ -20,6 +21,12 @@ describe('UsersService', () => {
   };
   const tokens = { revokeAllRefreshTokens: jest.fn() };
   const materializer = { rematerializeForUser: jest.fn() };
+  const storage = {
+    presignPut: jest.fn(),
+    headObject: jest.fn(),
+    deleteObject: jest.fn(),
+    objectUrl: jest.fn((key: string) => `http://s3.local/bucket/${key}`),
+  };
 
   const baseUser = {
     id: 'user-1',
@@ -28,6 +35,7 @@ describe('UsersService', () => {
     displayName: 'A',
     locale: 'en',
     timezone: 'UTC',
+    avatarKey: null as string | null,
     emailVerifiedAt: new Date(),
     passwordHash: null as string | null,
     oauthAccounts: [] as { provider: string }[],
@@ -41,6 +49,7 @@ describe('UsersService', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: TokenService, useValue: tokens },
         { provide: AvailabilityMaterializerService, useValue: materializer },
+        { provide: StorageService, useValue: storage },
       ],
     }).compile();
     service = moduleRef.get(UsersService);
@@ -135,6 +144,96 @@ describe('UsersService', () => {
         data: { passwordHash: expect.any(String) as string },
       });
       expect(tokens.revokeAllRefreshTokens).toHaveBeenCalledWith('user-1');
+    });
+  });
+
+  describe('avatar flow', () => {
+    it('issues a pre-signed URL under the user namespace', async () => {
+      storage.presignPut.mockResolvedValue('http://s3.local/presigned');
+
+      const result = await service.createAvatarUploadUrl('user-1', {
+        contentType: 'image/png',
+        sizeBytes: 1024,
+      });
+
+      expect(result.key).toMatch(/^avatars\/user-1\/[0-9a-f-]+\.png$/);
+      expect(result.uploadUrl).toBe('http://s3.local/presigned');
+      expect(storage.presignPut).toHaveBeenCalledWith(result.key, 'image/png');
+    });
+
+    it('rejects confirming a key outside the user namespace', async () => {
+      await expect(
+        service.confirmAvatar('user-1', 'avatars/user-2/x.png'),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects confirmation when the object was never uploaded', async () => {
+      storage.headObject.mockResolvedValue(null);
+
+      await expect(
+        service.confirmAvatar('user-1', 'avatars/user-1/x.png'),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('rejects and deletes an oversized upload', async () => {
+      storage.headObject.mockResolvedValue({
+        contentLength: 6 * 1024 * 1024,
+        contentType: 'image/png',
+      });
+
+      await expect(
+        service.confirmAvatar('user-1', 'avatars/user-1/x.png'),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(storage.deleteObject).toHaveBeenCalledWith('avatars/user-1/x.png');
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('attaches the avatar and deletes the previous object', async () => {
+      storage.headObject.mockResolvedValue({
+        contentLength: 1024,
+        contentType: 'image/png',
+      });
+      prisma.user.findUnique.mockResolvedValue({
+        ...baseUser,
+        avatarKey: 'avatars/user-1/old.png',
+      });
+      prisma.user.update.mockResolvedValue({
+        ...baseUser,
+        avatarKey: 'avatars/user-1/new.png',
+      });
+
+      const me = await service.confirmAvatar(
+        'user-1',
+        'avatars/user-1/new.png',
+      );
+
+      expect(me.avatarUrl).toBe(
+        'http://s3.local/bucket/avatars/user-1/new.png',
+      );
+      expect(storage.deleteObject).toHaveBeenCalledWith(
+        'avatars/user-1/old.png',
+      );
+    });
+
+    it('removes the avatar and deletes the object', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        ...baseUser,
+        avatarKey: 'avatars/user-1/old.png',
+      });
+      prisma.user.update.mockResolvedValue({ ...baseUser, avatarKey: null });
+
+      const me = await service.removeAvatar('user-1');
+
+      expect(me.avatarUrl).toBeNull();
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { avatarKey: null },
+        include: { oauthAccounts: true },
+      });
+      expect(storage.deleteObject).toHaveBeenCalledWith(
+        'avatars/user-1/old.png',
+      );
     });
   });
 

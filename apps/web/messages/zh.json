@@ -114,6 +114,7 @@
         "sessions": "我的课程",
         "videos": "我的视频",
         "payments": "付款",
+        "profile": "我的资料",
         "settings": "设置"
       }
     },
@@ -177,6 +178,18 @@
       "unlinking": "正在取消关联…",
       "needPassword": "请先设置密码，以免失去账户访问权限。",
       "unlinked": "已取消关联 Google 账户。"
+    },
+    "avatar": {
+      "title": "头像",
+      "upload": "上传照片",
+      "change": "更换照片",
+      "remove": "移除",
+      "uploading": "上传中…",
+      "removing": "移除中…",
+      "hint": "JPEG、PNG 或 WebP，最大 5 MB。",
+      "badType": "仅支持 JPEG、PNG 或 WebP 图片。",
+      "tooLarge": "图片超过 5 MB。",
+      "error": "无法更新照片，请重试。"
     }
   },
   "proProfile": {
@@ -389,6 +402,59 @@
         "cancelled_by_pro": "职业选手已取消",
         "cancelled_by_admin": "管理员已取消"
       }
+    }
+  },
+  "playerProfile": {
+    "title": "我的资料",
+    "subtitle": "在第一次课程前让教练了解您的球技",
+    "avatar": {
+      "title": "头像"
+    },
+    "details": {
+      "title": "球技信息",
+      "level": "水平",
+      "levels": {
+        "beginner": "初学者",
+        "intermediate": "中级",
+        "advanced": "高级",
+        "competitive": "竞技级"
+      },
+      "style": "打法",
+      "styles": {
+        "offensive": "进攻型",
+        "all_round": "全面型",
+        "defensive": "防守型"
+      },
+      "years": "球龄（年）",
+      "yearsPlaceholder": "例如 5",
+      "handedness": "持拍手",
+      "handednessOptions": {
+        "left": "左手",
+        "right": "右手"
+      },
+      "grip": "握拍",
+      "gripOptions": {
+        "shakehand": "横拍",
+        "penhold": "直拍"
+      },
+      "notSpecified": "未指定",
+      "about": "自我介绍",
+      "aboutPlaceholder": "您的打法、目标、想提升的方面…",
+      "save": "保存更改",
+      "saving": "保存中…",
+      "saved": "资料已更新。",
+      "error": "无法保存更改，请重试。"
+    },
+    "videos": {
+      "title": "我的视频",
+      "empty": "您上传的比赛视频将显示在这里。"
+    },
+    "sessions": {
+      "title": "我的课程",
+      "empty": "已预约的专业课程将显示在这里。"
+    },
+    "card": {
+      "years": "球龄 {years} 年"
     }
   }
 }

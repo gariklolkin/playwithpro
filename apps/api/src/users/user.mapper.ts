@@ -11,7 +11,10 @@ export function toPrismaRole(role: Role): PrismaRole {
   return role.toUpperCase() as PrismaRole;
 }
 
-export function toMeResponse(user: UserWithOAuth): MeResponse {
+export function toMeResponse(
+  user: UserWithOAuth,
+  avatarUrlOf: (key: string) => string,
+): MeResponse {
   return {
     id: user.id,
     email: user.email,
@@ -24,5 +27,6 @@ export function toMeResponse(user: UserWithOAuth): MeResponse {
     googleLinked: user.oauthAccounts.some(
       (account) => account.provider === 'google',
     ),
+    avatarUrl: user.avatarKey === null ? null : avatarUrlOf(user.avatarKey),
   };
 }

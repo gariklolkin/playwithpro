@@ -3,6 +3,7 @@
 import { Link, useRouter } from "@/i18n/navigation";
 import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface UserMenuLabels {
   dashboard: string;
@@ -12,9 +13,11 @@ interface UserMenuLabels {
 
 export function UserMenu({
   displayName,
+  avatarUrl,
   labels,
 }: {
   displayName: string;
+  avatarUrl: string | null;
   labels: UserMenuLabels;
 }) {
   const router = useRouter();
@@ -47,9 +50,9 @@ export function UserMenu({
         aria-label={displayName}
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-bg-secondary text-sm font-semibold text-text"
+        className="flex cursor-pointer items-center justify-center rounded-full"
       >
-        {displayName.trim().charAt(0).toUpperCase() || "🏓"}
+        <UserAvatar displayName={displayName} avatarUrl={avatarUrl} />
       </button>
       {open ? (
         <div className="absolute right-0 top-10 z-10 w-44 rounded-lg bg-bg p-1.5 shadow-card">

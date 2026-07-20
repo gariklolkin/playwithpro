@@ -9,6 +9,7 @@ import { Test } from '@nestjs/testing';
 import * as argon2 from 'argon2';
 import { MailerService } from '../mailer/mailer.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
 import { AuthService } from './auth.service';
 import { TokenService } from './token.service';
 
@@ -47,6 +48,12 @@ describe('AuthService', () => {
         { provide: TokenService, useValue: tokens },
         { provide: MailerService, useValue: mailer },
         { provide: ConfigService, useValue: { get: jest.fn() } },
+        {
+          provide: StorageService,
+          useValue: {
+            objectUrl: jest.fn((key: string) => `http://s3.local/${key}`),
+          },
+        },
       ],
     }).compile();
     service = moduleRef.get(AuthService);

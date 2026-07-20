@@ -65,6 +65,7 @@ export interface MeResponse {
   emailVerified: boolean;
   hasPassword: boolean;
   googleLinked: boolean;
+  avatarUrl: string | null;
 }
 
 /** Returned by register/login/refresh alongside the httpOnly auth cookies. */

@@ -17,6 +17,7 @@ const NAV: Record<
       { key: "sessions", emoji: "🗓️" },
       { key: "videos", emoji: "📹" },
       { key: "payments", emoji: "💳" },
+      { key: "profile", emoji: "🏓", href: "/dashboard/profile" },
       { key: "settings", emoji: "⚙️", href: "/settings/account" },
     ],
   },

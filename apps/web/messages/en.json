@@ -114,6 +114,7 @@
         "sessions": "My sessions",
         "videos": "My videos",
         "payments": "Payments",
+        "profile": "My profile",
         "settings": "Settings"
       }
     },
@@ -177,6 +178,18 @@
       "unlinking": "Unlinking…",
       "needPassword": "Set a password first so you don't lose access to your account.",
       "unlinked": "Google account unlinked."
+    },
+    "avatar": {
+      "title": "Profile photo",
+      "upload": "Upload photo",
+      "change": "Change photo",
+      "remove": "Remove",
+      "uploading": "Uploading…",
+      "removing": "Removing…",
+      "hint": "JPEG, PNG or WebP, up to 5 MB.",
+      "badType": "Only JPEG, PNG or WebP images are allowed.",
+      "tooLarge": "The image is larger than 5 MB.",
+      "error": "Could not update the photo. Please try again."
     }
   },
   "proProfile": {
@@ -389,6 +402,59 @@
         "cancelled_by_pro": "Cancelled by pro",
         "cancelled_by_admin": "Cancelled by admin"
       }
+    }
+  },
+  "playerProfile": {
+    "title": "My profile",
+    "subtitle": "Tell coaches about your game before your first session",
+    "avatar": {
+      "title": "Profile photo"
+    },
+    "details": {
+      "title": "Playing details",
+      "level": "Playing level",
+      "levels": {
+        "beginner": "Beginner",
+        "intermediate": "Intermediate",
+        "advanced": "Advanced",
+        "competitive": "Competitive"
+      },
+      "style": "Playing style",
+      "styles": {
+        "offensive": "Offensive",
+        "all_round": "All-round",
+        "defensive": "Defensive"
+      },
+      "years": "Years of experience",
+      "yearsPlaceholder": "e.g. 5",
+      "handedness": "Playing hand",
+      "handednessOptions": {
+        "left": "Left-handed",
+        "right": "Right-handed"
+      },
+      "grip": "Grip",
+      "gripOptions": {
+        "shakehand": "Shakehand",
+        "penhold": "Penhold"
+      },
+      "notSpecified": "Not specified",
+      "about": "About you",
+      "aboutPlaceholder": "Your playing style, goals, what you want to improve…",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "saved": "Profile updated.",
+      "error": "Could not save changes. Please try again."
+    },
+    "videos": {
+      "title": "My videos",
+      "empty": "Your uploaded game videos will appear here."
+    },
+    "sessions": {
+      "title": "My sessions",
+      "empty": "Booked sessions with pros will appear here."
+    },
+    "card": {
+      "years": "{years} yrs of play"
     }
   }
 }

@@ -10,8 +10,10 @@ import { MailerModule } from './mailer/mailer.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AdminModule } from './admin/admin.module';
 import { AvailabilityModule } from './availability/availability.module';
+import { PlayersModule } from './players/players.module';
 import { ProsModule } from './pros/pros.module';
 import { SchedulingModule } from './scheduling/scheduling.module';
+import { StorageModule } from './storage/storage.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -28,10 +30,12 @@ import { UsersModule } from './users/users.module';
     MailerModule,
     AuthModule,
     UsersModule,
+    PlayersModule,
     ProsModule,
     AvailabilityModule,
     AdminModule,
     SchedulingModule,
+    StorageModule,
   ],
   providers: [
     {
