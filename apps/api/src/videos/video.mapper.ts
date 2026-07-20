@@ -1,5 +1,9 @@
 import type { Video } from '@prisma/client';
-import { VideoRejectionReason, VideoResponse, VideoStatus } from '@playwithpro/shared';
+import {
+  VideoRejectionReason,
+  VideoResponse,
+  VideoStatus,
+} from '@playwithpro/shared';
 
 const STATUS_MAP: Record<Video['status'], VideoStatus> = {
   UPLOADING: VideoStatus.Uploading,

@@ -98,13 +98,21 @@ export class VideoProcessingService implements OnModuleInit {
     const probe = await this.probe(sourceUrl);
 
     if (!probe.hasVideoStream) {
-      await this.reject(videoId, video.originalKey, VideoRejectionReason.NotAVideo);
+      await this.reject(
+        videoId,
+        video.originalKey,
+        VideoRejectionReason.NotAVideo,
+      );
       return;
     }
     const maxDurationSeconds =
       this.config.getOrThrow<number>('VIDEO_MAX_DURATION_MIN') * 60;
     if (probe.durationSeconds > maxDurationSeconds) {
-      await this.reject(videoId, video.originalKey, VideoRejectionReason.TooLong);
+      await this.reject(
+        videoId,
+        video.originalKey,
+        VideoRejectionReason.TooLong,
+      );
       return;
     }
 

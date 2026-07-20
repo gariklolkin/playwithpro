@@ -16,10 +16,13 @@ describe('VideosService', () => {
 
   const prisma = {
     video: {
-      create: jest.fn(),
+      create: jest.fn<Promise<unknown>, [{ data: Record<string, unknown> }]>(),
       findUnique: jest.fn(),
       findMany: jest.fn(),
-      update: jest.fn(),
+      update: jest.fn<
+        Promise<unknown>,
+        [{ where: Record<string, unknown>; data: Record<string, unknown> }]
+      >(),
       delete: jest.fn(),
     },
   };

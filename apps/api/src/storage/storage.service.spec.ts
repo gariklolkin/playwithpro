@@ -7,7 +7,7 @@ jest.mock('@aws-sdk/s3-request-presigner', () => ({
   getSignedUrl: jest.fn().mockResolvedValue('https://signed.example/url'),
 }));
 
-const sendMock = jest.fn();
+const sendMock = jest.fn<Promise<unknown>, unknown[]>();
 jest.mock('@aws-sdk/client-s3', () => {
   const actual = jest.requireActual<object>('@aws-sdk/client-s3');
   return {
@@ -29,7 +29,7 @@ const env: Record<string, string> = {
 
 describe('StorageService', () => {
   let service: StorageService;
-  const signedUrlMock = getSignedUrl as jest.Mock;
+  const signedUrlMock = getSignedUrl as jest.Mock<Promise<string>, unknown[]>;
 
   beforeEach(async () => {
     jest.clearAllMocks();

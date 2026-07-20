@@ -62,8 +62,11 @@ describe('VideoProcessingService', () => {
   const prisma = {
     video: {
       findUnique: jest.fn(),
-      findMany: jest.fn(),
-      update: jest.fn().mockResolvedValue({}),
+      findMany: jest.fn<Promise<unknown>, [Record<string, unknown>]>(),
+      update: jest.fn<
+        Promise<unknown>,
+        [{ where: Record<string, unknown>; data: Record<string, unknown> }]
+      >(),
       delete: jest.fn(),
     },
   };
@@ -86,9 +89,9 @@ describe('VideoProcessingService', () => {
   };
 
   const process = (id: string): Promise<void> =>
-    (
-      service as unknown as { process: (id: string) => Promise<void> }
-    ).process(id);
+    (service as unknown as { process: (id: string) => Promise<void> }).process(
+      id,
+    );
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -157,7 +160,8 @@ describe('VideoProcessingService', () => {
 
     // Only ffprobe ran — no ffmpeg invocation.
     expect(mockExecFile).toHaveBeenCalledTimes(1);
-    const readyUpdate = prisma.video.update.mock.calls.at(-1)[0];
+    const calls = prisma.video.update.mock.calls;
+    const readyUpdate = calls[calls.length - 1][0];
     expect(readyUpdate.data).toEqual({
       status: 'READY',
       playbackKey: processingVideo.originalKey,
@@ -187,7 +191,8 @@ describe('VideoProcessingService', () => {
       'video/mp4',
       1234,
     );
-    const readyUpdate = prisma.video.update.mock.calls.at(-1)[0];
+    const calls = prisma.video.update.mock.calls;
+    const readyUpdate = calls[calls.length - 1][0];
     expect(readyUpdate.data.playbackKey).toBe(
       'videos/user-1/video-1/playback.mp4',
     );
@@ -223,7 +228,9 @@ describe('VideoProcessingService', () => {
     expect(prisma.video.delete).toHaveBeenCalledWith({
       where: { id: 'stale-1' },
     });
-    const where = prisma.video.findMany.mock.calls[0][0].where;
+    const { where } = prisma.video.findMany.mock.calls[0][0] as {
+      where: { status: string; createdAt: { lt: Date } };
+    };
     expect(where.status).toBe('UPLOADING');
     expect(where.createdAt.lt).toBeInstanceOf(Date);
   });

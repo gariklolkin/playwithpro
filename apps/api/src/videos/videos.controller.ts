@@ -72,7 +72,9 @@ export class VideosController {
 
   @Get()
   @ApiOkResponse({ description: 'Own video library, newest first.' })
-  async list(@CurrentUser() user: AuthenticatedUser): Promise<VideoListResponse> {
+  async list(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<VideoListResponse> {
     return this.videos.list(user.id);
   }
 
