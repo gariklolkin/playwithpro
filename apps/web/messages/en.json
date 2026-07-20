@@ -234,6 +234,35 @@
       "confirmEmailFirst": "Confirm your email address first — the booking confirmation, reminders and the meeting invite all go there. Check your inbox for the confirmation link."
     }
   },
+  "availability": {
+    "title": "Availability",
+    "subtitle": "Mark when you can play — players book free one-hour slots.",
+    "template": {
+      "title": "Weekly template",
+      "hint": "Times are in your timezone ({timezone}). Every slot is one hour. Slots are generated 4 weeks ahead — the horizon rolls forward every day.",
+      "dayOff": "Day off",
+      "addWindow": "Add hours",
+      "removeWindow": "Remove window",
+      "from": "From",
+      "to": "To",
+      "save": "Save template",
+      "saving": "Saving…",
+      "error": "Could not save the template. Check the windows and try again.",
+      "toggle": "Repeats weekly? Set a template and the calendar fills itself."
+    },
+    "calendar": {
+      "title": "Calendar",
+      "hint": "Times are in your timezone ({timezone}). Pick a day and toggle the hours you can play. The template fills slots 4 weeks ahead.",
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month"
+    },
+    "day": {
+      "hint": "Tap an hour to open or close that slot. Green means players can book it.",
+      "booked": "Booked",
+      "error": "Could not update the slot.",
+      "pickPrompt": "Select a day in the calendar to edit its hours."
+    }
+  },
   "adminVerification": {
     "title": "Verification queue",
     "empty": "No pending requests.",
@@ -274,7 +303,8 @@
     "dashboardTitle": "Dashboard — PlayWithPro",
     "settingsTitle": "Account settings — PlayWithPro",
     "proProfileTitle": "My profile — PlayWithPro",
-    "verificationTitle": "Verification"
+    "verificationTitle": "Verification",
+    "availabilityTitle": "Availability — PlayWithPro"
   },
   "verification": {
     "title": "Verification",

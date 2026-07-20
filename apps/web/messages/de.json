@@ -234,6 +234,35 @@
       "confirmEmailFirst": "Bestätigen Sie zuerst Ihre E-Mail-Adresse — Buchungsbestätigung, Erinnerungen und die Meeting-Einladung gehen dorthin. Der Bestätigungslink ist in Ihrem Postfach."
     }
   },
+  "availability": {
+    "title": "Verfügbarkeit",
+    "subtitle": "Markiere, wann du spielen kannst — Spieler buchen freie Ein-Stunden-Slots.",
+    "template": {
+      "title": "Wochenvorlage",
+      "hint": "Zeiten in deiner Zeitzone ({timezone}). Jeder Slot dauert eine Stunde. Slots werden 4 Wochen im Voraus erzeugt — der Horizont wandert täglich weiter.",
+      "dayOff": "Frei",
+      "addWindow": "Zeiten hinzufügen",
+      "removeWindow": "Fenster entfernen",
+      "from": "Von",
+      "to": "Bis",
+      "save": "Vorlage speichern",
+      "saving": "Wird gespeichert…",
+      "error": "Vorlage konnte nicht gespeichert werden. Prüfe die Zeitfenster und versuche es erneut.",
+      "toggle": "Wiederholt sich dein Plan wöchentlich? Lege eine Vorlage an — der Kalender füllt sich von selbst."
+    },
+    "calendar": {
+      "title": "Kalender",
+      "hint": "Zeiten in deiner Zeitzone ({timezone}). Wähle einen Tag und schalte die Stunden frei, an denen du spielen kannst. Die Vorlage füllt Slots 4 Wochen im Voraus.",
+      "prevMonth": "Vorheriger Monat",
+      "nextMonth": "Nächster Monat"
+    },
+    "day": {
+      "hint": "Tippe auf eine Stunde, um den Slot zu öffnen oder zu schließen. Grün heißt buchbar.",
+      "booked": "Gebucht",
+      "error": "Slot konnte nicht aktualisiert werden.",
+      "pickPrompt": "Wähle im Kalender einen Tag, um seine Stunden zu bearbeiten."
+    }
+  },
   "adminVerification": {
     "title": "Verifizierungswarteschlange",
     "empty": "Keine offenen Anfragen.",
@@ -274,7 +303,8 @@
     "dashboardTitle": "Dashboard — PlayWithPro",
     "settingsTitle": "Kontoeinstellungen — PlayWithPro",
     "proProfileTitle": "Mein Profil — PlayWithPro",
-    "verificationTitle": "Verifizierung"
+    "verificationTitle": "Verifizierung",
+    "availabilityTitle": "Verfügbarkeit — PlayWithPro"
   },
   "verification": {
     "title": "Verifizierung",

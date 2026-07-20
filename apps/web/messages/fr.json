@@ -234,6 +234,35 @@
       "confirmEmailFirst": "Confirmez d'abord votre adresse e-mail — la confirmation de réservation, les rappels et l'invitation à la réunion y seront envoyés. Le lien de confirmation est dans votre boîte de réception."
     }
   },
+  "availability": {
+    "title": "Disponibilités",
+    "subtitle": "Indiquez quand vous pouvez jouer — les joueurs réservent des créneaux d'une heure.",
+    "template": {
+      "title": "Modèle hebdomadaire",
+      "hint": "Heures dans votre fuseau horaire ({timezone}). Chaque créneau dure une heure. Les créneaux sont générés 4 semaines à l'avance — l'horizon avance chaque jour.",
+      "dayOff": "Repos",
+      "addWindow": "Ajouter des heures",
+      "removeWindow": "Supprimer la plage",
+      "from": "De",
+      "to": "À",
+      "save": "Enregistrer le modèle",
+      "saving": "Enregistrement…",
+      "error": "Impossible d'enregistrer le modèle. Vérifiez les plages et réessayez.",
+      "toggle": "Votre planning se répète chaque semaine ? Définissez un modèle — le calendrier se remplit tout seul."
+    },
+    "calendar": {
+      "title": "Calendrier",
+      "hint": "Heures dans votre fuseau horaire ({timezone}). Choisissez un jour et activez les heures où vous pouvez jouer. Le modèle remplit les créneaux 4 semaines à l'avance.",
+      "prevMonth": "Mois précédent",
+      "nextMonth": "Mois suivant"
+    },
+    "day": {
+      "hint": "Touchez une heure pour ouvrir ou fermer le créneau. Vert : réservable par les joueurs.",
+      "booked": "Réservé",
+      "error": "Impossible de mettre à jour le créneau.",
+      "pickPrompt": "Sélectionnez un jour dans le calendrier pour modifier ses heures."
+    }
+  },
   "adminVerification": {
     "title": "File de vérification",
     "empty": "Aucune demande en attente.",
@@ -274,7 +303,8 @@
     "dashboardTitle": "Tableau de bord — PlayWithPro",
     "settingsTitle": "Paramètres du compte — PlayWithPro",
     "proProfileTitle": "Mon profil — PlayWithPro",
-    "verificationTitle": "Vérification"
+    "verificationTitle": "Vérification",
+    "availabilityTitle": "Disponibilités — PlayWithPro"
   },
   "verification": {
     "title": "Vérification",

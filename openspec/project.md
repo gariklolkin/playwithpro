@@ -53,7 +53,7 @@ Core value loop: an amateur uploads game footage → picks a verified pro by lan
 2. `add-auth-and-accounts` ✅ — email+password & Google OAuth, roles, sessions (JWT), account settings
 3. `add-i18n` ✅ — locale routing, message catalogs for 5 languages, language switcher
 4. `add-pro-profiles-verification` ✅ — coach profile CRUD, services & pricing (incl. mapped venue for the in-person game service), admin verification queue; follow-ups also archived: `add-verification-scheduling` ✅ (slot booking, Google Meet, meeting state machine) and `update-email-verification-code` ✅ (6-digit email confirmation codes)
-5. `add-availability-scheduling` — coach availability slots, timezone handling
+5. `add-availability-scheduling` ✅ — coach weekly availability template, materialized bookable slots, timezone handling, public open-slot listing
 6. `add-video-upload` — S3 pre-signed uploads, video library for amateurs
 7. `add-booking-escrow` — booking flow, PaymentProvider abstraction + mock, escrow hold
 8. `add-session-rooms-calendar` — session room page, VideoProvider (Meet/Jitsi), CalendarProvider (Google/.ics), attendance logging; in-person game sessions get a venue-address invite instead of a video room

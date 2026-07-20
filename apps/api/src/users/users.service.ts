@@ -8,6 +8,7 @@ import {
 import { MeResponse } from '@playwithpro/shared';
 import * as argon2 from 'argon2';
 import { TokenService } from '../auth/token.service';
+import { AvailabilityMaterializerService } from '../availability/availability-materializer.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateMeDto } from './dto/update-me.dto';
 import { toMeResponse, UserWithOAuth } from './user.mapper';
@@ -17,6 +18,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tokens: TokenService,
+    private readonly availabilityMaterializer: AvailabilityMaterializerService,
   ) {}
 
   async getMe(userId: string): Promise<MeResponse> {
@@ -24,7 +26,7 @@ export class UsersService {
   }
 
   async updateMe(userId: string, dto: UpdateMeDto): Promise<MeResponse> {
-    await this.requireUser(userId);
+    const before = await this.requireUser(userId);
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -34,6 +36,11 @@ export class UsersService {
       },
       include: { oauthAccounts: true },
     });
+    if (dto.timezone && dto.timezone !== before.timezone) {
+      // The weekly template is anchored to the coach's wall clock, so slot
+      // instants must be recomputed under the new timezone.
+      await this.availabilityMaterializer.rematerializeForUser(userId);
+    }
     return toMeResponse(user);
   }
 

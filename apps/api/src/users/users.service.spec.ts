@@ -7,6 +7,7 @@ import {
 import { Test } from '@nestjs/testing';
 import * as argon2 from 'argon2';
 import { TokenService } from '../auth/token.service';
+import { AvailabilityMaterializerService } from '../availability/availability-materializer.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from './users.service';
 
@@ -18,6 +19,7 @@ describe('UsersService', () => {
     oAuthAccount: { deleteMany: jest.fn() },
   };
   const tokens = { revokeAllRefreshTokens: jest.fn() };
+  const materializer = { rematerializeForUser: jest.fn() };
 
   const baseUser = {
     id: 'user-1',
@@ -38,6 +40,7 @@ describe('UsersService', () => {
         UsersService,
         { provide: PrismaService, useValue: prisma },
         { provide: TokenService, useValue: tokens },
+        { provide: AvailabilityMaterializerService, useValue: materializer },
       ],
     }).compile();
     service = moduleRef.get(UsersService);
@@ -75,6 +78,16 @@ describe('UsersService', () => {
         include: { oauthAccounts: true },
       });
       expect(me.timezone).toBe('Europe/Berlin');
+      expect(materializer.rematerializeForUser).toHaveBeenCalledWith('user-1');
+    });
+
+    it('does not re-materialize slots when the timezone is unchanged', async () => {
+      prisma.user.findUnique.mockResolvedValue(baseUser);
+      prisma.user.update.mockResolvedValue({ ...baseUser, displayName: 'B' });
+
+      await service.updateMe('user-1', { displayName: 'B' });
+
+      expect(materializer.rematerializeForUser).not.toHaveBeenCalled();
     });
   });
 

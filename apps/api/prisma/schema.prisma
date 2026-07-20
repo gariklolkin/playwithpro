@@ -132,6 +132,8 @@ model ProProfile {
 
   services             ProService[]
   verificationRequests VerificationRequest[]
+  availabilityRules    AvailabilityRule[]
+  availabilitySlots    AvailabilitySlot[]
 }
 
 model ProService {
@@ -181,6 +183,45 @@ model VerificationSlot {
   bookings VerificationBooking[]
 
   @@index([status, startsAt])
+}
+
+enum AvailabilitySlotSource {
+  RULE // materialized from the weekly template
+  MANUAL // one-off slot added by the coach
+}
+
+/// Recurring weekly availability window in the coach's wall-clock time.
+/// UTC conversion happens per concrete date at materialization, so local
+/// times stay stable across DST transitions.
+model AvailabilityRule {
+  id          String     @id @default(uuid())
+  profileId   String
+  weekday     Int // 0 = Monday … 6 = Sunday (ISO)
+  startMinute Int // minutes from local midnight; multiple of 30
+  endMinute   Int // exclusive; endMinute - startMinute >= 60
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  profile     ProProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+}
+
+/// Concrete bookable 60-minute coach slot. Times are UTC.
+/// The unique (profileId, startsAt) pair anchors idempotent materialization:
+/// existing rows — including REMOVED ones — are never duplicated or resurrected.
+model AvailabilitySlot {
+  id        String                 @id @default(uuid())
+  profileId String
+  startsAt  DateTime
+  endsAt    DateTime
+  status    SlotStatus             @default(OPEN)
+  source    AvailabilitySlotSource @default(RULE)
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+  profile   ProProfile             @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, startsAt])
+  @@index([profileId, status, startsAt])
 }
 
 /// One booking attempt per row; outcomes (no-show, cancellations) stay as audit trail.

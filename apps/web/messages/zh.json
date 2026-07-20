@@ -234,6 +234,35 @@
       "confirmEmailFirst": "请先确认您的邮箱——预约确认、提醒和会议邀请都会发送到该邮箱。确认链接已发送至您的收件箱。"
     }
   },
+  "availability": {
+    "title": "可预约时间",
+    "subtitle": "标记您可以打球的时间——球员将预约空闲的一小时时段。",
+    "template": {
+      "title": "每周模板",
+      "hint": "时间以您的时区（{timezone}）显示。每个时段为一小时。时段会提前 4 周生成——范围每天向前滚动。",
+      "dayOff": "休息日",
+      "addWindow": "添加时间",
+      "removeWindow": "删除时间段",
+      "from": "从",
+      "to": "到",
+      "save": "保存模板",
+      "saving": "保存中…",
+      "error": "无法保存模板。请检查时间段后重试。",
+      "toggle": "时间安排每周重复？设置模板，日历会自动填充。"
+    },
+    "calendar": {
+      "title": "日历",
+      "hint": "时间以您的时区（{timezone}）显示。选择日期并勾选可以打球的小时。模板会提前 4 周填充时段。",
+      "prevMonth": "上个月",
+      "nextMonth": "下个月"
+    },
+    "day": {
+      "hint": "点击小时即可开放或关闭该时段。绿色表示球员可预约。",
+      "booked": "已预约",
+      "error": "无法更新时段。",
+      "pickPrompt": "在日历中选择一天以编辑其时段。"
+    }
+  },
   "adminVerification": {
     "title": "认证队列",
     "empty": "暂无待审申请。",
@@ -274,7 +303,8 @@
     "dashboardTitle": "控制台 — PlayWithPro",
     "settingsTitle": "账户设置 — PlayWithPro",
     "proProfileTitle": "我的主页 — PlayWithPro",
-    "verificationTitle": "认证"
+    "verificationTitle": "认证",
+    "availabilityTitle": "可预约时间 — PlayWithPro"
   },
   "verification": {
     "title": "认证",

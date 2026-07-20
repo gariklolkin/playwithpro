@@ -24,7 +24,7 @@ const NAV: Record<
     section: "professional",
     items: [
       { key: "overview", emoji: "📊" },
-      { key: "availability", emoji: "🗓️" },
+      { key: "availability", emoji: "🗓️", href: "/dashboard/availability" },
       { key: "bookings", emoji: "📒" },
       { key: "earnings", emoji: "💰" },
       { key: "profile", emoji: "🏆", href: "/dashboard/profile" },
