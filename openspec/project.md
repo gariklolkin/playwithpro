@@ -55,7 +55,7 @@ Core value loop: an amateur uploads game footage → picks a verified pro by lan
 4. `add-pro-profiles-verification` ✅ — coach profile CRUD, services & pricing (incl. mapped venue for the in-person game service), admin verification queue; follow-ups also archived: `add-verification-scheduling` ✅ (slot booking, Google Meet, meeting state machine) and `update-email-verification-code` ✅ (6-digit email confirmation codes)
 5. `add-availability-scheduling` ✅ — coach weekly availability template, materialized bookable slots, timezone handling, public open-slot listing
 5a. `add-player-profiles` ✅ — amateur player profile (level, experience, style, about), account-level avatar via S3 pre-signed uploads (first S3 usage; `StorageModule` reused by video upload), player card for coaches/admins
-6. `add-video-upload` — S3 pre-signed uploads, video library for amateurs
+6. `add-video-upload` ✅ — S3 multipart pre-signed uploads (Uppy), ffprobe validation + conditional H.264 transcode, video library for amateurs, profile videos summary
 7. `add-booking-escrow` — booking flow, PaymentProvider abstraction + mock, escrow hold
 8. `add-session-rooms-calendar` — session room page with **embedded Jitsi** (call + video player side by side for video-analysis sessions), CalendarProvider (Google/.ics) with invites pointing at the session-room URL, attendance logging; in-person game sessions get a venue-address invite instead of a video room. v2 candidate spun off from here: `add-synced-playback` (shared player control over the Jitsi data channel)
 9. `add-confirmation-payouts-disputes` — mutual confirmation, auto-confirm window, release/refund, dispute flow
