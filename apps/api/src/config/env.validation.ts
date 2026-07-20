@@ -88,6 +88,18 @@ class EnvironmentVariables {
 
   @IsString()
   S3_SECRET_KEY = 'playwithpro123';
+
+  /** Upper bound for an uploaded video file. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  VIDEO_MAX_SIZE_MB = 2048;
+
+  /** Upper bound for a video's duration, enforced at the ffprobe stage. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  VIDEO_MAX_DURATION_MIN = 30;
 }
 
 export function validate(

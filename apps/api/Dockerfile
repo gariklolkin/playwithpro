@@ -1,6 +1,9 @@
 # syntax=docker/dockerfile:1
 FROM node:22-alpine AS dev
 
+# ffmpeg/ffprobe: video validation and playback transcode (videos module)
+RUN apk add --no-cache ffmpeg
+
 RUN npm install -g pnpm@9.15.0
 
 WORKDIR /workspace

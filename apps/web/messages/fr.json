@@ -324,7 +324,9 @@
     "settingsTitle": "Paramètres du compte — PlayWithPro",
     "proProfileTitle": "Mon profil — PlayWithPro",
     "verificationTitle": "Vérification",
-    "availabilityTitle": "Disponibilités — PlayWithPro"
+    "availabilityTitle": "Disponibilités — PlayWithPro",
+    "videosTitle": "Mes vidéos — PlayWithPro",
+    "videoUploadTitle": "Importer une vidéo — PlayWithPro"
   },
   "verification": {
     "title": "Vérification",
@@ -454,7 +456,9 @@
     },
     "videos": {
       "title": "Mes vidéos",
-      "empty": "Vos vidéos de match apparaîtront ici."
+      "empty": "Vos vidéos de match apparaîtront ici.",
+      "uploadFirst": "Importer une première vidéo",
+      "viewAll": "Toutes les vidéos ({count})"
     },
     "sessions": {
       "title": "Mes séances",
@@ -462,6 +466,46 @@
     },
     "card": {
       "years": "{years} ans de jeu"
+    }
+  },
+  "videos": {
+    "title": "Mes vidéos",
+    "subtitle": "Vos séquences de jeu pour les séances d'analyse vidéo.",
+    "uploadCta": "Importer une vidéo",
+    "emptyTitle": "Aucune vidéo pour l'instant",
+    "emptySubtitle": "Importez une séquence de jeu pour l'analyser avec un pro.",
+    "rename": "Renommer",
+    "delete": "Supprimer",
+    "deleteConfirm": "Supprimer « {title} » ? Cette action est irréversible.",
+    "status": {
+      "uploading": "Envoi",
+      "processing": "Traitement",
+      "ready": "Prête",
+      "rejected": "Rejetée"
+    },
+    "rejection": {
+      "not_a_video": "Ce fichier n'est pas une vidéo lisible.",
+      "too_long": "La vidéo dépasse la durée autorisée.",
+      "too_large": "Le fichier dépasse la taille autorisée.",
+      "processing_failed": "Une erreur est survenue pendant le traitement. Réessayez l'import."
+    },
+    "upload": {
+      "title": "Importer une vidéo",
+      "subtitle": "Le fichier est stocké tel quel — sans compression, en pleine qualité pour l'analyse.",
+      "backToLibrary": "Mes vidéos",
+      "qualityHint": "Filmez en 1080p à 60 i/s si votre téléphone le permet : une fréquence d'images élevée est essentielle pour analyser les frappes rapides. Ne coupez pas et ne réencodez pas le fichier avant l'import.",
+      "dropTitle": "Glissez une vidéo ici ou cliquez pour choisir",
+      "dropSubtitle": "L'envoi est reprenable : après une coupure, il reprend là où il s'est arrêté.",
+      "notAVideo": "Seuls les fichiers vidéo peuvent être importés.",
+      "retry": "Réessayer",
+      "done": "Terminé",
+      "uploadingNote": "Envoi… {progress} % — gardez cette page ouverte."
+    },
+    "player": {
+      "loading": "Chargement de la vidéo…",
+      "loadFailed": "Impossible de charger la vidéo. Actualisez la page pour réessayer.",
+      "downloadHint": "Pour une analyse image par image, téléchargez l'original intact.",
+      "downloadOriginal": "Télécharger l'original"
     }
   }
 }

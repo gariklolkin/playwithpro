@@ -13,6 +13,9 @@
   "dependencies": {
     "@base-ui/react": "^1.6.0",
     "@playwithpro/shared": "workspace:*",
+    "@uppy/aws-s3": "^5.1.0",
+    "@uppy/core": "^5.2.0",
+    "@uppy/react": "^5.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "leaflet": "^1.9.4",

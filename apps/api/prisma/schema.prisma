@@ -37,6 +37,7 @@ model User {
   verificationTokens VerificationToken[]
   proProfile         ProProfile?
   playerProfile      PlayerProfile?
+  videos             Video[]
 }
 
 enum PlayerLevel {
@@ -75,6 +76,41 @@ model PlayerProfile {
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
   user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum VideoStatus {
+  UPLOADING
+  PROCESSING
+  READY
+  REJECTED
+}
+
+/// Amateur-uploaded game footage. The original object is never modified;
+/// playbackKey may equal originalKey when the source is already browser-safe.
+model Video {
+  id              String      @id @default(uuid())
+  ownerId         String
+  title           String
+  status          VideoStatus @default(UPLOADING)
+  originalKey     String
+  playbackKey     String?
+  /// S3 multipart upload id; cleared once the upload completes or aborts.
+  s3UploadId      String?
+  sizeBytes       BigInt?
+  durationSeconds Int?
+  width           Int?
+  height          Int?
+  fps             Float?
+  codec           String?
+  container       String?
+  /// Machine-readable reason key, localized in the UI.
+  rejectionReason String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  owner           User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, createdAt])
+  @@index([status, updatedAt])
 }
 
 model OAuthAccount {

@@ -324,7 +324,9 @@
     "settingsTitle": "Account settings — PlayWithPro",
     "proProfileTitle": "My profile — PlayWithPro",
     "verificationTitle": "Verification",
-    "availabilityTitle": "Availability — PlayWithPro"
+    "availabilityTitle": "Availability — PlayWithPro",
+    "videosTitle": "My videos — PlayWithPro",
+    "videoUploadTitle": "Upload video — PlayWithPro"
   },
   "verification": {
     "title": "Verification",
@@ -454,7 +456,9 @@
     },
     "videos": {
       "title": "My videos",
-      "empty": "Your uploaded game videos will appear here."
+      "empty": "Your uploaded game videos will appear here.",
+      "uploadFirst": "Upload your first video",
+      "viewAll": "All videos ({count})"
     },
     "sessions": {
       "title": "My sessions",
@@ -462,6 +466,46 @@
     },
     "card": {
       "years": "{years} yrs of play"
+    }
+  },
+  "videos": {
+    "title": "My videos",
+    "subtitle": "Your game footage for video analysis sessions.",
+    "uploadCta": "Upload video",
+    "emptyTitle": "No videos yet",
+    "emptySubtitle": "Upload your game footage to review it with a pro.",
+    "rename": "Rename",
+    "delete": "Delete",
+    "deleteConfirm": "Delete “{title}”? This cannot be undone.",
+    "status": {
+      "uploading": "Uploading",
+      "processing": "Processing",
+      "ready": "Ready",
+      "rejected": "Rejected"
+    },
+    "rejection": {
+      "not_a_video": "This file is not a playable video.",
+      "too_long": "The video is longer than the allowed limit.",
+      "too_large": "The file is larger than the allowed limit.",
+      "processing_failed": "Something went wrong while processing this video. Please try uploading it again."
+    },
+    "upload": {
+      "title": "Upload video",
+      "subtitle": "The file is stored as-is — no compression, full quality for analysis.",
+      "backToLibrary": "My videos",
+      "qualityHint": "Record in 1080p at 60 fps if your phone supports it — a high frame rate matters most for analyzing fast strokes. Don't trim or re-encode the file before uploading.",
+      "dropTitle": "Drag a video here or click to choose",
+      "dropSubtitle": "Uploads are resumable — a dropped connection picks up where it left off.",
+      "notAVideo": "Only video files can be uploaded.",
+      "retry": "Retry",
+      "done": "Done",
+      "uploadingNote": "Uploading… {progress}% — keep this page open."
+    },
+    "player": {
+      "loading": "Loading video…",
+      "loadFailed": "Could not load the video. Refresh the page to try again.",
+      "downloadHint": "For frame-by-frame analysis, download the untouched original file.",
+      "downloadOriginal": "Download original"
     }
   }
 }

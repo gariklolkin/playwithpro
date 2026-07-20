@@ -6,12 +6,14 @@ import {
   PLAYER_ABOUT_MAX_LENGTH,
   PlayerLevel,
   PlayingStyle,
+  VideoStatus,
   type MeResponse,
   type PlayerProfileResponse,
+  type VideoResponse,
 } from "@playwithpro/shared";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api";
 import { AvatarUploader } from "@/components/settings/avatar-uploader";
 import { Button } from "@/components/ui/button";
@@ -72,12 +74,78 @@ function sameForm(a: FormState, b: FormState): boolean {
   );
 }
 
+const STATUS_BADGE: Record<VideoStatus, string> = {
+  [VideoStatus.Uploading]: "bg-[#FAECC8] text-[#8A6C1B]",
+  [VideoStatus.Processing]: "bg-[#D6E4F5] text-[#2A5FC7]",
+  [VideoStatus.Ready]: "bg-[#DBEDDB] text-[#1C7A46]",
+  [VideoStatus.Rejected]: "bg-[#FBE4E4] text-[#C4554D]",
+};
+
+/** Compact library summary: management lives on /dashboard/videos. */
+function VideosSummary({ videos }: { videos: VideoResponse[] }) {
+  const t = useTranslations("playerProfile.videos");
+  const tv = useTranslations("videos");
+
+  if (videos.length === 0) {
+    return (
+      <p className="text-sm text-text-secondary">
+        📹 {t("empty")}{" "}
+        <Link
+          href="/dashboard/videos/upload"
+          className="font-medium text-text underline-offset-2 hover:underline"
+        >
+          {t("uploadFirst")}
+        </Link>
+      </p>
+    );
+  }
+
+  return (
+    <div>
+      <ul className="space-y-2">
+        {videos.slice(0, 3).map((video) => (
+          <li
+            key={video.id}
+            className="flex items-center justify-between gap-3 text-sm"
+          >
+            {video.status === VideoStatus.Ready ? (
+              <Link
+                href={`/dashboard/videos/${video.id}`}
+                className="truncate font-medium text-text hover:underline"
+              >
+                {video.title}
+              </Link>
+            ) : (
+              <span className="truncate font-medium text-text">
+                {video.title}
+              </span>
+            )}
+            <span
+              className={`shrink-0 rounded px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[video.status]}`}
+            >
+              {tv(`status.${video.status}`)}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <Link
+        href="/dashboard/videos"
+        className="mt-3 inline-block text-sm font-medium text-text-secondary hover:text-text"
+      >
+        {t("viewAll", { count: videos.length })} →
+      </Link>
+    </div>
+  );
+}
+
 export function PlayerProfileEditor({
   initialProfile,
   initialUser,
+  videos,
 }: {
   initialProfile: PlayerProfileResponse;
   initialUser: MeResponse;
+  videos: VideoResponse[];
 }) {
   const t = useTranslations("playerProfile");
   const router = useRouter();
@@ -247,7 +315,7 @@ export function PlayerProfileEditor({
       </ProfileCard>
 
       <ProfileCard title={t("videos.title")}>
-        <p className="text-sm text-text-secondary">📹 {t("videos.empty")}</p>
+        <VideosSummary videos={videos} />
       </ProfileCard>
 
       <ProfileCard title={t("sessions.title")}>

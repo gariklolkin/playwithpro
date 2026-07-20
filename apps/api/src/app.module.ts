@@ -15,6 +15,7 @@ import { ProsModule } from './pros/pros.module';
 import { SchedulingModule } from './scheduling/scheduling.module';
 import { StorageModule } from './storage/storage.module';
 import { UsersModule } from './users/users.module';
+import { VideosModule } from './videos/videos.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { UsersModule } from './users/users.module';
     AdminModule,
     SchedulingModule,
     StorageModule,
+    VideosModule,
   ],
   providers: [
     {

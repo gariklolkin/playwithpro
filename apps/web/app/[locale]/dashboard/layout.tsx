@@ -15,7 +15,7 @@ const NAV: Record<
     section: "amateur",
     items: [
       { key: "sessions", emoji: "🗓️" },
-      { key: "videos", emoji: "📹" },
+      { key: "videos", emoji: "📹", href: "/dashboard/videos" },
       { key: "payments", emoji: "💳" },
       { key: "profile", emoji: "🏓", href: "/dashboard/profile" },
       { key: "settings", emoji: "⚙️", href: "/settings/account" },

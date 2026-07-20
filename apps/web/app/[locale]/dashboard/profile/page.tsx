@@ -2,6 +2,7 @@ import {
   Role,
   type PlayerProfileResponse,
   type ProProfileResponse,
+  type VideoListResponse,
 } from "@playwithpro/shared";
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -31,6 +32,7 @@ export default async function ProfilePage() {
       redirect({ href: "/dashboard", locale: await getLocale() });
       return null;
     }
+    const library = await serverApiGet<VideoListResponse>("/videos");
     const t = await getTranslations("playerProfile");
     return (
       <div className="mx-auto w-full max-w-[720px] pb-16">
@@ -38,7 +40,11 @@ export default async function ProfilePage() {
           <h1 className="text-[28px] font-bold text-text">🏓 {t("title")}</h1>
           <p className="mt-1 text-text-secondary">{t("subtitle")}</p>
         </header>
-        <PlayerProfileEditor initialProfile={profile} initialUser={user} />
+        <PlayerProfileEditor
+          initialProfile={profile}
+          initialUser={user}
+          videos={library?.videos ?? []}
+        />
       </div>
     );
   }

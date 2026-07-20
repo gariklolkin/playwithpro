@@ -324,7 +324,9 @@
     "settingsTitle": "Kontoeinstellungen — PlayWithPro",
     "proProfileTitle": "Mein Profil — PlayWithPro",
     "verificationTitle": "Verifizierung",
-    "availabilityTitle": "Verfügbarkeit — PlayWithPro"
+    "availabilityTitle": "Verfügbarkeit — PlayWithPro",
+    "videosTitle": "Meine Videos — PlayWithPro",
+    "videoUploadTitle": "Video hochladen — PlayWithPro"
   },
   "verification": {
     "title": "Verifizierung",
@@ -454,7 +456,9 @@
     },
     "videos": {
       "title": "Meine Videos",
-      "empty": "Ihre hochgeladenen Spielvideos erscheinen hier."
+      "empty": "Ihre hochgeladenen Spielvideos erscheinen hier.",
+      "uploadFirst": "Erstes Video hochladen",
+      "viewAll": "Alle Videos ({count})"
     },
     "sessions": {
       "title": "Meine Einheiten",
@@ -462,6 +466,46 @@
     },
     "card": {
       "years": "{years} Jahre Spielpraxis"
+    }
+  },
+  "videos": {
+    "title": "Meine Videos",
+    "subtitle": "Deine Spielaufnahmen für Videoanalyse-Einheiten.",
+    "uploadCta": "Video hochladen",
+    "emptyTitle": "Noch keine Videos",
+    "emptySubtitle": "Lade eine Spielaufnahme hoch, um sie mit einem Pro zu analysieren.",
+    "rename": "Umbenennen",
+    "delete": "Löschen",
+    "deleteConfirm": "„{title}“ löschen? Das lässt sich nicht rückgängig machen.",
+    "status": {
+      "uploading": "Wird hochgeladen",
+      "processing": "Wird verarbeitet",
+      "ready": "Bereit",
+      "rejected": "Abgelehnt"
+    },
+    "rejection": {
+      "not_a_video": "Diese Datei ist kein abspielbares Video.",
+      "too_long": "Das Video überschreitet die zulässige Länge.",
+      "too_large": "Die Datei überschreitet die zulässige Größe.",
+      "processing_failed": "Bei der Verarbeitung ist ein Fehler aufgetreten. Bitte lade das Video erneut hoch."
+    },
+    "upload": {
+      "title": "Video hochladen",
+      "subtitle": "Die Datei wird unverändert gespeichert — ohne Kompression, in voller Qualität für die Analyse.",
+      "backToLibrary": "Meine Videos",
+      "qualityHint": "Filme in 1080p mit 60 fps, wenn dein Handy das kann — eine hohe Bildrate ist für die Analyse schneller Schläge am wichtigsten. Die Datei vor dem Hochladen nicht schneiden oder neu kodieren.",
+      "dropTitle": "Video hierher ziehen oder klicken zum Auswählen",
+      "dropSubtitle": "Uploads sind fortsetzbar — nach einem Verbindungsabbruch geht es an derselben Stelle weiter.",
+      "notAVideo": "Es können nur Videodateien hochgeladen werden.",
+      "retry": "Erneut versuchen",
+      "done": "Fertig",
+      "uploadingNote": "Wird hochgeladen… {progress} % — lass diese Seite geöffnet."
+    },
+    "player": {
+      "loading": "Video wird geladen…",
+      "loadFailed": "Das Video konnte nicht geladen werden. Lade die Seite neu und versuche es erneut.",
+      "downloadHint": "Für die Bild-für-Bild-Analyse lade die unveränderte Originaldatei herunter.",
+      "downloadOriginal": "Original herunterladen"
     }
   }
 }

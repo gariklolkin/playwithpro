@@ -324,7 +324,9 @@
     "settingsTitle": "账户设置 — PlayWithPro",
     "proProfileTitle": "我的主页 — PlayWithPro",
     "verificationTitle": "认证",
-    "availabilityTitle": "可预约时间 — PlayWithPro"
+    "availabilityTitle": "可预约时间 — PlayWithPro",
+    "videosTitle": "我的视频 — PlayWithPro",
+    "videoUploadTitle": "上传视频 — PlayWithPro"
   },
   "verification": {
     "title": "认证",
@@ -454,7 +456,9 @@
     },
     "videos": {
       "title": "我的视频",
-      "empty": "您上传的比赛视频将显示在这里。"
+      "empty": "您上传的比赛视频将显示在这里。",
+      "uploadFirst": "上传第一个视频",
+      "viewAll": "全部视频（{count}）"
     },
     "sessions": {
       "title": "我的课程",
@@ -462,6 +466,46 @@
     },
     "card": {
       "years": "球龄 {years} 年"
+    }
+  },
+  "videos": {
+    "title": "我的视频",
+    "subtitle": "用于视频分析课程的比赛录像。",
+    "uploadCta": "上传视频",
+    "emptyTitle": "还没有视频",
+    "emptySubtitle": "上传你的比赛录像，与专业教练一起分析。",
+    "rename": "重命名",
+    "delete": "删除",
+    "deleteConfirm": "删除“{title}”？此操作无法撤销。",
+    "status": {
+      "uploading": "上传中",
+      "processing": "处理中",
+      "ready": "就绪",
+      "rejected": "已拒绝"
+    },
+    "rejection": {
+      "not_a_video": "该文件不是可播放的视频。",
+      "too_long": "视频时长超出限制。",
+      "too_large": "文件大小超出限制。",
+      "processing_failed": "处理视频时出错，请重新上传。"
+    },
+    "upload": {
+      "title": "上传视频",
+      "subtitle": "文件将原样保存——不压缩，保留完整画质用于分析。",
+      "backToLibrary": "我的视频",
+      "qualityHint": "如果手机支持，请以 1080p、60 帧拍摄——高帧率对分析快速击球最重要。上传前请勿剪辑或转码文件。",
+      "dropTitle": "将视频拖到此处，或点击选择",
+      "dropSubtitle": "支持断点续传：网络中断后会从中断处继续。",
+      "notAVideo": "只能上传视频文件。",
+      "retry": "重试",
+      "done": "完成",
+      "uploadingNote": "上传中… {progress}%——请保持页面打开。"
+    },
+    "player": {
+      "loading": "视频加载中…",
+      "loadFailed": "无法加载视频。请刷新页面重试。",
+      "downloadHint": "如需逐帧分析，请下载未经处理的原始文件。",
+      "downloadOriginal": "下载原始文件"
     }
   }
 }
