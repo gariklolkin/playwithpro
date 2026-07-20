@@ -186,10 +186,17 @@
       "remove": "移除",
       "uploading": "上传中…",
       "removing": "移除中…",
-      "hint": "JPEG、PNG 或 WebP，最大 5 MB。",
-      "badType": "仅支持 JPEG、PNG 或 WebP 图片。",
-      "tooLarge": "图片超过 5 MB。",
-      "error": "无法更新照片，请重试。"
+      "hint": "任何图片都可以——您将把它裁剪为正方形。",
+      "error": "无法更新照片，请重试。",
+      "notImage": "无法将此文件作为图片打开。",
+      "crop": {
+        "title": "裁剪照片",
+        "zoom": "缩放",
+        "save": "保存",
+        "saving": "保存中…",
+        "cancel": "取消",
+        "error": "无法处理该图片，请尝试其他文件。"
+      }
     }
   },
   "proProfile": {

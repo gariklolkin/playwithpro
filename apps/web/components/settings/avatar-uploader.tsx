@@ -1,23 +1,24 @@
 "use client";
 
 import {
-  AVATAR_ALLOWED_CONTENT_TYPES,
-  AVATAR_MAX_SIZE_BYTES,
   type AvatarUploadUrlResponse,
   type MeResponse,
 } from "@playwithpro/shared";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { loadImageUrl, type CroppedAvatar } from "@/lib/crop-image";
+import { AvatarCropDialog } from "@/components/settings/avatar-crop-dialog";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/ui/user-avatar";
 
-type Status =
-  "idle" | "uploading" | "removing" | "tooLarge" | "badType" | "error";
+type Status = "idle" | "uploading" | "removing" | "notImage" | "error";
 
 /**
- * Two-step avatar upload: get a pre-signed URL from the API, PUT the file
- * straight to storage, then confirm so the API attaches it to the account.
+ * Avatar flow: pick any browser-decodable image → square crop dialog →
+ * normalized 512×512 blob → pre-signed PUT to storage → confirm so the API
+ * attaches it to the account. The server contract (type/size) is always
+ * satisfied by the normalized export, so no picked-file pre-checks remain.
  */
 export function AvatarUploader({
   user,
@@ -29,23 +30,29 @@ export function AvatarUploader({
   const t = useTranslations("settings.avatar");
   const inputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<Status>("idle");
+  const [cropUrl, setCropUrl] = useState<string | null>(null);
 
   async function handleFile(file: File) {
-    if (
-      !(AVATAR_ALLOWED_CONTENT_TYPES as readonly string[]).includes(file.type)
-    ) {
-      setStatus("badType");
-      return;
+    try {
+      setCropUrl(await loadImageUrl(file));
+      setStatus("idle");
+    } catch {
+      setStatus("notImage");
     }
-    if (file.size > AVATAR_MAX_SIZE_BYTES) {
-      setStatus("tooLarge");
-      return;
-    }
+  }
+
+  function closeCropDialog() {
+    if (cropUrl) URL.revokeObjectURL(cropUrl);
+    setCropUrl(null);
+  }
+
+  async function handleCropped({ blob, contentType }: CroppedAvatar) {
+    closeCropDialog();
     setStatus("uploading");
     try {
       const urlResponse = await apiFetch("/users/me/avatar/upload-url", {
         method: "POST",
-        body: JSON.stringify({ contentType: file.type, sizeBytes: file.size }),
+        body: JSON.stringify({ contentType, sizeBytes: blob.size }),
       });
       if (!urlResponse.ok) {
         setStatus("error");
@@ -55,8 +62,8 @@ export function AvatarUploader({
         (await urlResponse.json()) as AvatarUploadUrlResponse;
       const putResponse = await fetch(uploadUrl, {
         method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
+        headers: { "Content-Type": contentType },
+        body: blob,
       });
       if (!putResponse.ok) {
         setStatus("error");
@@ -102,7 +109,7 @@ export function AvatarUploader({
           <input
             ref={inputRef}
             type="file"
-            accept={AVATAR_ALLOWED_CONTENT_TYPES.join(",")}
+            accept="image/*"
             className="hidden"
             onChange={(event) => {
               const file = event.target.files?.[0];
@@ -133,16 +140,20 @@ export function AvatarUploader({
           ) : null}
         </div>
         <span className="text-[13px] text-text-tertiary">{t("hint")}</span>
-        {status === "badType" ? (
-          <span className="text-[13px] text-[#E03E3E]">{t("badType")}</span>
-        ) : null}
-        {status === "tooLarge" ? (
-          <span className="text-[13px] text-[#E03E3E]">{t("tooLarge")}</span>
+        {status === "notImage" ? (
+          <span className="text-[13px] text-[#E03E3E]">{t("notImage")}</span>
         ) : null}
         {status === "error" ? (
           <span className="text-[13px] text-[#E03E3E]">{t("error")}</span>
         ) : null}
       </div>
+      {cropUrl ? (
+        <AvatarCropDialog
+          imageUrl={cropUrl}
+          onConfirm={(avatar) => void handleCropped(avatar)}
+          onCancel={closeCropDialog}
+        />
+      ) : null}
     </div>
   );
 }

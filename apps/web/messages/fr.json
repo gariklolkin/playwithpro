@@ -186,10 +186,17 @@
       "remove": "Supprimer",
       "uploading": "Envoi…",
       "removing": "Suppression…",
-      "hint": "JPEG, PNG ou WebP, jusqu'à 5 Mo.",
-      "badType": "Seules les images JPEG, PNG ou WebP sont acceptées.",
-      "tooLarge": "L'image dépasse 5 Mo.",
-      "error": "Impossible de mettre à jour la photo. Réessayez."
+      "hint": "N'importe quelle image convient — vous la recadrerez en carré.",
+      "error": "Impossible de mettre à jour la photo. Réessayez.",
+      "notImage": "Ce fichier n'a pas pu être ouvert comme une image.",
+      "crop": {
+        "title": "Recadrer votre photo",
+        "zoom": "Zoom",
+        "save": "Enregistrer",
+        "saving": "Enregistrement…",
+        "cancel": "Annuler",
+        "error": "Impossible de traiter l'image. Essayez un autre fichier."
+      }
     }
   },
   "proProfile": {

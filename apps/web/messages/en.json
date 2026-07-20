@@ -186,10 +186,17 @@
       "remove": "Remove",
       "uploading": "Uploading…",
       "removing": "Removing…",
-      "hint": "JPEG, PNG or WebP, up to 5 MB.",
-      "badType": "Only JPEG, PNG or WebP images are allowed.",
-      "tooLarge": "The image is larger than 5 MB.",
-      "error": "Could not update the photo. Please try again."
+      "hint": "Any image works — you'll crop it to a square.",
+      "error": "Could not update the photo. Please try again.",
+      "notImage": "This file could not be opened as an image.",
+      "crop": {
+        "title": "Crop your photo",
+        "zoom": "Zoom",
+        "save": "Save",
+        "saving": "Saving…",
+        "cancel": "Cancel",
+        "error": "Could not process the image. Try a different file."
+      }
     }
   },
   "proProfile": {

@@ -186,10 +186,17 @@
       "remove": "Entfernen",
       "uploading": "Wird hochgeladen…",
       "removing": "Wird entfernt…",
-      "hint": "JPEG, PNG oder WebP, bis 5 MB.",
-      "badType": "Nur JPEG-, PNG- oder WebP-Bilder sind erlaubt.",
-      "tooLarge": "Das Bild ist größer als 5 MB.",
-      "error": "Foto konnte nicht aktualisiert werden. Bitte erneut versuchen."
+      "hint": "Jedes Bild funktioniert — Sie schneiden es quadratisch zu.",
+      "error": "Foto konnte nicht aktualisiert werden. Bitte erneut versuchen.",
+      "notImage": "Diese Datei konnte nicht als Bild geöffnet werden.",
+      "crop": {
+        "title": "Foto zuschneiden",
+        "zoom": "Zoom",
+        "save": "Speichern",
+        "saving": "Wird gespeichert…",
+        "cancel": "Abbrechen",
+        "error": "Bild konnte nicht verarbeitet werden. Versuchen Sie eine andere Datei."
+      }
     }
   },
   "proProfile": {
