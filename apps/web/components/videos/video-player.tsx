@@ -12,7 +12,14 @@ import { Button } from "@/components/ui/button";
  * untouched original for download — that is the file a coach scrubs
  * frame by frame.
  */
-export function VideoPlayer({ video }: { video: VideoResponse }) {
+export function VideoPlayer({
+  video,
+  canDownload = true,
+}: {
+  video: VideoResponse;
+  /** The original download is owner-only; hide it for the session coach. */
+  canDownload?: boolean;
+}) {
   const t = useTranslations("videos.player");
   const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -70,16 +77,18 @@ export function VideoPlayer({ video }: { video: VideoResponse }) {
         )}
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-text-secondary">{t("downloadHint")}</p>
-        <Button
-          variant="ghost"
-          onClick={() => void downloadOriginal()}
-          disabled={downloading}
-        >
-          ⬇️ {t("downloadOriginal")}
-        </Button>
-      </div>
+      {canDownload ? (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-text-secondary">{t("downloadHint")}</p>
+          <Button
+            variant="ghost"
+            onClick={() => void downloadOriginal()}
+            disabled={downloading}
+          >
+            ⬇️ {t("downloadOriginal")}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }

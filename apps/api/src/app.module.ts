@@ -15,6 +15,7 @@ import { CatalogModule } from './catalog/catalog.module';
 import { PlayersModule } from './players/players.module';
 import { ProsModule } from './pros/pros.module';
 import { SchedulingModule } from './scheduling/scheduling.module';
+import { SessionRoomsModule } from './session-rooms/session-rooms.module';
 import { StorageModule } from './storage/storage.module';
 import { UsersModule } from './users/users.module';
 import { VideosModule } from './videos/videos.module';
@@ -40,6 +41,7 @@ import { VideosModule } from './videos/videos.module';
     CatalogModule,
     AdminModule,
     SchedulingModule,
+    SessionRoomsModule,
     StorageModule,
     VideosModule,
   ],

@@ -329,7 +329,8 @@
     "videoUploadTitle": "Importer une vidéo — PlayWithPro",
     "coachesTitle": "Trouver un coach — PlayWithPro",
     "checkoutTitle": "Paiement — PlayWithPro",
-    "sessionsTitle": "Séances — PlayWithPro"
+    "sessionsTitle": "Séances — PlayWithPro",
+    "sessionRoomTitle": "Salle de session — PlayWithPro"
   },
   "verification": {
     "title": "Vérification",
@@ -611,6 +612,22 @@
       "disputed": "En litige",
       "resolved": "Résolue",
       "cancelled": "Annulée"
+    },
+    "joinRoomCta": "Rejoindre la salle",
+    "room": {
+      "loading": "Chargement de la salle de session…",
+      "unavailableTitle": "Salle de session indisponible",
+      "unavailableHint": "Cette session n'a pas de salle active. Elle est peut-être impayée, annulée, ou une partie en personne.",
+      "backToSessions": "Mes sessions",
+      "titleWith": "Session avec {name}",
+      "closedTitle": "Cette salle de session est fermée",
+      "closedHint": "La session est terminée. Vous pouvez la retrouver dans votre liste de sessions.",
+      "opensInTitle": "La salle ouvre bientôt",
+      "opensInHint": "La salle ouvre peu avant le début de la session. Cette page se déverrouillera automatiquement.",
+      "callLoadFailed": "L'appel n'a pas pu être chargé. Vérifiez votre connexion et rechargez la page.",
+      "videoPanelTitle": "Vidéo jointe",
+      "videoLoading": "Chargement de la vidéo…",
+      "videoLoadFailed": "La vidéo n'a pas pu être chargée."
     }
   }
 }

@@ -329,7 +329,8 @@
     "videoUploadTitle": "Загрузка видео — PlayWithPro",
     "coachesTitle": "Найти тренера — PlayWithPro",
     "checkoutTitle": "Оплата — PlayWithPro",
-    "sessionsTitle": "Занятия — PlayWithPro"
+    "sessionsTitle": "Занятия — PlayWithPro",
+    "sessionRoomTitle": "Комната сессии — PlayWithPro"
   },
   "verification": {
     "title": "Верификация",
@@ -611,6 +612,22 @@
       "disputed": "Спор",
       "resolved": "Решено",
       "cancelled": "Отменено"
+    },
+    "joinRoomCta": "Войти в комнату",
+    "room": {
+      "loading": "Загружаем комнату сессии…",
+      "unavailableTitle": "Комната сессии недоступна",
+      "unavailableHint": "У этой сессии нет активной комнаты. Возможно, она не оплачена, отменена или это очная игра.",
+      "backToSessions": "Мои сессии",
+      "titleWith": "Сессия с {name}",
+      "closedTitle": "Комната сессии закрыта",
+      "closedHint": "Сессия завершилась. Её можно найти в списке ваших сессий.",
+      "opensInTitle": "Комната скоро откроется",
+      "opensInHint": "Комната открывается незадолго до начала сессии. Страница разблокируется автоматически.",
+      "callLoadFailed": "Не удалось загрузить звонок. Проверьте соединение и перезагрузите страницу.",
+      "videoPanelTitle": "Прикреплённое видео",
+      "videoLoading": "Загружаем видео…",
+      "videoLoadFailed": "Не удалось загрузить видео."
     }
   }
 }

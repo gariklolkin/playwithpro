@@ -81,6 +81,8 @@ services:
       S3_BUCKET: ${S3_BUCKET:-playwithpro-videos}
       S3_ACCESS_KEY: ${MINIO_ROOT_USER:-playwithpro}
       S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-playwithpro123}
+      # Self-hosted Jitsi from this compose file (also the code default).
+      JITSI_DOMAIN: http://localhost:8000
     ports:
       - "4000:4000"
 
@@ -100,6 +102,94 @@ services:
       API_URL_INTERNAL: http://api:4000
     ports:
       - "3000:3000"
+
+  # --- Self-hosted Jitsi for session rooms (dev). Anonymous conferences,
+  # embedding allowed, no third-party surprises. Config is regenerated on
+  # each container start (no volumes) — dev-only setup.
+  jitsi-web:
+    image: jitsi/web:stable
+    ports:
+      # Plain HTTP: localhost is a secure context, so devices work without
+      # anyone accepting a self-signed certificate.
+      - "8000:80"
+    environment:
+      DISABLE_HTTPS: 1
+      PUBLIC_URL: http://localhost:8000
+      TZ: UTC
+    volumes:
+      # The image's config template hardcodes https/wss XMPP URLs; this
+      # override rewrites them to http/ws for the cert-free localhost setup.
+      - ./jitsi/custom-config.js:/config/custom-config.js:ro
+    networks:
+      default:
+      meet.jitsi:
+
+  jitsi-prosody:
+    image: jitsi/prosody:stable
+    environment:
+      JICOFO_AUTH_PASSWORD: dev-jicofo-secret
+      JVB_AUTH_PASSWORD: dev-jvb-secret
+      # Advertise the coturn relay (XEP-0215): browsers send media over TCP
+      # to coturn, which relays UDP to the bridge inside the docker network —
+      # the only media path that works without host UDP forwarding.
+      TURN_CREDENTIALS: dev-turn-secret
+      TURN_HOST: localhost
+      TURN_PORT: 3478
+      TURN_TRANSPORT: tcp
+      TZ: UTC
+    networks:
+      meet.jitsi:
+        aliases:
+          - xmpp.meet.jitsi
+
+  jitsi-jicofo:
+    image: jitsi/jicofo:stable
+    depends_on:
+      - jitsi-prosody
+    environment:
+      JICOFO_AUTH_PASSWORD: dev-jicofo-secret
+      TZ: UTC
+    networks:
+      meet.jitsi:
+
+  jitsi-jvb:
+    image: jitsi/jvb:stable
+    depends_on:
+      - jitsi-prosody
+    ports:
+      - "10000:10000/udp"
+    environment:
+      JVB_AUTH_PASSWORD: dev-jvb-secret
+      DOCKER_HOST_ADDRESS: 127.0.0.1
+      TZ: UTC
+    networks:
+      meet.jitsi:
+
+  # Media relay: Rancher Desktop (Lima) silently drops UDP port mappings, so
+  # browsers can never reach the bridge's UDP port directly. They instead
+  # send media over TCP to coturn, which relays UDP to the bridge inside the
+  # docker network.
+  jitsi-coturn:
+    image: coturn/coturn:4
+    ports:
+      - "3478:3478"
+    command:
+      - --listening-port=3478
+      - --realm=meet.jitsi
+      - --use-auth-secret
+      - --static-auth-secret=dev-turn-secret
+      - --no-tls
+      - --no-dtls
+      - --no-multicast-peers
+      - --log-file=stdout
+      - --verbose
+    networks:
+      # meet.jitsi only: relay addresses must be allocated on the network the
+      # bridge can reach (the published 3478 is host-reachable regardless).
+      meet.jitsi:
+
+networks:
+  meet.jitsi:
 
 volumes:
   postgres_data:

@@ -16,3 +16,4 @@ export * from "./types/availability";
 export * from "./types/video";
 export * from "./types/catalog";
 export * from "./types/booking";
+export * from "./types/session-room";

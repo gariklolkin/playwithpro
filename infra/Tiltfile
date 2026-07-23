@@ -6,6 +6,15 @@ dc_resource("minio", labels=["infra"])
 dc_resource("minio-bootstrap", labels=["infra"])
 dc_resource("mailpit", labels=["infra"])
 
+# Self-hosted Jitsi for session rooms: anonymous conferences + embedding,
+# which no public instance provides anymore. Browser needs a one-time
+# self-signed cert acceptance at https://localhost:8443.
+dc_resource("jitsi-prosody", labels=["jitsi"])
+dc_resource("jitsi-web", labels=["jitsi"], resource_deps=["jitsi-prosody"])
+dc_resource("jitsi-jicofo", labels=["jitsi"], resource_deps=["jitsi-prosody"])
+dc_resource("jitsi-jvb", labels=["jitsi"], resource_deps=["jitsi-prosody"])
+dc_resource("jitsi-coturn", labels=["jitsi"])
+
 dc_resource(
     "api",
     labels=["app"],

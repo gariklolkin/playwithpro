@@ -8,8 +8,10 @@ import { Test } from '@nestjs/testing';
 import { Role, ServiceType } from '@playwithpro/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { CALENDAR_PROVIDER } from '../calendar/calendar-provider';
 import { PAYMENT_PROVIDER } from '../payments/payment-provider';
 import { BookingsService } from './bookings.service';
+import { SessionProgressionService } from './session-progression.service';
 
 const HOUR = 3_600_000;
 
@@ -81,6 +83,7 @@ describe('BookingsService', () => {
       findUnique: jest.fn(),
       findMany: jest.fn(),
       findUniqueOrThrow: jest.fn(),
+      updateMany: jest.fn(),
     },
     payment: { create: jest.fn(), update: jest.fn() },
     $transaction: jest.fn(),
@@ -90,9 +93,22 @@ describe('BookingsService', () => {
     release: jest.fn(),
     refund: jest.fn(),
   };
+  const calendar = {
+    sendInvite: jest.fn(),
+    sendCancellation: jest.fn(),
+  };
+  const progression = {
+    normalize: jest.fn(<T>(session: T) => Promise.resolve(session)),
+  };
   const config = {
     getOrThrow: (name: string) =>
-      ({ PLATFORM_FEE_PERCENT: 10, BOOKING_PAYMENT_TTL_MIN: 15 })[name],
+      ({
+        PLATFORM_FEE_PERCENT: 10,
+        BOOKING_PAYMENT_TTL_MIN: 15,
+        ROOM_JOIN_WINDOW_BEFORE_MIN: 15,
+        ROOM_JOIN_WINDOW_AFTER_MIN: 30,
+        WEB_APP_URL: 'http://localhost:3000',
+      })[name],
   };
   const storage = { objectUrl: jest.fn((key: string) => `https://s/${key}`) };
 
@@ -108,6 +124,8 @@ describe('BookingsService', () => {
         { provide: ConfigService, useValue: config },
         { provide: StorageService, useValue: storage },
         { provide: PAYMENT_PROVIDER, useValue: provider },
+        { provide: CALENDAR_PROVIDER, useValue: calendar },
+        { provide: SessionProgressionService, useValue: progression },
       ],
     }).compile();
     service = moduleRef.get(BookingsService);
@@ -254,14 +272,27 @@ describe('BookingsService', () => {
       prisma.session.findUnique.mockResolvedValue(pendingSession);
       prisma.payment.create.mockResolvedValue({ id: 'payment-1' });
       tx.session.updateMany.mockResolvedValue({ count: 1 });
+      // Default: the invite was already claimed elsewhere; dedicated tests
+      // flip this to exercise the dispatch path.
+      prisma.session.updateMany.mockResolvedValue({ count: 0 });
       prisma.session.findUniqueOrThrow.mockResolvedValue({
         ...pendingSession,
         status: 'PAID_ESCROW',
         expiresAt: null,
+        roomSlug: 'slug-1',
+        player: { ...pendingSession.player, email: 'player@example.com' },
+        proProfile: {
+          ...pendingSession.proProfile,
+          user: {
+            ...pendingSession.proProfile.user,
+            email: 'coach@example.com',
+          },
+          services: [],
+        },
       });
     });
 
-    it('holds funds and transitions to paid_escrow', async () => {
+    it('holds funds, transitions to paid_escrow, and mints a room slug', async () => {
       provider.hold.mockResolvedValue({ ok: true, providerRef: 'ref-1' });
 
       const result = await service.pay('player-1', 'session-1', {});
@@ -274,8 +305,74 @@ describe('BookingsService', () => {
       });
       expect(tx.session.updateMany).toHaveBeenCalledWith({
         where: { id: 'session-1', status: 'PENDING_PAYMENT' },
-        data: { status: 'PAID_ESCROW', expiresAt: null },
+        data: {
+          status: 'PAID_ESCROW',
+          expiresAt: null,
+          roomSlug: expect.any(String) as string,
+        },
       });
+      expect(result.paymentStatus).toBe('held');
+      expect(result.session.status).toBe('paid_escrow');
+    });
+
+    it('mints no room slug for an in-person game session', async () => {
+      prisma.session.findUnique.mockResolvedValue({
+        ...pendingSession,
+        serviceType: 'GAME',
+      });
+      provider.hold.mockResolvedValue({ ok: true, providerRef: 'ref-1' });
+
+      await service.pay('player-1', 'session-1', {});
+
+      expect(tx.session.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ roomSlug: null }) as object,
+        }),
+      );
+    });
+
+    it('sends the invite exactly when it claims the idempotency flag', async () => {
+      provider.hold.mockResolvedValue({ ok: true, providerRef: 'ref-1' });
+      prisma.session.updateMany.mockResolvedValue({ count: 1 });
+
+      await service.pay('player-1', 'session-1', {});
+
+      expect(prisma.session.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: 'session-1',
+          status: 'PAID_ESCROW',
+          inviteSentAt: null,
+        },
+        data: { inviteSentAt: expect.any(Date) as Date },
+      });
+      expect(calendar.sendInvite).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sessionId: 'session-1',
+          roomUrl: 'http://localhost:3000/sessions/session-1/room',
+          venue: null,
+          attendees: [
+            expect.objectContaining({ email: 'player@example.com' }) as object,
+            expect.objectContaining({ email: 'coach@example.com' }) as object,
+          ],
+        }),
+      );
+    });
+
+    it('skips the invite when another pay already claimed it', async () => {
+      provider.hold.mockResolvedValue({ ok: true, providerRef: 'ref-1' });
+
+      await service.pay('player-1', 'session-1', {});
+
+      expect(calendar.sendInvite).not.toHaveBeenCalled();
+    });
+
+    it('keeps the session paid when the invite send fails', async () => {
+      provider.hold.mockResolvedValue({ ok: true, providerRef: 'ref-1' });
+      prisma.session.updateMany.mockResolvedValue({ count: 1 });
+      calendar.sendInvite.mockRejectedValue(new Error('smtp down'));
+
+      const result = await service.pay('player-1', 'session-1', {});
+
       expect(result.paymentStatus).toBe('held');
       expect(result.session.status).toBe('paid_escrow');
     });
@@ -343,6 +440,45 @@ describe('BookingsService', () => {
       await expect(
         service.pay('stranger', 'session-1', {}),
       ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  describe('sendCancellationIfInvited', () => {
+    it('revokes the event for a cancelled session with a delivered invite', async () => {
+      prisma.session.findUnique.mockResolvedValue({
+        status: 'CANCELLED',
+        inviteSentAt: new Date(),
+      });
+      prisma.session.findUniqueOrThrow.mockResolvedValue({
+        ...pendingSession,
+        status: 'CANCELLED',
+        player: { ...pendingSession.player, email: 'player@example.com' },
+        proProfile: {
+          ...pendingSession.proProfile,
+          user: {
+            ...pendingSession.proProfile.user,
+            email: 'coach@example.com',
+          },
+          services: [],
+        },
+      });
+
+      await service.sendCancellationIfInvited('session-1');
+
+      expect(calendar.sendCancellation).toHaveBeenCalledWith(
+        expect.objectContaining({ sessionId: 'session-1' }),
+      );
+    });
+
+    it('sends nothing when no invite ever went out', async () => {
+      prisma.session.findUnique.mockResolvedValue({
+        status: 'CANCELLED',
+        inviteSentAt: null,
+      });
+
+      await service.sendCancellationIfInvited('session-1');
+
+      expect(calendar.sendCancellation).not.toHaveBeenCalled();
     });
   });
 

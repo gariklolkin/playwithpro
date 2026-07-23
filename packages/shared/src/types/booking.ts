@@ -39,6 +39,10 @@ export interface SessionResponse {
   /** Attached video (video_analysis only). */
   videoId: string | null;
   videoTitle: string | null;
+  /** Venue of the coach's game service; set for game sessions only. */
+  venue: string | null;
+  /** Session-room join window; set for paid online sessions, null otherwise. */
+  room: { opensAt: string; closesAt: string } | null;
   createdAt: string;
 }
 

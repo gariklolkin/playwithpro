@@ -20,6 +20,25 @@ import { PrismaService } from '../src/prisma/prisma.service';
 const HOUR = 3_600_000;
 
 /**
+ * The startup catch-up sweeps (booking expiry, session progression) can hold
+ * row locks right after app.init(); TRUNCATE loses that race with a deadlock,
+ * so retry briefly instead of flaking.
+ */
+async function truncateAll(prisma: PrismaService): Promise<void> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await prisma.$executeRawUnsafe(
+        'TRUNCATE TABLE "User", "AvailabilitySlot", "Session", "Payment", "Video", "SessionAttendance" CASCADE',
+      );
+      return;
+    } catch (error) {
+      if (attempt >= 4) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+  }
+}
+
+/**
  * Booking/payment flow against a real Postgres (CI service container or a
  * dedicated local `*e2e*` database). Refuses to run elsewhere so it can
  * truncate tables freely.
@@ -66,9 +85,7 @@ describe('Booking & escrow (e2e)', () => {
     await app.init();
 
     prisma = app.get(PrismaService);
-    await prisma.$executeRawUnsafe(
-      'TRUNCATE TABLE "User", "AvailabilitySlot", "Session", "Payment", "Video" CASCADE',
-    );
+    await truncateAll(prisma);
 
     const coach = await prisma.user.create({
       data: {
@@ -157,7 +174,7 @@ describe('Booking & escrow (e2e)', () => {
     playerCookie = `access_token=${tokens.signAccessToken(playerId, Role.Amateur)}`;
     rivalCookie = `access_token=${tokens.signAccessToken(rivalId, Role.Amateur)}`;
     coachCookie = `access_token=${tokens.signAccessToken(coachId, Role.Professional)}`;
-  });
+  }, 30_000);
 
   afterAll(async () => {
     await app.close();

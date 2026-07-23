@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { LocalTime } from "@/components/catalog/local-time";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { Link } from "@/i18n/navigation";
+import { useNow } from "@/lib/use-now";
 
 /** Pastel status tags per DESIGN.md: blue = trust/escrow, yellow = action needed. */
 const STATUS_BADGE: Partial<Record<SessionStatus, string>> = {
@@ -28,6 +29,14 @@ function SessionCard({
   const t = useTranslations("sessions");
   const tCatalog = useTranslations("catalog");
   const other = isCoach ? session.player : session.coach;
+  // Window check happens after mount only, so server HTML never disagrees
+  // with the client clock.
+  const now = useNow();
+  const roomOpen =
+    now !== null &&
+    session.room !== null &&
+    now >= new Date(session.room.opensAt).getTime() &&
+    now <= new Date(session.room.closesAt).getTime();
 
   return (
     <li className="rounded-card border border-border bg-bg p-4">
@@ -69,6 +78,11 @@ function SessionCard({
                 </Link>
               </div>
             ) : null}
+            {session.venue ? (
+              <div className="mt-0.5 text-[13px] text-text-secondary">
+                📍 {session.venue}
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -87,6 +101,14 @@ function SessionCard({
               className="rounded-md bg-text px-2.5 py-1.5 text-[13px] font-medium text-white no-underline hover:bg-black"
             >
               {t("payCta")}
+            </Link>
+          ) : null}
+          {roomOpen ? (
+            <Link
+              href={`/sessions/${session.id}/room`}
+              className="rounded-md bg-[#2A5FC7] px-2.5 py-1.5 text-[13px] font-medium text-white no-underline hover:bg-[#1E4CA8]"
+            >
+              🎥 {t("joinRoomCta")}
             </Link>
           ) : null}
         </div>

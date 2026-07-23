@@ -39,6 +39,7 @@ model User {
   playerProfile      PlayerProfile?
   videos             Video[]
   playerSessions     Session[]
+  sessionAttendance  SessionAttendance[]
 }
 
 enum PlayerLevel {
@@ -347,6 +348,10 @@ model Session {
   endsAt           DateTime
   /// Payment deadline while PENDING_PAYMENT; cleared once paid.
   expiresAt        DateTime?
+  /// Random capability slug for the video room; set on payment, online services only.
+  roomSlug         String?       @unique
+  /// When the calendar invite was emailed to both parties; also the idempotency guard.
+  inviteSentAt     DateTime?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
@@ -355,10 +360,26 @@ model Session {
   slot       AvailabilitySlot @relation(fields: [slotId], references: [id])
   video      Video?           @relation(fields: [videoId], references: [id], onDelete: SetNull)
   payments   Payment[]
+  attendance SessionAttendance[]
 
   @@index([playerId, startsAt])
   @@index([proProfileId, startsAt])
   @@index([status, expiresAt])
+}
+
+/// One row per room entry; evidence for confirmation/disputes, never a status trigger.
+model SessionAttendance {
+  id        String    @id @default(uuid())
+  sessionId String
+  userId    String
+  joinedAt  DateTime  @default(now())
+  /// Best-effort (beacon on tab close); joinedAt is the primary evidence.
+  leftAt    DateTime?
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
 }
 
 /// One payment attempt per row (failed attempts kept as audit trail).

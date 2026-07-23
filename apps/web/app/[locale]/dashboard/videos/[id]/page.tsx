@@ -23,7 +23,11 @@ export default async function VideoDetailPage({
     });
     return null;
   }
-  if (user.role !== Role.Amateur) {
+  // Coaches land here from their session list: the API admits the session
+  // coach to the video from payment onward, so the page must too. Ownership
+  // still gates management/download — videos belong to amateurs only.
+  const isOwner = user.role === Role.Amateur;
+  if (user.role === Role.Admin) {
     redirect({ href: "/dashboard", locale: await getLocale() });
     return null;
   }
@@ -31,11 +35,15 @@ export default async function VideoDetailPage({
   const { id } = await params;
   const video = await serverApiGet<VideoResponse>(`/videos/${id}`);
   if (!video) {
-    redirect({ href: "/dashboard/videos", locale: await getLocale() });
+    redirect({
+      href: isOwner ? "/dashboard/videos" : "/dashboard/sessions",
+      locale: await getLocale(),
+    });
     return null;
   }
 
   const t = await getTranslations("videos");
+  const tRoom = await getTranslations("sessions.room");
   const details = [
     video.durationSeconds !== null
       ? `${Math.floor(video.durationSeconds / 60)}:${String(video.durationSeconds % 60).padStart(2, "0")}`
@@ -51,10 +59,10 @@ export default async function VideoDetailPage({
     <div className="mx-auto w-full max-w-[860px] pb-16">
       <header className="pb-4 pt-1">
         <Link
-          href="/dashboard/videos"
+          href={isOwner ? "/dashboard/videos" : "/dashboard/sessions"}
           className="text-sm text-text-secondary hover:text-text"
         >
-          ← {t("upload.backToLibrary")}
+          ← {isOwner ? t("upload.backToLibrary") : tRoom("backToSessions")}
         </Link>
         <h1 className="mt-2 truncate text-[28px] font-bold text-text">
           {video.title}
@@ -63,7 +71,7 @@ export default async function VideoDetailPage({
           <p className="mt-1 text-sm text-text-secondary">{details}</p>
         ) : null}
       </header>
-      <VideoPlayer video={video} />
+      <VideoPlayer video={video} canDownload={isOwner} />
     </div>
   );
 }

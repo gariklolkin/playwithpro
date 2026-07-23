@@ -112,6 +112,30 @@ class EnvironmentVariables {
   @IsInt()
   @Min(1)
   BOOKING_PAYMENT_TTL_MIN = 15;
+
+  /**
+   * Jitsi instance hosting embedded session rooms: a bare host (https
+   * assumed) or a full origin like http://localhost:8000. Default is the
+   * self-hosted dev stack from infra/docker-compose.yml over plain HTTP —
+   * localhost is a secure context, so no certificate step, and public
+   * instances no longer support embedded accountless rooms anyway.
+   * Production must point this at a properly hosted HTTPS Jitsi (or a JaaS
+   * deployment once JWT rooms are introduced).
+   */
+  @IsString()
+  JITSI_DOMAIN = 'http://localhost:8000';
+
+  /** Minutes before slot start when the session room opens. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  ROOM_JOIN_WINDOW_BEFORE_MIN = 15;
+
+  /** Minutes after slot end while the session room stays joinable. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  ROOM_JOIN_WINDOW_AFTER_MIN = 30;
 }
 
 export function validate(

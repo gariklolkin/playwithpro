@@ -329,7 +329,8 @@
     "videoUploadTitle": "上传视频 — PlayWithPro",
     "coachesTitle": "寻找教练 — PlayWithPro",
     "checkoutTitle": "支付 — PlayWithPro",
-    "sessionsTitle": "课程 — PlayWithPro"
+    "sessionsTitle": "课程 — PlayWithPro",
+    "sessionRoomTitle": "课程房间 — PlayWithPro"
   },
   "verification": {
     "title": "认证",
@@ -611,6 +612,22 @@
       "disputed": "争议中",
       "resolved": "已解决",
       "cancelled": "已取消"
+    },
+    "joinRoomCta": "进入房间",
+    "room": {
+      "loading": "正在加载课程房间…",
+      "unavailableTitle": "课程房间不可用",
+      "unavailableHint": "此课程没有可用的房间。它可能未支付、已取消，或是线下比赛课程。",
+      "backToSessions": "我的课程",
+      "titleWith": "与 {name} 的课程",
+      "closedTitle": "此课程房间已关闭",
+      "closedHint": "课程已结束。你可以在课程列表中查看。",
+      "opensInTitle": "房间即将开放",
+      "opensInHint": "房间会在课程开始前不久开放。此页面将自动解锁。",
+      "callLoadFailed": "无法加载通话。请检查网络连接并刷新页面。",
+      "videoPanelTitle": "附加视频",
+      "videoLoading": "正在加载视频…",
+      "videoLoadFailed": "无法加载视频。"
     }
   }
 }

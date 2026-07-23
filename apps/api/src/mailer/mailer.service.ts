@@ -179,6 +179,68 @@ export class MailerService {
     );
   }
 
+  async sendSessionInviteEmail(input: {
+    to: string;
+    displayName: string;
+    serviceLabel: string;
+    whenLine: string;
+    roomUrl: string | null;
+    venue: string | null;
+    ics: string;
+  }): Promise<void> {
+    await this.send(
+      input.to,
+      `Your PlayWithPro ${input.serviceLabel} session is booked`,
+      [
+        `Hi ${input.displayName},`,
+        '',
+        `Your ${input.serviceLabel} session is confirmed:`,
+        input.whenLine,
+        '',
+        ...(input.roomUrl
+          ? [`Join the session room: ${input.roomUrl}`]
+          : [`Venue: ${input.venue ?? ''}`]),
+        '',
+        'The attached invite adds the session to any calendar app.',
+      ].join('\n'),
+      [
+        {
+          filename: 'playwithpro-session.ics',
+          content: input.ics,
+          contentType: 'text/calendar; charset=utf-8; method=REQUEST',
+        },
+      ],
+    );
+  }
+
+  async sendSessionCancelledEmail(input: {
+    to: string;
+    displayName: string;
+    serviceLabel: string;
+    whenLine: string;
+    ics: string;
+  }): Promise<void> {
+    await this.send(
+      input.to,
+      `Your PlayWithPro ${input.serviceLabel} session was cancelled`,
+      [
+        `Hi ${input.displayName},`,
+        '',
+        `Your ${input.serviceLabel} session scheduled for:`,
+        input.whenLine,
+        '',
+        'was cancelled. The attached update removes it from your calendar.',
+      ].join('\n'),
+      [
+        {
+          filename: 'playwithpro-session-cancelled.ics',
+          content: input.ics,
+          contentType: 'text/calendar; charset=utf-8; method=CANCEL',
+        },
+      ],
+    );
+  }
+
   /** Heads-up to admins when a pro cancels or withdraws. */
   async sendCoachCancelledNoticeEmail(
     adminEmails: string[],

@@ -329,7 +329,8 @@
     "videoUploadTitle": "Video hochladen — PlayWithPro",
     "coachesTitle": "Trainer finden — PlayWithPro",
     "checkoutTitle": "Bezahlung — PlayWithPro",
-    "sessionsTitle": "Sessions — PlayWithPro"
+    "sessionsTitle": "Sessions — PlayWithPro",
+    "sessionRoomTitle": "Sitzungsraum — PlayWithPro"
   },
   "verification": {
     "title": "Verifizierung",
@@ -611,6 +612,22 @@
       "disputed": "Im Streitfall",
       "resolved": "Geklärt",
       "cancelled": "Storniert"
+    },
+    "joinRoomCta": "Raum beitreten",
+    "room": {
+      "loading": "Sitzungsraum wird geladen…",
+      "unavailableTitle": "Sitzungsraum nicht verfügbar",
+      "unavailableHint": "Diese Sitzung hat keinen aktiven Raum. Sie ist möglicherweise unbezahlt, storniert oder ein Spiel vor Ort.",
+      "backToSessions": "Meine Sitzungen",
+      "titleWith": "Sitzung mit {name}",
+      "closedTitle": "Dieser Sitzungsraum ist geschlossen",
+      "closedHint": "Die Sitzung ist beendet. Du findest sie in deiner Sitzungsliste.",
+      "opensInTitle": "Der Raum öffnet bald",
+      "opensInHint": "Der Raum öffnet kurz vor Beginn der Sitzung. Diese Seite schaltet sich automatisch frei.",
+      "callLoadFailed": "Der Anruf konnte nicht geladen werden. Prüfe deine Verbindung und lade die Seite neu.",
+      "videoPanelTitle": "Angehängtes Video",
+      "videoLoading": "Video wird geladen…",
+      "videoLoadFailed": "Das Video konnte nicht geladen werden."
     }
   }
 }

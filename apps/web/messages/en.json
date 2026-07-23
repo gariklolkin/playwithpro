@@ -329,7 +329,8 @@
     "videoUploadTitle": "Upload video — PlayWithPro",
     "coachesTitle": "Find a coach — PlayWithPro",
     "checkoutTitle": "Checkout — PlayWithPro",
-    "sessionsTitle": "Sessions — PlayWithPro"
+    "sessionsTitle": "Sessions — PlayWithPro",
+    "sessionRoomTitle": "Session room — PlayWithPro"
   },
   "verification": {
     "title": "Verification",
@@ -611,6 +612,22 @@
       "disputed": "Disputed",
       "resolved": "Resolved",
       "cancelled": "Cancelled"
+    },
+    "joinRoomCta": "Join room",
+    "room": {
+      "loading": "Loading the session room…",
+      "unavailableTitle": "Session room unavailable",
+      "unavailableHint": "This session has no active room. It may be unpaid, cancelled, or an in-person game session.",
+      "backToSessions": "My sessions",
+      "titleWith": "Session with {name}",
+      "closedTitle": "This session room is closed",
+      "closedHint": "The session has ended. You can review it in your sessions list.",
+      "opensInTitle": "The room opens soon",
+      "opensInHint": "The room opens shortly before the session starts. This page will unlock automatically.",
+      "callLoadFailed": "The call could not be loaded. Check your connection and reload the page.",
+      "videoPanelTitle": "Attached video",
+      "videoLoading": "Loading video…",
+      "videoLoadFailed": "The video could not be loaded."
     }
   }
 }
