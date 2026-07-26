@@ -58,6 +58,12 @@ export default async function Home() {
               width={1400}
               height={933}
               priority
+              // The image optimizer's webp/avif path hangs indefinitely in the
+              // dockerized dev stack (jpeg output works; sharp itself encodes
+              // webp fine standalone), leaving the hero blank in any browser.
+              // One static 169 KB jpg gains nothing from optimization — serve
+              // it as-is.
+              unoptimized
               className="h-auto w-full rounded-[20px] border border-border shadow-[0_4px_16px_rgba(15,15,15,0.06)]"
             />
           </div>
