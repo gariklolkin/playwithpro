@@ -645,7 +645,14 @@
       "callLoadFailed": "L'appel n'a pas pu être chargé. Vérifiez votre connexion et rechargez la page.",
       "videoPanelTitle": "Vidéo jointe",
       "videoLoading": "Chargement de la vidéo…",
-      "videoLoadFailed": "La vidéo n'a pas pu être chargée."
+      "videoLoadFailed": "La vidéo n'a pas pu être chargée.",
+      "sync": {
+        "on": "Synchronisé",
+        "off": "Sync désactivée",
+        "onHint": "La lecture est partagée entre les deux participants. Cliquez pour naviguer librement.",
+        "offHint": "La lecture est indépendante. Cliquez pour rejoindre la lecture partagée.",
+        "resume": "Reprendre la lecture synchronisée"
+      }
     },
     "actions": {
       "paidOut": "Versé",

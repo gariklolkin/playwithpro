@@ -645,7 +645,14 @@
       "callLoadFailed": "无法加载通话。请检查网络连接并刷新页面。",
       "videoPanelTitle": "附加视频",
       "videoLoading": "正在加载视频…",
-      "videoLoadFailed": "无法加载视频。"
+      "videoLoadFailed": "无法加载视频。",
+      "sync": {
+        "on": "已同步",
+        "off": "同步关闭",
+        "onHint": "播放进度与对方保持一致。点击可自行浏览。",
+        "offHint": "播放进度独立。点击可恢复同步播放。",
+        "resume": "恢复同步播放"
+      }
     },
     "actions": {
       "paidOut": "已打款",

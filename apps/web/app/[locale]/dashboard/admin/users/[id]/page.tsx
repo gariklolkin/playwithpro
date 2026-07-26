@@ -147,7 +147,8 @@ export default async function AdminUserDetailPage({
                 key={status}
                 className="rounded bg-bg-secondary px-2 py-1 text-xs text-text-secondary"
               >
-                {tSessions(status)}: <strong className="text-text">{count}</strong>
+                {tSessions(status)}:{" "}
+                <strong className="text-text">{count}</strong>
               </span>
             ))}
           </div>

@@ -645,7 +645,14 @@
       "callLoadFailed": "Der Anruf konnte nicht geladen werden. Prüfe deine Verbindung und lade die Seite neu.",
       "videoPanelTitle": "Angehängtes Video",
       "videoLoading": "Video wird geladen…",
-      "videoLoadFailed": "Das Video konnte nicht geladen werden."
+      "videoLoadFailed": "Das Video konnte nicht geladen werden.",
+      "sync": {
+        "on": "Synchron",
+        "off": "Sync aus",
+        "onHint": "Die Wiedergabe folgt beiden Teilnehmern. Klicken, um unabhängig zu navigieren.",
+        "offHint": "Die Wiedergabe ist unabhängig. Klicken, um zur gemeinsamen Wiedergabe zurückzukehren.",
+        "resume": "Synchronisierte Wiedergabe fortsetzen"
+      }
     },
     "actions": {
       "paidOut": "Ausgezahlt",

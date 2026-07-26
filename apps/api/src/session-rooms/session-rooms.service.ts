@@ -11,7 +11,7 @@ import {
   SessionRoomResponse,
   SessionStatus as SharedSessionStatus,
 } from '@playwithpro/shared';
-import type { Prisma } from '@prisma/client';
+import { ServiceType, type Prisma } from '@prisma/client';
 import type { AuthenticatedUser } from '../auth/auth-cookies';
 import {
   ROOM_ACCESS_STATUSES,
@@ -101,6 +101,40 @@ export class SessionRoomsService {
       where: { id: attendanceId, sessionId, userId: user.id, leftAt: null },
       data: { leftAt: new Date() },
     });
+  }
+
+  /**
+   * Gate for the playback sync channel: strictly the two parties (no admin
+   * pass-through — the channel is peer state, not oversight), video-analysis
+   * only, room-eligible status, inside the join window. Throws otherwise.
+   */
+  async authorizePlaybackSync(
+    user: AuthenticatedUser,
+    sessionId: string,
+  ): Promise<void> {
+    const session = await this.prisma.session.findUnique({
+      where: { id: sessionId },
+      include: ROOM_INCLUDE,
+    });
+    const isParty =
+      session &&
+      (session.playerId === user.id || session.proProfile.userId === user.id);
+    if (
+      !session ||
+      !isParty ||
+      session.serviceType !== ServiceType.VIDEO_ANALYSIS
+    ) {
+      throw new NotFoundException();
+    }
+    const current = await this.progression.normalize(session);
+    if (!ROOM_ACCESS_STATUSES.includes(current.status)) {
+      throw new ConflictException('This session has no active room.');
+    }
+    const now = Date.now();
+    const { opensAt, closesAt } = this.window(current);
+    if (now < opensAt.getTime() || now > closesAt.getTime()) {
+      throw new ConflictException('The session room is closed.');
+    }
   }
 
   /**

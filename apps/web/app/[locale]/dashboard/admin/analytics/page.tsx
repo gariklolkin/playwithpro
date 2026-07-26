@@ -65,9 +65,8 @@ function TrendBars({
 }
 
 export default async function AdminAnalyticsPage() {
-  const analytics = await serverApiGet<AdminAnalyticsResponse>(
-    "/admin/analytics",
-  );
+  const analytics =
+    await serverApiGet<AdminAnalyticsResponse>("/admin/analytics");
   const t = await getTranslations("adminConsole.analytics");
   const tRoles = await getTranslations("adminConsole.roles");
   const tSessions = await getTranslations("sessions.status");
@@ -111,7 +110,9 @@ export default async function AdminAnalyticsPage() {
           detail={
             <>
               {Object.values(Role)
-                .map((role) => `${tRoles(role)}: ${analytics.users.byRole[role]}`)
+                .map(
+                  (role) => `${tRoles(role)}: ${analytics.users.byRole[role]}`,
+                )
                 .join(" · ")}
               {analytics.users.suspended > 0
                 ? ` · ${t("suspendedCount", { count: analytics.users.suspended })}`

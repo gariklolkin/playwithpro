@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment,
-   @typescript-eslint/no-unsafe-member-access,
+/* eslint-disable @typescript-eslint/no-unsafe-member-access,
    @typescript-eslint/no-unsafe-argument,
    @typescript-eslint/no-unsafe-return
    -- supertest responses are untyped; assertions cast where it matters. */
@@ -122,7 +121,9 @@ describe('Admin console (e2e)', () => {
     }).compile();
     app = moduleRef.createNestApplication();
     app.use(cookieParser());
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
     await app.init();
 
     prisma = app.get(PrismaService);

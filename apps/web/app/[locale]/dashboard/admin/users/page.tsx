@@ -41,7 +41,12 @@ export default async function AdminUsersPage({
       </header>
       <AdminUsersTable
         data={
-          users ?? { items: [], total: 0, page: 1, pageSize: ADMIN_USERS_PAGE_SIZE }
+          users ?? {
+            items: [],
+            total: 0,
+            page: 1,
+            pageSize: ADMIN_USERS_PAGE_SIZE,
+          }
         }
         query={filters.query ?? ""}
         role={filters.role ?? ""}

@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { CorsIoAdapter } from './config/socket-io.adapter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,6 +16,9 @@ async function bootstrap() {
     origin: config.get<string>('WEB_APP_URL'),
     credentials: true,
   });
+  app.useWebSocketAdapter(
+    new CorsIoAdapter(app, config.getOrThrow<string>('WEB_APP_URL')),
+  );
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('PlayWithPro API')

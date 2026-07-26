@@ -645,7 +645,14 @@
       "callLoadFailed": "The call could not be loaded. Check your connection and reload the page.",
       "videoPanelTitle": "Attached video",
       "videoLoading": "Loading video…",
-      "videoLoadFailed": "The video could not be loaded."
+      "videoLoadFailed": "The video could not be loaded.",
+      "sync": {
+        "on": "Synced",
+        "off": "Sync off",
+        "onHint": "Playback follows both participants. Click to browse on your own.",
+        "offHint": "Playback is independent. Click to rejoin shared playback.",
+        "resume": "Resume synced playback"
+      }
     },
     "actions": {
       "paidOut": "Paid out",

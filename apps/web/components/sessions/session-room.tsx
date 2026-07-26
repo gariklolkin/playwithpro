@@ -232,6 +232,7 @@ export function SessionRoom({
           </div>
           {withVideo && room.videoId ? (
             <RoomVideoPanel
+              sessionId={sessionId}
               videoId={room.videoId}
               videoTitle={room.videoTitle}
             />
