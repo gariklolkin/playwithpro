@@ -32,7 +32,8 @@
       "noAccount": "Nouveau sur PlayWithPro ?",
       "createAccount": "Créer un compte",
       "unverified": "Votre e-mail n'est pas encore confirmé.",
-      "getCode": "Recevoir un code de confirmation"
+      "getCode": "Recevoir un code de confirmation",
+      "suspended": "Ce compte a été suspendu. Contactez le support si vous pensez qu'il s'agit d'une erreur."
     },
     "register": {
       "title": "Créer un compte",
@@ -140,7 +141,8 @@
         "disputes": "Litiges",
         "users": "Utilisateurs",
         "transactions": "Transactions",
-        "analytics": "Statistiques"
+        "analytics": "Statistiques",
+        "reviews": "Avis"
       }
     }
   },
@@ -333,7 +335,11 @@
     "checkoutTitle": "Paiement — PlayWithPro",
     "sessionsTitle": "Séances — PlayWithPro",
     "sessionRoomTitle": "Salle de session — PlayWithPro",
-    "disputesTitle": "Litiges — PlayWithPro"
+    "disputesTitle": "Litiges — PlayWithPro",
+    "adminUsersTitle": "Utilisateurs — PlayWithPro",
+    "adminTransactionsTitle": "Transactions — PlayWithPro",
+    "adminAnalyticsTitle": "Statistiques — PlayWithPro",
+    "adminReviewsTitle": "Modération des avis — PlayWithPro"
   },
   "verification": {
     "title": "Vérification",
@@ -690,5 +696,129 @@
     "outcomeRelease": "Versé au coach",
     "outcomeRefund": "Remboursé au joueur",
     "error": "La résolution a échoué. Réessayez."
+  },
+  "adminConsole": {
+    "roles": {
+      "amateur": "Joueur",
+      "professional": "Coach",
+      "admin": "Admin"
+    },
+    "paymentStatus": {
+      "requires_hold": "Blocage en attente",
+      "held": "Sous séquestre",
+      "failed": "Échoué",
+      "released": "Versé",
+      "refunded": "Remboursé"
+    },
+    "users": {
+      "title": "Utilisateurs",
+      "subtitle": "Tous les comptes de la plateforme — rechercher, inspecter, suspendre.",
+      "searchPlaceholder": "Rechercher par e-mail ou nom…",
+      "search": "Rechercher",
+      "roleFilter": "Filtrer par rôle",
+      "allRoles": "Tous les rôles",
+      "empty": "Aucun utilisateur ne correspond à cette recherche.",
+      "columns": {
+        "user": "Utilisateur",
+        "role": "Rôle",
+        "registered": "Inscrit le",
+        "status": "Statut"
+      },
+      "suspended": "Suspendu",
+      "active": "Actif",
+      "backToList": "Tous les utilisateurs",
+      "accountSection": "Compte",
+      "emailVerified": "E-mail vérifié",
+      "locale": "Langue",
+      "timezone": "Fuseau horaire",
+      "suspendedSince": "Suspendu depuis",
+      "profileSection": "Profil",
+      "playerLevel": "Niveau du joueur",
+      "proStatus": "Statut du coach",
+      "rating": "Note",
+      "noReviews": "Pas encore d'avis",
+      "levels": {
+        "beginner": "Débutant",
+        "intermediate": "Intermédiaire",
+        "advanced": "Avancé",
+        "competitive": "Compétiteur"
+      },
+      "proStatuses": {
+        "draft": "Brouillon",
+        "pending_review": "En attente de validation",
+        "verified": "Vérifié",
+        "rejected": "Refusé"
+      },
+      "activitySection": "Activité",
+      "noSessions": "Pas encore de sessions.",
+      "paymentAttempts": "Tentatives de paiement : {count}",
+      "suspendCta": "Suspendre",
+      "unsuspendCta": "Rétablir",
+      "confirmSuspend": "Suspendre ce compte ? Il sera déconnecté et ne pourra plus se connecter.",
+      "confirmUnsuspend": "Lever la suspension et autoriser à nouveau la connexion ?",
+      "cancel": "Annuler",
+      "error": "Une erreur est survenue. Veuillez réessayer.",
+      "pagination": {
+        "prev": "Précédent",
+        "next": "Suivant",
+        "pageOf": "Page {page} sur {total}"
+      }
+    },
+    "transactions": {
+      "title": "Transactions",
+      "subtitle": "Chaque tentative de paiement, la plus récente d'abord. Lecture seule.",
+      "allStatuses": "Tous",
+      "empty": "Aucun paiement enregistré pour le moment.",
+      "columns": {
+        "date": "Date",
+        "parties": "Joueur → Coach",
+        "amount": "Montant",
+        "fee": "Commission",
+        "status": "Statut",
+        "reference": "Réf. prestataire"
+      },
+      "pagination": {
+        "prev": "Précédent",
+        "next": "Suivant",
+        "pageOf": "Page {page} sur {total}"
+      }
+    },
+    "analytics": {
+      "title": "Statistiques",
+      "subtitle": "L'état de la place de marché en ce moment.",
+      "unavailable": "Les statistiques sont indisponibles pour le moment.",
+      "usersCard": "Utilisateurs",
+      "sessionsCard": "Sessions",
+      "disputesCard": "Litiges ouverts",
+      "suspendedCount": "{count} suspendus",
+      "disputesDetail": "Résolus : {released} versés · {refunded} remboursés",
+      "moneyTitle": "Argent",
+      "noMoney": "Pas encore de paiements.",
+      "currency": "Devise",
+      "held": "Sous séquestre",
+      "released": "Versé",
+      "refunded": "Remboursé",
+      "feeRevenue": "Revenus de commission",
+      "trendSessionsTitle": "Sessions créées — 30 derniers jours",
+      "trendReleasedTitle": "Montants versés ({currency}) — 30 derniers jours"
+    },
+    "reviews": {
+      "title": "Modération des avis",
+      "subtitle": "Tous les avis, les plus récents d'abord. La suppression met à jour la note du coach.",
+      "searchPlaceholder": "Rechercher par coach ou joueur…",
+      "search": "Rechercher",
+      "empty": "Aucun avis trouvé.",
+      "about": "à propos de",
+      "deleteCta": "Supprimer l'avis",
+      "confirmDelete": "Supprimer définitivement",
+      "cancel": "Annuler",
+      "reasonPlaceholder": "Motif de la suppression (obligatoire)…",
+      "error": "Une erreur est survenue. Veuillez réessayer.",
+      "pagination": {
+        "prev": "Précédent",
+        "next": "Suivant",
+        "pageOf": "Page {page} sur {total}"
+      }
+    }
   }
 }

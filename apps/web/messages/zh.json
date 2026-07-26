@@ -32,7 +32,8 @@
       "noAccount": "第一次使用 PlayWithPro？",
       "createAccount": "创建账户",
       "unverified": "您的邮箱尚未确认。",
-      "getCode": "获取验证码"
+      "getCode": "获取验证码",
+      "suspended": "该账号已被封禁。如果您认为这是误判，请联系客服。"
     },
     "register": {
       "title": "创建账户",
@@ -140,7 +141,8 @@
         "disputes": "纠纷",
         "users": "用户",
         "transactions": "交易",
-        "analytics": "数据分析"
+        "analytics": "数据分析",
+        "reviews": "评价"
       }
     }
   },
@@ -333,7 +335,11 @@
     "checkoutTitle": "支付 — PlayWithPro",
     "sessionsTitle": "课程 — PlayWithPro",
     "sessionRoomTitle": "课程房间 — PlayWithPro",
-    "disputesTitle": "争议 — PlayWithPro"
+    "disputesTitle": "争议 — PlayWithPro",
+    "adminUsersTitle": "用户 — PlayWithPro",
+    "adminTransactionsTitle": "交易 — PlayWithPro",
+    "adminAnalyticsTitle": "数据分析 — PlayWithPro",
+    "adminReviewsTitle": "评价审核 — PlayWithPro"
   },
   "verification": {
     "title": "认证",
@@ -690,5 +696,129 @@
     "outcomeRelease": "已打款给教练",
     "outcomeRefund": "已退款给球员",
     "error": "处理失败，请重试。"
+  },
+  "adminConsole": {
+    "roles": {
+      "amateur": "球员",
+      "professional": "教练",
+      "admin": "管理员"
+    },
+    "paymentStatus": {
+      "requires_hold": "待冻结",
+      "held": "托管中",
+      "failed": "失败",
+      "released": "已放款",
+      "refunded": "已退款"
+    },
+    "users": {
+      "title": "用户",
+      "subtitle": "平台上的所有账号——搜索、查看、封禁。",
+      "searchPlaceholder": "按邮箱或姓名搜索…",
+      "search": "搜索",
+      "roleFilter": "按角色筛选",
+      "allRoles": "所有角色",
+      "empty": "没有符合条件的用户。",
+      "columns": {
+        "user": "用户",
+        "role": "角色",
+        "registered": "注册时间",
+        "status": "状态"
+      },
+      "suspended": "已封禁",
+      "active": "正常",
+      "backToList": "所有用户",
+      "accountSection": "账号",
+      "emailVerified": "邮箱已验证",
+      "locale": "语言",
+      "timezone": "时区",
+      "suspendedSince": "封禁开始时间",
+      "profileSection": "档案",
+      "playerLevel": "球员水平",
+      "proStatus": "教练状态",
+      "rating": "评分",
+      "noReviews": "暂无评价",
+      "levels": {
+        "beginner": "初学者",
+        "intermediate": "中级",
+        "advanced": "高级",
+        "competitive": "竞技级"
+      },
+      "proStatuses": {
+        "draft": "草稿",
+        "pending_review": "待审核",
+        "verified": "已认证",
+        "rejected": "已拒绝"
+      },
+      "activitySection": "活动",
+      "noSessions": "暂无课程。",
+      "paymentAttempts": "支付尝试次数：{count}",
+      "suspendCta": "封禁",
+      "unsuspendCta": "解封",
+      "confirmSuspend": "封禁该账号？用户将被登出且无法再登录。",
+      "confirmUnsuspend": "解除封禁并允许该账号重新登录？",
+      "cancel": "取消",
+      "error": "出错了，请重试。",
+      "pagination": {
+        "prev": "上一页",
+        "next": "下一页",
+        "pageOf": "第 {page} 页，共 {total} 页"
+      }
+    },
+    "transactions": {
+      "title": "交易",
+      "subtitle": "每笔支付尝试，最新在前。只读。",
+      "allStatuses": "全部",
+      "empty": "暂无支付记录。",
+      "columns": {
+        "date": "日期",
+        "parties": "球员 → 教练",
+        "amount": "金额",
+        "fee": "手续费",
+        "status": "状态",
+        "reference": "服务商参考号"
+      },
+      "pagination": {
+        "prev": "上一页",
+        "next": "下一页",
+        "pageOf": "第 {page} 页，共 {total} 页"
+      }
+    },
+    "analytics": {
+      "title": "数据分析",
+      "subtitle": "平台当前的运营情况。",
+      "unavailable": "数据分析暂时不可用。",
+      "usersCard": "用户",
+      "sessionsCard": "课程",
+      "disputesCard": "未决争议",
+      "suspendedCount": "已封禁 {count} 人",
+      "disputesDetail": "已解决：放款 {released} · 退款 {refunded}",
+      "moneyTitle": "资金",
+      "noMoney": "暂无支付。",
+      "currency": "币种",
+      "held": "托管中",
+      "released": "已放款",
+      "refunded": "已退款",
+      "feeRevenue": "手续费收入",
+      "trendSessionsTitle": "新建课程 — 最近 30 天",
+      "trendReleasedTitle": "放款金额（{currency}）— 最近 30 天"
+    },
+    "reviews": {
+      "title": "评价审核",
+      "subtitle": "所有评价，最新在前。删除会同步更新教练评分。",
+      "searchPlaceholder": "按教练或球员搜索…",
+      "search": "搜索",
+      "empty": "未找到评价。",
+      "about": "评价对象",
+      "deleteCta": "删除评价",
+      "confirmDelete": "永久删除",
+      "cancel": "取消",
+      "reasonPlaceholder": "删除原因（必填）…",
+      "error": "出错了，请重试。",
+      "pagination": {
+        "prev": "上一页",
+        "next": "下一页",
+        "pageOf": "第 {page} 页，共 {total} 页"
+      }
+    }
   }
 }

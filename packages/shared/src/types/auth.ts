@@ -16,6 +16,12 @@ export interface LoginRequest {
   password: string;
 }
 
+/**
+ * `error` discriminator on 403 auth responses for suspended accounts,
+ * so the web can tell suspension apart from the unverified-email 403.
+ */
+export const AUTH_ERROR_SUSPENDED = "account_suspended";
+
 export const EMAIL_CODE_LENGTH = 6;
 
 export interface VerifyEmailRequest {

@@ -37,9 +37,10 @@ const NAV: Record<
     items: [
       { key: "verification", emoji: "✅", href: "/dashboard/verification" },
       { key: "disputes", emoji: "⚖️", href: "/dashboard/disputes" },
-      { key: "users", emoji: "👥" },
-      { key: "transactions", emoji: "💳" },
-      { key: "analytics", emoji: "📈" },
+      { key: "users", emoji: "👥", href: "/dashboard/admin/users" },
+      { key: "transactions", emoji: "💳", href: "/dashboard/admin/transactions" },
+      { key: "analytics", emoji: "📈", href: "/dashboard/admin/analytics" },
+      { key: "reviews", emoji: "⭐", href: "/dashboard/admin/reviews" },
     ],
   },
 };

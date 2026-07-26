@@ -1,5 +1,6 @@
 "use client";
 
+import { AUTH_ERROR_SUSPENDED } from "@playwithpro/shared";
 import { useSearchParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
@@ -63,6 +64,16 @@ export function LoginCard() {
     }
     setSubmitting(false);
     if (response.status === 403) {
+      let body: { error?: string } | null = null;
+      try {
+        body = (await response.json()) as { error?: string };
+      } catch {
+        body = null;
+      }
+      if (body?.error === AUTH_ERROR_SUSPENDED) {
+        setError(t("suspended"));
+        return;
+      }
       // Right password, unconfirmed email — offer to confirm with a code.
       setUnverified(true);
       return;
@@ -83,9 +94,11 @@ export function LoginCard() {
   const oauthErrorMessage =
     oauthError === "google_email"
       ? t("errorGoogleEmail")
-      : oauthError
-        ? t("errorGoogle")
-        : null;
+      : oauthError === "suspended"
+        ? t("suspended")
+        : oauthError
+          ? t("errorGoogle")
+          : null;
 
   return (
     <AuthCard title={t("title")} subtitle={t("subtitle")}>

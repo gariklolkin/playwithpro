@@ -32,7 +32,8 @@
       "noAccount": "Neu bei PlayWithPro?",
       "createAccount": "Konto erstellen",
       "unverified": "Deine E-Mail ist noch nicht bestätigt.",
-      "getCode": "Bestätigungscode anfordern"
+      "getCode": "Bestätigungscode anfordern",
+      "suspended": "Dieses Konto wurde gesperrt. Wende dich an den Support, wenn du das für einen Fehler hältst."
     },
     "register": {
       "title": "Konto erstellen",
@@ -140,7 +141,8 @@
         "disputes": "Streitfälle",
         "users": "Nutzer",
         "transactions": "Transaktionen",
-        "analytics": "Statistiken"
+        "analytics": "Statistiken",
+        "reviews": "Bewertungen"
       }
     }
   },
@@ -333,7 +335,11 @@
     "checkoutTitle": "Bezahlung — PlayWithPro",
     "sessionsTitle": "Sessions — PlayWithPro",
     "sessionRoomTitle": "Sitzungsraum — PlayWithPro",
-    "disputesTitle": "Streitfälle — PlayWithPro"
+    "disputesTitle": "Streitfälle — PlayWithPro",
+    "adminUsersTitle": "Nutzer — PlayWithPro",
+    "adminTransactionsTitle": "Transaktionen — PlayWithPro",
+    "adminAnalyticsTitle": "Statistiken — PlayWithPro",
+    "adminReviewsTitle": "Bewertungsmoderation — PlayWithPro"
   },
   "verification": {
     "title": "Verifizierung",
@@ -690,5 +696,129 @@
     "outcomeRelease": "An Coach ausgezahlt",
     "outcomeRefund": "An Spieler erstattet",
     "error": "Entscheidung fehlgeschlagen. Versuchen Sie es erneut."
+  },
+  "adminConsole": {
+    "roles": {
+      "amateur": "Spieler",
+      "professional": "Coach",
+      "admin": "Admin"
+    },
+    "paymentStatus": {
+      "requires_hold": "Reservierung ausstehend",
+      "held": "Treuhänderisch verwahrt",
+      "failed": "Fehlgeschlagen",
+      "released": "Ausgezahlt",
+      "refunded": "Erstattet"
+    },
+    "users": {
+      "title": "Nutzer",
+      "subtitle": "Alle Konten der Plattform — suchen, prüfen, sperren.",
+      "searchPlaceholder": "Nach E-Mail oder Name suchen…",
+      "search": "Suchen",
+      "roleFilter": "Nach Rolle filtern",
+      "allRoles": "Alle Rollen",
+      "empty": "Keine Nutzer entsprechen dieser Suche.",
+      "columns": {
+        "user": "Nutzer",
+        "role": "Rolle",
+        "registered": "Registriert",
+        "status": "Status"
+      },
+      "suspended": "Gesperrt",
+      "active": "Aktiv",
+      "backToList": "Alle Nutzer",
+      "accountSection": "Konto",
+      "emailVerified": "E-Mail bestätigt",
+      "locale": "Sprache",
+      "timezone": "Zeitzone",
+      "suspendedSince": "Gesperrt seit",
+      "profileSection": "Profil",
+      "playerLevel": "Spielniveau",
+      "proStatus": "Coach-Status",
+      "rating": "Bewertung",
+      "noReviews": "Noch keine Bewertungen",
+      "levels": {
+        "beginner": "Anfänger",
+        "intermediate": "Fortgeschritten",
+        "advanced": "Weit fortgeschritten",
+        "competitive": "Wettkampfspieler"
+      },
+      "proStatuses": {
+        "draft": "Entwurf",
+        "pending_review": "Prüfung ausstehend",
+        "verified": "Verifiziert",
+        "rejected": "Abgelehnt"
+      },
+      "activitySection": "Aktivität",
+      "noSessions": "Noch keine Sessions.",
+      "paymentAttempts": "Zahlungsversuche: {count}",
+      "suspendCta": "Sperren",
+      "unsuspendCta": "Entsperren",
+      "confirmSuspend": "Dieses Konto sperren? Es wird abgemeldet und kann sich nicht mehr anmelden.",
+      "confirmUnsuspend": "Sperre aufheben und die Anmeldung wieder erlauben?",
+      "cancel": "Abbrechen",
+      "error": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
+      "pagination": {
+        "prev": "Zurück",
+        "next": "Weiter",
+        "pageOf": "Seite {page} von {total}"
+      }
+    },
+    "transactions": {
+      "title": "Transaktionen",
+      "subtitle": "Jeder Zahlungsversuch, neueste zuerst. Nur Lesezugriff.",
+      "allStatuses": "Alle",
+      "empty": "Noch keine Zahlungen erfasst.",
+      "columns": {
+        "date": "Datum",
+        "parties": "Spieler → Coach",
+        "amount": "Betrag",
+        "fee": "Gebühr",
+        "status": "Status",
+        "reference": "Anbieter-Ref."
+      },
+      "pagination": {
+        "prev": "Zurück",
+        "next": "Weiter",
+        "pageOf": "Seite {page} von {total}"
+      }
+    },
+    "analytics": {
+      "title": "Statistiken",
+      "subtitle": "Wie es dem Marktplatz gerade geht.",
+      "unavailable": "Statistiken sind derzeit nicht verfügbar.",
+      "usersCard": "Nutzer",
+      "sessionsCard": "Sessions",
+      "disputesCard": "Offene Streitfälle",
+      "suspendedCount": "{count} gesperrt",
+      "disputesDetail": "Gelöst: {released} ausgezahlt · {refunded} erstattet",
+      "moneyTitle": "Geld",
+      "noMoney": "Noch keine Zahlungen.",
+      "currency": "Währung",
+      "held": "Verwahrt",
+      "released": "Ausgezahlt",
+      "refunded": "Erstattet",
+      "feeRevenue": "Gebühreneinnahmen",
+      "trendSessionsTitle": "Erstellte Sessions — letzte 30 Tage",
+      "trendReleasedTitle": "Ausgezahlte Beträge ({currency}) — letzte 30 Tage"
+    },
+    "reviews": {
+      "title": "Bewertungsmoderation",
+      "subtitle": "Alle Bewertungen, neueste zuerst. Löschen aktualisiert die Coach-Bewertung.",
+      "searchPlaceholder": "Nach Coach oder Spieler suchen…",
+      "search": "Suchen",
+      "empty": "Keine Bewertungen gefunden.",
+      "about": "über",
+      "deleteCta": "Bewertung löschen",
+      "confirmDelete": "Endgültig löschen",
+      "cancel": "Abbrechen",
+      "reasonPlaceholder": "Grund für die Löschung (erforderlich)…",
+      "error": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
+      "pagination": {
+        "prev": "Zurück",
+        "next": "Weiter",
+        "pageOf": "Seite {page} von {total}"
+      }
+    }
   }
 }

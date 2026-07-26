@@ -29,6 +29,8 @@ model User {
   timezone        String    @default("UTC")
   avatarKey       String? // S3 object key; public URL is computed, never stored
   emailVerifiedAt DateTime?
+  /// Set while the account is suspended by an admin; blocks sign-in and refresh.
+  suspendedAt     DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

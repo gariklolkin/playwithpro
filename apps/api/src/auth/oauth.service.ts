@@ -17,7 +17,9 @@ export type GoogleCallbackOutcome =
   /** No account for this email yet — role choice pending, no user row created. */
   | { kind: 'pending_signup'; pendingToken: string }
   /** Email belongs to an unverified password account — refuse silent takeover. */
-  | { kind: 'email_conflict' };
+  | { kind: 'email_conflict' }
+  /** Account exists but is suspended by an admin — no sign-in. */
+  | { kind: 'suspended' };
 
 interface PendingSignupPayload {
   kind: 'oauth_pending';
@@ -48,6 +50,9 @@ export class OAuthService {
       include: { user: { include: { oauthAccounts: true } } },
     });
     if (account) {
+      if (account.user.suspendedAt) {
+        return { kind: 'suspended' };
+      }
       return {
         kind: 'signed_in',
         result: await this.auth.signIn(account.user),
@@ -65,6 +70,9 @@ export class OAuthService {
     if (existing) {
       if (existing.emailVerifiedAt === null) {
         return { kind: 'email_conflict' };
+      }
+      if (existing.suspendedAt) {
+        return { kind: 'suspended' };
       }
       await this.prisma.oAuthAccount.create({
         data: {

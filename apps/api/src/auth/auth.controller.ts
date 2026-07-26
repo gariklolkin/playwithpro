@@ -176,6 +176,9 @@ export class AuthController {
         case 'email_conflict':
           res.redirect(`${this.webAppUrl()}/login?error=google_email`);
           return;
+        case 'suspended':
+          res.redirect(`${this.webAppUrl()}/login?error=suspended`);
+          return;
       }
     } catch {
       res.redirect(`${this.webAppUrl()}/login?error=google`);

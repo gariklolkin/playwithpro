@@ -164,6 +164,73 @@ describe('AuthService', () => {
     expect(tokens.issueRefreshToken).not.toHaveBeenCalled();
   });
 
+  it('login rejects a suspended account with the suspension discriminator', async () => {
+    const passwordHash = await argon2.hash('password1', {
+      type: argon2.argon2id,
+    });
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u1',
+      passwordHash,
+      emailVerifiedAt: new Date(),
+      suspendedAt: new Date(),
+      oauthAccounts: [],
+    });
+
+    const error = await service
+      .login({ email: 'a@b.c', password: 'password1' })
+      .then(() => null)
+      .catch((e: ForbiddenException) => e);
+
+    expect(error).toBeInstanceOf(ForbiddenException);
+    expect(error?.getResponse()).toMatchObject({ error: 'account_suspended' });
+    expect(tokens.issueRefreshToken).not.toHaveBeenCalled();
+  });
+
+  it('login succeeds again once the suspension is lifted', async () => {
+    const passwordHash = await argon2.hash('password1', {
+      type: argon2.argon2id,
+    });
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u1',
+      email: 'a@b.c',
+      role: 'AMATEUR',
+      displayName: 'A',
+      locale: 'en',
+      timezone: 'UTC',
+      passwordHash,
+      emailVerifiedAt: new Date(),
+      suspendedAt: null,
+      avatarKey: null,
+      oauthAccounts: [],
+    });
+
+    const result = await service.login({
+      email: 'a@b.c',
+      password: 'password1',
+    });
+
+    expect(result.tokens.refreshToken).toBe('refresh');
+  });
+
+  it('signIn never issues tokens for a suspended user', async () => {
+    await expect(
+      service.signIn({
+        id: 'u1',
+        email: 'a@b.c',
+        role: 'AMATEUR',
+        displayName: 'A',
+        locale: 'en',
+        timezone: 'UTC',
+        passwordHash: 'hash',
+        emailVerifiedAt: new Date(),
+        suspendedAt: new Date(),
+        avatarKey: null,
+        oauthAccounts: [],
+      } as never),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(tokens.issueRefreshToken).not.toHaveBeenCalled();
+  });
+
   it('register creates the account without signing in', async () => {
     prisma.user.findUnique.mockResolvedValue(null);
     prisma.user.create.mockResolvedValue({ id: 'u1', email: 'n@e.c' });

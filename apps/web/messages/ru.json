@@ -32,7 +32,8 @@
       "noAccount": "Впервые на PlayWithPro?",
       "createAccount": "Создать аккаунт",
       "unverified": "Ваш email ещё не подтверждён.",
-      "getCode": "Получить код подтверждения"
+      "getCode": "Получить код подтверждения",
+      "suspended": "Этот аккаунт заблокирован. Если вы считаете это ошибкой, обратитесь в поддержку."
     },
     "register": {
       "title": "Создать аккаунт",
@@ -140,7 +141,8 @@
         "disputes": "Споры",
         "users": "Пользователи",
         "transactions": "Транзакции",
-        "analytics": "Аналитика"
+        "analytics": "Аналитика",
+        "reviews": "Отзывы"
       }
     }
   },
@@ -333,7 +335,11 @@
     "checkoutTitle": "Оплата — PlayWithPro",
     "sessionsTitle": "Занятия — PlayWithPro",
     "sessionRoomTitle": "Комната сессии — PlayWithPro",
-    "disputesTitle": "Споры — PlayWithPro"
+    "disputesTitle": "Споры — PlayWithPro",
+    "adminUsersTitle": "Пользователи — PlayWithPro",
+    "adminTransactionsTitle": "Транзакции — PlayWithPro",
+    "adminAnalyticsTitle": "Аналитика — PlayWithPro",
+    "adminReviewsTitle": "Модерация отзывов — PlayWithPro"
   },
   "verification": {
     "title": "Верификация",
@@ -690,5 +696,129 @@
     "outcomeRelease": "Выплачено тренеру",
     "outcomeRefund": "Возвращено игроку",
     "error": "Не удалось принять решение. Попробуйте ещё раз."
+  },
+  "adminConsole": {
+    "roles": {
+      "amateur": "Игрок",
+      "professional": "Тренер",
+      "admin": "Админ"
+    },
+    "paymentStatus": {
+      "requires_hold": "Ожидает блокировки",
+      "held": "На эскроу",
+      "failed": "Не прошёл",
+      "released": "Выплачен",
+      "refunded": "Возвращён"
+    },
+    "users": {
+      "title": "Пользователи",
+      "subtitle": "Все аккаунты платформы — поиск, просмотр, блокировка.",
+      "searchPlaceholder": "Поиск по почте или имени…",
+      "search": "Найти",
+      "roleFilter": "Фильтр по роли",
+      "allRoles": "Все роли",
+      "empty": "По этому запросу пользователей не найдено.",
+      "columns": {
+        "user": "Пользователь",
+        "role": "Роль",
+        "registered": "Регистрация",
+        "status": "Статус"
+      },
+      "suspended": "Заблокирован",
+      "active": "Активен",
+      "backToList": "Все пользователи",
+      "accountSection": "Аккаунт",
+      "emailVerified": "Почта подтверждена",
+      "locale": "Язык",
+      "timezone": "Часовой пояс",
+      "suspendedSince": "Заблокирован с",
+      "profileSection": "Профиль",
+      "playerLevel": "Уровень игрока",
+      "proStatus": "Статус тренера",
+      "rating": "Рейтинг",
+      "noReviews": "Отзывов пока нет",
+      "levels": {
+        "beginner": "Новичок",
+        "intermediate": "Средний",
+        "advanced": "Продвинутый",
+        "competitive": "Соревновательный"
+      },
+      "proStatuses": {
+        "draft": "Черновик",
+        "pending_review": "На проверке",
+        "verified": "Подтверждён",
+        "rejected": "Отклонён"
+      },
+      "activitySection": "Активность",
+      "noSessions": "Сессий пока нет.",
+      "paymentAttempts": "Попыток оплаты: {count}",
+      "suspendCta": "Заблокировать",
+      "unsuspendCta": "Разблокировать",
+      "confirmSuspend": "Заблокировать этот аккаунт? Пользователь будет разлогинен и не сможет войти.",
+      "confirmUnsuspend": "Снять блокировку и снова разрешить вход?",
+      "cancel": "Отмена",
+      "error": "Что-то пошло не так. Попробуйте ещё раз.",
+      "pagination": {
+        "prev": "Назад",
+        "next": "Далее",
+        "pageOf": "Страница {page} из {total}"
+      }
+    },
+    "transactions": {
+      "title": "Транзакции",
+      "subtitle": "Каждая попытка оплаты, сначала новые. Только просмотр.",
+      "allStatuses": "Все",
+      "empty": "Платежей пока нет.",
+      "columns": {
+        "date": "Дата",
+        "parties": "Игрок → Тренер",
+        "amount": "Сумма",
+        "fee": "Комиссия",
+        "status": "Статус",
+        "reference": "Реф. провайдера"
+      },
+      "pagination": {
+        "prev": "Назад",
+        "next": "Далее",
+        "pageOf": "Страница {page} из {total}"
+      }
+    },
+    "analytics": {
+      "title": "Аналитика",
+      "subtitle": "Как идут дела на маркетплейсе прямо сейчас.",
+      "unavailable": "Аналитика сейчас недоступна.",
+      "usersCard": "Пользователи",
+      "sessionsCard": "Сессии",
+      "disputesCard": "Открытые споры",
+      "suspendedCount": "заблокировано: {count}",
+      "disputesDetail": "Решено: {released} выплачено · {refunded} возвращено",
+      "moneyTitle": "Деньги",
+      "noMoney": "Платежей пока нет.",
+      "currency": "Валюта",
+      "held": "На эскроу",
+      "released": "Выплачено",
+      "refunded": "Возвращено",
+      "feeRevenue": "Доход с комиссии",
+      "trendSessionsTitle": "Созданные сессии — последние 30 дней",
+      "trendReleasedTitle": "Выплаченные суммы ({currency}) — последние 30 дней"
+    },
+    "reviews": {
+      "title": "Модерация отзывов",
+      "subtitle": "Все отзывы, сначала новые. Удаление обновляет рейтинг тренера.",
+      "searchPlaceholder": "Поиск по тренеру или игроку…",
+      "search": "Найти",
+      "empty": "Отзывы не найдены.",
+      "about": "о тренере",
+      "deleteCta": "Удалить отзыв",
+      "confirmDelete": "Удалить навсегда",
+      "cancel": "Отмена",
+      "reasonPlaceholder": "Причина удаления (обязательно)…",
+      "error": "Что-то пошло не так. Попробуйте ещё раз.",
+      "pagination": {
+        "prev": "Назад",
+        "next": "Далее",
+        "pageOf": "Страница {page} из {total}"
+      }
+    }
   }
 }

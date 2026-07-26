@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment,
-   @typescript-eslint/no-unsafe-member-access,
-   @typescript-eslint/no-unsafe-argument,
+/* eslint-disable @typescript-eslint/no-unsafe-argument,
    @typescript-eslint/no-unsafe-return
    -- supertest responses are untyped; assertions cast where it matters. */
 import { INestApplication, ValidationPipe } from '@nestjs/common';

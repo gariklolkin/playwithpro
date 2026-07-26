@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { MeResponse } from '@playwithpro/shared';
+import { AUTH_ERROR_SUSPENDED, MeResponse } from '@playwithpro/shared';
 import * as argon2 from 'argon2';
 import { MailerService } from '../mailer/mailer.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -34,6 +34,17 @@ const EMAIL_TAKEN =
   'An account with this email already exists. Log in instead.';
 const EMAIL_NOT_VERIFIED =
   'Confirm your email address to sign in — check your inbox for the link.';
+const ACCOUNT_SUSPENDED = 'This account has been suspended.';
+
+/** 403 with an `error` discriminator the web can tell apart from the
+ *  unverified-email 403 on the login form. */
+export function suspendedException(): ForbiddenException {
+  return new ForbiddenException({
+    statusCode: 403,
+    error: AUTH_ERROR_SUSPENDED,
+    message: ACCOUNT_SUSPENDED,
+  });
+}
 
 @Injectable()
 export class AuthService {
@@ -85,6 +96,9 @@ export class AuthService {
     const valid = await argon2.verify(user.passwordHash, dto.password);
     if (!valid) {
       throw new UnauthorizedException(INVALID_CREDENTIALS);
+    }
+    if (user.suspendedAt) {
+      throw suspendedException();
     }
     if (!user.emailVerifiedAt) {
       // Correct password, unconfirmed address: 403 so the UI can offer resend.
@@ -182,6 +196,11 @@ export class AuthService {
   }
 
   async signIn(user: UserWithOAuth): Promise<AuthResult> {
+    // Safety net for every issuance path (login, OAuth, email verification):
+    // a suspended account never gets tokens.
+    if (user.suspendedAt) {
+      throw suspendedException();
+    }
     return {
       user: toMeResponse(user, this.avatarUrlOf),
       tokens: {

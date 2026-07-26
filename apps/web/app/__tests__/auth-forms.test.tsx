@@ -216,6 +216,29 @@ describe("RegisterCard", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
+  it("shows the suspension message on a suspended login", async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 403,
+      json: () => Promise.resolve({ error: "account_suspended" }),
+    });
+
+    renderWithIntl(<LoginCard />);
+
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "player@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "password1" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Log in" }));
+
+    expect(
+      await screen.findByText(/account has been suspended/),
+    ).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+  });
+
   it("offers a confirmation code on unverified login", async () => {
     fetchMock.mockResolvedValue({ ok: false, status: 403 });
 

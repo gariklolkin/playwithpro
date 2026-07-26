@@ -63,6 +63,7 @@ export class TokenService {
   ): Promise<{ userId: string; token: string }> {
     const record = await this.prisma.refreshToken.findUnique({
       where: { tokenHash: hashToken(raw) },
+      include: { user: { select: { suspendedAt: true } } },
     });
     if (!record) {
       throw new UnauthorizedException();
@@ -72,6 +73,11 @@ export class TokenService {
       throw new UnauthorizedException();
     }
     if (record.expiresAt < new Date()) {
+      throw new UnauthorizedException();
+    }
+    // Suspension revokes all tokens, but a token issued around the same
+    // moment must still die here — and without being rotated.
+    if (record.user.suspendedAt) {
       throw new UnauthorizedException();
     }
 

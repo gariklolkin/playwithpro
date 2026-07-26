@@ -47,6 +47,7 @@ describe('TokenService', () => {
         userId: 'user-1',
         revokedAt: null,
         expiresAt: new Date(Date.now() + 60_000),
+        user: { suspendedAt: null },
       });
 
       const result = await service.rotateRefreshToken('raw-token');
@@ -76,6 +77,7 @@ describe('TokenService', () => {
         userId: 'user-1',
         revokedAt: new Date(),
         expiresAt: new Date(Date.now() + 60_000),
+        user: { suspendedAt: null },
       });
 
       await expect(service.rotateRefreshToken('stolen')).rejects.toBeInstanceOf(
@@ -94,12 +96,29 @@ describe('TokenService', () => {
         userId: 'user-1',
         revokedAt: null,
         expiresAt: new Date(Date.now() - 1_000),
+        user: { suspendedAt: null },
       });
 
       await expect(service.rotateRefreshToken('old')).rejects.toBeInstanceOf(
         UnauthorizedException,
       );
       expect(prisma.refreshToken.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('rejects a suspended user without rotating the token', async () => {
+      prisma.refreshToken.findUnique.mockResolvedValue({
+        id: 'rt-1',
+        userId: 'user-1',
+        revokedAt: null,
+        expiresAt: new Date(Date.now() + 60_000),
+        user: { suspendedAt: new Date() },
+      });
+
+      await expect(
+        service.rotateRefreshToken('suspended'),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+      expect(prisma.refreshToken.update).not.toHaveBeenCalled();
+      expect(prisma.refreshToken.create).not.toHaveBeenCalled();
     });
   });
 

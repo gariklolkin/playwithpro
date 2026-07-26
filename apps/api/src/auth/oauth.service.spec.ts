@@ -101,6 +101,32 @@ describe('OAuthService', () => {
       });
     });
 
+    it('returns suspended for a linked account under suspension', async () => {
+      prisma.oAuthAccount.findUnique.mockResolvedValue({
+        user: { id: 'user-1', suspendedAt: new Date(), oauthAccounts: [] },
+      });
+
+      const outcome = await service.handleGoogleCallback(profile);
+
+      expect(outcome).toEqual({ kind: 'suspended' });
+      expect(auth.signIn).not.toHaveBeenCalled();
+    });
+
+    it('refuses to link to a suspended existing account', async () => {
+      prisma.oAuthAccount.findUnique.mockResolvedValue(null);
+      prisma.user.findUnique.mockResolvedValue({
+        id: 'user-1',
+        emailVerifiedAt: new Date(),
+        suspendedAt: new Date(),
+        oauthAccounts: [],
+      });
+
+      const outcome = await service.handleGoogleCallback(profile);
+
+      expect(outcome).toEqual({ kind: 'suspended' });
+      expect(prisma.oAuthAccount.create).not.toHaveBeenCalled();
+    });
+
     it('refuses to link when the existing account email is unverified', async () => {
       prisma.oAuthAccount.findUnique.mockResolvedValue(null);
       prisma.user.findUnique.mockResolvedValue({
