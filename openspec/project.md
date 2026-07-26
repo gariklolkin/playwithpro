@@ -42,7 +42,7 @@ Core value loop: an amateur uploads game footage → picks a verified pro by lan
 - Testing: unit tests colocated; e2e for booking/payment flows are mandatory before a change is archived.
 - Session lifecycle (canonical state machine):
   `draft → pending_payment → paid_escrow → in_progress → awaiting_confirmation → completed_paid | disputed → resolved`
-  Implementation notes (2026-07-20): `draft` is never persisted (booking config is client-side; `POST /bookings` creates the session directly in `pending_payment` while atomically claiming the slot); a `cancelled` terminal state exists for unpaid/expired bookings only (15-minute payment window, config `BOOKING_PAYMENT_TTL_MIN`) — post-payment cancellation semantics belong to the disputes change.
+  Implementation notes (2026-07-20): `draft` is never persisted (booking config is client-side; `POST /bookings` creates the session directly in `pending_payment` while atomically claiming the slot); a `cancelled` terminal state exists for unpaid/expired bookings (15-minute payment window, config `BOOKING_PAYMENT_TTL_MIN`) and, since change 9, for paid sessions cancelled by either party before slot start (full refund, slot reopens).
 
 ## Tech debt / known issues
 
@@ -59,6 +59,6 @@ Core value loop: an amateur uploads game footage → picks a verified pro by lan
 6. `add-video-upload` ✅ — S3 multipart pre-signed uploads (Uppy), ffprobe validation + conditional H.264 transcode, video library for amateurs, profile videos summary
 7. `add-booking-escrow` ✅ — public coach catalog + coach page, booking flow with atomic slot claiming and payment expiry, `PaymentProvider` abstraction + mock with escrow hold, per-session coach access to attached videos, session lists for both roles
 8. `add-session-rooms-calendar` ✅ — session room page with **embedded Jitsi** (call + video player side by side for video-analysis sessions), `CalendarProvider` with `.ics` email invites pointing at the session-room URL (Google Calendar/Meet implementations deferred until a Google account connection exists), attendance logging, clock-driven `paid_escrow → in_progress → awaiting_confirmation` progression; in-person game sessions get a venue-address invite instead of a video room. v2 candidate spun off from here: `add-synced-playback` (shared player control over the Jitsi data channel)
-9. `add-confirmation-payouts-disputes` — mutual confirmation, auto-confirm window, release/refund, dispute flow
+9. `add-confirmation-payouts-disputes` ✅ — mutual confirmation (player confirm or 48h auto-confirm releases escrow; coach confirm recorded as evidence), `SettlementService` as the single exactly-once caller of `PaymentProvider.release/refund` (sweep retries failures), dispute flow with admin queue + release/refund resolution, pre-start cancellation of paid sessions (full refund, slot reopens, `.ics` CANCEL)
 10. `add-reviews-ratings` — post-session reviews
 11. `add-admin-console` — users, transactions, disputes, analytics
