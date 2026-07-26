@@ -67,7 +67,7 @@ Sessions SHALL follow the canonical lifecycle; `pending_payment → paid_escrow`
 - **THEN** the request is rejected with a conflict and the session keeps progressing
 
 ### Requirement: Session lists for both parties
-The system SHALL provide each party role-appropriate session lists: a player sees their sessions and a coach sees sessions booked with them — split into upcoming and past by slot start time, showing the other party, service type, time in the viewer's timezone, and payment/escrow status including the `in_progress`, `awaiting_confirmation`, `completed_paid`, `disputed`, and `resolved` statuses. For paid online sessions (`video_analysis`, `consultation`) the list entry SHALL offer a join-room affordance gated by the session-room join window; for `game` sessions it SHALL surface the venue instead. Upcoming `paid_escrow` entries SHALL offer the pre-start cancel action; `awaiting_confirmation` entries SHALL surface the confirmation banner (confirm / report a problem, auto-confirm countdown); past entries SHALL show the payout outcome (paid out, refunded, or disputed). Sessions SHALL be visible only to their two parties (and admins). Cancelled unpaid sessions SHALL NOT clutter the default lists.
+The system SHALL provide each party role-appropriate session lists: a player sees their sessions and a coach sees sessions booked with them — split into upcoming and past by slot start time, showing the other party, service type, time in the viewer's timezone, and payment/escrow status including the `in_progress`, `awaiting_confirmation`, `completed_paid`, `disputed`, and `resolved` statuses. For paid online sessions (`video_analysis`, `consultation`) the list entry SHALL offer a join-room affordance gated by the session-room join window; for `game` sessions it SHALL surface the venue instead. Upcoming `paid_escrow` entries SHALL offer the pre-start cancel action; `awaiting_confirmation` entries SHALL surface the confirmation banner (confirm / report a problem, auto-confirm countdown); past entries SHALL show the payout outcome (paid out, refunded, or disputed). A player's review-eligible past entries (per the reviews capability) SHALL offer a leave-review action, and entries with a review SHALL display the given star rating to both parties. Sessions SHALL be visible only to their two parties (and admins). Cancelled unpaid sessions SHALL NOT clutter the default lists.
 
 #### Scenario: Player sees an upcoming paid session
 - **WHEN** a player with a `paid_escrow` session opens their sessions list
@@ -96,6 +96,14 @@ The system SHALL provide each party role-appropriate session lists: a player see
 #### Scenario: Payout status on past sessions
 - **WHEN** a coach views a `completed_paid` session in their past list
 - **THEN** the entry shows that the payout was released
+
+#### Scenario: Leave-review action on an eligible entry
+- **WHEN** a player views a `completed_paid` session without a review in their past list
+- **THEN** the entry offers a leave-review action opening the review form
+
+#### Scenario: Reviewed entry shows the rating
+- **WHEN** either party views a past session that has a review
+- **THEN** the entry displays the given star rating instead of the leave-review action
 
 ### Requirement: Localized booking flow
 The booking flow — service selection, week slot picker, video attachment step, order summary with escrow notice, and payment-deadline countdown — SHALL render from the message catalogs in all five locales with no hard-coded strings, and SHALL display slot times in the viewer's timezone with an explicit "(your time)" label. The video attachment step SHALL appear only for video-analysis bookings and SHALL link to the upload flow when the player's library has no ready videos.
