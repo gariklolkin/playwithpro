@@ -66,6 +66,7 @@ const pendingSession = {
   video: null,
   payments: [],
   dispute: null,
+  review: null,
 };
 
 describe('BookingsService', () => {

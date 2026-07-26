@@ -42,6 +42,8 @@ const draftProfile: ProProfileResponse = {
   languages: [],
   services: [],
   latestVerification: null,
+  ratingAvg: null,
+  ratingCount: 0,
 };
 
 function renderEditor(

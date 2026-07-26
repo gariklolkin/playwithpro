@@ -121,6 +121,8 @@
     "professional": {
       "title": "Überblick",
       "empty": "Deine Buchungen, Verfügbarkeit und Einnahmen erscheinen hier.",
+      "ratingTitle": "Deine Bewertung",
+      "ratingNone": "Noch keine Bewertungen",
       "nav": {
         "overview": "Überblick",
         "availability": "Verfügbarkeit",
@@ -525,7 +527,8 @@
       "hour": "Std.",
       "nextSlot": "Nächster freier Termin:",
       "noSlots": "Derzeit keine freien Termine",
-      "viewProfile": "Profil ansehen"
+      "viewProfile": "Profil ansehen",
+      "noReviews": "Noch keine Bewertungen"
     },
     "empty": {
       "title": "Keine Trainer entsprechen diesen Filtern",
@@ -541,6 +544,14 @@
     "backToCatalog": "Alle Trainer",
     "aboutTitle": "Über mich",
     "servicesTitle": "Leistungen & Preise",
+    "reviews": {
+      "title": "Bewertungen",
+      "count": "{count, plural, one {# Bewertung} other {# Bewertungen}}",
+      "empty": "Noch keine Bewertungen.",
+      "noRating": "Noch keine Bewertungen",
+      "loadMore": "Mehr anzeigen",
+      "loadFailed": "Weitere Bewertungen konnten nicht geladen werden. Versuchen Sie es erneut."
+    },
     "booking": {
       "title": "Session buchen",
       "chooseService": "1. Leistung",
@@ -651,6 +662,18 @@
       "cancelConfirm": "Ja, stornieren",
       "cancelKeep": "Session behalten",
       "error": "Etwas ist schiefgelaufen. Versuchen Sie es erneut."
+    },
+    "review": {
+      "cta": "Bewertung abgeben",
+      "formTitle": "Wie war die Session?",
+      "ratingLabel": "Deine Bewertung",
+      "starLabel": "{star} von 5 Sternen",
+      "textPlaceholder": "Ein paar Worte zur Session (optional)…",
+      "submit": "Bewertung senden",
+      "abort": "Abbrechen",
+      "error": "Etwas ist schiefgelaufen. Versuchen Sie es erneut.",
+      "givenLabel": "Deine Bewertung",
+      "receivedLabel": "Bewertung des Spielers"
     }
   },
   "adminDisputes": {

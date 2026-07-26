@@ -121,6 +121,8 @@
     "professional": {
       "title": "Overview",
       "empty": "Your bookings, availability and earnings will appear here.",
+      "ratingTitle": "Your rating",
+      "ratingNone": "No reviews yet",
       "nav": {
         "overview": "Overview",
         "availability": "Availability",
@@ -525,7 +527,8 @@
       "hour": "hour",
       "nextSlot": "Next free slot:",
       "noSlots": "No open slots right now",
-      "viewProfile": "View profile"
+      "viewProfile": "View profile",
+      "noReviews": "No reviews yet"
     },
     "empty": {
       "title": "No coaches match these filters",
@@ -541,6 +544,14 @@
     "backToCatalog": "All coaches",
     "aboutTitle": "About",
     "servicesTitle": "Services & pricing",
+    "reviews": {
+      "title": "Reviews",
+      "count": "{count, plural, one {# review} other {# reviews}}",
+      "empty": "No reviews yet.",
+      "noRating": "No reviews yet",
+      "loadMore": "Show more",
+      "loadFailed": "Could not load more reviews. Try again."
+    },
     "booking": {
       "title": "Book a session",
       "chooseService": "1. Service",
@@ -651,6 +662,18 @@
       "cancelConfirm": "Yes, cancel",
       "cancelKeep": "Keep session",
       "error": "Something went wrong. Try again."
+    },
+    "review": {
+      "cta": "Leave a review",
+      "formTitle": "How was the session?",
+      "ratingLabel": "Your rating",
+      "starLabel": "{star} of 5 stars",
+      "textPlaceholder": "Share a few words about the session (optional)…",
+      "submit": "Submit review",
+      "abort": "Cancel",
+      "error": "Something went wrong. Try again.",
+      "givenLabel": "Your review",
+      "receivedLabel": "Player's review"
     }
   },
   "adminDisputes": {

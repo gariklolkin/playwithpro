@@ -121,6 +121,8 @@
     "professional": {
       "title": "Aperçu",
       "empty": "Vos réservations, disponibilités et revenus apparaîtront ici.",
+      "ratingTitle": "Votre note",
+      "ratingNone": "Pas encore d'avis",
       "nav": {
         "overview": "Aperçu",
         "availability": "Disponibilités",
@@ -525,7 +527,8 @@
       "hour": "heure",
       "nextSlot": "Prochain créneau libre :",
       "noSlots": "Aucun créneau ouvert pour le moment",
-      "viewProfile": "Voir le profil"
+      "viewProfile": "Voir le profil",
+      "noReviews": "Pas encore d'avis"
     },
     "empty": {
       "title": "Aucun coach ne correspond à ces filtres",
@@ -541,6 +544,14 @@
     "backToCatalog": "Tous les coachs",
     "aboutTitle": "À propos",
     "servicesTitle": "Services et tarifs",
+    "reviews": {
+      "title": "Avis",
+      "count": "{count, plural, one {# avis} other {# avis}}",
+      "empty": "Pas encore d'avis.",
+      "noRating": "Pas encore d'avis",
+      "loadMore": "Afficher plus",
+      "loadFailed": "Impossible de charger plus d'avis. Réessayez."
+    },
     "booking": {
       "title": "Réserver une séance",
       "chooseService": "1. Service",
@@ -651,6 +662,18 @@
       "cancelConfirm": "Oui, annuler",
       "cancelKeep": "Garder la session",
       "error": "Une erreur est survenue. Réessayez."
+    },
+    "review": {
+      "cta": "Laisser un avis",
+      "formTitle": "Comment s'est passée la séance ?",
+      "ratingLabel": "Votre note",
+      "starLabel": "{star} sur 5 étoiles",
+      "textPlaceholder": "Quelques mots sur la séance (facultatif)…",
+      "submit": "Publier l'avis",
+      "abort": "Annuler",
+      "error": "Une erreur est survenue. Réessayez.",
+      "givenLabel": "Votre avis",
+      "receivedLabel": "Avis du joueur"
     }
   },
   "adminDisputes": {

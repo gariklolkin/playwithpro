@@ -42,6 +42,7 @@ model User {
   sessionAttendance  SessionAttendance[]
   openedDisputes     Dispute[]           @relation("DisputeOpener")
   resolvedDisputes   Dispute[]           @relation("DisputeResolver")
+  reviews            Review[]
 }
 
 enum PlayerLevel {
@@ -231,6 +232,11 @@ model ProProfile {
   status    ProProfileStatus @default(DRAFT)
   bio       String           @default("") // single free-form "about" block; optional
   languages String[]         @default([]) // ISO 639-1, subset of platform locales
+  /// Rating aggregate as integers (avg is derived in mappers, never stored);
+  /// incremented in the same transaction as the review insert so it cannot
+  /// drift from the Review rows.
+  ratingSum   Int            @default(0)
+  ratingCount Int            @default(0)
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -240,6 +246,7 @@ model ProProfile {
   availabilityRules    AvailabilityRule[]
   availabilitySlots    AvailabilitySlot[]
   sessions             Session[]
+  reviews              Review[]
 }
 
 model ProService {
@@ -368,6 +375,7 @@ model Session {
   payments   Payment[]
   attendance SessionAttendance[]
   dispute    Dispute?
+  review     Review?
 
   @@index([playerId, startsAt])
   @@index([proProfileId, startsAt])
@@ -436,6 +444,26 @@ model Dispute {
   resolvedBy User?   @relation("DisputeResolver", fields: [resolvedById], references: [id])
 
   @@index([status, createdAt])
+}
+
+/// Player review of a paid-out session; at most one per session (the unique
+/// sessionId IS the one-review invariant, including under concurrent submits).
+/// proProfileId/playerId are denormalized from the session so the public
+/// listing needs no join through Session. Immutable in MVP.
+model Review {
+  id           String   @id @default(uuid())
+  sessionId    String   @unique
+  proProfileId String
+  playerId     String
+  rating       Int // 1–5, validated at the API boundary
+  text         String?
+  createdAt    DateTime @default(now())
+
+  session    Session    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  proProfile ProProfile @relation(fields: [proProfileId], references: [id], onDelete: Cascade)
+  player     User       @relation(fields: [playerId], references: [id])
+
+  @@index([proProfileId, createdAt])
 }
 
 /// One booking attempt per row; outcomes (no-show, cancellations) stay as audit trail.

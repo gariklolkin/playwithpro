@@ -19,3 +19,4 @@ export * from "./types/catalog";
 export * from "./types/booking";
 export * from "./types/session-room";
 export * from "./types/dispute";
+export * from "./types/review";

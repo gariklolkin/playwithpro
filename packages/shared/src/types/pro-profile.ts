@@ -1,6 +1,7 @@
 import type { ProProfileStatus } from "../enums/pro-profile";
 import type { ServiceType } from "../enums/service-type";
 import type { BookingStatus, VerificationState } from "../enums/verification";
+import type { RatingAggregate } from "./review";
 import type { VerificationBookingResponse } from "./verification";
 
 export const BIO_MAX_LENGTH = 4000;
@@ -48,7 +49,7 @@ export interface VerificationRequestResponse {
   reviewedAt: string | null;
 }
 
-export interface ProProfileResponse {
+export interface ProProfileResponse extends RatingAggregate {
   id: string;
   status: ProProfileStatus;
   bio: string;

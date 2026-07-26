@@ -42,6 +42,8 @@ const item: AdminVerificationItem = {
       },
     ],
     latestVerification: null,
+    ratingAvg: null,
+    ratingCount: 0,
   },
   user: { id: "user-1", email: "coach@example.com", displayName: "Coach Ma" },
 };

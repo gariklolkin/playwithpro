@@ -15,6 +15,7 @@ import { CatalogModule } from './catalog/catalog.module';
 import { DisputesModule } from './disputes/disputes.module';
 import { PlayersModule } from './players/players.module';
 import { ProsModule } from './pros/pros.module';
+import { ReviewsModule } from './reviews/reviews.module';
 import { SchedulingModule } from './scheduling/scheduling.module';
 import { SessionRoomsModule } from './session-rooms/session-rooms.module';
 import { StorageModule } from './storage/storage.module';
@@ -41,6 +42,7 @@ import { VideosModule } from './videos/videos.module';
     BookingsModule,
     CatalogModule,
     DisputesModule,
+    ReviewsModule,
     AdminModule,
     SchedulingModule,
     SessionRoomsModule,

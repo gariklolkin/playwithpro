@@ -1,14 +1,17 @@
 import {
   Locale,
+  REVIEWS_PAGE_SIZE,
   Role,
   ServiceType,
   type PublicAvailabilitySlot,
   type PublicProProfileResponse,
+  type ReviewListResponse,
 } from "@playwithpro/shared";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { BookingPanel } from "@/components/booking/booking-panel";
+import { CoachReviews } from "@/components/pros/coach-reviews";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { LOCALE_LABELS } from "@/i18n/locale-labels";
 import { Link } from "@/i18n/navigation";
@@ -45,9 +48,10 @@ export default async function CoachPage({
   params: Promise<{ locale: string; id: string }>;
 }) {
   const { locale, id } = await params;
-  const [profile, slots, user] = await Promise.all([
+  const [profile, slots, reviews, user] = await Promise.all([
     fetchPublic<PublicProProfileResponse>(`/pros/${id}/profile`),
     fetchPublic<PublicAvailabilitySlot[]>(`/pros/${id}/slots`),
+    fetchPublic<ReviewListResponse>(`/pros/${id}/reviews`),
     getCurrentUser(),
   ]);
   if (!profile) {
@@ -85,11 +89,26 @@ export default async function CoachPage({
                   ✓ {tCatalog("card.verified")}
                 </span>
               </h1>
-              <div className="mt-1 text-sm text-text-secondary">
-                🌐{" "}
-                {profile.languages
-                  .map((code) => LOCALE_LABELS[code as Locale] ?? code)
-                  .join(" · ")}
+              <div className="mt-1 flex flex-wrap items-center gap-x-3 text-sm text-text-secondary">
+                <span>
+                  🌐{" "}
+                  {profile.languages
+                    .map((code) => LOCALE_LABELS[code as Locale] ?? code)
+                    .join(" · ")}
+                </span>
+                {profile.ratingAvg !== null ? (
+                  <span>
+                    <span className="font-semibold text-[#D9A514]">★</span>{" "}
+                    <span className="font-semibold text-text">
+                      {profile.ratingAvg}
+                    </span>{" "}
+                    ({profile.ratingCount})
+                  </span>
+                ) : (
+                  <span className="text-text-tertiary">
+                    {t("reviews.noRating")}
+                  </span>
+                )}
               </div>
             </div>
           </header>
@@ -136,6 +155,20 @@ export default async function CoachPage({
               ))}
             </ul>
           </section>
+
+          <CoachReviews
+            proId={profile.id}
+            ratingAvg={profile.ratingAvg}
+            ratingCount={profile.ratingCount}
+            initial={
+              reviews ?? {
+                items: [],
+                total: 0,
+                page: 1,
+                pageSize: REVIEWS_PAGE_SIZE,
+              }
+            }
+          />
         </article>
 
         <BookingPanel

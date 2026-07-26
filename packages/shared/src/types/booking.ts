@@ -2,6 +2,7 @@ import type { DisputeOutcome, DisputeStatus } from "../enums/dispute";
 import type { PaymentStatus } from "../enums/payment";
 import type { ServiceType } from "../enums/service-type";
 import type { SessionStatus } from "../enums/session-status";
+import type { ReviewResponse } from "./review";
 
 export interface CreateBookingRequest {
   /** ProProfile id of the coach. */
@@ -59,6 +60,10 @@ export interface SessionResponse {
     reason: string;
     outcome: DisputeOutcome | null;
   } | null;
+  /** The player's review of this session; null when none yet. */
+  review: ReviewResponse | null;
+  /** True when the viewer-independent eligibility holds: paid-out terminal status and no review yet. */
+  reviewable: boolean;
   createdAt: string;
 }
 

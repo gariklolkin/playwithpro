@@ -9,6 +9,7 @@ import type {
   Dispute,
   Payment,
   ProProfile,
+  Review,
   Session,
   User,
   Video,
@@ -26,6 +27,7 @@ export type SessionWithParties = Session & {
   video: Pick<Video, 'id' | 'title'> | null;
   payments: Array<Pick<Payment, 'status'>>;
   dispute: Pick<Dispute, 'status' | 'reason' | 'outcome'> | null;
+  review: Pick<Review, 'rating' | 'text' | 'createdAt'> | null;
 };
 
 /** The escrow lifecycle: failed attempts never enter it. */
@@ -53,6 +55,7 @@ export const SESSION_INCLUDE = {
     take: 1,
   },
   dispute: { select: { status: true, reason: true, outcome: true } },
+  review: { select: { rating: true, text: true, createdAt: true } },
 } as const;
 
 /** Join-window bounds around the slot, in minutes. */
@@ -147,6 +150,28 @@ export function toSessionResponse(
                 : null,
         }
       : null,
+    review: session.review
+      ? {
+          rating: session.review.rating,
+          text: session.review.text,
+          createdAt: session.review.createdAt.toISOString(),
+        }
+      : null,
+    reviewable: session.review === null && isPaidOut(session),
     createdAt: session.createdAt.toISOString(),
   };
+}
+
+/**
+ * The coach was paid for this session: completed, or a dispute the admin
+ * resolved in the coach's favor. Deliberately independent of the payment
+ * row, which may lag HELD while a payout retry is pending.
+ */
+function isPaidOut(
+  session: Pick<SessionWithParties, 'status' | 'dispute'>,
+): boolean {
+  return (
+    session.status === 'COMPLETED_PAID' ||
+    (session.status === 'RESOLVED' && session.dispute?.outcome === 'RELEASE')
+  );
 }

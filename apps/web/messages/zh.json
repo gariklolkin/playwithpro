@@ -121,6 +121,8 @@
     "professional": {
       "title": "概览",
       "empty": "您的预约、时间安排和收入将显示在这里。",
+      "ratingTitle": "您的评分",
+      "ratingNone": "暂无评价",
       "nav": {
         "overview": "概览",
         "availability": "时间安排",
@@ -525,7 +527,8 @@
       "hour": "小时",
       "nextSlot": "最近空闲时段：",
       "noSlots": "目前没有空闲时段",
-      "viewProfile": "查看主页"
+      "viewProfile": "查看主页",
+      "noReviews": "暂无评价"
     },
     "empty": {
       "title": "没有符合条件的教练",
@@ -541,6 +544,14 @@
     "backToCatalog": "全部教练",
     "aboutTitle": "关于教练",
     "servicesTitle": "服务与价格",
+    "reviews": {
+      "title": "评价",
+      "count": "{count, plural, other {# 条评价}}",
+      "empty": "暂无评价。",
+      "noRating": "暂无评价",
+      "loadMore": "加载更多",
+      "loadFailed": "无法加载更多评价，请重试。"
+    },
     "booking": {
       "title": "预约课程",
       "chooseService": "1. 服务",
@@ -651,6 +662,18 @@
       "cancelConfirm": "是，取消",
       "cancelKeep": "保留课程",
       "error": "出错了，请重试。"
+    },
+    "review": {
+      "cta": "写评价",
+      "formTitle": "这节课怎么样？",
+      "ratingLabel": "您的评分",
+      "starLabel": "{star} / 5 星",
+      "textPlaceholder": "写几句课程感受（选填）…",
+      "submit": "提交评价",
+      "abort": "取消",
+      "error": "出错了，请重试。",
+      "givenLabel": "您的评价",
+      "receivedLabel": "球员的评价"
     }
   },
   "adminDisputes": {

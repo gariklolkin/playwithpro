@@ -1,9 +1,9 @@
-import { Role } from "@playwithpro/shared";
+import { Role, type ProProfileResponse } from "@playwithpro/shared";
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { VerifyEmailBanner } from "@/components/dashboard/verify-email-banner";
-import { getCurrentUser } from "@/lib/server-user";
+import { getCurrentUser, serverApiGet } from "@/lib/server-user";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("meta");
@@ -25,6 +25,10 @@ export default async function DashboardPage() {
 
   const t = await getTranslations("dashboard");
   const section = SECTIONS[user.role];
+  const proProfile =
+    user.role === Role.Professional
+      ? await serverApiGet<ProProfileResponse>("/pros/me/profile")
+      : null;
 
   return (
     <>
@@ -35,6 +39,27 @@ export default async function DashboardPage() {
       <p className="mt-1 text-text-secondary">
         {t("greeting", { name: user.displayName })}
       </p>
+      {proProfile ? (
+        <div className="mt-6 inline-block rounded-card border border-border p-4">
+          <div className="text-[13px] text-text-secondary">
+            {t("professional.ratingTitle")}
+          </div>
+          <div className="mt-1 text-xl font-bold text-text">
+            {proProfile.ratingAvg !== null ? (
+              <>
+                <span className="text-[#D9A514]">★</span> {proProfile.ratingAvg}
+                <span className="ml-1.5 text-sm font-normal text-text-secondary">
+                  ({proProfile.ratingCount})
+                </span>
+              </>
+            ) : (
+              <span className="text-sm font-normal text-text-tertiary">
+                {t("professional.ratingNone")}
+              </span>
+            )}
+          </div>
+        </div>
+      ) : null}
       <div className="mt-8 rounded-card border border-border p-10 text-center">
         <div className="text-3xl">🏓</div>
         <div className="mt-2 font-semibold text-text">{t("emptyTitle")}</div>

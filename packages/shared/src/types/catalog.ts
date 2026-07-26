@@ -1,5 +1,6 @@
 import type { ServiceType } from "../enums/service-type";
 import type { ProServiceResponse } from "./pro-profile";
+import type { RatingAggregate } from "./review";
 
 /**
  * Filters for the public coach catalog; all optional. A coach matches when
@@ -18,7 +19,7 @@ export interface CatalogQuery {
 
 export const CATALOG_PAGE_SIZE = 12;
 
-export interface CatalogCoachCard {
+export interface CatalogCoachCard extends RatingAggregate {
   /** ProProfile id — the public coach identifier. */
   id: string;
   displayName: string;
@@ -41,7 +42,7 @@ export interface CatalogResponse {
 }
 
 /** Public profile of a verified coach. */
-export interface PublicProProfileResponse {
+export interface PublicProProfileResponse extends RatingAggregate {
   id: string;
   displayName: string;
   avatarUrl: string | null;

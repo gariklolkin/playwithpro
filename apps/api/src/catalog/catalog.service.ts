@@ -14,6 +14,7 @@ import {
 } from '@prisma/client';
 import { MIN_NOTICE_MS } from '../availability/availability.service';
 import {
+  ratingAvg,
   toPrismaServiceType,
   toServiceResponse,
 } from '../pros/pro-profile.mapper';
@@ -25,6 +26,8 @@ type CatalogProfile = {
   id: string;
   bio: string;
   languages: string[];
+  ratingSum: number;
+  ratingCount: number;
   user: Pick<User, 'displayName' | 'avatarKey'>;
   services: ProService[];
 };
@@ -68,6 +71,8 @@ export class CatalogService {
           id: true,
           bio: true,
           languages: true,
+          ratingSum: true,
+          ratingCount: true,
           user: { select: { displayName: true, avatarKey: true } },
           services: { where: { active: true }, orderBy: { type: 'asc' } },
         },
@@ -94,6 +99,8 @@ export class CatalogService {
         status: true,
         bio: true,
         languages: true,
+        ratingSum: true,
+        ratingCount: true,
         user: { select: { displayName: true, avatarKey: true } },
         services: { where: { active: true }, orderBy: { type: 'asc' } },
       },
@@ -108,6 +115,8 @@ export class CatalogService {
       bio: profile.bio,
       languages: profile.languages,
       services: profile.services.map(toServiceResponse),
+      ratingAvg: ratingAvg(profile.ratingSum, profile.ratingCount),
+      ratingCount: profile.ratingCount,
     };
   }
 
@@ -150,6 +159,8 @@ export class CatalogService {
       priceFromMinor: cheapest.priceMinor,
       currency: cheapest.currency,
       nextSlotAt: nextSlotAt?.toISOString() ?? null,
+      ratingAvg: ratingAvg(profile.ratingSum, profile.ratingCount),
+      ratingCount: profile.ratingCount,
     };
   }
 

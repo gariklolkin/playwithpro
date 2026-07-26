@@ -25,6 +25,8 @@ const verifiedProfile = {
   status: 'VERIFIED',
   bio: 'Seasoned coach',
   languages: ['en', 'de'],
+  ratingSum: 0,
+  ratingCount: 0,
   user: { displayName: 'Anna Coach', avatarKey: 'avatars/a.jpg' },
   services: [
     service(),
@@ -135,6 +137,24 @@ describe('CatalogService', () => {
     );
   });
 
+  it('exposes the rating aggregate on cards with one-decimal rounding', async () => {
+    prisma.proProfile.findMany.mockResolvedValue([
+      { ...verifiedProfile, ratingSum: 13, ratingCount: 3 },
+    ]);
+
+    const response = await catalog.list({});
+
+    expect(response.items[0].ratingAvg).toBe(4.3);
+    expect(response.items[0].ratingCount).toBe(3);
+  });
+
+  it('presents no rating (null, not zero) without reviews', async () => {
+    const response = await catalog.list({});
+
+    expect(response.items[0].ratingAvg).toBeNull();
+    expect(response.items[0].ratingCount).toBe(0);
+  });
+
   it('serves the public profile of a verified coach', async () => {
     prisma.proProfile.findUnique.mockResolvedValue(verifiedProfile);
 
@@ -142,6 +162,21 @@ describe('CatalogService', () => {
 
     expect(profile.displayName).toBe('Anna Coach');
     expect(profile.services).toHaveLength(2);
+    expect(profile.ratingAvg).toBeNull();
+    expect(profile.ratingCount).toBe(0);
+  });
+
+  it('serves the rating aggregate on the public profile', async () => {
+    prisma.proProfile.findUnique.mockResolvedValue({
+      ...verifiedProfile,
+      ratingSum: 9,
+      ratingCount: 2,
+    });
+
+    const profile = await catalog.getPublicProfile('profile-1');
+
+    expect(profile.ratingAvg).toBe(4.5);
+    expect(profile.ratingCount).toBe(2);
   });
 
   it('hides unverified profiles behind not-found', async () => {

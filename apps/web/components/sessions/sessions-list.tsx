@@ -7,6 +7,7 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { Link } from "@/i18n/navigation";
 import { useNow } from "@/lib/use-now";
 import { SessionActions } from "./session-actions";
+import { SessionReview } from "./session-review";
 
 /** Pastel status tags per DESIGN.md: blue = trust/escrow, yellow = action needed. */
 const STATUS_BADGE: Partial<Record<SessionStatus, string>> = {
@@ -115,6 +116,7 @@ function SessionCard({
         </div>
       </div>
       <SessionActions session={session} isCoach={isCoach} />
+      <SessionReview session={session} isCoach={isCoach} />
     </li>
   );
 }

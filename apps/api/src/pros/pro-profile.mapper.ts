@@ -48,6 +48,11 @@ const RETURN_OUTCOMES: BookingStatus[] = [
   BookingStatus.CANCELLED_BY_PRO,
 ];
 
+/** One decimal; null (never 0) while the coach has no reviews. */
+export function ratingAvg(sum: number, count: number): number | null {
+  return count === 0 ? null : Math.round((sum / count) * 10) / 10;
+}
+
 export function toSharedProfileStatus(
   status: PrismaProProfileStatus,
 ): ProProfileStatus {
@@ -122,5 +127,7 @@ export function toProfileResponse(
     languages: profile.languages,
     services: profile.services.map(toServiceResponse),
     latestVerification: latest ? toVerificationResponse(latest) : null,
+    ratingAvg: ratingAvg(profile.ratingSum, profile.ratingCount),
+    ratingCount: profile.ratingCount,
   };
 }

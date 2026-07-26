@@ -122,10 +122,29 @@ export default async function CoachesPage({
                           ✓ {t("card.verified")}
                         </span>
                       </div>
-                      <div className="mt-1 text-[13px] text-text-secondary">
-                        {coach.languages
-                          .map((code) => LOCALE_LABELS[code as Locale] ?? code)
-                          .join(" · ")}
+                      <div className="mt-1 flex flex-wrap items-center gap-x-2 text-[13px] text-text-secondary">
+                        {coach.ratingAvg !== null ? (
+                          <span>
+                            <span className="font-semibold text-[#D9A514]">
+                              ★
+                            </span>{" "}
+                            <span className="font-semibold text-text">
+                              {coach.ratingAvg}
+                            </span>{" "}
+                            ({coach.ratingCount})
+                          </span>
+                        ) : (
+                          <span className="text-text-tertiary">
+                            {t("card.noReviews")}
+                          </span>
+                        )}
+                        <span>
+                          {coach.languages
+                            .map(
+                              (code) => LOCALE_LABELS[code as Locale] ?? code,
+                            )
+                            .join(" · ")}
+                        </span>
                       </div>
                     </div>
                   </div>
