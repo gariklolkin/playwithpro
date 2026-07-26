@@ -43,9 +43,10 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 import { PaySessionDto } from './dto/pay-session.dto';
 import { isOnlineService } from './session-access';
 import { SessionProgressionService } from './session-progression.service';
+import { SettlementService } from './settlement.service';
 import {
-  RoomWindow,
   SESSION_INCLUDE,
+  SessionResponseExtras,
   SessionWithParties,
   toSessionResponse,
 } from './session.mapper';
@@ -64,15 +65,23 @@ export class BookingsService {
     @Inject(PAYMENT_PROVIDER) private readonly payments: PaymentProvider,
     @Inject(CALENDAR_PROVIDER) private readonly calendar: CalendarProvider,
     private readonly progression: SessionProgressionService,
+    private readonly settlement: SettlementService,
   ) {}
 
   private readonly avatarUrlOf = (key: string): string =>
     this.storage.objectUrl(key);
 
-  private roomWindow(): RoomWindow {
+  private responseExtras(): SessionResponseExtras {
     return {
-      beforeMin: this.config.getOrThrow<number>('ROOM_JOIN_WINDOW_BEFORE_MIN'),
-      afterMin: this.config.getOrThrow<number>('ROOM_JOIN_WINDOW_AFTER_MIN'),
+      roomWindow: {
+        beforeMin: this.config.getOrThrow<number>(
+          'ROOM_JOIN_WINDOW_BEFORE_MIN',
+        ),
+        afterMin: this.config.getOrThrow<number>('ROOM_JOIN_WINDOW_AFTER_MIN'),
+      },
+      autoConfirmWindowHours: this.config.getOrThrow<number>(
+        'AUTO_CONFIRM_WINDOW_HOURS',
+      ),
     };
   }
 
@@ -144,7 +153,27 @@ export class BookingsService {
   async list(user: AuthenticatedUser): Promise<SessionListResponse> {
     const where = this.partyFilter(user);
     const sessions = await this.prisma.session.findMany({
-      where: { ...where, status: { not: SessionStatus.CANCELLED } },
+      where: {
+        ...where,
+        // Abandoned unpaid bookings are noise; a cancelled session that held
+        // money (pre-start cancellation) stays visible with its refund.
+        OR: [
+          { status: { not: SessionStatus.CANCELLED } },
+          {
+            payments: {
+              some: {
+                status: {
+                  in: [
+                    PaymentStatus.HELD,
+                    PaymentStatus.RELEASED,
+                    PaymentStatus.REFUNDED,
+                  ],
+                },
+              },
+            },
+          },
+        ],
+      },
       include: SESSION_INCLUDE,
       orderBy: { startsAt: 'asc' },
     });
@@ -155,15 +184,15 @@ export class BookingsService {
         .filter((session) => !this.isExpired(session, now))
         .map((session) => this.progression.normalize(session)),
     );
-    const window = this.roomWindow();
+    const extras = this.responseExtras();
     return {
       upcoming: alive
         .filter((session) => session.startsAt.getTime() >= now)
-        .map((session) => toSessionResponse(session, this.avatarUrlOf, window)),
+        .map((session) => toSessionResponse(session, this.avatarUrlOf, extras)),
       past: alive
         .filter((session) => session.startsAt.getTime() < now)
         .reverse()
-        .map((session) => toSessionResponse(session, this.avatarUrlOf, window)),
+        .map((session) => toSessionResponse(session, this.avatarUrlOf, extras)),
     };
   }
 
@@ -182,7 +211,7 @@ export class BookingsService {
       }
     }
     const current = await this.progression.normalize(session);
-    return toSessionResponse(current, this.avatarUrlOf, this.roomWindow());
+    return toSessionResponse(current, this.avatarUrlOf, this.responseExtras());
   }
 
   async pay(
@@ -286,6 +315,124 @@ export class BookingsService {
   }
 
   /**
+   * Records a party's confirmation of an awaiting_confirmation session.
+   * The player's confirmation completes the session and releases escrow;
+   * the coach's is dispute evidence only. Confirmation belongs to the two
+   * parties — admins read sessions but never confirm them.
+   */
+  async confirm(
+    user: AuthenticatedUser,
+    sessionId: string,
+  ): Promise<SessionResponse> {
+    const session = await this.requireParty(user, sessionId);
+    const isPlayer = session.playerId === user.id;
+    const isCoach = session.proProfile.userId === user.id;
+    if (!isPlayer && !isCoach) {
+      throw new NotFoundException();
+    }
+    // Persist the clock-derived status first so a session whose end time
+    // just passed is confirmable without waiting for the sweep.
+    await this.progression.normalize(session);
+    if (isPlayer) {
+      const confirmed = await this.prisma.session.updateMany({
+        where: { id: session.id, status: SessionStatus.AWAITING_CONFIRMATION },
+        data: {
+          status: SessionStatus.COMPLETED_PAID,
+          playerConfirmedAt: new Date(),
+        },
+      });
+      if (
+        confirmed.count === 0 &&
+        !(await this.hasConfirmed(session.id, 'player'))
+      ) {
+        throw new ConflictException('This session cannot be confirmed.');
+      }
+      await this.settlement.settle(session.id);
+    } else {
+      const confirmed = await this.prisma.session.updateMany({
+        where: {
+          id: session.id,
+          status: SessionStatus.AWAITING_CONFIRMATION,
+          coachConfirmedAt: null,
+        },
+        data: { coachConfirmedAt: new Date() },
+      });
+      if (
+        confirmed.count === 0 &&
+        !(await this.hasConfirmed(session.id, 'coach'))
+      ) {
+        throw new ConflictException('This session cannot be confirmed.');
+      }
+    }
+    return this.sessionResponse(session.id);
+  }
+
+  /**
+   * Pre-start cancellation of a paid session by either party: full refund,
+   * slot back on the market, calendar event revoked. The conditional update
+   * is the race guard against the progression sweep flipping the session
+   * in_progress at the same moment.
+   */
+  async cancel(
+    user: AuthenticatedUser,
+    sessionId: string,
+  ): Promise<SessionResponse> {
+    const session = await this.requireParty(user, sessionId);
+    if (session.playerId !== user.id && session.proProfile.userId !== user.id) {
+      throw new NotFoundException();
+    }
+    const cancelled = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.session.updateMany({
+        where: {
+          id: session.id,
+          status: SessionStatus.PAID_ESCROW,
+          startsAt: { gt: new Date() },
+        },
+        data: { status: SessionStatus.CANCELLED },
+      });
+      if (updated.count === 0) {
+        return false;
+      }
+      await tx.availabilitySlot.updateMany({
+        where: { id: session.slotId, status: SlotStatus.BOOKED },
+        data: { status: SlotStatus.OPEN },
+      });
+      return true;
+    });
+    if (!cancelled) {
+      throw new ConflictException(
+        'Only paid sessions can be cancelled before they start.',
+      );
+    }
+    this.logger.log(`Session ${session.id} cancelled by user ${user.id}`);
+    await this.settlement.settle(session.id);
+    await this.sendCancellationIfInvited(session.id);
+    return this.sessionResponse(session.id);
+  }
+
+  private async hasConfirmed(
+    sessionId: string,
+    party: 'player' | 'coach',
+  ): Promise<boolean> {
+    const session = await this.prisma.session.findUniqueOrThrow({
+      where: { id: sessionId },
+      select: { playerConfirmedAt: true, coachConfirmedAt: true },
+    });
+    return party === 'player'
+      ? session.playerConfirmedAt !== null
+      : session.coachConfirmedAt !== null;
+  }
+
+  /** Current session state mapped for a party-facing response. */
+  async sessionResponse(sessionId: string): Promise<SessionResponse> {
+    const session = await this.prisma.session.findUniqueOrThrow({
+      where: { id: sessionId },
+      include: SESSION_INCLUDE,
+    });
+    return toSessionResponse(session, this.avatarUrlOf, this.responseExtras());
+  }
+
+  /**
    * Idempotent post-payment invite: the conditional update is the claim, so
    * concurrent or repeated pay processing emails both parties exactly once.
    * Money state beats notification state — a failed send is logged, never
@@ -357,9 +504,8 @@ export class BookingsService {
 
   /**
    * Calendar cleanup for sessions cancelled after their invite went out.
-   * No current flow cancels a paid session; change 9 (refund/dispute) calls
-   * this when it introduces one. Unpaid expiry never triggers it because the
-   * invite is only sent on payment.
+   * Called by pre-start cancellation of paid sessions; unpaid expiry never
+   * triggers it because the invite is only sent on payment.
    */
   async sendCancellationIfInvited(sessionId: string): Promise<void> {
     const session = await this.prisma.session.findUnique({

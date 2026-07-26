@@ -136,6 +136,12 @@ class EnvironmentVariables {
   @IsInt()
   @Min(0)
   ROOM_JOIN_WINDOW_AFTER_MIN = 30;
+
+  /** Hours after slot end before an unconfirmed, undisputed session auto-completes. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  AUTO_CONFIRM_WINDOW_HOURS = 48;
 }
 
 export function validate(

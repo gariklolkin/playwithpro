@@ -7,11 +7,17 @@ import { BookingExpiryService } from './booking-expiry.service';
 import { BookingsController } from './bookings.controller';
 import { BookingsService } from './bookings.service';
 import { SessionProgressionService } from './session-progression.service';
+import { SettlementService } from './settlement.service';
 
 @Module({
   imports: [AuthModule, PaymentsModule, StorageModule, CalendarModule],
   controllers: [BookingsController],
-  providers: [BookingsService, BookingExpiryService, SessionProgressionService],
-  exports: [BookingsService, SessionProgressionService],
+  providers: [
+    BookingsService,
+    BookingExpiryService,
+    SessionProgressionService,
+    SettlementService,
+  ],
+  exports: [BookingsService, SessionProgressionService, SettlementService],
 })
 export class BookingsModule {}

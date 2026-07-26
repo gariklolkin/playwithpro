@@ -330,7 +330,8 @@
     "coachesTitle": "Find a coach — PlayWithPro",
     "checkoutTitle": "Checkout — PlayWithPro",
     "sessionsTitle": "Sessions — PlayWithPro",
-    "sessionRoomTitle": "Session room — PlayWithPro"
+    "sessionRoomTitle": "Session room — PlayWithPro",
+    "disputesTitle": "Disputes — PlayWithPro"
   },
   "verification": {
     "title": "Verification",
@@ -628,6 +629,43 @@
       "videoPanelTitle": "Attached video",
       "videoLoading": "Loading video…",
       "videoLoadFailed": "The video could not be loaded."
+    },
+    "actions": {
+      "paidOut": "Paid out",
+      "refunded": "Refunded",
+      "disputeOpenTitle": "Dispute under review",
+      "disputeOpenHint": "Our team is reviewing this session. The payment stays on hold until the dispute is resolved.",
+      "resolvedRelease": "Dispute resolved — payment released to the coach",
+      "resolvedRefund": "Dispute resolved — payment refunded",
+      "bannerTitlePlayer": "Did this session take place?",
+      "bannerTitleCoach": "Confirm this session took place",
+      "autoConfirm": "Otherwise it confirms automatically {relative}.",
+      "youConfirmed": "You confirmed",
+      "confirmCta": "Confirm session",
+      "reportCta": "Report a problem",
+      "disputePlaceholder": "Describe what went wrong…",
+      "disputeSubmit": "Open dispute",
+      "disputeAbort": "Back",
+      "cancelCta": "Cancel session",
+      "cancelWarning": "Cancel this session? The full amount is refunded and the slot reopens.",
+      "cancelConfirm": "Yes, cancel",
+      "cancelKeep": "Keep session",
+      "error": "Something went wrong. Try again."
     }
+  },
+  "adminDisputes": {
+    "title": "Disputes",
+    "subtitle": "Player-reported problems with paid sessions. Escrow stays frozen until you decide.",
+    "empty": "No open disputes.",
+    "resolvedTitle": "Resolved",
+    "openedAt": "dispute opened",
+    "noAttendance": "Neither party ever joined the session room.",
+    "noLeaveTime": "no leave time",
+    "notePlaceholder": "Resolution note (optional)…",
+    "releaseCta": "Release to coach (fee {fee})",
+    "refundCta": "Refund the player",
+    "outcomeRelease": "Released to coach",
+    "outcomeRefund": "Refunded to player",
+    "error": "Resolution failed. Try again."
   }
 }

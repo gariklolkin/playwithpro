@@ -12,6 +12,7 @@ import { AdminModule } from './admin/admin.module';
 import { AvailabilityModule } from './availability/availability.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { CatalogModule } from './catalog/catalog.module';
+import { DisputesModule } from './disputes/disputes.module';
 import { PlayersModule } from './players/players.module';
 import { ProsModule } from './pros/pros.module';
 import { SchedulingModule } from './scheduling/scheduling.module';
@@ -39,6 +40,7 @@ import { VideosModule } from './videos/videos.module';
     AvailabilityModule,
     BookingsModule,
     CatalogModule,
+    DisputesModule,
     AdminModule,
     SchedulingModule,
     SessionRoomsModule,

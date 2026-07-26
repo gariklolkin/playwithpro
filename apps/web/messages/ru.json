@@ -330,7 +330,8 @@
     "coachesTitle": "Найти тренера — PlayWithPro",
     "checkoutTitle": "Оплата — PlayWithPro",
     "sessionsTitle": "Занятия — PlayWithPro",
-    "sessionRoomTitle": "Комната сессии — PlayWithPro"
+    "sessionRoomTitle": "Комната сессии — PlayWithPro",
+    "disputesTitle": "Споры — PlayWithPro"
   },
   "verification": {
     "title": "Верификация",
@@ -628,6 +629,43 @@
       "videoPanelTitle": "Прикреплённое видео",
       "videoLoading": "Загружаем видео…",
       "videoLoadFailed": "Не удалось загрузить видео."
+    },
+    "actions": {
+      "paidOut": "Выплачено",
+      "refunded": "Возвращено",
+      "disputeOpenTitle": "Спор на рассмотрении",
+      "disputeOpenHint": "Наша команда разбирает эту сессию. Платёж заморожен до решения спора.",
+      "resolvedRelease": "Спор решён — оплата перечислена тренеру",
+      "resolvedRefund": "Спор решён — оплата возвращена",
+      "bannerTitlePlayer": "Сессия состоялась?",
+      "bannerTitleCoach": "Подтвердите, что сессия состоялась",
+      "autoConfirm": "Иначе она подтвердится автоматически {relative}.",
+      "youConfirmed": "Вы подтвердили",
+      "confirmCta": "Подтвердить сессию",
+      "reportCta": "Сообщить о проблеме",
+      "disputePlaceholder": "Опишите, что пошло не так…",
+      "disputeSubmit": "Открыть спор",
+      "disputeAbort": "Назад",
+      "cancelCta": "Отменить сессию",
+      "cancelWarning": "Отменить сессию? Вся сумма будет возвращена, а слот снова станет доступен.",
+      "cancelConfirm": "Да, отменить",
+      "cancelKeep": "Оставить сессию",
+      "error": "Что-то пошло не так. Попробуйте ещё раз."
     }
+  },
+  "adminDisputes": {
+    "title": "Споры",
+    "subtitle": "Проблемы с оплаченными сессиями, о которых сообщили игроки. Деньги в эскроу заморожены до вашего решения.",
+    "empty": "Открытых споров нет.",
+    "resolvedTitle": "Решённые",
+    "openedAt": "спор открыт",
+    "noAttendance": "Ни одна из сторон не заходила в комнату сессии.",
+    "noLeaveTime": "время выхода неизвестно",
+    "notePlaceholder": "Комментарий к решению (необязательно)…",
+    "releaseCta": "Выплатить тренеру (комиссия {fee})",
+    "refundCta": "Вернуть игроку",
+    "outcomeRelease": "Выплачено тренеру",
+    "outcomeRefund": "Возвращено игроку",
+    "error": "Не удалось принять решение. Попробуйте ещё раз."
   }
 }

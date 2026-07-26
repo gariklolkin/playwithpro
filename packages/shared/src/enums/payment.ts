@@ -2,9 +2,9 @@ export enum PaymentStatus {
   RequiresHold = "requires_hold",
   Held = "held",
   Failed = "failed",
-  /** Reserved for the payout change. */
+  /** Escrow paid out to the coach (confirmation, auto-confirm, or dispute resolution). */
   Released = "released",
-  /** Reserved for the dispute change. */
+  /** Escrow returned to the player (pre-start cancellation or dispute resolution). */
   Refunded = "refunded",
 }
 

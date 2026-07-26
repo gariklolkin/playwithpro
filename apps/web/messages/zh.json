@@ -330,7 +330,8 @@
     "coachesTitle": "寻找教练 — PlayWithPro",
     "checkoutTitle": "支付 — PlayWithPro",
     "sessionsTitle": "课程 — PlayWithPro",
-    "sessionRoomTitle": "课程房间 — PlayWithPro"
+    "sessionRoomTitle": "课程房间 — PlayWithPro",
+    "disputesTitle": "争议 — PlayWithPro"
   },
   "verification": {
     "title": "认证",
@@ -628,6 +629,43 @@
       "videoPanelTitle": "附加视频",
       "videoLoading": "正在加载视频…",
       "videoLoadFailed": "无法加载视频。"
+    },
+    "actions": {
+      "paidOut": "已打款",
+      "refunded": "已退款",
+      "disputeOpenTitle": "争议审核中",
+      "disputeOpenHint": "我们的团队正在审核这节课。在争议解决前，款项将保持冻结。",
+      "resolvedRelease": "争议已解决 — 款项已打给教练",
+      "resolvedRefund": "争议已解决 — 款项已退还",
+      "bannerTitlePlayer": "这节课进行了吗？",
+      "bannerTitleCoach": "请确认这节课已进行",
+      "autoConfirm": "否则将于{relative}自动确认。",
+      "youConfirmed": "您已确认",
+      "confirmCta": "确认课程",
+      "reportCta": "报告问题",
+      "disputePlaceholder": "请描述出了什么问题…",
+      "disputeSubmit": "发起争议",
+      "disputeAbort": "返回",
+      "cancelCta": "取消课程",
+      "cancelWarning": "取消这节课？全额退款，该时段将重新开放。",
+      "cancelConfirm": "是，取消",
+      "cancelKeep": "保留课程",
+      "error": "出错了，请重试。"
     }
+  },
+  "adminDisputes": {
+    "title": "争议",
+    "subtitle": "球员报告的已付款课程问题。在您做出决定前，托管资金保持冻结。",
+    "empty": "暂无未处理的争议。",
+    "resolvedTitle": "已解决",
+    "openedAt": "争议发起于",
+    "noAttendance": "双方都未进入过课程房间。",
+    "noLeaveTime": "离开时间未知",
+    "notePlaceholder": "处理备注（可选）…",
+    "releaseCta": "打款给教练（手续费 {fee}）",
+    "refundCta": "退款给球员",
+    "outcomeRelease": "已打款给教练",
+    "outcomeRefund": "已退款给球员",
+    "error": "处理失败，请重试。"
   }
 }

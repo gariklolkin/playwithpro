@@ -12,6 +12,7 @@ import { CALENDAR_PROVIDER } from '../calendar/calendar-provider';
 import { PAYMENT_PROVIDER } from '../payments/payment-provider';
 import { BookingsService } from './bookings.service';
 import { SessionProgressionService } from './session-progression.service';
+import { SettlementService } from './settlement.service';
 
 const HOUR = 3_600_000;
 
@@ -53,6 +54,8 @@ const pendingSession = {
   startsAt: futureSlot.startsAt,
   endsAt: futureSlot.endsAt,
   expiresAt: new Date(Date.now() + 15 * 60_000),
+  playerConfirmedAt: null,
+  coachConfirmedAt: null,
   createdAt: new Date(),
   updatedAt: new Date(),
   player: { id: 'player-1', displayName: 'Player', avatarKey: null },
@@ -61,6 +64,8 @@ const pendingSession = {
     user: { displayName: 'Coach', avatarKey: null },
   },
   video: null,
+  payments: [],
+  dispute: null,
 };
 
 describe('BookingsService', () => {
@@ -100,6 +105,7 @@ describe('BookingsService', () => {
   const progression = {
     normalize: jest.fn(<T>(session: T) => Promise.resolve(session)),
   };
+  const settlement = { settle: jest.fn() };
   const config = {
     getOrThrow: (name: string) =>
       ({
@@ -107,6 +113,7 @@ describe('BookingsService', () => {
         BOOKING_PAYMENT_TTL_MIN: 15,
         ROOM_JOIN_WINDOW_BEFORE_MIN: 15,
         ROOM_JOIN_WINDOW_AFTER_MIN: 30,
+        AUTO_CONFIRM_WINDOW_HOURS: 48,
         WEB_APP_URL: 'http://localhost:3000',
       })[name],
   };
@@ -126,6 +133,7 @@ describe('BookingsService', () => {
         { provide: PAYMENT_PROVIDER, useValue: provider },
         { provide: CALENDAR_PROVIDER, useValue: calendar },
         { provide: SessionProgressionService, useValue: progression },
+        { provide: SettlementService, useValue: settlement },
       ],
     }).compile();
     service = moduleRef.get(BookingsService);
@@ -492,7 +500,16 @@ describe('BookingsService', () => {
         expect.objectContaining({
           where: expect.objectContaining({
             proProfile: { userId: 'coach-1' },
-            status: { not: 'CANCELLED' },
+            OR: [
+              { status: { not: 'CANCELLED' } },
+              {
+                payments: {
+                  some: {
+                    status: { in: ['HELD', 'RELEASED', 'REFUNDED'] },
+                  },
+                },
+              },
+            ],
           }) as object,
         }),
       );
@@ -518,6 +535,179 @@ describe('BookingsService', () => {
 
       expect(result.upcoming.map((s) => s.id)).toEqual(['session-1']);
       expect(result.past.map((s) => s.id)).toEqual(['session-past']);
+    });
+  });
+
+  describe('confirm', () => {
+    const awaitingSession = {
+      ...pendingSession,
+      status: 'AWAITING_CONFIRMATION',
+      expiresAt: null,
+      startsAt: new Date(Date.now() - 3 * HOUR),
+      endsAt: new Date(Date.now() - 2 * HOUR),
+      payments: [{ status: 'HELD' }],
+    };
+
+    beforeEach(() => {
+      prisma.session.findUnique.mockResolvedValue(awaitingSession);
+      prisma.session.updateMany.mockResolvedValue({ count: 1 });
+      prisma.session.findUniqueOrThrow.mockResolvedValue({
+        ...awaitingSession,
+        status: 'COMPLETED_PAID',
+        playerConfirmedAt: new Date(),
+        payments: [{ status: 'RELEASED' }],
+      });
+    });
+
+    it('completes and settles on player confirmation', async () => {
+      const result = await service.confirm(
+        { id: 'player-1', role: Role.Amateur },
+        'session-1',
+      );
+
+      expect(prisma.session.updateMany).toHaveBeenCalledWith({
+        where: { id: 'session-1', status: 'AWAITING_CONFIRMATION' },
+        data: {
+          status: 'COMPLETED_PAID',
+          playerConfirmedAt: expect.any(Date) as Date,
+        },
+      });
+      expect(settlement.settle).toHaveBeenCalledWith('session-1');
+      expect(result.status).toBe('completed_paid');
+      expect(result.escrow).toBe('released');
+    });
+
+    it('records coach confirmation as evidence without settling', async () => {
+      await service.confirm(
+        { id: 'coach-1', role: Role.Professional },
+        'session-1',
+      );
+
+      expect(prisma.session.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: 'session-1',
+          status: 'AWAITING_CONFIRMATION',
+          coachConfirmedAt: null,
+        },
+        data: { coachConfirmedAt: expect.any(Date) as Date },
+      });
+      expect(settlement.settle).not.toHaveBeenCalled();
+    });
+
+    it('409s when the session is not awaiting confirmation', async () => {
+      prisma.session.updateMany.mockResolvedValue({ count: 0 });
+      prisma.session.findUniqueOrThrow.mockResolvedValue({
+        playerConfirmedAt: null,
+        coachConfirmedAt: null,
+      });
+
+      await expect(
+        service.confirm({ id: 'player-1', role: Role.Amateur }, 'session-1'),
+      ).rejects.toBeInstanceOf(ConflictException);
+      expect(settlement.settle).not.toHaveBeenCalled();
+    });
+
+    it('treats a repeated confirmation as a no-op', async () => {
+      prisma.session.updateMany.mockResolvedValue({ count: 0 });
+
+      const result = await service.confirm(
+        { id: 'player-1', role: Role.Amateur },
+        'session-1',
+      );
+
+      expect(result.status).toBe('completed_paid');
+    });
+
+    it('yields not-found for a third party', async () => {
+      await expect(
+        service.confirm({ id: 'stranger', role: Role.Amateur }, 'session-1'),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  describe('cancel', () => {
+    const paidUpcoming = {
+      ...pendingSession,
+      status: 'PAID_ESCROW',
+      expiresAt: null,
+      inviteSentAt: null,
+      payments: [{ status: 'HELD' }],
+    };
+
+    beforeEach(() => {
+      prisma.session.findUnique.mockResolvedValue(paidUpcoming);
+      tx.session.updateMany.mockResolvedValue({ count: 1 });
+      tx.availabilitySlot.updateMany.mockResolvedValue({ count: 1 });
+      prisma.session.findUniqueOrThrow.mockResolvedValue({
+        ...paidUpcoming,
+        status: 'CANCELLED',
+        payments: [{ status: 'REFUNDED' }],
+      });
+    });
+
+    it('cancels, reopens the slot, and refunds before start', async () => {
+      const result = await service.cancel(
+        { id: 'coach-1', role: Role.Professional },
+        'session-1',
+      );
+
+      expect(tx.session.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: 'session-1',
+          status: 'PAID_ESCROW',
+          startsAt: { gt: expect.any(Date) as Date },
+        },
+        data: { status: 'CANCELLED' },
+      });
+      expect(tx.availabilitySlot.updateMany).toHaveBeenCalledWith({
+        where: { id: 'slot-1', status: 'BOOKED' },
+        data: { status: 'OPEN' },
+      });
+      expect(settlement.settle).toHaveBeenCalledWith('session-1');
+      expect(result.status).toBe('cancelled');
+      expect(result.escrow).toBe('refunded');
+    });
+
+    it('sends the calendar cancellation when an invite went out', async () => {
+      // Second findUnique call is sendCancellationIfInvited's status check.
+      prisma.session.findUnique
+        .mockResolvedValueOnce(paidUpcoming)
+        .mockResolvedValueOnce({
+          status: 'CANCELLED',
+          inviteSentAt: new Date(),
+        });
+      prisma.session.findUniqueOrThrow.mockResolvedValue({
+        ...paidUpcoming,
+        status: 'CANCELLED',
+        player: { ...paidUpcoming.player, email: 'player@example.com' },
+        proProfile: {
+          ...paidUpcoming.proProfile,
+          user: { ...paidUpcoming.proProfile.user, email: 'coach@example.com' },
+          services: [],
+        },
+      });
+
+      await service.cancel({ id: 'player-1', role: Role.Amateur }, 'session-1');
+
+      expect(calendar.sendCancellation).toHaveBeenCalledWith(
+        expect.objectContaining({ sessionId: 'session-1' }),
+      );
+    });
+
+    it('409s once the session has started', async () => {
+      tx.session.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(
+        service.cancel({ id: 'player-1', role: Role.Amateur }, 'session-1'),
+      ).rejects.toBeInstanceOf(ConflictException);
+      expect(settlement.settle).not.toHaveBeenCalled();
+      expect(tx.availabilitySlot.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('yields not-found for a third party', async () => {
+      await expect(
+        service.cancel({ id: 'stranger', role: Role.Amateur }, 'session-1'),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 });

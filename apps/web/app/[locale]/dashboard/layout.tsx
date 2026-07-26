@@ -36,7 +36,7 @@ const NAV: Record<
     section: "admin",
     items: [
       { key: "verification", emoji: "✅", href: "/dashboard/verification" },
-      { key: "disputes", emoji: "⚖️" },
+      { key: "disputes", emoji: "⚖️", href: "/dashboard/disputes" },
       { key: "users", emoji: "👥" },
       { key: "transactions", emoji: "💳" },
       { key: "analytics", emoji: "📈" },

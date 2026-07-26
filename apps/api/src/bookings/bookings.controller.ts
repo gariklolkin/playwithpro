@@ -61,6 +61,32 @@ export class BookingsController {
     return this.bookings.get(user, id);
   }
 
+  @Post('sessions/:id/confirm')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    description:
+      'Party confirmation; player confirmation completes the session and releases escrow.',
+  })
+  async confirm(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<SessionResponse> {
+    return this.bookings.confirm(user, id);
+  }
+
+  @Post('sessions/:id/cancel')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    description:
+      'Pre-start cancellation of a paid session; refunds the player and reopens the slot.',
+  })
+  async cancel(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<SessionResponse> {
+    return this.bookings.cancel(user, id);
+  }
+
   @Post('sessions/:id/pay')
   @Roles(Role.Amateur)
   @HttpCode(HttpStatus.OK)

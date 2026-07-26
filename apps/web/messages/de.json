@@ -330,7 +330,8 @@
     "coachesTitle": "Trainer finden — PlayWithPro",
     "checkoutTitle": "Bezahlung — PlayWithPro",
     "sessionsTitle": "Sessions — PlayWithPro",
-    "sessionRoomTitle": "Sitzungsraum — PlayWithPro"
+    "sessionRoomTitle": "Sitzungsraum — PlayWithPro",
+    "disputesTitle": "Streitfälle — PlayWithPro"
   },
   "verification": {
     "title": "Verifizierung",
@@ -628,6 +629,43 @@
       "videoPanelTitle": "Angehängtes Video",
       "videoLoading": "Video wird geladen…",
       "videoLoadFailed": "Das Video konnte nicht geladen werden."
+    },
+    "actions": {
+      "paidOut": "Ausgezahlt",
+      "refunded": "Erstattet",
+      "disputeOpenTitle": "Streitfall wird geprüft",
+      "disputeOpenHint": "Unser Team prüft diese Session. Die Zahlung bleibt einbehalten, bis der Streitfall gelöst ist.",
+      "resolvedRelease": "Streitfall gelöst — Zahlung an den Coach ausgezahlt",
+      "resolvedRefund": "Streitfall gelöst — Zahlung erstattet",
+      "bannerTitlePlayer": "Hat diese Session stattgefunden?",
+      "bannerTitleCoach": "Bestätigen Sie, dass diese Session stattgefunden hat",
+      "autoConfirm": "Andernfalls wird sie {relative} automatisch bestätigt.",
+      "youConfirmed": "Sie haben bestätigt",
+      "confirmCta": "Session bestätigen",
+      "reportCta": "Problem melden",
+      "disputePlaceholder": "Beschreiben Sie, was schiefgelaufen ist…",
+      "disputeSubmit": "Streitfall eröffnen",
+      "disputeAbort": "Zurück",
+      "cancelCta": "Session stornieren",
+      "cancelWarning": "Diese Session stornieren? Der volle Betrag wird erstattet und der Termin wieder freigegeben.",
+      "cancelConfirm": "Ja, stornieren",
+      "cancelKeep": "Session behalten",
+      "error": "Etwas ist schiefgelaufen. Versuchen Sie es erneut."
     }
+  },
+  "adminDisputes": {
+    "title": "Streitfälle",
+    "subtitle": "Von Spielern gemeldete Probleme mit bezahlten Sessions. Das Treuhandgeld bleibt eingefroren, bis Sie entscheiden.",
+    "empty": "Keine offenen Streitfälle.",
+    "resolvedTitle": "Gelöst",
+    "openedAt": "Streitfall eröffnet",
+    "noAttendance": "Keine der Parteien hat den Session-Raum je betreten.",
+    "noLeaveTime": "keine Austrittszeit",
+    "notePlaceholder": "Notiz zur Entscheidung (optional)…",
+    "releaseCta": "An Coach auszahlen (Gebühr {fee})",
+    "refundCta": "Spieler erstatten",
+    "outcomeRelease": "An Coach ausgezahlt",
+    "outcomeRefund": "An Spieler erstattet",
+    "error": "Entscheidung fehlgeschlagen. Versuchen Sie es erneut."
   }
 }

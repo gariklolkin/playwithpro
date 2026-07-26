@@ -7,6 +7,6 @@ export enum SessionStatus {
   CompletedPaid = "completed_paid",
   Disputed = "disputed",
   Resolved = "resolved",
-  /** Terminal state for unpaid/expired bookings (pre-payment abandonment only). */
+  /** Terminal state for unpaid/expired bookings and pre-start cancellations of paid sessions. */
   Cancelled = "cancelled",
 }

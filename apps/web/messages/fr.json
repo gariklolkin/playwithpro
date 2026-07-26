@@ -330,7 +330,8 @@
     "coachesTitle": "Trouver un coach — PlayWithPro",
     "checkoutTitle": "Paiement — PlayWithPro",
     "sessionsTitle": "Séances — PlayWithPro",
-    "sessionRoomTitle": "Salle de session — PlayWithPro"
+    "sessionRoomTitle": "Salle de session — PlayWithPro",
+    "disputesTitle": "Litiges — PlayWithPro"
   },
   "verification": {
     "title": "Vérification",
@@ -628,6 +629,43 @@
       "videoPanelTitle": "Vidéo jointe",
       "videoLoading": "Chargement de la vidéo…",
       "videoLoadFailed": "La vidéo n'a pas pu être chargée."
+    },
+    "actions": {
+      "paidOut": "Versé",
+      "refunded": "Remboursé",
+      "disputeOpenTitle": "Litige en cours d'examen",
+      "disputeOpenHint": "Notre équipe examine cette session. Le paiement reste bloqué jusqu'à la résolution du litige.",
+      "resolvedRelease": "Litige résolu — paiement versé au coach",
+      "resolvedRefund": "Litige résolu — paiement remboursé",
+      "bannerTitlePlayer": "Cette session a-t-elle eu lieu ?",
+      "bannerTitleCoach": "Confirmez que cette session a eu lieu",
+      "autoConfirm": "Sinon, elle sera confirmée automatiquement {relative}.",
+      "youConfirmed": "Vous avez confirmé",
+      "confirmCta": "Confirmer la session",
+      "reportCta": "Signaler un problème",
+      "disputePlaceholder": "Décrivez ce qui s'est mal passé…",
+      "disputeSubmit": "Ouvrir un litige",
+      "disputeAbort": "Retour",
+      "cancelCta": "Annuler la session",
+      "cancelWarning": "Annuler cette session ? Le montant total est remboursé et le créneau redevient disponible.",
+      "cancelConfirm": "Oui, annuler",
+      "cancelKeep": "Garder la session",
+      "error": "Une erreur est survenue. Réessayez."
     }
+  },
+  "adminDisputes": {
+    "title": "Litiges",
+    "subtitle": "Problèmes signalés par les joueurs sur des sessions payées. Le séquestre reste gelé jusqu'à votre décision.",
+    "empty": "Aucun litige ouvert.",
+    "resolvedTitle": "Résolus",
+    "openedAt": "litige ouvert le",
+    "noAttendance": "Aucune des deux parties n'a rejoint la salle de session.",
+    "noLeaveTime": "heure de départ inconnue",
+    "notePlaceholder": "Note de résolution (facultative)…",
+    "releaseCta": "Verser au coach (commission {fee})",
+    "refundCta": "Rembourser le joueur",
+    "outcomeRelease": "Versé au coach",
+    "outcomeRefund": "Remboursé au joueur",
+    "error": "La résolution a échoué. Réessayez."
   }
 }

@@ -40,6 +40,8 @@ model User {
   videos             Video[]
   playerSessions     Session[]
   sessionAttendance  SessionAttendance[]
+  openedDisputes     Dispute[]           @relation("DisputeOpener")
+  resolvedDisputes   Dispute[]           @relation("DisputeResolver")
 }
 
 enum PlayerLevel {
@@ -348,6 +350,10 @@ model Session {
   endsAt           DateTime
   /// Payment deadline while PENDING_PAYMENT; cleared once paid.
   expiresAt        DateTime?
+  /// Player confirmation completes the session; coach confirmation is
+  /// dispute evidence only. Each recorded at most once.
+  playerConfirmedAt DateTime?
+  coachConfirmedAt  DateTime?
   /// Random capability slug for the video room; set on payment, online services only.
   roomSlug         String?       @unique
   /// When the calendar invite was emailed to both parties; also the idempotency guard.
@@ -361,6 +367,7 @@ model Session {
   video      Video?           @relation(fields: [videoId], references: [id], onDelete: SetNull)
   payments   Payment[]
   attendance SessionAttendance[]
+  dispute    Dispute?
 
   @@index([playerId, startsAt])
   @@index([proProfileId, startsAt])
@@ -398,6 +405,37 @@ model Payment {
   session     Session       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
+}
+
+enum DisputeStatus {
+  OPEN
+  RESOLVED
+}
+
+enum DisputeOutcome {
+  RELEASE
+  REFUND
+}
+
+/// Player-opened dispute over an awaiting_confirmation session; at most one
+/// per session. Resolution (admin-only) settles the escrowed payment.
+model Dispute {
+  id           String         @id @default(uuid())
+  sessionId    String         @unique
+  openedById   String
+  reason       String
+  status       DisputeStatus  @default(OPEN)
+  outcome      DisputeOutcome?
+  resolvedById String?
+  adminNote    String?
+  createdAt    DateTime       @default(now())
+  resolvedAt   DateTime?
+
+  session    Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  openedBy   User    @relation("DisputeOpener", fields: [openedById], references: [id])
+  resolvedBy User?   @relation("DisputeResolver", fields: [resolvedById], references: [id])
+
+  @@index([status, createdAt])
 }
 
 /// One booking attempt per row; outcomes (no-show, cancellations) stay as audit trail.
