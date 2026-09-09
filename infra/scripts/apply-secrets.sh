@@ -24,15 +24,17 @@ kubectl -n "$NAMESPACE" create secret generic playwithpro-env \
   --dry-run=client -o yaml | kubectl apply -f -
 
 # LiveKit config: the same key/secret pair the api uses, rendered from the
-# env file into the server's yaml so the two can never drift.
-set -a
-# shellcheck disable=SC1090
-source "$ENV_FILE"
-set +a
-: "${LIVEKIT_API_KEY:?LIVEKIT_API_KEY missing in $ENV_FILE}"
-: "${LIVEKIT_API_SECRET:?LIVEKIT_API_SECRET missing in $ENV_FILE}"
-: "${LIVEKIT_NODE_IP:?LIVEKIT_NODE_IP missing in $ENV_FILE}"
-: "${LIVEKIT_TURN_DOMAIN:?LIVEKIT_TURN_DOMAIN missing in $ENV_FILE}"
+# env file into the server's yaml so the two can never drift. The env file
+# is kubectl --from-env-file syntax (unquoted values), not shell — read the
+# needed keys instead of sourcing it.
+env_value() {
+  grep -E "^$1=" "$ENV_FILE" | tail -1 | cut -d= -f2-
+}
+for key in LIVEKIT_API_KEY LIVEKIT_API_SECRET LIVEKIT_NODE_IP LIVEKIT_TURN_DOMAIN; do
+  value="$(env_value "$key")"
+  [[ -n "$value" ]] || { echo "$key missing in $ENV_FILE" >&2; exit 1; }
+  export "$key=$value"
+done
 REPO_ROOT="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
 envsubst '$LIVEKIT_API_KEY $LIVEKIT_API_SECRET $LIVEKIT_NODE_IP $LIVEKIT_TURN_DOMAIN' \
   < "$REPO_ROOT/infra/k8s/livekit/livekit.yaml.tpl" \

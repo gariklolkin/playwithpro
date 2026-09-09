@@ -26,6 +26,9 @@ spec:
       hostNetwork: true
       # Cluster DNS on the host network so webhooks reach http://api:4000.
       dnsPolicy: ClusterFirstWithHostNet
+      # The `livekit` Service would otherwise inject LIVEKIT_PORT=tcp://…,
+      # which livekit-server parses as its own --port flag and crashes.
+      enableServiceLinks: false
       containers:
         - name: livekit
           image: livekit/livekit-server:v1.13.6

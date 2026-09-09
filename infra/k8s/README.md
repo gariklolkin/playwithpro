@@ -31,13 +31,13 @@ Use `export KUBECONFIG=~/.kube/playwithpro.yaml` in any shell that operates the 
 
 ## One-off: retiring the Jitsi stack
 
-The staging cluster was first provisioned with Jitsi. Before the first LiveKit
-deploy, remove it by hand (the manifests are gone from the repo; take them from
-git history or delete by name):
+The staging cluster was first provisioned with Jitsi (manifests never reached
+git). Before the first LiveKit deploy, remove it by name — the old `jitsi`
+Ingress claims the `meet.play-with.pro` host the new `meet` Ingress needs:
 
 ```bash
-kubectl -n playwithpro delete deploy,svc -l 'app in (jitsi-prosody,jitsi-jicofo,jitsi-web,jitsi-jvb,jitsi-coturn)'
-kubectl -n playwithpro delete configmap jitsi-custom-config secret jitsi-secrets --ignore-not-found
+kubectl -n playwithpro delete deploy jitsi-prosody jitsi-jicofo jitsi-web jitsi-jvb jitsi-coturn --ignore-not-found
+kubectl -n playwithpro delete svc jitsi-web ingress jitsi configmap jitsi-custom-config secret jitsi-secrets --ignore-not-found
 ```
 
 Then swap the ufw rules on the host (`ufw delete allow 10000/udp`; allow

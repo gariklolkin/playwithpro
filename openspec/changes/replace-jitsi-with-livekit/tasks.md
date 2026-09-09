@@ -43,7 +43,7 @@
 - [x] 6.2 `apply-secrets.sh`: drop `jitsi-secrets`; render `livekit.yaml.tpl` with `envsubst` from the env file into Secret `livekit-config`; `env.example`: replace Jitsi block with `LIVEKIT_URL=wss://meet.play-with.pro`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`
 - [x] 6.3 `ingress.yaml`: `meet.play-with.pro` → `livekit:7880` with TLS (cert-manager) and the api-style middleware set; update the site-gate comment (no iframe anymore)
 - [x] 6.4 `deploy.sh`: apply `k8s/livekit/` instead of `k8s/jitsi/`, `rollout restart deploy/livekit` when `livekit-config` changed, wait for its rollout; delete `infra/k8s/jitsi/`
-- [ ] 6.5 (README + one-off runbook written; host ufw swap and cluster cleanup still to run) Host: ufw swap (`10000/udp` → `7881/tcp`, `7882/udp`, `5349/tcp`; keep 3478); one-off `kubectl delete -f` of the old Jitsi manifests + `jitsi-secrets`; update `infra/k8s/README.md` (layout, ports, TURN cert restart note)
+- [x] 6.5 (done 2026-09-09 on the staging host/cluster) Host: ufw swap (`10000/udp` → `7881/tcp`, `7882/udp`, `5349/tcp`; keep 3478); one-off `kubectl delete -f` of the old Jitsi manifests + `jitsi-secrets`; update `infra/k8s/README.md` (layout, ports, TURN cert restart note)
 
 ## 7. Verification & hand-off
 
