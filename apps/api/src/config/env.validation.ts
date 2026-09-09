@@ -47,6 +47,13 @@ class EnvironmentVariables {
   @IsString()
   SMTP_FROM = 'PlayWithPro <no-reply@playwithpro.local>';
 
+  /** SMTP credentials; empty = unauthenticated dev catcher (Mailpit). */
+  @IsString()
+  SMTP_USER = '';
+
+  @IsString()
+  SMTP_PASSWORD = '';
+
   @IsOptional()
   @IsString()
   GOOGLE_CLIENT_ID?: string;
@@ -124,6 +131,14 @@ class EnvironmentVariables {
    */
   @IsString()
   JITSI_DOMAIN = 'http://localhost:8000';
+
+  /**
+   * Parent domain for auth cookies when web and api run on sibling hosts
+   * (prod: play-with.pro + api.play-with.pro — the web SSR must see the
+   * access token). Empty = host-only cookies (dev: ports share localhost).
+   */
+  @IsString()
+  AUTH_COOKIE_DOMAIN = '';
 
   /** Minutes before slot start when the session room opens. */
   @Type(() => Number)

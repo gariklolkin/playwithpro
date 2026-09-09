@@ -1,0 +1,69 @@
+# Nightly pg_dump shipped to the Hetzner Object Storage bucket under backups/.
+# Restore: download the dump, then
+#   kubectl -n playwithpro exec -i deploy/postgres -- pg_restore -U playwithpro \
+#     -d playwithpro --clean --if-exists < dump.pgdump
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: playwithpro
+spec:
+  schedule: "17 2 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          initContainers:
+            - name: dump
+              image: postgres:17-alpine
+              command:
+                - sh
+                - -c
+                - pg_dump -Fc -h postgres -U "$POSTGRES_USER" "$POSTGRES_DB" -f "/backup/playwithpro-$(date +%F).pgdump"
+              env:
+                - name: POSTGRES_USER
+                  valueFrom:
+                    secretKeyRef: { name: playwithpro-env, key: POSTGRES_USER }
+                - name: POSTGRES_DB
+                  valueFrom:
+                    secretKeyRef: { name: playwithpro-env, key: POSTGRES_DB }
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef: { name: playwithpro-env, key: POSTGRES_PASSWORD }
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+          containers:
+            - name: upload
+              image: amazon/aws-cli:latest
+              command:
+                - sh
+                - -c
+                - aws s3 cp /backup/ "s3://$S3_BUCKET/backups/" --recursive --endpoint-url "$S3_ENDPOINT"
+              env:
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef: { name: playwithpro-env, key: S3_ACCESS_KEY }
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef: { name: playwithpro-env, key: S3_SECRET_KEY }
+                - name: AWS_DEFAULT_REGION
+                  valueFrom:
+                    secretKeyRef: { name: playwithpro-env, key: S3_REGION }
+                - name: S3_BUCKET
+                  valueFrom:
+                    secretKeyRef: { name: playwithpro-env, key: S3_BUCKET }
+                - name: S3_ENDPOINT
+                  valueFrom:
+                    secretKeyRef: { name: playwithpro-env, key: S3_ENDPOINT }
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+          volumes:
+            - name: backup
+              emptyDir: {}

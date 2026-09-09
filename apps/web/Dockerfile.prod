@@ -1,0 +1,43 @@
+# syntax=docker/dockerfile:1
+# Production image: Next.js standalone output, amd64 target.
+# NEXT_PUBLIC_* values are baked into the client bundle at build time.
+FROM node:22-alpine AS build
+
+RUN npm install -g pnpm@9.15.0
+
+WORKDIR /workspace
+
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY packages/config/package.json packages/config/package.json
+COPY packages/shared/package.json packages/shared/package.json
+COPY apps/web/package.json apps/web/package.json
+
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
+
+COPY packages ./packages
+COPY apps/web ./apps/web
+
+RUN pnpm --filter @playwithpro/shared run build
+
+ARG NEXT_PUBLIC_API_URL=https://api.play-with.pro
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
+RUN pnpm --filter @playwithpro/web exec next build
+
+FROM node:22-alpine AS prod
+
+ENV NODE_ENV=production \
+    PORT=3000 \
+    HOSTNAME=0.0.0.0
+
+WORKDIR /app
+
+# Standalone output mirrors the monorepo layout under its root.
+COPY --from=build /workspace/apps/web/.next/standalone ./
+COPY --from=build /workspace/apps/web/.next/static ./apps/web/.next/static
+COPY --from=build /workspace/apps/web/public ./apps/web/public
+
+EXPOSE 3000
+
+CMD ["node", "apps/web/server.js"]

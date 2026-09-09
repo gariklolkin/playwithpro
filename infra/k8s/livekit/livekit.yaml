@@ -1,0 +1,67 @@
+# Self-hosted LiveKit for session rooms — one process replaces the former
+# prosody/jicofo/jitsi-web/JVB/coturn set. Signaling (7880) is served at
+# https://meet.play-with.pro through the Traefik ingress; media cannot
+# traverse the ingress, so the pod runs on the host network:
+#   7881/tcp  ICE over TCP (first fallback)
+#   7882/udp  muxed WebRTC media (primary path)
+#   3478/udp, 5349/tcp  embedded TURN (UDP-restricted clients)
+# Config comes from Secret `livekit-config` (rendered by apply-secrets.sh);
+# the TURN certificate from the ingress TLS Secret. After a cert renewal or a
+# config change: kubectl -n playwithpro rollout restart deploy/livekit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: livekit
+  namespace: playwithpro
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate # host ports: two pods cannot coexist on one node
+  selector:
+    matchLabels: { app: livekit }
+  template:
+    metadata:
+      labels: { app: livekit }
+    spec:
+      hostNetwork: true
+      # Cluster DNS on the host network so webhooks reach http://api:4000.
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: livekit
+          image: livekit/livekit-server:v1.13.6
+          args: ["--config", "/etc/livekit/livekit.yaml"]
+          ports:
+            - { name: signal, containerPort: 7880, protocol: TCP }
+            - { name: ice-tcp, containerPort: 7881, protocol: TCP }
+            - { name: ice-udp, containerPort: 7882, protocol: UDP }
+            - { name: turn-udp, containerPort: 3478, protocol: UDP }
+            - { name: turn-tls, containerPort: 5349, protocol: TCP }
+          volumeMounts:
+            - { name: config, mountPath: /etc/livekit, readOnly: true }
+            - { name: tls, mountPath: /etc/livekit-tls, readOnly: true }
+          readinessProbe:
+            httpGet: { path: /, port: 7880 }
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /, port: 7880 }
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests: { cpu: 250m, memory: 256Mi }
+            limits: { memory: 1Gi }
+      volumes:
+        - name: config
+          secret: { secretName: livekit-config }
+        - name: tls
+          secret: { secretName: play-with-pro-meet-tls }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: livekit
+  namespace: playwithpro
+spec:
+  selector: { app: livekit }
+  ports:
+    - { name: signal, port: 7880, targetPort: 7880 }

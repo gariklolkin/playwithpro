@@ -9,10 +9,15 @@ export class MailerService {
   private readonly from: string;
 
   constructor(config: ConfigService) {
+    const user = config.get<string>('SMTP_USER');
+    const pass = config.get<string>('SMTP_PASSWORD');
     this.transporter = createTransport({
       host: config.get<string>('SMTP_HOST'),
       port: config.get<number>('SMTP_PORT'),
       secure: false,
+      // Real providers need auth and must never see it in plaintext;
+      // dev Mailpit has neither auth nor TLS.
+      ...(user && pass ? { auth: { user, pass }, requireTLS: true } : {}),
     });
     this.from = config.get<string>('SMTP_FROM') ?? 'no-reply@playwithpro.local';
   }

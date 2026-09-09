@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: playwithpro
+spec:
+  # HARD single replica: playback-sync state is in-memory (see synced-playback spec)
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          image: playwithpro/api:__TAG__
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4000
+          envFrom:
+            - secretRef:
+                name: playwithpro-env
+          readinessProbe:
+            httpGet: { path: /health, port: 4000 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /health, port: 4000 }
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            requests: { cpu: 300m, memory: 512Mi }
+            # headroom for ffmpeg transcodes spawned by the videos module
+            limits: { memory: 1536Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: playwithpro
+spec:
+  selector:
+    app: api
+  ports:
+    - port: 4000
+      targetPort: 4000

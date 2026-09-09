@@ -67,7 +67,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
     const { user, tokens } = await this.auth.login(dto);
-    setAuthCookies(res, tokens, this.secureCookies());
+    setAuthCookies(res, tokens, this.secureCookies(), this.cookieDomain());
     return { user };
   }
 
@@ -79,7 +79,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
     const { user, tokens } = await this.auth.refresh(this.refreshCookie(req));
-    setAuthCookies(res, tokens, this.secureCookies());
+    setAuthCookies(res, tokens, this.secureCookies(), this.cookieDomain());
     return { user };
   }
 
@@ -90,7 +90,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
     await this.auth.logout(this.refreshCookie(req));
-    clearAuthCookies(res, this.secureCookies());
+    clearAuthCookies(res, this.secureCookies(), this.cookieDomain());
   }
 
   @Post('email/verify')
@@ -103,7 +103,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
     const { user, tokens } = await this.auth.verifyEmail(dto.email, dto.code);
-    setAuthCookies(res, tokens, this.secureCookies());
+    setAuthCookies(res, tokens, this.secureCookies(), this.cookieDomain());
     return { user };
   }
 
@@ -135,7 +135,13 @@ export class AuthController {
   @Get('google')
   googleStart(@Res() res: Response): void {
     const state = randomBytes(16).toString('base64url');
-    setOAuthCookie(res, OAUTH_STATE_COOKIE, state, this.secureCookies());
+    setOAuthCookie(
+      res,
+      OAUTH_STATE_COOKIE,
+      state,
+      this.secureCookies(),
+      this.cookieDomain(),
+    );
     res.redirect(this.google.buildAuthUrl(state));
   }
 
@@ -147,8 +153,9 @@ export class AuthController {
     @Query('state') state?: string,
   ): Promise<void> {
     const secure = this.secureCookies();
+    const domain = this.cookieDomain();
     const expectedState = this.cookie(req, OAUTH_STATE_COOKIE);
-    clearOAuthCookie(res, OAUTH_STATE_COOKIE, secure);
+    clearOAuthCookie(res, OAUTH_STATE_COOKIE, secure, domain);
 
     if (!code || !state || !expectedState || state !== expectedState) {
       res.redirect(`${this.webAppUrl()}/login?error=google`);
@@ -161,7 +168,7 @@ export class AuthController {
 
       switch (outcome.kind) {
         case 'signed_in':
-          setAuthCookies(res, outcome.result.tokens, secure);
+          setAuthCookies(res, outcome.result.tokens, secure, domain);
           res.redirect(`${this.webAppUrl()}/dashboard`);
           return;
         case 'pending_signup':
@@ -170,6 +177,7 @@ export class AuthController {
             OAUTH_PENDING_COOKIE,
             outcome.pendingToken,
             secure,
+            domain,
           );
           res.redirect(`${this.webAppUrl()}/oauth/complete`);
           return;
@@ -198,8 +206,13 @@ export class AuthController {
       dto.role,
       dto.timezone,
     );
-    clearOAuthCookie(res, OAUTH_PENDING_COOKIE, this.secureCookies());
-    setAuthCookies(res, tokens, this.secureCookies());
+    clearOAuthCookie(
+      res,
+      OAUTH_PENDING_COOKIE,
+      this.secureCookies(),
+      this.cookieDomain(),
+    );
+    setAuthCookies(res, tokens, this.secureCookies(), this.cookieDomain());
     return { user };
   }
 
@@ -219,5 +232,10 @@ export class AuthController {
 
   private secureCookies(): boolean {
     return this.config.get<string>('NODE_ENV') === 'production';
+  }
+
+  /** Parent domain for auth cookies (prod: web and api are sibling hosts). */
+  private cookieDomain(): string | undefined {
+    return this.config.get<string>('AUTH_COOKIE_DOMAIN') || undefined;
   }
 }

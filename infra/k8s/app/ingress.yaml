@@ -1,0 +1,114 @@
+# TLS note: new hosts start on letsencrypt-staging; switch the
+# cert-manager.io/cluster-issuer annotations to letsencrypt-prod (and delete the
+# staging tls secrets) only after routing is verified — LE prod rate limits.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-https
+  namespace: playwithpro
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+---
+# Pre-launch gate: basic auth on the web UI only (api/meet stay open — the
+# SPA's fetches and the LiveKit WebSocket would break behind it). Secret `site-gate`
+# is created out-of-repo (htpasswd format, key `users`). Remove the middleware
+# from the web Ingress annotation at launch.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: site-gate
+  namespace: playwithpro
+spec:
+  basicAuth:
+    secret: site-gate
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-www
+  namespace: playwithpro
+spec:
+  redirectRegex:
+    regex: "^https?://www\\.play-with\\.pro/(.*)"
+    replacement: "https://play-with.pro/${1}"
+    permanent: true
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web
+  namespace: playwithpro
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.middlewares: playwithpro-redirect-https@kubernetescrd,playwithpro-redirect-www@kubernetescrd,playwithpro-site-gate@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts: [play-with.pro, www.play-with.pro]
+      secretName: play-with-pro-web-tls
+  rules:
+    - host: play-with.pro
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: web, port: { number: 3000 } }
+    - host: www.play-with.pro
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: web, port: { number: 3000 } }
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api
+  namespace: playwithpro
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.middlewares: playwithpro-redirect-https@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts: [api.play-with.pro]
+      secretName: play-with-pro-api-tls
+  rules:
+    - host: api.play-with.pro
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: api, port: { number: 4000 } }
+---
+# LiveKit signaling (WebSocket) at meet.play-with.pro; TLS at Traefik, plain
+# HTTP to the host-network pod. The TLS Secret doubles as the TURN cert.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: meet
+  namespace: playwithpro
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.middlewares: playwithpro-redirect-https@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts: [meet.play-with.pro]
+      secretName: play-with-pro-meet-tls
+  rules:
+    - host: meet.play-with.pro
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: livekit, port: { number: 7880 } }

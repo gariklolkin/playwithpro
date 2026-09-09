@@ -1,0 +1,29 @@
+# Prisma migration Job. deploy.sh substitutes __TAG__, deletes any previous
+# job of the same name, applies this, and waits for completion BEFORE rolling
+# the app deployments — failed migrations must never take down a running app.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: prisma-migrate
+  namespace: playwithpro
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app: prisma-migrate
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: playwithpro/api:__TAG__
+          imagePullPolicy: IfNotPresent
+          # no pnpm in the prod image — call the workspace-linked CLI directly
+          command: ["sh", "-c", "./node_modules/.bin/prisma migrate deploy"]
+          envFrom:
+            - secretRef:
+                name: playwithpro-env
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { memory: 512Mi }

@@ -75,6 +75,7 @@ export class UsersController {
         refreshToken: await this.tokens.issueRefreshToken(user.id),
       },
       this.config.get<string>('NODE_ENV') === 'production',
+      this.config.get<string>('AUTH_COOKIE_DOMAIN') || undefined,
     );
     return { ok: true };
   }
