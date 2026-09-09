@@ -15,8 +15,11 @@ export interface ResolveDisputeRequest {
 export interface DisputeAttendanceEntry {
   userId: string;
   displayName: string;
+  /** When the party performed the join action (token issued). */
   joinedAt: string;
-  /** Best-effort; null when the tab-close beacon never arrived. */
+  /** When the media server saw them connect; null if they never connected. */
+  connectedAt: string | null;
+  /** When the media server saw them leave; null if unknown. */
   leftAt: string | null;
 }
 

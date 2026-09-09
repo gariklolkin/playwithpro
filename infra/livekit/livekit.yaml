@@ -1,0 +1,27 @@
+# LiveKit dev config (infra/docker-compose.yml). Development keys only —
+# production renders infra/k8s/livekit/livekit.yaml.tpl from real secrets.
+port: 7880
+keys:
+  devkey: secret
+rtc:
+  tcp_port: 7881
+  udp_port: 7882
+  # Browsers run on the same machine; Rancher Desktop drops UDP port
+  # mappings, so ICE falls back to TCP 7881 — the same path production uses
+  # for UDP-restricted clients.
+  use_external_ip: false
+  node_ip: 127.0.0.1
+room:
+  auto_create: true
+  # A session room is exactly the two parties.
+  max_participants: 2
+  empty_timeout: 300
+  departure_timeout: 20
+turn:
+  enabled: false
+webhook:
+  api_key: devkey
+  urls:
+    - http://api:4000/livekit/webhook
+logging:
+  level: info

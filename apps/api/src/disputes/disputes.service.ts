@@ -40,6 +40,7 @@ type DisputeWithSession = Dispute & {
     attendance: Array<{
       userId: string;
       joinedAt: Date;
+      connectedAt: Date | null;
       leftAt: Date | null;
       user: { displayName: string };
     }>;
@@ -65,6 +66,7 @@ const DISPUTE_INCLUDE = {
         select: {
           userId: true,
           joinedAt: true,
+          connectedAt: true,
           leftAt: true,
           user: { select: { displayName: true } },
         },
@@ -234,6 +236,7 @@ export class DisputesService {
         userId: entry.userId,
         displayName: entry.user.displayName,
         joinedAt: entry.joinedAt.toISOString(),
+        connectedAt: entry.connectedAt?.toISOString() ?? null,
         leftAt: entry.leftAt?.toISOString() ?? null,
       })),
     };

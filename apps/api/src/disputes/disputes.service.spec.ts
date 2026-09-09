@@ -73,6 +73,7 @@ describe('DisputesService', () => {
         {
           userId: 'player-1',
           joinedAt: new Date(),
+          connectedAt: null,
           leftAt: null,
           user: { displayName: 'Player' },
         },

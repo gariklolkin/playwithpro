@@ -2,17 +2,28 @@ import type { RoomDescriptor } from '@playwithpro/shared';
 
 /**
  * Port for the video-call integration behind session rooms. Business logic
- * depends only on this interface; the vendor (embedded Jitsi in MVP, Google
- * Meet candidate later) is an implementation detail.
+ * depends only on this interface; the vendor (self-hosted LiveKit in MVP,
+ * LiveKit Cloud or another SFU later) is an implementation detail.
  */
 export interface RoomInput {
-  /** Random capability slug minted at payment; the only room identity. */
+  /** Random slug minted at payment; names the room, grants nothing by itself. */
   roomSlug: string;
 }
 
+export interface TokenInput extends RoomInput {
+  participant: {
+    /** Platform user id — becomes the participant identity. */
+    id: string;
+    displayName: string;
+    role: 'player' | 'coach';
+  };
+}
+
 export interface VideoProvider {
-  /** Descriptor the web client uses to join; must not leak beyond parties. */
-  getRoom(input: RoomInput): RoomDescriptor;
+  /** Where the call lives; safe to hand to parties inside the join window. */
+  describeRoom(input: RoomInput): RoomDescriptor;
+  /** Short-lived participant credential scoped to this one room. */
+  issueToken(input: TokenInput): Promise<string>;
 }
 
 export const VIDEO_PROVIDER = Symbol('VIDEO_PROVIDER');

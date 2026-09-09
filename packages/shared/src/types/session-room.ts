@@ -1,12 +1,15 @@
 import type { ServiceType } from "../enums/service-type";
 import type { SessionStatus } from "../enums/session-status";
 
-/** Vendor-agnostic descriptor of how to join the call. */
+/**
+ * Vendor-tagged descriptor of where the call lives. Carries no capability:
+ * admission needs the participant token returned by the join action.
+ */
 export type RoomDescriptor =
   | {
-      kind: "embedded_jitsi";
-      /** Bare host (https assumed) or full origin, e.g. http://localhost:8000. */
-      domain: string;
+      kind: "livekit";
+      /** Public signaling URL for the browser SDK, e.g. wss://meet.example. */
+      url: string;
       roomName: string;
     }
   | {
@@ -34,10 +37,8 @@ export interface SessionRoomResponse {
 }
 
 export interface JoinRoomResponse {
-  /** Attendance entry created for this join; pass back on leave. */
+  /** Attendance entry created for this join (connect/leave times arrive via provider webhooks). */
   attendanceId: string;
-}
-
-export interface LeaveRoomRequest {
-  attendanceId: string;
+  /** Short-lived participant token scoped to this session's room. */
+  token: string;
 }

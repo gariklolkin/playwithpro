@@ -6,9 +6,10 @@ import {
 } from './meeting-provider';
 
 /**
- * Dev/test stand-in: no API calls, no calendar — but the join URL is a real
- * Jitsi room (anonymous, browser-only), so the whole flow works end to end
- * locally, including actually joining the call.
+ * Dev/test stand-in: no API calls, no calendar — the join URL points at a
+ * public Jitsi Meet room (anonymous, browser-only) so the admin verification
+ * flow can be exercised end to end locally. Unrelated to session rooms,
+ * which run on the platform's own LiveKit server.
  */
 @Injectable()
 export class FakeMeetingProvider implements MeetingProvider {

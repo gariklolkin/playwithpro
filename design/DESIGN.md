@@ -80,7 +80,7 @@ Admin:       Verification queue · Disputes · Users · Transactions · Analytic
 ```
 Amateur: pick coach → pick service → pick slot → (optional) upload video → pay
 Platform: PaymentProvider.hold(amount)            # funds held, not transferred
-Platform: create calendar invite for both parties (Google Calendar API or .ics email) + video room link (Meet or Jitsi)
+Platform: create calendar invite for both parties (Google Calendar API or .ics email) + session-room link (LiveKit call inside the platform page)
 Session:  both join via platform session room at slot time (attendance logged)
 After:    amateur confirms (or auto-confirm after 48h, or opens dispute)
 Platform: PaymentProvider.release(coach) − platform fee   # payout
@@ -121,7 +121,7 @@ Sign up → build profile (bio, achievements, languages, services & prices) → 
 
 - **Frontend:** React + Next.js (App Router), Tailwind CSS + shadcn/ui, next-intl.
 - **Backend:** NestJS + PostgreSQL (Prisma).
-- **Sessions:** `VideoProvider` abstraction. Google Meet when the coach has a Google account connected; fallback — embedded Jitsi room (no account required for either party). Join always goes through a platform "session room" page so attendance can be tracked regardless of provider.
+- **Sessions:** `VideoProvider` abstraction (room descriptor + per-participant token). MVP implementation: self-hosted LiveKit with a native call UI inside the platform "session room" page (pre-join device check, counterpart/screen-share main tile, own camera as a corner tile); no account required from either party. Join is an explicit action that records attendance, and LiveKit webhooks add connection/leave evidence; Google Meet remains only for admin verification calls.
 - **Calendar:** `CalendarProvider` abstraction. Google Calendar API event for users who connected Google; universal `.ics` email invite for everyone else. Not all users are assumed to have a Google account.
 - **Video storage:** S3 (pre-signed uploads); MinIO locally.
 - **Payments:** `PaymentProvider` abstraction; mock provider in MVP, real provider (e.g., Stripe Connect) decided later.

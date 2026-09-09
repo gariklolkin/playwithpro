@@ -6,12 +6,21 @@ import {
   type SessionRoomResponse,
 } from "@playwithpro/shared";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import { useCallback, useEffect, useState } from "react";
 import { LocalTime } from "@/components/catalog/local-time";
-import { JitsiRoom } from "@/components/sessions/jitsi-room";
 import { RoomVideoPanel } from "@/components/sessions/room-video-panel";
-import { API_URL, apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 import { Link } from "@/i18n/navigation";
+
+// The call SDK is a sizeable client-only bundle; load it on this page only.
+const LiveKitCall = dynamic(
+  () =>
+    import("@/components/sessions/livekit-room").then(
+      (module) => module.LiveKitCall,
+    ),
+  { ssr: false },
+);
 
 type LoadState =
   | { kind: "loading" }
@@ -30,9 +39,9 @@ function formatCountdown(ms: number): string {
 }
 
 /**
- * The platform session room: countdown before the join window, embedded
- * Jitsi call inside it (side by side with the attached video for
- * video-analysis sessions), closed state after the grace period.
+ * The platform session room: countdown before the join window, the native
+ * call inside it (side by side with the attached video for video-analysis
+ * sessions), closed state after the grace period.
  */
 export function SessionRoom({
   sessionId,
@@ -46,8 +55,6 @@ export function SessionRoom({
   const [state, setState] = useState<LoadState>({ kind: "loading" });
   const [countdown, setCountdown] = useState<string | null>(null);
   const [windowClosed, setWindowClosed] = useState(false);
-  const attendanceRef = useRef<string | null>(null);
-  const joinLoggedRef = useRef(false);
 
   const load = useCallback(async () => {
     try {
@@ -103,50 +110,20 @@ export function SessionRoom({
     };
   }, [room, load]);
 
-  // Best-effort leave when the tab closes mid-call; joinedAt is the evidence
-  // that matters, so a lost beacon is acceptable.
-  useEffect(() => {
-    const leaveOnHide = () => {
-      if (!attendanceRef.current) return;
-      void fetch(`${API_URL}/sessions/${sessionId}/room/leave`, {
+  // The explicit "Join call" click performs the join: it records attendance
+  // and returns the participant token. Connection/leave evidence arrives via
+  // provider webhooks, so there is nothing to beacon on tab close.
+  const requestToken = useCallback(async (): Promise<string | null> => {
+    try {
+      const response = await apiFetch(`/sessions/${sessionId}/room/join`, {
         method: "POST",
-        credentials: "include",
-        keepalive: true,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ attendanceId: attendanceRef.current }),
-      }).catch(() => undefined);
-      attendanceRef.current = null;
-    };
-    window.addEventListener("pagehide", leaveOnHide);
-    return () => {
-      window.removeEventListener("pagehide", leaveOnHide);
-      leaveOnHide();
-    };
-  }, [sessionId]);
-
-  // The user already expressed intent by opening the room page ("Join room"
-  // in the list), so the call embeds immediately — Jitsi's own prejoin is
-  // the device check. Entering the open room is what attendance records.
-  const roomOpen = room !== null && room.room !== null;
-  useEffect(() => {
-    if (!roomOpen || joinLoggedRef.current) {
-      return;
+      });
+      if (!response.ok) return null;
+      return ((await response.json()) as JoinRoomResponse).token;
+    } catch {
+      return null;
     }
-    joinLoggedRef.current = true;
-    const kickoff = setTimeout(() => {
-      void apiFetch(`/sessions/${sessionId}/room/join`, { method: "POST" })
-        .then(async (response) => {
-          if (response.ok) {
-            attendanceRef.current = (
-              (await response.json()) as JoinRoomResponse
-            ).attendanceId;
-          }
-        })
-        // Attendance is evidence, not access control — the call still opens.
-        .catch(() => undefined);
-    }, 0);
-    return () => clearTimeout(kickoff);
-  }, [roomOpen, sessionId]);
+  }, [sessionId]);
 
   if (state.kind === "loading") {
     return <RoomShell>{t("loading")}</RoomShell>;
@@ -222,11 +199,12 @@ export function SessionRoom({
           }
         >
           <div>
-            {room.room.kind === "embedded_jitsi" ? (
-              <JitsiRoom
-                domain={room.room.domain}
-                roomName={room.room.roomName}
+            {room.room.kind === "livekit" ? (
+              <LiveKitCall
+                serverUrl={room.room.url}
+                counterpartName={room.counterpartName}
                 displayName={displayName}
+                requestToken={requestToken}
               />
             ) : null}
           </div>

@@ -652,6 +652,53 @@
         "onHint": "播放进度与对方保持一致。点击可自行浏览。",
         "offHint": "播放进度独立。点击可恢复同步播放。",
         "resume": "恢复同步播放"
+      },
+      "call": {
+        "prejoin": {
+          "title": "准备好加入了吗？",
+          "hint": "检查摄像头和麦克风，然后加入与 {name} 的通话。",
+          "camera": "摄像头",
+          "microphone": "麦克风",
+          "join": "加入通话",
+          "joining": "正在加入…",
+          "permissionDenied": "无法访问摄像头或麦克风。请检查浏览器权限后重试。",
+          "cameraOff": "摄像头已关闭"
+        },
+        "controls": {
+          "mute": "关闭麦克风",
+          "unmute": "打开麦克风",
+          "cameraOff": "关闭摄像头",
+          "cameraOn": "打开摄像头",
+          "shareScreen": "共享屏幕",
+          "stopShare": "停止共享",
+          "leave": "离开"
+        },
+        "waiting": "正在等待 {name} 加入…",
+        "connecting": "正在连接…",
+        "reconnecting": "正在重新连接…",
+        "you": "你",
+        "screenOf": "{name} 的屏幕",
+        "left": {
+          "title": "你已离开通话",
+          "hint": "房间在本次课程的加入时段结束前保持开放。"
+        },
+        "lost": {
+          "title": "连接已断开",
+          "hint": "请检查网络连接并重新加入通话。"
+        },
+        "joinFailed": {
+          "title": "无法加入通话",
+          "hint": "房间可能已关闭。请刷新页面后重试。"
+        },
+        "rejoin": "重新加入",
+        "quality": {
+          "excellent": "连接：极佳",
+          "good": "连接：良好",
+          "poor": "连接：较差",
+          "lost": "连接：已断开",
+          "unknown": "连接：检测中"
+        },
+        "mediaUnavailable": "摄像头或麦克风不可用。你仍然可以看到并听到对方。"
       }
     },
     "actions": {
@@ -702,7 +749,9 @@
     "refundCta": "退款给球员",
     "outcomeRelease": "已打款给教练",
     "outcomeRefund": "已退款给球员",
-    "error": "处理失败，请重试。"
+    "error": "处理失败，请重试。",
+    "connectedAt": "于 {time} 接入",
+    "neverConnected": "从未接入通话"
   },
   "adminConsole": {
     "roles": {

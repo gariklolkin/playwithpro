@@ -652,6 +652,53 @@
         "onHint": "La lecture est partagée entre les deux participants. Cliquez pour naviguer librement.",
         "offHint": "La lecture est indépendante. Cliquez pour rejoindre la lecture partagée.",
         "resume": "Reprendre la lecture synchronisée"
+      },
+      "call": {
+        "prejoin": {
+          "title": "Prêt à rejoindre ?",
+          "hint": "Vérifiez votre caméra et votre micro, puis rejoignez l'appel avec {name}.",
+          "camera": "Caméra",
+          "microphone": "Micro",
+          "join": "Rejoindre l'appel",
+          "joining": "Connexion…",
+          "permissionDenied": "Impossible d'accéder à votre caméra ou à votre micro. Vérifiez les autorisations du navigateur et réessayez.",
+          "cameraOff": "Caméra désactivée"
+        },
+        "controls": {
+          "mute": "Couper le micro",
+          "unmute": "Réactiver le micro",
+          "cameraOff": "Désactiver la caméra",
+          "cameraOn": "Activer la caméra",
+          "shareScreen": "Partager l'écran",
+          "stopShare": "Arrêter le partage",
+          "leave": "Quitter"
+        },
+        "waiting": "En attente de {name}…",
+        "connecting": "Connexion…",
+        "reconnecting": "Reconnexion…",
+        "you": "Vous",
+        "screenOf": "Écran de {name}",
+        "left": {
+          "title": "Vous avez quitté l'appel",
+          "hint": "La salle reste ouverte jusqu'à la fin de la fenêtre de connexion de la séance."
+        },
+        "lost": {
+          "title": "Connexion perdue",
+          "hint": "Vérifiez votre connexion Internet et rejoignez à nouveau l'appel."
+        },
+        "joinFailed": {
+          "title": "Impossible de rejoindre l'appel",
+          "hint": "La salle est peut-être fermée. Rechargez la page et réessayez."
+        },
+        "rejoin": "Rejoindre à nouveau",
+        "quality": {
+          "excellent": "Connexion : excellente",
+          "good": "Connexion : bonne",
+          "poor": "Connexion : faible",
+          "lost": "Connexion : perdue",
+          "unknown": "Connexion : mesure en cours"
+        },
+        "mediaUnavailable": "Votre caméra ou votre micro n'est pas disponible. Vous pouvez tout de même voir et entendre l'autre participant."
       }
     },
     "actions": {
@@ -702,7 +749,9 @@
     "refundCta": "Rembourser le joueur",
     "outcomeRelease": "Versé au coach",
     "outcomeRefund": "Remboursé au joueur",
-    "error": "La résolution a échoué. Réessayez."
+    "error": "La résolution a échoué. Réessayez.",
+    "connectedAt": "connecté à {time}",
+    "neverConnected": "jamais connecté à l'appel"
   },
   "adminConsole": {
     "roles": {

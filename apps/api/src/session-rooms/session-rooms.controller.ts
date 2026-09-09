@@ -1,5 +1,4 @@
 import {
-  Body,
   Controller,
   Get,
   HttpCode,
@@ -15,7 +14,6 @@ import type { AuthenticatedUser } from '../auth/auth-cookies';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { LeaveRoomDto } from './dto/leave-room.dto';
 import { SessionRoomsService } from './session-rooms.service';
 
 @ApiTags('session-rooms')
@@ -38,21 +36,14 @@ export class SessionRoomsController {
 
   @Post('join')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ description: 'Attendance entry recorded for this join.' })
+  @ApiOkResponse({
+    description:
+      'Attendance entry recorded and participant token minted; parties only.',
+  })
   async join(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<JoinRoomResponse> {
     return this.rooms.join(user, id);
-  }
-
-  @Post('leave')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async leave(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: LeaveRoomDto,
-  ): Promise<void> {
-    await this.rooms.leave(user, id, dto.attendanceId);
   }
 }

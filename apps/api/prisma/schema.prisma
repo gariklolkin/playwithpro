@@ -389,9 +389,12 @@ model SessionAttendance {
   id        String    @id @default(uuid())
   sessionId String
   userId    String
-  joinedAt  DateTime  @default(now())
-  /// Best-effort (beacon on tab close); joinedAt is the primary evidence.
-  leftAt    DateTime?
+  /// When the party performed the join action (token issued).
+  joinedAt    DateTime  @default(now())
+  /// When the media server reported the participant connected (webhook).
+  connectedAt DateTime?
+  /// When the media server reported the participant left (webhook).
+  leftAt      DateTime?
 
   session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)

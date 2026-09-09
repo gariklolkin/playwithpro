@@ -61,11 +61,11 @@ export class SessionRoomsService {
       endsAt: session.endsAt.toISOString(),
       opensAt: opensAt.toISOString(),
       closesAt: closesAt.toISOString(),
-      // The descriptor carries the room slug — the capability — so it is
-      // released only inside the join window.
+      // Room details are released only inside the join window; admission
+      // still needs the participant token minted by join().
       room:
         joinable && session.roomSlug !== null
-          ? this.video.getRoom({ roomSlug: session.roomSlug })
+          ? this.video.describeRoom({ roomSlug: session.roomSlug })
           : null,
       videoId: session.video?.id ?? null,
       videoTitle: session.video?.title ?? null,
@@ -75,32 +75,43 @@ export class SessionRoomsService {
     };
   }
 
+  /**
+   * Explicit join: records the attendance row (the evidence that the party
+   * tried) and mints the participant token. Parties only — admins may read
+   * timing via getRoom() but never enter the call.
+   */
   async join(
     user: AuthenticatedUser,
     sessionId: string,
   ): Promise<JoinRoomResponse> {
     const session = await this.requireRoomSession(user, sessionId);
+    const viewerIsPlayer = session.playerId === user.id;
+    const viewerIsCoach = session.proProfile.userId === user.id;
+    if (!viewerIsPlayer && !viewerIsCoach) {
+      throw new NotFoundException();
+    }
     const now = Date.now();
     const { opensAt, closesAt } = this.window(session);
     if (now < opensAt.getTime() || now > closesAt.getTime()) {
       throw new ConflictException('The session room is closed.');
     }
+    if (session.roomSlug === null) {
+      throw new ConflictException('This session has no active room.');
+    }
+    const token = await this.video.issueToken({
+      roomSlug: session.roomSlug,
+      participant: {
+        id: user.id,
+        displayName: viewerIsPlayer
+          ? session.player.displayName
+          : session.proProfile.user.displayName,
+        role: viewerIsPlayer ? 'player' : 'coach',
+      },
+    });
     const attendance = await this.prisma.sessionAttendance.create({
       data: { sessionId: session.id, userId: user.id },
     });
-    return { attendanceId: attendance.id };
-  }
-
-  /** Best-effort: beacons on tab close may never arrive, joinedAt suffices. */
-  async leave(
-    user: AuthenticatedUser,
-    sessionId: string,
-    attendanceId: string,
-  ): Promise<void> {
-    await this.prisma.sessionAttendance.updateMany({
-      where: { id: attendanceId, sessionId, userId: user.id, leftAt: null },
-      data: { leftAt: new Date() },
-    });
+    return { attendanceId: attendance.id, token };
   }
 
   /**

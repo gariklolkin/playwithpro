@@ -28,6 +28,14 @@ function AttendanceEvidence({ item }: { item: AdminDisputeItem }) {
             dateStyle: "short",
             timeStyle: "short",
           })}
+          {" · "}
+          {entry.connectedAt
+            ? t("connectedAt", {
+                time: format.dateTime(new Date(entry.connectedAt), {
+                  timeStyle: "short",
+                }),
+              })
+            : t("neverConnected")}
           {entry.leftAt
             ? ` → ${format.dateTime(new Date(entry.leftAt), { timeStyle: "short" })}`
             : ` (${t("noLeaveTime")})`}

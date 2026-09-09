@@ -652,6 +652,53 @@
         "onHint": "Die Wiedergabe folgt beiden Teilnehmern. Klicken, um unabhängig zu navigieren.",
         "offHint": "Die Wiedergabe ist unabhängig. Klicken, um zur gemeinsamen Wiedergabe zurückzukehren.",
         "resume": "Synchronisierte Wiedergabe fortsetzen"
+      },
+      "call": {
+        "prejoin": {
+          "title": "Bereit beizutreten?",
+          "hint": "Prüfe Kamera und Mikrofon und tritt dann dem Anruf mit {name} bei.",
+          "camera": "Kamera",
+          "microphone": "Mikrofon",
+          "join": "Anruf beitreten",
+          "joining": "Verbinde…",
+          "permissionDenied": "Kein Zugriff auf Kamera oder Mikrofon. Prüfe die Browser-Berechtigungen und versuche es erneut.",
+          "cameraOff": "Kamera ist aus"
+        },
+        "controls": {
+          "mute": "Mikrofon stummschalten",
+          "unmute": "Stummschaltung aufheben",
+          "cameraOff": "Kamera ausschalten",
+          "cameraOn": "Kamera einschalten",
+          "shareScreen": "Bildschirm teilen",
+          "stopShare": "Teilen beenden",
+          "leave": "Verlassen"
+        },
+        "waiting": "Warte auf {name}…",
+        "connecting": "Verbinde…",
+        "reconnecting": "Verbindung wird wiederhergestellt…",
+        "you": "Du",
+        "screenOf": "Bildschirm von {name}",
+        "left": {
+          "title": "Du hast den Anruf verlassen",
+          "hint": "Der Raum bleibt offen, bis das Beitrittsfenster der Sitzung schließt."
+        },
+        "lost": {
+          "title": "Verbindung verloren",
+          "hint": "Prüfe deine Internetverbindung und tritt dem Anruf erneut bei."
+        },
+        "joinFailed": {
+          "title": "Beitritt nicht möglich",
+          "hint": "Der Raum ist möglicherweise geschlossen. Lade die Seite neu und versuche es erneut."
+        },
+        "rejoin": "Erneut beitreten",
+        "quality": {
+          "excellent": "Verbindung: ausgezeichnet",
+          "good": "Verbindung: gut",
+          "poor": "Verbindung: schwach",
+          "lost": "Verbindung: verloren",
+          "unknown": "Verbindung: wird gemessen"
+        },
+        "mediaUnavailable": "Kamera oder Mikrofon sind nicht verfügbar. Du kannst die andere Person trotzdem sehen und hören."
       }
     },
     "actions": {
@@ -702,7 +749,9 @@
     "refundCta": "Spieler erstatten",
     "outcomeRelease": "An Coach ausgezahlt",
     "outcomeRefund": "An Spieler erstattet",
-    "error": "Entscheidung fehlgeschlagen. Versuchen Sie es erneut."
+    "error": "Entscheidung fehlgeschlagen. Versuchen Sie es erneut.",
+    "connectedAt": "verbunden um {time}",
+    "neverConnected": "nie mit dem Anruf verbunden"
   },
   "adminConsole": {
     "roles": {

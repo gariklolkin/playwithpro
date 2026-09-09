@@ -1,6 +1,6 @@
 # PlayWithPro — Table Tennis Coaching Marketplace
 
-Two-sided marketplace: amateur players book paid sessions with verified table tennis professionals. Exactly three services: video analysis, consultation (both via video call), and an in-person game at a venue. Escrow payments, video upload to S3, online sessions via Google Meet/Jitsi, 5 UI languages (en/fr/de/ru/zh).
+Two-sided marketplace: amateur players book paid sessions with verified table tennis professionals. Exactly three services: video analysis, consultation (both via video call), and an in-person game at a venue. Escrow payments, video upload to S3, online sessions via self-hosted LiveKit (admin verification calls via Google Meet), 5 UI languages (en/fr/de/ru/zh).
 
 ## Spec-driven workflow (OpenSpec) — MANDATORY
 
@@ -20,5 +20,5 @@ Two-sided marketplace: amateur players book paid sessions with verified table te
 - Stack: pnpm + Turborepo monorepo; `apps/web` Next.js (App Router, Tailwind, shadcn/ui, next-intl); `apps/api` NestJS + Prisma + PostgreSQL; Tilt for local dev; MinIO as local S3.
 - Money: integer minor units + currency code. Time: UTC in DB, viewer timezone in UI.
 - No hard-coded UI strings — next-intl catalogs only.
-- Provider abstractions (do not bind business logic to vendors): `PaymentProvider` (mock in MVP), `VideoProvider` (Meet | Jitsi), `CalendarProvider` (Google | .ics email).
+- Provider abstractions (do not bind business logic to vendors): `PaymentProvider` (mock in MVP), `VideoProvider` (LiveKit; Meet only for admin verification calls), `CalendarProvider` (Google | .ics email).
 - Session lifecycle: `draft → pending_payment → paid_escrow → in_progress → awaiting_confirmation → completed_paid | disputed → resolved`.

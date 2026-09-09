@@ -652,6 +652,53 @@
         "onHint": "Playback follows both participants. Click to browse on your own.",
         "offHint": "Playback is independent. Click to rejoin shared playback.",
         "resume": "Resume synced playback"
+      },
+      "call": {
+        "prejoin": {
+          "title": "Ready to join?",
+          "hint": "Check your camera and microphone, then join the call with {name}.",
+          "camera": "Camera",
+          "microphone": "Microphone",
+          "join": "Join call",
+          "joining": "Joining…",
+          "permissionDenied": "We can't access your camera or microphone. Check the browser permissions and try again.",
+          "cameraOff": "Camera is off"
+        },
+        "controls": {
+          "mute": "Mute microphone",
+          "unmute": "Unmute microphone",
+          "cameraOff": "Turn camera off",
+          "cameraOn": "Turn camera on",
+          "shareScreen": "Share screen",
+          "stopShare": "Stop sharing",
+          "leave": "Leave"
+        },
+        "waiting": "Waiting for {name} to join…",
+        "connecting": "Connecting…",
+        "reconnecting": "Reconnecting…",
+        "you": "You",
+        "screenOf": "{name}'s screen",
+        "left": {
+          "title": "You left the call",
+          "hint": "The room stays open until the session's join window closes."
+        },
+        "lost": {
+          "title": "Connection lost",
+          "hint": "Check your internet connection and rejoin the call."
+        },
+        "joinFailed": {
+          "title": "Could not join the call",
+          "hint": "The room may have closed. Reload the page and try again."
+        },
+        "rejoin": "Rejoin",
+        "quality": {
+          "excellent": "Connection: excellent",
+          "good": "Connection: good",
+          "poor": "Connection: poor",
+          "lost": "Connection: lost",
+          "unknown": "Connection: measuring"
+        },
+        "mediaUnavailable": "Your camera or microphone is unavailable. You can still see and hear the other party."
       }
     },
     "actions": {
@@ -702,7 +749,9 @@
     "refundCta": "Refund the player",
     "outcomeRelease": "Released to coach",
     "outcomeRefund": "Refunded to player",
-    "error": "Resolution failed. Try again."
+    "error": "Resolution failed. Try again.",
+    "connectedAt": "connected {time}",
+    "neverConnected": "never connected to the call"
   },
   "adminConsole": {
     "roles": {

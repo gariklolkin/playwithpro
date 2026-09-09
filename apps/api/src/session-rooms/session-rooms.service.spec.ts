@@ -18,7 +18,7 @@ describe('SessionRoomsService.authorizePlaybackSync', () => {
   const progression = {
     normalize: jest.fn((session: unknown) => Promise.resolve(session)),
   };
-  const video = { getRoom: jest.fn() };
+  const video = { describeRoom: jest.fn(), issueToken: jest.fn() };
   const service = new SessionRoomsService(
     prisma as unknown as PrismaService,
     config as unknown as ConfigService,

@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment,
-   @typescript-eslint/no-unsafe-member-access,
-   @typescript-eslint/no-unsafe-argument,
-   @typescript-eslint/no-unsafe-return
+   @typescript-eslint/no-unsafe-member-access
    -- supertest responses are untyped; assertions cast where it matters. */
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { createHash } from 'node:crypto';
+import { ValidationPipe } from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import {
   Role,
@@ -12,6 +12,7 @@ import {
   SessionRoomResponse,
 } from '@playwithpro/shared';
 import cookieParser from 'cookie-parser';
+import { AccessToken, TokenVerifier } from 'livekit-server-sdk';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { TokenService } from '../src/auth/token.service';
@@ -44,14 +45,17 @@ async function truncateAll(prisma: PrismaService): Promise<void> {
  * Postgres (CI service container or a dedicated local `*e2e*` database).
  */
 describe('Session rooms & calendar (e2e)', () => {
-  let app: INestApplication;
+  let app: NestExpressApplication;
   let prisma: PrismaService;
   let playerCookie: string;
   let rivalCookie: string;
   let coachCookie: string;
 
+  let adminCookie: string;
+
   let coachProfileId: string;
   let playerId: string;
+  let rivalId: string;
 
   const slotIds: string[] = [];
 
@@ -105,7 +109,13 @@ describe('Session rooms & calendar (e2e)', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
-    app = moduleRef.createNestApplication();
+    // Mirrors main.ts: raw body + webhook content type for LiveKit signatures.
+    app = moduleRef.createNestApplication<NestExpressApplication>({
+      rawBody: true,
+    });
+    app.useBodyParser('json', {
+      type: ['application/json', 'application/webhook+json'],
+    });
     app.use(cookieParser());
     app.useGlobalPipes(
       new ValidationPipe({ whitelist: true, transform: true }),
@@ -169,8 +179,18 @@ describe('Session rooms & calendar (e2e)', () => {
         displayName: 'Rooms Rival',
       },
     });
+    rivalId = rival.id;
+
+    const admin = await prisma.user.create({
+      data: {
+        email: 'rooms-admin@e2e.test',
+        role: 'ADMIN',
+        displayName: 'Rooms Admin',
+      },
+    });
 
     const tokens = app.get(TokenService);
+    adminCookie = `access_token=${tokens.signAccessToken(admin.id, Role.Admin)}`;
     playerCookie = `access_token=${tokens.signAccessToken(playerId, Role.Amateur)}`;
     rivalCookie = `access_token=${tokens.signAccessToken(rival.id, Role.Amateur)}`;
     coachCookie = `access_token=${tokens.signAccessToken(coach.id, Role.Professional)}`;
@@ -181,6 +201,31 @@ describe('Session rooms & calendar (e2e)', () => {
   });
 
   const server = () => app.getHttpServer();
+
+  const LIVEKIT_KEY = process.env.LIVEKIT_API_KEY ?? 'devkey';
+  const LIVEKIT_SECRET = process.env.LIVEKIT_API_SECRET ?? 'secret';
+
+  /** Posts a LiveKit-style webhook, signed the way livekit-server signs it. */
+  async function postWebhook(
+    event: Record<string, unknown>,
+    expectedStatus: number,
+    options: { signed?: boolean; secret?: string } = {},
+  ): Promise<void> {
+    const body = JSON.stringify(event);
+    const req = request(server())
+      .post('/livekit/webhook')
+      .set('Content-Type', 'application/webhook+json');
+    if (options.signed !== false) {
+      const token = new AccessToken(
+        LIVEKIT_KEY,
+        options.secret ?? LIVEKIT_SECRET,
+        { ttl: 60 },
+      );
+      token.sha256 = createHash('sha256').update(body).digest('base64');
+      req.set('Authorization', await token.toJwt());
+    }
+    await req.send(body).expect(expectedStatus);
+  }
 
   describe('payment mints room + invite', () => {
     let sessionId: string;
@@ -237,9 +282,13 @@ describe('Session rooms & calendar (e2e)', () => {
         .set('Cookie', playerCookie)
         .expect(200);
       const room = res.body as SessionRoomResponse;
-      expect(room.room).toMatchObject({
-        kind: 'embedded_jitsi',
-        roomName: expect.stringContaining('playwithpro-') as string,
+      const session = await prisma.session.findUniqueOrThrow({
+        where: { id: sessionId },
+      });
+      expect(room.room).toEqual({
+        kind: 'livekit',
+        url: expect.stringMatching(/^wss?:\/\//) as string,
+        roomName: session.roomSlug,
       });
       // Session already started → clock-driven progression applied inline.
       expect(room.status).toBe('in_progress');
@@ -254,21 +303,104 @@ describe('Session rooms & calendar (e2e)', () => {
         .expect(200);
       expect(rejoin.body.attendanceId).not.toBe(first.body.attendanceId);
 
+      // The token is a LiveKit JWT bound to this user and this room only.
+      const claims = await new TokenVerifier(
+        LIVEKIT_KEY,
+        LIVEKIT_SECRET,
+      ).verify(first.body.token as string);
+      expect(claims.sub).toBe(playerId);
+      expect(claims.video).toMatchObject({
+        room: session.roomSlug,
+        roomJoin: true,
+        canPublish: true,
+        canSubscribe: true,
+        canPublishData: false,
+      });
+
       const rows = await prisma.sessionAttendance.findMany({
         where: { sessionId, userId: playerId },
       });
       expect(rows).toHaveLength(2);
       expect(rows.every((row) => row.leftAt === null)).toBe(true);
+      expect(rows.every((row) => row.connectedAt === null)).toBe(true);
 
+      // The leave endpoint is gone: evidence now arrives via webhooks.
       await request(server())
         .post(`/sessions/${sessionId}/room/leave`)
         .set('Cookie', playerCookie)
         .send({ attendanceId: rejoin.body.attendanceId })
-        .expect(204);
-      const left = await prisma.sessionAttendance.findUniqueOrThrow({
-        where: { id: rejoin.body.attendanceId },
+        .expect(404);
+    });
+
+    it('admins read timing but cannot join', async () => {
+      const res = await request(server())
+        .get(`/sessions/${sessionId}/room`)
+        .set('Cookie', adminCookie)
+        .expect(200);
+      expect((res.body as SessionRoomResponse).room).not.toBeNull();
+
+      await request(server())
+        .post(`/sessions/${sessionId}/room/join`)
+        .set('Cookie', adminCookie)
+        .expect(404);
+    });
+
+    it('signed webhooks stamp connection evidence; unsigned are rejected', async () => {
+      const session = await prisma.session.findUniqueOrThrow({
+        where: { id: sessionId },
       });
-      expect(left.leftAt).not.toBeNull();
+      const joinedAtSec = Math.floor(Date.now() / 1000) - 30;
+      const joined = {
+        event: 'participant_joined',
+        id: 'evt-1',
+        createdAt: joinedAtSec,
+        room: { name: session.roomSlug },
+        participant: { identity: playerId, joinedAt: joinedAtSec },
+      };
+
+      await postWebhook(joined, 401, { signed: false });
+      await postWebhook(joined, 401, { secret: 'wrong-secret-long-enough-x' });
+      await postWebhook(joined, 200);
+      // Redelivery must not add or change anything.
+      await postWebhook(joined, 200);
+
+      let rows = await prisma.sessionAttendance.findMany({
+        where: { sessionId, userId: playerId },
+        orderBy: { joinedAt: 'asc' },
+      });
+      expect(rows).toHaveLength(2);
+      const connected = rows.filter((row) => row.connectedAt !== null);
+      expect(connected).toHaveLength(1);
+      expect(connected[0].connectedAt!.getTime()).toBe(joinedAtSec * 1000);
+
+      await postWebhook(
+        {
+          event: 'participant_left',
+          id: 'evt-2',
+          createdAt: joinedAtSec + 20,
+          room: { name: session.roomSlug },
+          participant: { identity: playerId, joinedAt: joinedAtSec },
+        },
+        200,
+      );
+      rows = await prisma.sessionAttendance.findMany({
+        where: { sessionId, userId: playerId, leftAt: { not: null } },
+      });
+      expect(rows).toHaveLength(1);
+      expect(rows[0].leftAt!.getTime()).toBe((joinedAtSec + 20) * 1000);
+
+      // Unknown room and non-party identity are ignored, never errors.
+      await postWebhook({ ...joined, room: { name: 'nope' } }, 200);
+      await postWebhook(
+        {
+          ...joined,
+          participant: { identity: rivalId, joinedAt: joinedAtSec },
+        },
+        200,
+      );
+      expect(
+        await prisma.sessionAttendance.count({ where: { userId: rivalId } }),
+      ).toBe(0);
     });
 
     it('progresses to awaiting_confirmation after the end, room open in grace', async () => {
