@@ -662,7 +662,8 @@
           "join": "Join call",
           "joining": "Joining…",
           "permissionDenied": "We can't access your camera or microphone. Check the browser permissions and try again.",
-          "cameraOff": "Camera is off"
+          "cameraOff": "Camera is off",
+          "deviceBusy": "Your camera or microphone is in use by another app or browser. Close it and reload the page."
         },
         "controls": {
           "mute": "Mute microphone",

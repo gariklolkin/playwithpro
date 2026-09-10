@@ -662,7 +662,8 @@
           "join": "加入通话",
           "joining": "正在加入…",
           "permissionDenied": "无法访问摄像头或麦克风。请检查浏览器权限后重试。",
-          "cameraOff": "摄像头已关闭"
+          "cameraOff": "摄像头已关闭",
+          "deviceBusy": "摄像头或麦克风正被其他应用或浏览器占用。请关闭后刷新页面。"
         },
         "controls": {
           "mute": "关闭麦克风",

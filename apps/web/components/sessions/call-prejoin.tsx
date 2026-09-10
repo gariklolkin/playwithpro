@@ -149,7 +149,10 @@ export function CallPreJoin({
         </p>
         {deviceError ? (
           <p className="mt-2 text-sm text-destructive">
-            {t("prejoin.permissionDenied")}
+            {deviceError.name === "NotReadableError"
+              ? t("prejoin.deviceBusy")
+              : t("prejoin.permissionDenied")}{" "}
+            <span className="text-text-tertiary">({deviceError.name})</span>
           </p>
         ) : null}
         {/* Device labels only exist once permission was granted, so the

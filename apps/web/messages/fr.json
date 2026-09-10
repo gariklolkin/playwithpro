@@ -662,7 +662,8 @@
           "join": "Rejoindre l'appel",
           "joining": "Connexion…",
           "permissionDenied": "Impossible d'accéder à votre caméra ou à votre micro. Vérifiez les autorisations du navigateur et réessayez.",
-          "cameraOff": "Caméra désactivée"
+          "cameraOff": "Caméra désactivée",
+          "deviceBusy": "Votre caméra ou votre micro est utilisé par une autre application ou un autre navigateur. Fermez-le et rechargez la page."
         },
         "controls": {
           "mute": "Couper le micro",

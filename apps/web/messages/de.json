@@ -662,7 +662,8 @@
           "join": "Anruf beitreten",
           "joining": "Verbinde…",
           "permissionDenied": "Kein Zugriff auf Kamera oder Mikrofon. Prüfe die Browser-Berechtigungen und versuche es erneut.",
-          "cameraOff": "Kamera ist aus"
+          "cameraOff": "Kamera ist aus",
+          "deviceBusy": "Kamera oder Mikrofon werden von einer anderen App oder einem anderen Browser verwendet. Schließe sie und lade die Seite neu."
         },
         "controls": {
           "mute": "Mikrofon stummschalten",
