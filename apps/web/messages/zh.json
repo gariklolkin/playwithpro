@@ -653,6 +653,25 @@
         "offHint": "播放进度独立。点击可恢复同步播放。",
         "resume": "恢复同步播放"
       },
+      "annotations": {
+        "toolbarLabel": "标注工具",
+        "tools": {
+          "select": "选择",
+          "pen": "画笔",
+          "line": "直线",
+          "angle": "角度"
+        },
+        "colorLabel": "线条颜色",
+        "undo": "撤销",
+        "clear": "清空画面",
+        "hint": {
+          "pen": "在暂停的画面上绘制。按 Esc 退出绘制。",
+          "line": "拖动以绘制直线。按 Esc 退出绘制。",
+          "angle": "点击三个点，角度在中间点测量。按 Esc 退出绘制。"
+        },
+        "moments": "已标注的时刻",
+        "jumpTo": "跳转到 {time}"
+      },
       "call": {
         "prejoin": {
           "title": "准备好加入了吗？",

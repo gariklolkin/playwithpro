@@ -653,6 +653,25 @@
         "offHint": "Die Wiedergabe ist unabhängig. Klicken, um zur gemeinsamen Wiedergabe zurückzukehren.",
         "resume": "Synchronisierte Wiedergabe fortsetzen"
       },
+      "annotations": {
+        "toolbarLabel": "Anmerkungswerkzeuge",
+        "tools": {
+          "select": "Auswahl",
+          "pen": "Stift",
+          "line": "Linie",
+          "angle": "Winkel"
+        },
+        "colorLabel": "Strichfarbe",
+        "undo": "Rückgängig",
+        "clear": "Bild leeren",
+        "hint": {
+          "pen": "Zeichnen Sie auf dem pausierten Bild. Mit Esc beenden.",
+          "line": "Ziehen Sie, um eine gerade Linie zu zeichnen. Mit Esc beenden.",
+          "angle": "Tippen Sie drei Punkte an; der Winkel wird am mittleren Punkt gemessen. Mit Esc beenden."
+        },
+        "moments": "Kommentierte Momente",
+        "jumpTo": "Zu {time} springen"
+      },
       "call": {
         "prejoin": {
           "title": "Bereit beizutreten?",

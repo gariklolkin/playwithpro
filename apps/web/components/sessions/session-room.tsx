@@ -3,6 +3,7 @@
 import {
   ServiceType,
   type JoinRoomResponse,
+  type Role,
   type SessionRoomResponse,
 } from "@playwithpro/shared";
 import { useTranslations } from "next-intl";
@@ -45,9 +46,13 @@ function formatCountdown(ms: number): string {
  */
 export function SessionRoom({
   sessionId,
+  userId,
+  role,
   displayName,
 }: {
   sessionId: string;
+  userId: string;
+  role: Role;
   displayName: string;
 }) {
   const t = useTranslations("sessions.room");
@@ -213,6 +218,8 @@ export function SessionRoom({
               sessionId={sessionId}
               videoId={room.videoId}
               videoTitle={room.videoTitle}
+              userId={userId}
+              role={role}
             />
           ) : null}
         </div>

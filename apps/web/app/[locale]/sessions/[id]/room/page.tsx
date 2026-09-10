@@ -28,7 +28,12 @@ export default async function SessionRoomPage({
   // countdown and refetch when the join window opens.
   return (
     <main className="mx-auto w-full max-w-[1200px] flex-1 px-5 pb-16 sm:px-8">
-      <SessionRoom sessionId={id} displayName={user.displayName} />
+      <SessionRoom
+        sessionId={id}
+        userId={user.id}
+        role={user.role}
+        displayName={user.displayName}
+      />
     </main>
   );
 }

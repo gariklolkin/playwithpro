@@ -1,3 +1,4 @@
+import { Role } from "@playwithpro/shared";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -10,6 +11,10 @@ const ioMock = vi.fn(() => ({
   on: (event: string, handler: (payload: unknown) => void) => {
     socketHandlers.set(event, handler);
   },
+  off: (event: string) => {
+    socketHandlers.delete(event);
+  },
+  connected: false,
   emit: socketEmit,
   disconnect: vi.fn(),
 }));
@@ -36,6 +41,11 @@ beforeEach(() => {
     configurable: true,
     value: vi.fn(),
   });
+  // jsdom has no 2D context; the annotation layer skips drawing on null.
+  Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
+    configurable: true,
+    value: vi.fn(() => null),
+  });
 });
 
 afterEach(() => {
@@ -51,6 +61,8 @@ async function renderPanel() {
         sessionId="session-1"
         videoId="video-1"
         videoTitle="Match footage"
+        userId="coach-1"
+        role={Role.Professional}
       />
     </NextIntlClientProvider>,
   );
@@ -144,5 +156,91 @@ describe("RoomVideoPanel synced playback", () => {
         screen.queryByRole("button", { name: /resume synced playback/i }),
       ).not.toBeInTheDocument(),
     );
+  });
+});
+
+describe("RoomVideoPanel annotations", () => {
+  const lineStroke = (id: string, authorId: string, momentKey = "134.2") => ({
+    id,
+    momentKey,
+    authorId,
+    tool: "line" as const,
+    color: "#2563eb",
+    points: [
+      { x: 0.1, y: 0.2 },
+      { x: 0.8, y: 0.9 },
+    ],
+    createdAtMs: 1,
+  });
+
+  async function receiveAnnotationState(state: Record<string, unknown[]>) {
+    await waitFor(() =>
+      expect(socketHandlers.get("annotation:state")).toBeDefined(),
+    );
+    socketHandlers.get("annotation:state")?.(state);
+  }
+
+  it("lists annotated moments and seeks to them, pausing the player", async () => {
+    const { video } = await renderPanel();
+    await receiveAnnotationState({
+      "134.2": [lineStroke("s1", "coach-1")],
+      "34.0": [lineStroke("s2", "player-1", "34.0")],
+    });
+    const group = await screen.findByRole("group", {
+      name: /annotated moments/i,
+    });
+    const chips = group.querySelectorAll("button");
+    expect([...chips].map((c) => c.textContent)).toEqual(["0:34", "2:14.2"]);
+
+    fireEvent.click(chips[1]);
+    expect(video.currentTime).toBeCloseTo(134.2);
+    expect(HTMLMediaElement.prototype.pause).toHaveBeenCalled();
+  });
+
+  it("pauses the video when a drawing tool is activated and exits on Escape", async () => {
+    const { video } = await renderPanel();
+    Object.defineProperty(video, "paused", {
+      configurable: true,
+      value: false,
+    });
+    const pen = screen.getByRole("button", { name: /pen/i });
+    fireEvent.click(pen);
+    expect(HTMLMediaElement.prototype.pause).toHaveBeenCalled();
+    expect(pen).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(pen).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: /select/i })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  it("undoes only this user's stroke on the shown moment", async () => {
+    const { video } = await renderPanel();
+    video.currentTime = 134.2;
+    fireEvent(video, new Event("seeked"));
+    await receiveAnnotationState({
+      "134.2": [
+        lineStroke("mine", "coach-1"),
+        lineStroke("theirs", "player-1"),
+      ],
+    });
+    const undo = await screen.findByRole("button", { name: /undo/i });
+    await waitFor(() => expect(undo).toBeEnabled());
+    fireEvent.click(undo);
+    expect(socketEmit).toHaveBeenCalledWith("annotation:undo", {
+      momentKey: "134.2",
+    });
+    // Only the peer's stroke is left, so undo is no longer available.
+    await waitFor(() => expect(undo).toBeDisabled());
+    expect(screen.getByRole("button", { name: /clear/i })).toBeEnabled();
+  });
+
+  it("uses the role default color", async () => {
+    await renderPanel();
+    const swatches = screen.getAllByRole("radio");
+    expect(swatches[0]).toHaveAttribute("aria-label", "#2563eb");
+    expect(swatches[0]).toHaveAttribute("aria-checked", "true");
   });
 });

@@ -653,6 +653,25 @@
         "offHint": "La lecture est indépendante. Cliquez pour rejoindre la lecture partagée.",
         "resume": "Reprendre la lecture synchronisée"
       },
+      "annotations": {
+        "toolbarLabel": "Outils d’annotation",
+        "tools": {
+          "select": "Sélection",
+          "pen": "Crayon",
+          "line": "Ligne",
+          "angle": "Angle"
+        },
+        "colorLabel": "Couleur du trait",
+        "undo": "Annuler",
+        "clear": "Effacer l’image",
+        "hint": {
+          "pen": "Dessinez sur l’image en pause. Appuyez sur Échap pour arrêter.",
+          "line": "Faites glisser pour tracer une ligne droite. Appuyez sur Échap pour arrêter.",
+          "angle": "Touchez trois points ; l’angle est mesuré au point du milieu. Appuyez sur Échap pour arrêter."
+        },
+        "moments": "Moments annotés",
+        "jumpTo": "Aller à {time}"
+      },
       "call": {
         "prejoin": {
           "title": "Prêt à rejoindre ?",

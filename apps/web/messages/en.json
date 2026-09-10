@@ -653,6 +653,25 @@
         "offHint": "Playback is independent. Click to rejoin shared playback.",
         "resume": "Resume synced playback"
       },
+      "annotations": {
+        "toolbarLabel": "Annotation tools",
+        "tools": {
+          "select": "Select",
+          "pen": "Pen",
+          "line": "Line",
+          "angle": "Angle"
+        },
+        "colorLabel": "Stroke color",
+        "undo": "Undo",
+        "clear": "Clear frame",
+        "hint": {
+          "pen": "Draw on the paused frame. Press Esc to stop drawing.",
+          "line": "Drag to draw a straight line. Press Esc to stop drawing.",
+          "angle": "Tap three points; the angle is measured at the middle one. Press Esc to stop drawing."
+        },
+        "moments": "Annotated moments",
+        "jumpTo": "Jump to {time}"
+      },
       "call": {
         "prejoin": {
           "title": "Ready to join?",

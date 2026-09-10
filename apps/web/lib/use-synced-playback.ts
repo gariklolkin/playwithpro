@@ -32,6 +32,11 @@ export interface SyncedPlayback {
   onPlay: () => void;
   onPause: () => void;
   onSeeked: () => void;
+  /**
+   * The underlying /playback-sync socket, for features that share the
+   * channel (annotations). Null until the effect creates it.
+   */
+  socket: Socket | null;
 }
 
 /**
@@ -45,6 +50,7 @@ export function useSyncedPlayback(
 ): SyncedPlayback {
   const [synced, setSyncedState] = useState(true);
   const [blocked, setBlocked] = useState(false);
+  const [socket, setSocket] = useState<Socket | null>(null);
 
   const socketRef = useRef<Socket | null>(null);
   const remoteRef = useRef<RemoteState | null>(null);
@@ -123,6 +129,8 @@ export function useSyncedPlayback(
       auth: { sessionId },
     });
     socketRef.current = socket;
+    // Deferred so the effect body stays free of synchronous setState.
+    const expose = setTimeout(() => setSocket(socket), 0);
     socket.on(PLAYBACK_SYNC_EVENTS.state, (state: PlaybackState) => {
       const remote: RemoteState = { state, receivedAtMs: performance.now() };
       remoteRef.current = remote;
@@ -133,7 +141,9 @@ export function useSyncedPlayback(
       }
     });
     return () => {
+      clearTimeout(expose);
       socketRef.current = null;
+      setSocket(null);
       socket.disconnect();
     };
   }, [sessionId, apply]);
@@ -195,5 +205,6 @@ export function useSyncedPlayback(
     onPlay: onLocalGesture,
     onPause: onLocalGesture,
     onSeeked: onLocalGesture,
+    socket,
   };
 }

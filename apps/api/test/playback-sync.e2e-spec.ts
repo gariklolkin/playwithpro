@@ -1,6 +1,15 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { PLAYBACK_SYNC_EVENTS, PlaybackState, Role } from '@playwithpro/shared';
+import {
+  ANNOTATION_EVENTS,
+  AnnotationClearedPayload,
+  AnnotationRemovedPayload,
+  AnnotationState,
+  PLAYBACK_SYNC_EVENTS,
+  PlaybackState,
+  Role,
+  Stroke,
+} from '@playwithpro/shared';
 import cookieParser from 'cookie-parser';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -271,5 +280,120 @@ describe('Playback sync (e2e)', () => {
     const socket = connect(playerCookie, consultationSessionId);
     await waitForEvent(socket, 'connect_error');
     expect(socket.connected).toBe(false);
+  });
+
+  describe('annotations', () => {
+    const lineStroke = (id: string, momentKey = '134.2') => ({
+      id,
+      momentKey,
+      tool: 'line',
+      color: '#2563eb',
+      points: [
+        { x: 0.1, y: 0.2 },
+        { x: 0.8, y: 0.9 },
+      ],
+      createdAtMs: Date.now(),
+    });
+
+    it('relays add, undo and clear between the parties', async () => {
+      const playerSocket = connect(playerCookie, analysisSessionId);
+      const coachSocket = connect(coachCookie, analysisSessionId);
+      await Promise.all([
+        waitForEvent(playerSocket, 'connect'),
+        waitForEvent(coachSocket, 'connect'),
+      ]);
+
+      const added = waitForEvent<Stroke>(playerSocket, ANNOTATION_EVENTS.added);
+      coachSocket.emit(
+        ANNOTATION_EVENTS.add,
+        lineStroke('c0000000-0000-4000-8000-000000000001'),
+      );
+      const stroke = await added;
+      expect(stroke.id).toBe('c0000000-0000-4000-8000-000000000001');
+      expect(stroke.authorId).toBeDefined();
+      expect(stroke.tool).toBe('line');
+
+      const playerAdded = waitForEvent<Stroke>(
+        coachSocket,
+        ANNOTATION_EVENTS.added,
+      );
+      playerSocket.emit(
+        ANNOTATION_EVENTS.add,
+        lineStroke('a0000000-0000-4000-8000-000000000001'),
+      );
+      await playerAdded;
+
+      // Coach undo removes the coach's stroke, not the player's.
+      const removed = waitForEvent<AnnotationRemovedPayload>(
+        playerSocket,
+        ANNOTATION_EVENTS.removed,
+      );
+      coachSocket.emit(ANNOTATION_EVENTS.undo, { momentKey: '134.2' });
+      expect(await removed).toEqual({
+        momentKey: '134.2',
+        strokeId: 'c0000000-0000-4000-8000-000000000001',
+      });
+
+      const cleared = waitForEvent<AnnotationClearedPayload>(
+        coachSocket,
+        ANNOTATION_EVENTS.cleared,
+      );
+      playerSocket.emit(ANNOTATION_EVENTS.clear, { momentKey: '134.2' });
+      expect(await cleared).toEqual({ momentKey: '134.2' });
+    });
+
+    it('sends the current annotation state to a late joiner', async () => {
+      const coachSocket = connect(coachCookie, analysisSessionId);
+      await waitForEvent(coachSocket, 'connect');
+      coachSocket.emit(
+        ANNOTATION_EVENTS.add,
+        lineStroke('c0000000-0000-4000-8000-000000000011', '34.0'),
+      );
+      coachSocket.emit(
+        ANNOTATION_EVENTS.add,
+        lineStroke('c0000000-0000-4000-8000-000000000012', '134.2'),
+      );
+
+      const late = connect(playerCookie, analysisSessionId);
+      const state = await waitForEvent<AnnotationState>(
+        late,
+        ANNOTATION_EVENTS.state,
+      );
+      expect(Object.keys(state).sort()).toEqual(['134.2', '34.0']);
+      expect(state['34.0'][0].id).toBe('c0000000-0000-4000-8000-000000000011');
+    });
+
+    it('ignores an oversized stroke', async () => {
+      const playerSocket = connect(playerCookie, analysisSessionId);
+      const coachSocket = connect(coachCookie, analysisSessionId);
+      await Promise.all([
+        waitForEvent(playerSocket, 'connect'),
+        waitForEvent(coachSocket, 'connect'),
+      ]);
+      const received: Stroke[] = [];
+      playerSocket.on(ANNOTATION_EVENTS.added, (s: Stroke) => received.push(s));
+      coachSocket.emit(ANNOTATION_EVENTS.add, {
+        ...lineStroke('c0000000-0000-4000-8000-000000000021'),
+        tool: 'pen',
+        points: Array.from({ length: 201 }, () => ({ x: 0.5, y: 0.5 })),
+      });
+      // A valid stroke sent afterwards proves the oversized one was dropped
+      // rather than delayed.
+      const added = waitForEvent<Stroke>(playerSocket, ANNOTATION_EVENTS.added);
+      coachSocket.emit(
+        ANNOTATION_EVENTS.add,
+        lineStroke('c0000000-0000-4000-8000-000000000022'),
+      );
+      await added;
+      expect(received.map((s) => s.id)).toEqual([
+        'c0000000-0000-4000-8000-000000000022',
+      ]);
+    });
+
+    it('still rejects a third party', async () => {
+      const socket = connect(rivalCookie, analysisSessionId);
+      await waitForEvent(socket, 'connect_error');
+      expect(socket.connected).toBe(false);
+    });
   });
 });
