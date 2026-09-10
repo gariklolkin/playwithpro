@@ -265,6 +265,19 @@ export class VideoProcessingService implements OnModuleInit {
   /** Abandoned uploads leave multipart garbage in S3; sweep daily. */
   @Cron(CronExpression.EVERY_DAY_AT_4AM)
   async sweepStaleUploads(): Promise<void> {
+    try {
+      await this.sweepStaleUploadsOnce();
+    } catch (error) {
+      // A transient failure of the scan itself must not surface as an
+      // unhandled rejection from the scheduler; the next tick retries.
+      this.logger.error(
+        'Stale upload sweep failed; retrying on the next tick',
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
+
+  private async sweepStaleUploadsOnce(): Promise<void> {
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const stale = await this.prisma.video.findMany({
       where: { status: 'UPLOADING', createdAt: { lt: cutoff } },

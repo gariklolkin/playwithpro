@@ -91,6 +91,19 @@ export class MeetingSyncService {
 
   @Cron(CronExpression.EVERY_MINUTE)
   async retryPending(): Promise<void> {
+    try {
+      await this.retryPendingOnce();
+    } catch (error) {
+      // A transient failure of the scan itself must not surface as an
+      // unhandled rejection from the scheduler; the next tick retries.
+      this.logger.error(
+        'Meeting sync retry failed; retrying on the next tick',
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
+
+  private async retryPendingOnce(): Promise<void> {
     const stale = await this.prisma.verificationBooking.findMany({
       where: {
         status: BookingStatus.SCHEDULED,

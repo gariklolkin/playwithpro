@@ -234,4 +234,11 @@ describe('VideoProcessingService', () => {
     expect(where.status).toBe('UPLOADING');
     expect(where.createdAt.lt).toBeInstanceOf(Date);
   });
+
+  it('stale-upload sweep swallows a failed scan', async () => {
+    prisma.video.findMany.mockRejectedValue(new Error('deadlock detected'));
+
+    await expect(service.sweepStaleUploads()).resolves.toBeUndefined();
+    expect(storage.abortMultipartUpload).not.toHaveBeenCalled();
+  });
 });

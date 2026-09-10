@@ -22,6 +22,19 @@ export class RemindersService {
 
   @Cron(CronExpression.EVERY_MINUTE)
   async deliverDue(): Promise<void> {
+    try {
+      await this.deliverDueOnce();
+    } catch (error) {
+      // A transient failure of the scan itself must not surface as an
+      // unhandled rejection from the scheduler; the next tick retries.
+      this.logger.error(
+        'Reminder delivery failed; retrying on the next tick',
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
+
+  private async deliverDueOnce(): Promise<void> {
     await this.deliver(24, 'reminder24hSentAt');
     await this.deliver(1, 'reminder1hSentAt');
   }

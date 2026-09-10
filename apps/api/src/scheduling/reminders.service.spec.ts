@@ -49,6 +49,15 @@ describe('RemindersService', () => {
     service = moduleRef.get(RemindersService);
   });
 
+  it('swallows a failed scan so the scheduler never sees a rejection', async () => {
+    prisma.verificationBooking.findMany.mockRejectedValue(
+      new Error('deadlock detected'),
+    );
+
+    await expect(service.deliverDue()).resolves.toBeUndefined();
+    expect(notify.reminder).not.toHaveBeenCalled();
+  });
+
   it('sends a due reminder exactly once by stamping it', async () => {
     const booking = dueBooking(23, 48);
     prisma.verificationBooking.findMany
