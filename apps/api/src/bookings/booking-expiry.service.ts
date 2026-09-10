@@ -26,6 +26,21 @@ export class BookingExpiryService implements OnApplicationBootstrap {
 
   @Cron(CronExpression.EVERY_5_MINUTES)
   async sweep(): Promise<void> {
+    try {
+      await this.sweepOnce();
+    } catch (error) {
+      // The scan itself can fail transiently (e.g. a deadlock against a
+      // concurrent TRUNCATE in tests, or a DB blip in production); the next
+      // tick retries, and a bootstrap kickoff must never leave an
+      // unhandled rejection behind.
+      this.logger.error(
+        'Booking expiry sweep failed; retrying on the next tick',
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
+
+  private async sweepOnce(): Promise<void> {
     const overdue = await this.prisma.session.findMany({
       where: {
         status: SessionStatus.PENDING_PAYMENT,

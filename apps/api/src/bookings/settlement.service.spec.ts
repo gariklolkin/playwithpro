@@ -141,4 +141,13 @@ describe('SettlementService', () => {
     expect(prisma.session.findUnique).toHaveBeenCalledTimes(2);
     expect(payments.release).toHaveBeenCalledTimes(2);
   });
+
+  it('sweep swallows a failed scan so a bootstrap kickoff cannot reject', async () => {
+    // A deadlock against a concurrent TRUNCATE (e2e) or a DB blip (prod).
+    prisma.payment.findMany.mockRejectedValue(new Error('deadlock detected'));
+
+    await expect(service.sweep()).resolves.toBeUndefined();
+    expect(() => service.onApplicationBootstrap()).not.toThrow();
+    expect(payments.release).not.toHaveBeenCalled();
+  });
 });

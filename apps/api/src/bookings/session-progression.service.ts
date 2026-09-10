@@ -101,6 +101,21 @@ export class SessionProgressionService implements OnApplicationBootstrap {
 
   @Cron(CronExpression.EVERY_MINUTE)
   async sweep(): Promise<void> {
+    try {
+      await this.sweepOnce();
+    } catch (error) {
+      // The scan itself can fail transiently (e.g. a deadlock against a
+      // concurrent TRUNCATE in tests, or a DB blip in production); the next
+      // tick retries, and a bootstrap kickoff must never leave an
+      // unhandled rejection behind.
+      this.logger.error(
+        'Session progression sweep failed; retrying on the next tick',
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
+
+  private async sweepOnce(): Promise<void> {
     const now = new Date();
     const autoConfirmBefore = new Date(
       now.getTime() -
