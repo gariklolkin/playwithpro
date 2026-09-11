@@ -57,7 +57,7 @@ export class AuthService {
   ) {}
 
   private readonly avatarUrlOf = (key: string): string =>
-    this.storage.objectUrl(key);
+    this.storage.avatarUrl(key);
 
   /** Creates the account and sends the confirmation link — no session yet:
    *  the account becomes usable only after the email is verified. */

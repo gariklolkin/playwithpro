@@ -580,7 +580,13 @@
       "loginCta": "登录后预约",
       "coachesCannotBook": "仅球员账号可以预约。",
       "openSheet": "预约课程",
-      "close": "关闭"
+      "close": "关闭",
+      "pending": {
+        "title": "你有一个 {time} 的未支付预约。",
+        "minutesLeft": "还有 {minutes, plural, other {# 分钟}}可以支付，之后时段将被释放。",
+        "pay": "立即支付",
+        "release": "释放时段"
+      }
     }
   },
   "checkout": {
@@ -605,7 +611,8 @@
     "goToSessions": "查看我的课程",
     "expiredTitle": "预约已过期",
     "expiredSubtitle": "支付时限已过，该时段已重新开放。你可以另选时间。",
-    "backToCoach": "返回教练主页"
+    "backToCoach": "返回教练主页",
+    "releaseSlot": "改为释放此时段"
   },
   "sessions": {
     "title": "课程",
@@ -718,7 +725,9 @@
           "lost": "连接：已断开",
           "unknown": "连接：检测中"
         },
-        "mediaUnavailable": "摄像头或麦克风不可用。你仍然可以看到并听到对方。"
+        "mediaUnavailable": "摄像头或麦克风不可用。你仍然可以看到并听到对方。",
+        "cameraUnavailable": "摄像头不可用。对方仍然可以听到你。",
+        "micUnavailable": "麦克风不可用。对方仍然可以看到你。"
       }
     },
     "actions": {

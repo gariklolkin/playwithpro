@@ -51,7 +51,7 @@ describe('AuthService', () => {
         {
           provide: StorageService,
           useValue: {
-            objectUrl: jest.fn((key: string) => `http://s3.local/${key}`),
+            avatarUrl: jest.fn((key: string) => `http://s3.local/${key}`),
           },
         },
       ],

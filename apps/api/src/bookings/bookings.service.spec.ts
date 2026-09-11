@@ -118,7 +118,7 @@ describe('BookingsService', () => {
         WEB_APP_URL: 'http://localhost:3000',
       })[name],
   };
-  const storage = { objectUrl: jest.fn((key: string) => `https://s/${key}`) };
+  const storage = { avatarUrl: jest.fn((key: string) => `https://s/${key}`) };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -667,6 +667,45 @@ describe('BookingsService', () => {
       expect(settlement.settle).toHaveBeenCalledWith('session-1');
       expect(result.status).toBe('cancelled');
       expect(result.escrow).toBe('refunded');
+    });
+
+    it('lets the player release an unpaid booking without settlement', async () => {
+      prisma.session.findUnique.mockResolvedValue(pendingSession);
+      tx.session.findUniqueOrThrow.mockResolvedValue({
+        slotId: 'slot-1',
+        startsAt: futureSlot.startsAt,
+      });
+      prisma.session.findUniqueOrThrow.mockResolvedValue({
+        ...pendingSession,
+        status: 'CANCELLED',
+        expiresAt: null,
+        payments: [],
+      });
+
+      const result = await service.cancel(
+        { id: 'player-1', role: Role.Amateur },
+        'session-1',
+      );
+
+      expect(tx.session.updateMany).toHaveBeenCalledWith({
+        where: { id: 'session-1', status: 'PENDING_PAYMENT' },
+        data: { status: 'CANCELLED', expiresAt: null },
+      });
+      expect(tx.availabilitySlot.updateMany).toHaveBeenCalledWith({
+        where: { id: 'slot-1', status: 'BOOKED' },
+        data: { status: 'OPEN' },
+      });
+      expect(settlement.settle).not.toHaveBeenCalled();
+      expect(result.status).toBe('cancelled');
+    });
+
+    it('refuses the coach releasing an unpaid booking', async () => {
+      prisma.session.findUnique.mockResolvedValue(pendingSession);
+
+      await expect(
+        service.cancel({ id: 'coach-1', role: Role.Professional }, 'session-1'),
+      ).rejects.toBeInstanceOf(ConflictException);
+      expect(tx.session.updateMany).not.toHaveBeenCalled();
     });
 
     it('sends the calendar cancellation when an invite went out', async () => {

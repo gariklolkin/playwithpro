@@ -69,7 +69,7 @@ export class BookingsService {
   ) {}
 
   private readonly avatarUrlOf = (key: string): string =>
-    this.storage.objectUrl(key);
+    this.storage.avatarUrl(key);
 
   private responseExtras(): SessionResponseExtras {
     return {
@@ -381,6 +381,21 @@ export class BookingsService {
     if (session.playerId !== user.id && session.proProfile.userId !== user.id) {
       throw new NotFoundException();
     }
+    if (session.status === SessionStatus.PENDING_PAYMENT) {
+      // An unpaid booking is the player's hold on the slot: only they can
+      // release it early, and nothing was charged, so no settlement runs.
+      if (session.playerId !== user.id) {
+        throw new ConflictException(
+          'Only the player can release an unpaid booking.',
+        );
+      }
+      const released = await this.cancelUnpaidSession(session.id);
+      if (!released) {
+        throw new ConflictException('This booking is no longer unpaid.');
+      }
+      this.logger.log(`Unpaid session ${session.id} released by player`);
+      return this.sessionResponse(session.id);
+    }
     const cancelled = await this.prisma.$transaction(async (tx) => {
       const updated = await tx.session.updateMany({
         where: {
@@ -531,6 +546,13 @@ export class BookingsService {
 
   /** Cancels an expired pending session and reopens its slot when claimable. */
   async expireSession(sessionId: string): Promise<boolean> {
+    const expired = await this.cancelUnpaidSession(sessionId);
+    if (expired) this.logger.log(`Expired unpaid session ${sessionId}`);
+    return expired;
+  }
+
+  /** Cancels a PENDING_PAYMENT session and reopens its slot; false if it was not unpaid. */
+  private async cancelUnpaidSession(sessionId: string): Promise<boolean> {
     return this.prisma.$transaction(async (tx) => {
       const cancelled = await tx.session.updateMany({
         where: { id: sessionId, status: SessionStatus.PENDING_PAYMENT },
@@ -550,7 +572,6 @@ export class BookingsService {
           data: { status: SlotStatus.OPEN },
         });
       }
-      this.logger.log(`Expired unpaid session ${sessionId}`);
       return true;
     });
   }

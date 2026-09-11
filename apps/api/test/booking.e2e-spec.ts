@@ -19,6 +19,9 @@ import { PrismaService } from '../src/prisma/prisma.service';
 
 const HOUR = 3_600_000;
 
+// Paying sends calendar invites over SMTP, which stretches those round-trips.
+jest.setTimeout(20_000);
+
 /**
  * The startup catch-up sweeps (booking expiry, session progression) can hold
  * row locks right after app.init(); TRUNCATE loses that race with a deadlock,
@@ -342,6 +345,55 @@ describe('Booking & escrow (e2e)', () => {
           slotId: slotIds[0],
         })
         .expect(409);
+    });
+
+    it('lets the player release an unpaid booking and reopens the slot', async () => {
+      const res = await request(server())
+        .post('/bookings')
+        .set('Cookie', playerCookie)
+        .send({
+          proId: coachProfileId,
+          serviceType: 'consultation',
+          slotId: slotIds[2],
+        })
+        .expect(200);
+      const sessionId = (res.body as SessionResponse).id;
+
+      await request(server())
+        .post(`/sessions/${sessionId}/cancel`)
+        .set('Cookie', coachCookie)
+        .send({})
+        .expect(409);
+
+      const released = await request(server())
+        .post(`/sessions/${sessionId}/cancel`)
+        .set('Cookie', playerCookie)
+        .send({})
+        .expect(200);
+      expect((released.body as SessionResponse).status).toBe('cancelled');
+      expect((released.body as SessionResponse).escrow).toBeNull();
+
+      const slot = await prisma.availabilitySlot.findUnique({
+        where: { id: slotIds[2] },
+      });
+      expect(slot!.status).toBe('OPEN');
+      expect(await prisma.payment.count({ where: { sessionId } })).toBe(0);
+
+      // The released slot is real inventory again, not a phantom.
+      const rebooked = await request(server())
+        .post('/bookings')
+        .set('Cookie', rivalCookie)
+        .send({
+          proId: coachProfileId,
+          serviceType: 'consultation',
+          slotId: slotIds[2],
+        })
+        .expect(200);
+      await request(server())
+        .post(`/sessions/${(rebooked.body as SessionResponse).id}/cancel`)
+        .set('Cookie', rivalCookie)
+        .send({})
+        .expect(200);
     });
 
     it('expires a late payment, cancels the session, and reopens the slot', async () => {

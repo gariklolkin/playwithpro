@@ -22,7 +22,7 @@ describe('PlayersService', () => {
     user: { findUnique: jest.fn() },
   };
   const storage = {
-    objectUrl: jest.fn((key: string) => `http://s3.local/bucket/${key}`),
+    avatarUrl: jest.fn((key: string) => `http://s3.local/bucket/${key}`),
   };
 
   const baseProfile = {

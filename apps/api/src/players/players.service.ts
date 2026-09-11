@@ -72,7 +72,7 @@ export class PlayersService {
       userId: user.id,
       displayName: user.displayName,
       avatarUrl:
-        user.avatarKey === null ? null : this.storage.objectUrl(user.avatarKey),
+        user.avatarKey === null ? null : this.storage.avatarUrl(user.avatarKey),
     };
   }
 }

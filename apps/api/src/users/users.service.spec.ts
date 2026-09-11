@@ -25,7 +25,7 @@ describe('UsersService', () => {
     presignPut: jest.fn(),
     headObject: jest.fn(),
     deleteObject: jest.fn(),
-    objectUrl: jest.fn((key: string) => `http://s3.local/bucket/${key}`),
+    avatarUrl: jest.fn((key: string) => `http://s3.local/bucket/${key}`),
   };
 
   const baseUser = {

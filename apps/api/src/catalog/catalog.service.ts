@@ -165,6 +165,6 @@ export class CatalogService {
   }
 
   private avatarUrl(avatarKey: string | null): string | null {
-    return avatarKey === null ? null : this.storage.objectUrl(avatarKey);
+    return avatarKey === null ? null : this.storage.avatarUrl(avatarKey);
   }
 }

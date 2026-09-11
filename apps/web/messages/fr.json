@@ -580,7 +580,13 @@
       "loginCta": "Connectez-vous pour réserver",
       "coachesCannotBook": "La réservation est réservée aux comptes joueurs.",
       "openSheet": "Réserver une séance",
-      "close": "Fermer"
+      "close": "Fermer",
+      "pending": {
+        "title": "Vous avez une réservation non payée pour le {time}.",
+        "minutesLeft": "Il reste {minutes, plural, one {# minute} other {# minutes}} pour payer, ensuite le créneau sera libéré.",
+        "pay": "Payer maintenant",
+        "release": "Libérer le créneau"
+      }
     }
   },
   "checkout": {
@@ -605,7 +611,8 @@
     "goToSessions": "Voir mes séances",
     "expiredTitle": "Cette réservation a expiré",
     "expiredSubtitle": "Le délai de paiement est écoulé et le créneau a été libéré. Vous pouvez choisir un nouvel horaire.",
-    "backToCoach": "Retour au coach"
+    "backToCoach": "Retour au coach",
+    "releaseSlot": "Libérer ce créneau à la place"
   },
   "sessions": {
     "title": "Séances",
@@ -718,7 +725,9 @@
           "lost": "Connexion : perdue",
           "unknown": "Connexion : mesure en cours"
         },
-        "mediaUnavailable": "Votre caméra ou votre micro n'est pas disponible. Vous pouvez tout de même voir et entendre l'autre participant."
+        "mediaUnavailable": "Votre caméra ou votre micro n'est pas disponible. Vous pouvez tout de même voir et entendre l'autre participant.",
+        "cameraUnavailable": "Votre caméra n'est pas disponible. L'autre participant peut tout de même vous entendre.",
+        "micUnavailable": "Votre micro n'est pas disponible. L'autre participant peut tout de même vous voir."
       }
     },
     "actions": {

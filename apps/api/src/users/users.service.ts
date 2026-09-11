@@ -37,7 +37,7 @@ export class UsersService {
   ) {}
 
   private readonly avatarUrlOf = (key: string): string =>
-    this.storage.objectUrl(key);
+    this.storage.avatarUrl(key);
 
   async getMe(userId: string): Promise<MeResponse> {
     return toMeResponse(await this.requireUser(userId), this.avatarUrlOf);

@@ -24,7 +24,7 @@ export class BookingExpiryService implements OnApplicationBootstrap {
     void this.sweep();
   }
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  @Cron(CronExpression.EVERY_MINUTE)
   async sweep(): Promise<void> {
     try {
       await this.sweepOnce();

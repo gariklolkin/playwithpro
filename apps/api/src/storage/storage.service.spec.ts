@@ -25,6 +25,7 @@ const env: Record<string, string> = {
   S3_BUCKET: 'bucket',
   S3_ENDPOINT: 'http://minio:9000',
   S3_PUBLIC_URL: 'http://localhost:9000',
+  API_URL: 'http://localhost:4000',
 };
 
 describe('StorageService', () => {
@@ -68,6 +69,14 @@ describe('StorageService', () => {
       await expect(
         service.createMultipartUpload('k', 'video/mp4'),
       ).rejects.toThrow('no upload id');
+    });
+  });
+
+  describe('avatarUrl', () => {
+    it('points at the API redirect, never at the bucket', () => {
+      expect(service.avatarUrl('avatars/u1/f.webp')).toBe(
+        'http://localhost:4000/avatars/u1/f.webp',
+      );
     });
   });
 

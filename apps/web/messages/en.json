@@ -580,7 +580,13 @@
       "loginCta": "Log in to book",
       "coachesCannotBook": "Booking is available to player accounts.",
       "openSheet": "Book a session",
-      "close": "Close"
+      "close": "Close",
+      "pending": {
+        "title": "You have an unpaid booking for {time}.",
+        "minutesLeft": "{minutes, plural, one {# minute} other {# minutes}} left to pay, then the slot is released.",
+        "pay": "Pay now",
+        "release": "Release slot"
+      }
     }
   },
   "checkout": {
@@ -605,7 +611,8 @@
     "goToSessions": "Go to my sessions",
     "expiredTitle": "This booking has expired",
     "expiredSubtitle": "The payment window closed and the slot was released. You can pick a new time.",
-    "backToCoach": "Back to the coach"
+    "backToCoach": "Back to the coach",
+    "releaseSlot": "Release this slot instead"
   },
   "sessions": {
     "title": "Sessions",
@@ -718,7 +725,9 @@
           "lost": "Connection: lost",
           "unknown": "Connection: measuring"
         },
-        "mediaUnavailable": "Your camera or microphone is unavailable. You can still see and hear the other party."
+        "mediaUnavailable": "Your camera or microphone is unavailable. You can still see and hear the other party.",
+        "cameraUnavailable": "Your camera is unavailable. The other party can still hear you.",
+        "micUnavailable": "Your microphone is unavailable. The other party can still see you."
       }
     },
     "actions": {

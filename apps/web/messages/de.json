@@ -580,7 +580,13 @@
       "loginCta": "Zum Buchen anmelden",
       "coachesCannotBook": "Buchungen sind Spielerkonten vorbehalten.",
       "openSheet": "Session buchen",
-      "close": "Schließen"
+      "close": "Schließen",
+      "pending": {
+        "title": "Du hast eine unbezahlte Buchung für {time}.",
+        "minutesLeft": "Noch {minutes, plural, one {# Minute} other {# Minuten}} zum Bezahlen, danach wird der Termin freigegeben.",
+        "pay": "Jetzt bezahlen",
+        "release": "Termin freigeben"
+      }
     }
   },
   "checkout": {
@@ -605,7 +611,8 @@
     "goToSessions": "Zu meinen Sessions",
     "expiredTitle": "Diese Buchung ist abgelaufen",
     "expiredSubtitle": "Das Zahlungsfenster wurde geschlossen und der Termin freigegeben. Du kannst eine neue Zeit wählen.",
-    "backToCoach": "Zurück zum Trainer"
+    "backToCoach": "Zurück zum Trainer",
+    "releaseSlot": "Diesen Termin stattdessen freigeben"
   },
   "sessions": {
     "title": "Sessions",
@@ -718,7 +725,9 @@
           "lost": "Verbindung: verloren",
           "unknown": "Verbindung: wird gemessen"
         },
-        "mediaUnavailable": "Kamera oder Mikrofon sind nicht verfügbar. Du kannst die andere Person trotzdem sehen und hören."
+        "mediaUnavailable": "Kamera oder Mikrofon sind nicht verfügbar. Du kannst die andere Person trotzdem sehen und hören.",
+        "cameraUnavailable": "Deine Kamera ist nicht verfügbar. Die andere Person kann dich trotzdem hören.",
+        "micUnavailable": "Dein Mikrofon ist nicht verfügbar. Die andere Person kann dich trotzdem sehen."
       }
     },
     "actions": {

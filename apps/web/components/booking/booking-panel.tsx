@@ -2,9 +2,11 @@
 
 import {
   ServiceType,
+  SessionStatus,
   VideoStatus,
   type ProServiceResponse,
   type PublicAvailabilitySlot,
+  type SessionListResponse,
   type SessionResponse,
   type VideoListResponse,
   type VideoResponse,
@@ -72,6 +74,11 @@ export function BookingPanel({ proId, services, initialSlots, viewer }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  // The viewer's own unpaid booking with this coach: it holds a slot the
+  // grid no longer shows, so it must be visible and releasable from here.
+  const [pending, setPending] = useState<SessionResponse | null>(null);
+  const [releasing, setReleasing] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
   // Slots are grouped in the browser's timezone, so render after mount only.
   const mounted = useMounted();
 
@@ -99,6 +106,53 @@ export function BookingPanel({ proId, services, initialSlots, viewer }: Props) {
       );
     });
   }, [needsVideo, viewer, videos]);
+
+  useEffect(() => {
+    if (viewer !== "amateur") return;
+    void apiFetch("/sessions").then(async (response) => {
+      if (!response.ok) return;
+      const list = (await response.json()) as SessionListResponse;
+      setPending(
+        list.upcoming.find(
+          (item) =>
+            item.status === SessionStatus.PendingPayment &&
+            item.coach.id === proId,
+        ) ?? null,
+      );
+    });
+  }, [viewer, proId]);
+
+  // Minutes left tick once the banner is up; the API cancels at the deadline.
+  useEffect(() => {
+    if (!pending?.expiresAt) return;
+    const timer = setInterval(() => setNow(Date.now()), 15_000);
+    return () => clearInterval(timer);
+  }, [pending]);
+
+  const minutesLeft = pending?.expiresAt
+    ? Math.max(
+        0,
+        Math.ceil((new Date(pending.expiresAt).getTime() - now) / 60_000),
+      )
+    : 0;
+  const pendingVisible = pending !== null && minutesLeft > 0;
+
+  async function releasePending() {
+    if (!pending) return;
+    setReleasing(true);
+    try {
+      const response = await apiFetch(`/sessions/${pending.id}/cancel`, {
+        method: "POST",
+        body: "{}",
+      });
+      if (response.ok || response.status === 409) {
+        setPending(null);
+        await refreshSlots();
+      }
+    } finally {
+      setReleasing(false);
+    }
+  }
 
   async function refreshSlots() {
     const response = await apiFetch(`/pros/${proId}/slots`);
@@ -148,6 +202,38 @@ export function BookingPanel({ proId, services, initialSlots, viewer }: Props) {
   const panel = (
     <div className="rounded-card border border-border bg-bg p-5">
       <h2 className="text-lg font-semibold text-text">{t("title")}</h2>
+
+      {pendingVisible && pending ? (
+        <div className="mt-3 rounded-md bg-[#FBF3DB] p-3 text-[13px] text-[#8A5A00]">
+          <p className="font-medium">
+            {t("pending.title", {
+              time: new Intl.DateTimeFormat(locale, {
+                dateStyle: "medium",
+                timeStyle: "short",
+              }).format(new Date(pending.startsAt)),
+            })}
+          </p>
+          <p className="mt-0.5">
+            {t("pending.minutesLeft", { minutes: minutesLeft })}
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Link
+              href={`/booking/${pending.id}`}
+              className="rounded-md bg-text px-2.5 py-1.5 text-[13px] font-medium text-white no-underline hover:bg-black"
+            >
+              {t("pending.pay")}
+            </Link>
+            <button
+              type="button"
+              disabled={releasing}
+              onClick={() => void releasePending()}
+              className="cursor-pointer rounded-md border border-border bg-bg px-2.5 py-1.5 text-[13px] font-medium text-text hover:bg-bg-secondary disabled:opacity-60"
+            >
+              {releasing ? "…" : t("pending.release")}
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {/* Step 1 — service */}
       <div className="mt-4">

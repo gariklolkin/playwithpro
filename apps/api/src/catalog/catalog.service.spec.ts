@@ -49,7 +49,7 @@ describe('CatalogService', () => {
     $transaction: jest.fn(),
   };
   const storage = {
-    objectUrl: jest.fn((key: string) => `https://cdn.test/${key}`),
+    avatarUrl: jest.fn((key: string) => `https://cdn.test/${key}`),
   };
 
   beforeEach(async () => {

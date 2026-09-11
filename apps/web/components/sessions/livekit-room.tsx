@@ -31,10 +31,11 @@ import {
   VideoOff,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CallFrame } from "./call-frame";
 import { CallPreJoin, type PreJoinChoices } from "./call-prejoin";
+import { deviceNotice } from "@/lib/device-notice";
 
 type CallPhase =
   | { kind: "prejoin" }
@@ -177,7 +178,10 @@ export function LiveKitCall({
       <CallStage
         counterpartName={counterpartName}
         displayName={displayName}
-        mediaFailed={mediaFailed}
+        deviceError={mediaFailed}
+        wantsCamera={choices?.videoEnabled ?? true}
+        wantsMicrophone={choices?.audioEnabled ?? true}
+        onDevicesRecovered={() => setMediaFailed(false)}
         onLeave={() => {
           leavingRef.current = true;
         }}
@@ -189,16 +193,35 @@ export function LiveKitCall({
 function CallStage({
   counterpartName,
   displayName,
-  mediaFailed,
+  deviceError,
+  wantsCamera,
+  wantsMicrophone,
+  onDevicesRecovered,
   onLeave,
 }: {
   counterpartName: string;
   displayName: string;
-  mediaFailed: boolean;
+  deviceError: boolean;
+  wantsCamera: boolean;
+  wantsMicrophone: boolean;
+  onDevicesRecovered: () => void;
   onLeave: () => void;
 }) {
   const t = useTranslations("sessions.room.call");
   const room = useRoomContext();
+  const { isCameraEnabled, isMicrophoneEnabled } = useLocalParticipant();
+  const notice = deviceNotice({
+    deviceError,
+    wantsCamera,
+    wantsMicrophone,
+    cameraOn: isCameraEnabled,
+    microphoneOn: isMicrophoneEnabled,
+  });
+  // Once everything requested is published the error is history; forgetting
+  // it keeps a later deliberate mute from resurrecting the notice.
+  useEffect(() => {
+    if (deviceError && notice === null) onDevicesRecovered();
+  }, [deviceError, notice, onDevicesRecovered]);
   const connectionState = useConnectionState();
   const remoteParticipants = useRemoteParticipants();
   const tracks = useTracks(
@@ -262,9 +285,13 @@ function CallStage({
 
         <QualityBadge />
 
-        {mediaFailed ? (
+        {notice ? (
           <div className="absolute left-3 top-10 max-w-[70%] rounded bg-black/70 px-2 py-1 text-[12px] text-amber-200">
-            {t("mediaUnavailable")}
+            {notice === "camera"
+              ? t("cameraUnavailable")
+              : notice === "microphone"
+                ? t("micUnavailable")
+                : t("mediaUnavailable")}
           </div>
         ) : null}
 

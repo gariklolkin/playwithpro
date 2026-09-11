@@ -36,8 +36,10 @@ export class StorageService {
   private readonly signingClient: S3Client;
   private readonly bucket: string;
   private readonly publicUrl: string;
+  private readonly apiUrl: string;
 
   constructor(config: ConfigService) {
+    this.apiUrl = config.getOrThrow<string>('API_URL').replace(/\/$/, '');
     const region = config.getOrThrow<string>('S3_REGION');
     const credentials = {
       accessKeyId: config.getOrThrow<string>('S3_ACCESS_KEY'),
@@ -241,8 +243,12 @@ export class StorageService {
     }
   }
 
-  /** Public download URL (bucket has anonymous read for public content). */
-  objectUrl(key: string): string {
-    return `${this.publicUrl}/${this.bucket}/${key}`;
+  /**
+   * Avatar URL served by the API (`GET /avatars/:userId/:file`), which
+   * redirects to a short-lived pre-signed URL. Keeps every bucket private —
+   * the production bucket denies anonymous reads, and it also holds videos.
+   */
+  avatarUrl(key: string): string {
+    return `${this.apiUrl}/avatars/${key.replace(/^avatars\//, '')}`;
   }
 }

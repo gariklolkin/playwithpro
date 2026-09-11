@@ -38,6 +38,7 @@ export function CheckoutPanel({
   );
   const [paying, setPaying] = useState(false);
   const [declined, setDeclined] = useState<string | null>(null);
+  const [releasing, setReleasing] = useState(false);
   const [paid, setPaid] = useState(
     initialSession.status === SessionStatus.PaidEscrow,
   );
@@ -54,6 +55,23 @@ export function CheckoutPanel({
     );
     return () => clearInterval(timer);
   }, [pending, paid, session.expiresAt]);
+
+  // Leaving without paying would keep the slot claimed for the rest of the
+  // payment window; releasing hands it back to the coach immediately.
+  async function release() {
+    setReleasing(true);
+    try {
+      const response = await apiFetch(`/sessions/${session.id}/cancel`, {
+        method: "POST",
+        body: "{}",
+      });
+      if (response.ok || response.status === 409) {
+        router.push(`/coaches/${session.coach.id}`);
+      }
+    } finally {
+      setReleasing(false);
+    }
+  }
 
   async function pay() {
     setPaying(true);
@@ -209,6 +227,15 @@ export function CheckoutPanel({
           time: `${minutes}:${String(seconds).padStart(2, "0")}`,
         })}
       </p>
+
+      <button
+        type="button"
+        disabled={releasing || paying}
+        onClick={() => void release()}
+        className="mt-2 block w-full cursor-pointer text-center text-[13px] text-text-tertiary underline-offset-2 hover:underline disabled:opacity-60"
+      >
+        {releasing ? "…" : t("releaseSlot")}
+      </button>
 
       {process.env.NODE_ENV === "development" ? (
         <label className="mt-4 flex items-center justify-center gap-2 text-[12px] text-text-tertiary">

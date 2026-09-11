@@ -334,7 +334,7 @@ model AvailabilitySlot {
   createdAt DateTime               @default(now())
   updatedAt DateTime               @updatedAt
   profile   ProProfile             @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  session   Session?
+  sessions  Session[]
 
   @@unique([profileId, startsAt])
   @@index([profileId, status, startsAt])
@@ -352,7 +352,9 @@ model Session {
   currency         String        @db.Char(3) // ISO 4217
   /// Coach-side fee for the future payout (release − fee), snapshotted at booking.
   platformFeeMinor Int
-  slotId           String        @unique
+  /// A slot can carry many sessions over time (cancelled or expired ones keep
+  /// their link); the atomic OPEN → BOOKED claim guarantees one live booking.
+  slotId           String
   videoId          String? // VIDEO_ANALYSIS only
   status           SessionStatus @default(PENDING_PAYMENT)
   startsAt         DateTime
@@ -382,6 +384,7 @@ model Session {
   @@index([playerId, startsAt])
   @@index([proProfileId, startsAt])
   @@index([status, expiresAt])
+  @@index([slotId])
 }
 
 /// One row per room entry; evidence for confirmation/disputes, never a status trigger.
