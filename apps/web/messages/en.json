@@ -728,6 +728,10 @@
         "mediaUnavailable": "Your camera or microphone is unavailable. You can still see and hear the other party.",
         "cameraUnavailable": "Your camera is unavailable. The other party can still hear you.",
         "micUnavailable": "Your microphone is unavailable. The other party can still see you."
+      },
+      "speed": {
+        "label": "Speed",
+        "value": "{rate}×"
       }
     },
     "actions": {

@@ -18,6 +18,7 @@ import {
   AnnotationState,
   AnnotationTool,
   isMomentKey,
+  PLAYBACK_RATE_RANGE,
   PLAYBACK_SYNC_EVENTS,
   PLAYBACK_SYNC_NAMESPACE,
   PlaybackState,
@@ -64,7 +65,7 @@ function parseCookies(header: string): Record<string, string> {
 /** Untrusted wire payload → validated state, or null to drop it. */
 function parseState(body: unknown): Omit<PlaybackState, 'emittedAtMs'> | null {
   if (typeof body !== 'object' || body === null) return null;
-  const { playing, positionSeconds } = body as Record<string, unknown>;
+  const { playing, positionSeconds, rate } = body as Record<string, unknown>;
   if (typeof playing !== 'boolean') return null;
   if (
     typeof positionSeconds !== 'number' ||
@@ -73,7 +74,17 @@ function parseState(body: unknown): Omit<PlaybackState, 'emittedAtMs'> | null {
   ) {
     return null;
   }
-  return { playing, positionSeconds };
+  // A snapshot without a rate comes from a client predating speed sync.
+  if (rate === undefined) return { playing, positionSeconds, rate: 1 };
+  if (
+    typeof rate !== 'number' ||
+    !Number.isFinite(rate) ||
+    rate < PLAYBACK_RATE_RANGE.min ||
+    rate > PLAYBACK_RATE_RANGE.max
+  ) {
+    return null;
+  }
+  return { playing, positionSeconds, rate };
 }
 
 function parsePoint(value: unknown): AnnotationPoint | null {

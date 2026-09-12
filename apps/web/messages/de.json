@@ -728,6 +728,10 @@
         "mediaUnavailable": "Kamera oder Mikrofon sind nicht verfügbar. Du kannst die andere Person trotzdem sehen und hören.",
         "cameraUnavailable": "Deine Kamera ist nicht verfügbar. Die andere Person kann dich trotzdem hören.",
         "micUnavailable": "Dein Mikrofon ist nicht verfügbar. Die andere Person kann dich trotzdem sehen."
+      },
+      "speed": {
+        "label": "Tempo",
+        "value": "{rate}×"
       }
     },
     "actions": {

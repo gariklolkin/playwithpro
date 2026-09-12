@@ -728,6 +728,10 @@
         "mediaUnavailable": "摄像头或麦克风不可用。你仍然可以看到并听到对方。",
         "cameraUnavailable": "摄像头不可用。对方仍然可以听到你。",
         "micUnavailable": "麦克风不可用。对方仍然可以看到你。"
+      },
+      "speed": {
+        "label": "速度",
+        "value": "{rate}×"
       }
     },
     "actions": {

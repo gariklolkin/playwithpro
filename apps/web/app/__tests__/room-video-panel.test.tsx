@@ -77,11 +77,12 @@ async function renderPanel() {
 function receiveState(state: {
   playing: boolean;
   positionSeconds: number;
+  rate?: number;
   emittedAtMs?: number;
 }) {
   const handler = socketHandlers.get("playback:state");
   expect(handler).toBeDefined();
-  handler?.({ emittedAtMs: Date.now(), ...state });
+  handler?.({ emittedAtMs: Date.now(), rate: 1, ...state });
 }
 
 describe("RoomVideoPanel synced playback", () => {
@@ -109,6 +110,46 @@ describe("RoomVideoPanel synced playback", () => {
     expect(socketEmit).toHaveBeenCalledWith(
       "playback:publish",
       expect.objectContaining({ playing: false, positionSeconds: 10 }),
+    );
+  });
+
+  it("publishes the playback rate and applies a remote one", async () => {
+    const { video } = await renderPanel();
+    fireEvent.click(screen.getByRole("button", { name: "0.5×" }));
+    expect(video.playbackRate).toBe(0.5);
+    fireEvent(video, new Event("ratechange"));
+    expect(socketEmit).toHaveBeenCalledWith(
+      "playback:publish",
+      expect.objectContaining({ rate: 0.5 }),
+    );
+    expect(screen.getByRole("button", { name: "0.5×" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
+    socketEmit.mockClear();
+    receiveState({ playing: false, positionSeconds: 12, rate: 0.25 });
+    expect(video.playbackRate).toBe(0.25);
+    // The ratechange we caused must not be echoed back to the peer.
+    fireEvent(video, new Event("ratechange"));
+    expect(socketEmit).not.toHaveBeenCalledWith(
+      "playback:publish",
+      expect.anything(),
+    );
+    expect(screen.getByRole("button", { name: "0.25×" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  it("shows a non-preset rate from the native menu", async () => {
+    const { video } = await renderPanel();
+    video.playbackRate = 1.75;
+    fireEvent(video, new Event("ratechange"));
+    expect(screen.getByText("1.75×")).toBeInTheDocument();
+    expect(socketEmit).toHaveBeenCalledWith(
+      "playback:publish",
+      expect.objectContaining({ rate: 1.75 }),
     );
   });
 

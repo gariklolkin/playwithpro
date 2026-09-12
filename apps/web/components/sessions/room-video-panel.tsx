@@ -3,6 +3,7 @@
 import {
   ANNOTATION_ROLE_COLORS,
   MOMENT_TOLERANCE_SECONDS,
+  PLAYBACK_RATE_PRESETS,
   Role,
   momentKeyOf,
   momentSecondsOf,
@@ -67,6 +68,15 @@ export function RoomVideoPanel({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const sync = useSyncedPlayback(sessionId, videoRef);
   const annotations = useAnnotations(sync.socket, userId);
+  /** Mirrors the element's playbackRate for the speed control (any source). */
+  const [rate, setRate] = useState(1);
+  const applyRate = (next: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    // The ratechange event publishes it, so presets and the native menu
+    // share one path.
+    video.playbackRate = next;
+  };
 
   const defaultColor =
     role === Role.Amateur
@@ -201,6 +211,10 @@ export function RoomVideoPanel({
                 readPosition();
                 sync.onSeeked();
               }}
+              onRateChange={() => {
+                setRate(videoRef.current?.playbackRate ?? 1);
+                sync.onRateChange();
+              }}
               onTimeUpdate={readPosition}
               onLoadedMetadata={readPosition}
               className="block max-h-[520px] w-full"
@@ -229,6 +243,37 @@ export function RoomVideoPanel({
           </div>
         )}
       </div>
+      {playbackUrl && !failed ? (
+        <div
+          className="mt-2 flex flex-wrap items-center gap-1"
+          role="group"
+          aria-label={t("speed.label")}
+        >
+          <span className="mr-1 text-[12px] text-text-tertiary">
+            {t("speed.label")}
+          </span>
+          {PLAYBACK_RATE_PRESETS.map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              aria-pressed={rate === preset}
+              onClick={() => applyRate(preset)}
+              className={`rounded-md border px-2 py-0.5 text-xs font-medium tabular-nums transition-colors ${
+                rate === preset
+                  ? "border-text bg-text text-white"
+                  : "border-border text-text-secondary hover:text-text"
+              }`}
+            >
+              {t("speed.value", { rate: preset })}
+            </button>
+          ))}
+          {!PLAYBACK_RATE_PRESETS.some((preset) => preset === rate) ? (
+            <span className="rounded-md border border-text bg-text px-2 py-0.5 text-xs font-medium tabular-nums text-white">
+              {t("speed.value", { rate })}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
       {playbackUrl && !failed ? (
         <>
           <AnnotationToolbar

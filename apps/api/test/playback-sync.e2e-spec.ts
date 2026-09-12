@@ -225,11 +225,13 @@ describe('Playback sync (e2e)', () => {
     playerSocket.emit(PLAYBACK_SYNC_EVENTS.publish, {
       playing: true,
       positionSeconds: 134,
+      rate: 0.5,
       emittedAtMs: 1, // must be replaced by the server stamp
     });
     const state = await received;
     expect(state.playing).toBe(true);
     expect(state.positionSeconds).toBe(134);
+    expect(state.rate).toBe(0.5);
     expect(state.emittedAtMs).toBeGreaterThanOrEqual(before);
   });
 

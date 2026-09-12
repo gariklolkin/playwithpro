@@ -23,12 +23,19 @@ export interface PlaybackSyncHandshake {
 export interface PlaybackState {
   playing: boolean;
   positionSeconds: number;
+  /** Playback rate (1 = normal); shared so slow motion stays in sync. */
+  rate: number;
   /**
    * Server receive time (ms epoch), stamped on relay; clients use it only as
    * a delta against later server stamps, never against their own clock.
    */
   emittedAtMs: number;
 }
+
+/** Speed presets offered under the player; other rates (native menu) still sync. */
+export const PLAYBACK_RATE_PRESETS = [0.25, 0.5, 0.75, 1, 1.5, 2] as const;
+/** What browsers accept for HTMLMediaElement.playbackRate; the server rejects outside. */
+export const PLAYBACK_RATE_RANGE = { min: 0.0625, max: 4 } as const;
 
 export const PLAYBACK_SYNC_EVENTS = {
   /** client → server: local gesture or heartbeat snapshot to share. */

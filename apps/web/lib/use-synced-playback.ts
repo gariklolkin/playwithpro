@@ -32,6 +32,7 @@ export interface SyncedPlayback {
   onPlay: () => void;
   onPause: () => void;
   onSeeked: () => void;
+  onRateChange: () => void;
   /**
    * The underlying /playback-sync socket, for features that share the
    * channel (annotations). Null until the effect creates it.
@@ -68,6 +69,7 @@ export function useSyncedPlayback(
     const state: PlaybackState = {
       playing: !video.paused && !video.ended,
       positionSeconds: video.currentTime,
+      rate: video.playbackRate,
       emittedAtMs: Date.now(), // informational; the server re-stamps
     };
     socket.emit(PLAYBACK_SYNC_EVENTS.publish, state);
@@ -79,9 +81,10 @@ export function useSyncedPlayback(
       const video = videoRef.current;
       if (!video) return;
       const { state } = remote;
+      // Position advances at the shared rate: slow motion is not drift.
       const target = state.playing
         ? state.positionSeconds +
-          (performance.now() - remote.receivedAtMs) / 1000
+          ((performance.now() - remote.receivedAtMs) / 1000) * state.rate
         : state.positionSeconds;
       const drift = Math.abs(video.currentTime - target);
       const playingLocally = !video.paused && !video.ended;
@@ -89,6 +92,17 @@ export function useSyncedPlayback(
         ? PLAYBACK_DRIFT_THRESHOLD_SECONDS
         : EXACT_SEEK_SLACK_SECONDS;
       applyingRef.current += 1;
+      if (video.playbackRate !== state.rate) {
+        // The resulting ratechange fires as its own task, later than the
+        // tick that releases the play/pause/seek suppression — so hold the
+        // guard until that exact event, or we would echo the peer's rate.
+        applyingRef.current += 1;
+        const release = () => {
+          applyingRef.current = Math.max(0, applyingRef.current - 1);
+        };
+        video.addEventListener("ratechange", release, { once: true });
+        video.playbackRate = state.rate;
+      }
       if (state.playing !== playingLocally || drift > slack) {
         video.currentTime = target;
       }
@@ -205,6 +219,7 @@ export function useSyncedPlayback(
     onPlay: onLocalGesture,
     onPause: onLocalGesture,
     onSeeked: onLocalGesture,
+    onRateChange: onLocalGesture,
     socket,
   };
 }

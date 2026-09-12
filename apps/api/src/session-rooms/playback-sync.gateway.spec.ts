@@ -157,10 +157,28 @@ describe('PlaybackSyncGateway', () => {
     gateway.publish(socket, { playing: 'yes', positionSeconds: 1 });
     gateway.publish(socket, { playing: true, positionSeconds: -5 });
     gateway.publish(socket, { playing: true, positionSeconds: Infinity });
+    gateway.publish(socket, { playing: true, positionSeconds: 1, rate: 50 });
+    gateway.publish(socket, { playing: true, positionSeconds: 1, rate: 0 });
+    gateway.publish(socket, { playing: true, positionSeconds: 1, rate: '1' });
     gateway.publish(socket, null);
     expect(peerEmit).not.toHaveBeenCalled();
     gateway.requestState(socket);
     expect(raw.emit).not.toHaveBeenCalled();
+  });
+
+  it('relays the playback rate and defaults a missing one to 1', async () => {
+    const { socket, peerEmit } = fakeSocket();
+    await connect(socket);
+    gateway.publish(socket, { playing: true, positionSeconds: 5, rate: 0.25 });
+    expect(peerEmit).toHaveBeenLastCalledWith(
+      'playback:state',
+      expect.objectContaining({ rate: 0.25 }),
+    );
+    gateway.publish(socket, { playing: true, positionSeconds: 6 });
+    expect(peerEmit).toHaveBeenLastCalledWith(
+      'playback:state',
+      expect.objectContaining({ positionSeconds: 6, rate: 1 }),
+    );
   });
 
   it('replays the last state to a newly connected socket', async () => {
