@@ -27,7 +27,7 @@ The owner reviewed the "Session Review Layouts" canvas (baseline, options A–D,
 A test asserts the LiveKit room is connected exactly once across focus/hide/stack toggles.
 
 ### D2. Card width from the clip's aspect ratio
-Card height is fixed per breakpoint (`min(520px, 62vh)` in theatre). Card width = `clamp(560px, height × aspect, column − rail_min − gap)` with `rail_min = 260px`, exposed as a CSS variable on the grid (`grid-template-columns: var(--card-w) minmax(260px, 1fr)`). Aspect comes from `SessionVideoItem.width/height` (added in this change from the already-stored `Video` probe) and is corrected from `videoWidth/videoHeight` on `loadedmetadata`; 16:9 until known. Letterboxing of narrower clips is the video element's `object-contain` on a black card.
+Card height is fixed per breakpoint (`min(520px, 62vh)` in theatre). Card width = `clamp(560px, height × aspect, column − rail_min − gap)` with `rail_min = 260px`, exposed as a CSS variable on the grid (`grid-template-columns: var(--card-cols)`, i.e. `clamp(…) minmax(260px, 1fr)`); the rail's offset and height come from the card's measured box (`--rail-top`, `--rail-h`). Aspect comes from `SessionVideoItem.width/height` (added in this change from the already-stored `Video` probe) and is corrected from `videoWidth/videoHeight` on `loadedmetadata`; 16:9 until known. Letterboxing of narrower clips is the video element's `object-contain` on a black card.
 *Alternative:* pure CSS `aspect-ratio` on the card — rejected: it cannot express the 560px floor plus "rest goes to the rail" without knowing the ratio anyway.
 
 ### D3. Own player bar over the existing media events
@@ -40,7 +40,7 @@ Card height is fixed per breakpoint (`min(520px, 62vh)` in theatre). Card width 
 - **Fullscreen:** `requestFullscreen()` on the video card (video + annotation layer + bar). Where element fullscreen is unavailable (iOS Safari), fall back to `video.webkitEnterFullscreen()` — native player, no annotations — acceptable for phone detail viewing.
 
 ### D4. Annotation toolbar as a left-edge rail
-`AnnotationToolbar` gains `orientation="vertical"`, rendered inside the card at the left edge above the annotation layer (z-order: video < layer < tool rail < bar). Color and clear move into a small popover to keep the rail narrow. Behavior (pause on tool activation, Escape, undo scope) is unchanged.
+`AnnotationToolbar` becomes a vertical rail (the room panel is its only consumer, so no orientation switch), rendered inside the card at the left edge above the annotation layer (z-order: video < layer < tool rail < bar). Tools, undo and clear are icon buttons; the palette opens in a small popover to keep the rail narrow; the tool hint shows beside the rail. Behavior (pause on tool activation, Escape, undo scope) is unchanged.
 
 ### D5. Presence rail and hide-own-tile
 `CallStage` with `layout="rail"` renders a flex column: counterpart tile (`flex-1`, `object-cover`, screen share `object-contain`), own tile (fixed 16:9 at rail width) unless hidden, quality badge on the counterpart tile, controls row at the bottom plus a hide/show-self toggle and the focus button. Hiding the own tile only stops rendering `VideoTrack`; publishing is untouched. The preference is stored in `localStorage` (`pwp.room.hideSelf`) with try/catch fallbacks. When the counterpart shares a screen, the rail's top tile shows the screen and the counterpart's camera takes the second slot, the own tile then showing as a small corner overlay (or hidden if the user hid it).
@@ -49,7 +49,7 @@ Card height is fixed per breakpoint (`min(520px, 62vh)` in theatre). Card width 
 ### D6. Breakpoints
 - `≥1000px`: theatre (D2).
 - `640–999px`: card full width with height by aspect (max 60vh), rail becomes a horizontal strip under it: two tiles side by side (each 16:9), controls to the right; focus hides the strip.
-- `<640px`: single column: clip tabs, card with bar, moment chips, tiles side by side, controls with 44px targets. Tool rail stays inside the card; the bar collapses speed/loop/sync into an overflow menu.
+- `<640px`: single column: clip tabs, card with bar, moment chips, tiles side by side, controls with 44px targets. Tool rail stays inside the card; the player bar keeps its buttons at 44px and wraps the timeline onto its own row (no overflow menu — every control stays one tap away).
 Replaces the current `min-[900px]` split.
 
 ### D7. Fields for fps and dimensions

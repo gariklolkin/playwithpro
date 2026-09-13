@@ -10,7 +10,14 @@ import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 import { LocalTime } from "@/components/catalog/local-time";
-import { RoomVideoPanel } from "@/components/sessions/room-video-panel";
+import type {
+  CallLayout,
+  CallPhaseKind,
+} from "@/components/sessions/livekit-room";
+import {
+  RoomVideoPanel,
+  type CardLayout,
+} from "@/components/sessions/room-video-panel";
 import { apiFetch } from "@/lib/api";
 import { Link } from "@/i18n/navigation";
 
@@ -28,6 +35,34 @@ type LoadState =
   | { kind: "unavailable" }
   | { kind: "ready"; room: SessionRoomResponse };
 
+/** Theatre geometry (px); the frame height caps at 62% of the window. */
+const CARD_MIN_WIDTH = 560;
+const RAIL_MIN_WIDTH = 260;
+const GRID_GAP = 16;
+const THEATRE_FRAME_HEIGHT = "min(520px, 62vh)";
+const FOCUS_FRAME_HEIGHT = "min(720px, 75vh)";
+const HIDE_SELF_KEY = "pwp.room.hideSelf";
+
+function readHideSelf(): boolean {
+  try {
+    return (
+      typeof window !== "undefined" &&
+      window.localStorage.getItem(HIDE_SELF_KEY) === "1"
+    );
+  } catch {
+    return false;
+  }
+}
+
+function writeHideSelf(hide: boolean) {
+  try {
+    if (hide) window.localStorage.setItem(HIDE_SELF_KEY, "1");
+    else window.localStorage.removeItem(HIDE_SELF_KEY);
+  } catch {
+    // Storage blocked: the choice lasts for this page only.
+  }
+}
+
 function formatCountdown(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));
   const hours = Math.floor(total / 3600);
@@ -41,8 +76,12 @@ function formatCountdown(ms: number): string {
 
 /**
  * The platform session room: countdown before the join window, the native
- * call inside it (side by side with the attached video for video-analysis
- * sessions), closed state after the grace period.
+ * call inside it, closed state after the grace period. Video-analysis rooms
+ * put the attached clips beside the pre-join panel and, once joined, switch
+ * to the theatre layout — clip card in the main column, call in a presence
+ * rail matching the card — with focus mode and stacking on narrow screens.
+ * The call and the clip panel keep their place in the tree across layouts,
+ * so a layout change never reconnects the call.
  */
 export function SessionRoom({
   sessionId,
@@ -60,6 +99,11 @@ export function SessionRoom({
   const [state, setState] = useState<LoadState>({ kind: "loading" });
   const [countdown, setCountdown] = useState<string | null>(null);
   const [windowClosed, setWindowClosed] = useState(false);
+  const [callPhase, setCallPhase] = useState<CallPhaseKind>("prejoin");
+  const [focus, setFocus] = useState(false);
+  const [hideSelf, setHideSelf] = useState(readHideSelf);
+  const [aspect, setAspect] = useState(16 / 9);
+  const [cardLayout, setCardLayout] = useState<CardLayout | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -130,6 +174,24 @@ export function SessionRoom({
     }
   }, [sessionId]);
 
+  const onPhaseChange = useCallback((phase: CallPhaseKind) => {
+    setCallPhase(phase);
+    if (phase !== "in-call") setFocus(false);
+  }, []);
+
+  const onHideSelfChange = useCallback((hide: boolean) => {
+    setHideSelf(hide);
+    writeHideSelf(hide);
+  }, []);
+
+  const onCardLayout = useCallback((next: CardLayout) => {
+    setCardLayout((prev) =>
+      prev && prev.top === next.top && prev.height === next.height
+        ? prev
+        : next,
+    );
+  }, []);
+
   if (state.kind === "loading") {
     return <RoomShell>{t("loading")}</RoomShell>;
   }
@@ -149,6 +211,20 @@ export function SessionRoom({
 
   const withVideo = room.serviceType === ServiceType.VideoAnalysis;
   const closed = room.room === null && windowClosed;
+  const theatre = withVideo && callPhase === "in-call";
+  const focused = theatre && focus;
+  const callLayout: CallLayout = focused ? "focus" : theatre ? "rail" : "stage";
+  const railReserve = RAIL_MIN_WIDTH + GRID_GAP;
+  const gridStyle = theatre
+    ? ({
+        "--frame-h": focused ? FOCUS_FRAME_HEIGHT : THEATRE_FRAME_HEIGHT,
+        "--card-cols": focused
+          ? "minmax(0, 1fr)"
+          : `clamp(min(${CARD_MIN_WIDTH}px, 100% - ${railReserve}px), calc(${THEATRE_FRAME_HEIGHT} * ${aspect.toFixed(4)}), 100% - ${railReserve}px) minmax(${RAIL_MIN_WIDTH}px, 1fr)`,
+        "--rail-top": `${cardLayout?.top ?? 0}px`,
+        "--rail-h": cardLayout ? `${cardLayout.height}px` : "auto",
+      } as React.CSSProperties)
+    : undefined;
 
   return (
     <div className="pb-4 pt-1">
@@ -196,35 +272,63 @@ export function SessionRoom({
         </div>
       ) : (
         <div
+          data-testid="room-layout"
+          data-layout={withVideo ? callLayout : "consultation"}
+          style={gridStyle}
           className={
-            withVideo
-              ? "grid gap-4 min-[900px]:grid-cols-2"
-              : "mx-auto max-w-[860px]"
+            !withVideo
+              ? "mx-auto max-w-[860px]"
+              : theatre
+                ? "grid gap-4 min-[1000px]:[grid-template-columns:var(--card-cols)]"
+                : "grid gap-4 min-[900px]:grid-cols-2"
           }
         >
-          <div>
+          <div
+            className={
+              theatre && !focused
+                ? "order-2 min-w-0 min-[1000px]:order-none min-[1000px]:col-start-2 min-[1000px]:row-start-1 min-[1000px]:mt-[var(--rail-top)] min-[1000px]:h-[var(--rail-h)]"
+                : theatre
+                  ? "order-2"
+                  : "min-w-0"
+            }
+          >
             {room.room.kind === "livekit" ? (
               <LiveKitCall
                 serverUrl={room.room.url}
                 counterpartName={room.counterpartName}
                 displayName={displayName}
                 requestToken={requestToken}
+                layout={withVideo ? callLayout : "stage"}
+                hideSelf={hideSelf}
+                onHideSelfChange={onHideSelfChange}
+                onFocusChange={setFocus}
+                onPhaseChange={onPhaseChange}
               />
             ) : null}
           </div>
           {withVideo ? (
-            room.videos.length > 0 ? (
-              <RoomVideoPanel
-                sessionId={sessionId}
-                videos={room.videos}
-                userId={userId}
-                role={role}
-              />
-            ) : (
-              <div className="rounded-card border border-border p-6 text-center text-sm text-text-secondary">
-                📹 {t("clips.removed")}
-              </div>
-            )
+            <div
+              className={
+                theatre
+                  ? "min-w-0 min-[1000px]:col-start-1 min-[1000px]:row-start-1"
+                  : "min-w-0"
+              }
+            >
+              {room.videos.length > 0 ? (
+                <RoomVideoPanel
+                  sessionId={sessionId}
+                  videos={room.videos}
+                  userId={userId}
+                  role={role}
+                  onAspectChange={setAspect}
+                  onCardLayout={onCardLayout}
+                />
+              ) : (
+                <div className="rounded-card border border-border p-6 text-center text-sm text-text-secondary">
+                  📹 {t("clips.removed")}
+                </div>
+              )}
+            </div>
           ) : null}
         </div>
       )}

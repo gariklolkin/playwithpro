@@ -1,4 +1,8 @@
-import { toSessionResponse, type SessionWithParties } from './session.mapper';
+import {
+  toSessionResponse,
+  toSessionVideoItems,
+  type SessionWithParties,
+} from './session.mapper';
 
 const HOUR = 3_600_000;
 
@@ -116,5 +120,59 @@ describe('toSessionResponse review fields', () => {
     );
 
     expect(response.reviewable).toBe(false);
+  });
+});
+
+describe('toSessionVideoItems', () => {
+  it('exposes each clip with its probed frame rate and frame size', () => {
+    expect(
+      toSessionVideoItems([
+        {
+          position: 0,
+          note: 'serve',
+          video: {
+            id: 'video-1',
+            title: 'Serve drill',
+            durationSeconds: 45,
+            fps: 59.94,
+            width: 1080,
+            height: 1920,
+          },
+        },
+        {
+          position: 2,
+          note: null,
+          video: {
+            id: 'video-2',
+            title: 'Match',
+            durationSeconds: null,
+            fps: null,
+            width: null,
+            height: null,
+          },
+        },
+      ]),
+    ).toEqual([
+      {
+        videoId: 'video-1',
+        title: 'Serve drill',
+        note: 'serve',
+        durationSeconds: 45,
+        fps: 59.94,
+        width: 1080,
+        height: 1920,
+        position: 0,
+      },
+      {
+        videoId: 'video-2',
+        title: 'Match',
+        note: null,
+        durationSeconds: null,
+        fps: null,
+        width: null,
+        height: null,
+        position: 2,
+      },
+    ]);
   });
 });

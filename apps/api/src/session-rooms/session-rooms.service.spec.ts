@@ -38,7 +38,14 @@ describe('SessionRoomsService.authorizePlaybackSync', () => {
       {
         position: 0,
         note: null,
-        video: { id: 'video-1', title: 'Match footage', durationSeconds: 60 },
+        video: {
+          id: 'video-1',
+          title: 'Match footage',
+          durationSeconds: 60,
+          fps: 60,
+          width: 1080,
+          height: 1920,
+        },
       },
     ],
     serviceType: ServiceType.VIDEO_ANALYSIS,

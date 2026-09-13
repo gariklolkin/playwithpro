@@ -749,6 +749,26 @@
       "clips": {
         "label": "Clips",
         "removed": "The clips of this session were removed from the library. The player can attach new ones until the session starts."
+      },
+      "player": {
+        "play": "Play",
+        "pause": "Pause",
+        "frameBack": "Previous frame",
+        "frameForward": "Next frame",
+        "timeline": "Timeline",
+        "markers": "Annotated moments on the timeline",
+        "speed": "Playback speed: {rate}×",
+        "loop": "Loop",
+        "fullscreen": "Full screen",
+        "exitFullscreen": "Exit full screen"
+      },
+      "layout": {
+        "onCall": "On call",
+        "focus": "Focus on the video",
+        "exitFocus": "Show the call",
+        "hideSelf": "Hide my camera tile",
+        "showSelf": "Show my camera tile",
+        "hideSelfHint": "Hidden only on your screen — the other party still sees you."
       }
     },
     "actions": {

@@ -749,6 +749,26 @@
       "clips": {
         "label": "片段",
         "removed": "本次课程的片段已从视频库中删除。球员可在课程开始前重新附上片段。"
+      },
+      "player": {
+        "play": "播放",
+        "pause": "暂停",
+        "frameBack": "上一帧",
+        "frameForward": "下一帧",
+        "timeline": "时间轴",
+        "markers": "时间轴上的标注时刻",
+        "speed": "播放速度：{rate}×",
+        "loop": "循环",
+        "fullscreen": "全屏",
+        "exitFullscreen": "退出全屏"
+      },
+      "layout": {
+        "onCall": "通话中",
+        "focus": "专注视频",
+        "exitFocus": "显示通话",
+        "hideSelf": "隐藏我的画面",
+        "showSelf": "显示我的画面",
+        "hideSelfHint": "仅在您的屏幕上隐藏——对方仍能看到您。"
       }
     },
     "actions": {

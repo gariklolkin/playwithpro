@@ -22,8 +22,12 @@ import {
   type RoomOptions,
 } from "livekit-client";
 import {
+  Eye,
+  EyeOff,
+  Maximize2,
   Mic,
   MicOff,
+  PanelRightOpen,
   PhoneOff,
   ScreenShare,
   ScreenShareOff,
@@ -43,10 +47,20 @@ type CallPhase =
   | { kind: "in-call"; token: string }
   | { kind: "left"; reason: "user" | "connection" | "failed" };
 
+export type CallPhaseKind = CallPhase["kind"];
+
+/**
+ * How the joined call is presented: the full stage (consultation rooms and
+ * pre-theatre), the presence rail beside the attached clip, or only a
+ * floating control bar while the clip is in focus. Switching never touches
+ * the connection.
+ */
+export type CallLayout = "stage" | "rail" | "focus";
+
 /**
  * The native call inside the session room: pre-join device check, the call
  * itself (counterpart or shared screen as the main tile, own camera as a
- * corner tile), and a left/lost state that offers rejoining. Every join —
+ * secondary tile), and a left/lost state that offers rejoining. Every join —
  * including a rejoin — asks the API for a fresh token, which is also what
  * records attendance.
  */
@@ -55,12 +69,23 @@ export function LiveKitCall({
   counterpartName,
   displayName,
   requestToken,
+  layout = "stage",
+  hideSelf = false,
+  onHideSelfChange,
+  onFocusChange,
+  onPhaseChange,
 }: {
   serverUrl: string;
   counterpartName: string;
   displayName: string;
   /** Performs the join action; resolves to the participant token or null. */
   requestToken: () => Promise<string | null>;
+  layout?: CallLayout;
+  /** Rail only: hide the party's own tile (publishing is unaffected). */
+  hideSelf?: boolean;
+  onHideSelfChange?: (hide: boolean) => void;
+  onFocusChange?: (focus: boolean) => void;
+  onPhaseChange?: (phase: CallPhaseKind) => void;
 }) {
   const t = useTranslations("sessions.room.call");
   const [phase, setPhase] = useState<CallPhase>({ kind: "prejoin" });
@@ -68,20 +93,28 @@ export function LiveKitCall({
   const [mediaFailed, setMediaFailed] = useState(false);
   const leavingRef = useRef(false);
 
+  const changePhase = useCallback(
+    (next: CallPhase) => {
+      setPhase(next);
+      onPhaseChange?.(next.kind);
+    },
+    [onPhaseChange],
+  );
+
   const join = useCallback(
     async (next: PreJoinChoices) => {
       setChoices(next);
-      setPhase({ kind: "joining" });
+      changePhase({ kind: "joining" });
       const token = await requestToken();
       if (!token) {
-        setPhase({ kind: "left", reason: "failed" });
+        changePhase({ kind: "left", reason: "failed" });
         return;
       }
       leavingRef.current = false;
       setMediaFailed(false);
-      setPhase({ kind: "in-call", token });
+      changePhase({ kind: "in-call", token });
     },
-    [requestToken],
+    [requestToken, changePhase],
   );
 
   const roomOptions = useMemo<RoomOptions>(
@@ -135,7 +168,7 @@ export function LiveKitCall({
             type="button"
             variant="blue"
             className="mt-3"
-            onClick={() => setPhase({ kind: "prejoin" })}
+            onClick={() => changePhase({ kind: "prejoin" })}
           >
             {t("rejoin")}
           </Button>
@@ -153,7 +186,7 @@ export function LiveKitCall({
       video={choices?.videoEnabled ?? true}
       options={roomOptions}
       onDisconnected={() =>
-        setPhase({
+        changePhase({
           kind: "left",
           reason: leavingRef.current ? "user" : "connection",
         })
@@ -169,7 +202,7 @@ export function LiveKitCall({
           setMediaFailed(true);
           return;
         }
-        setPhase({ kind: "left", reason: "connection" });
+        changePhase({ kind: "left", reason: "connection" });
       }}
       onMediaDeviceFailure={() => setMediaFailed(true)}
       className="contents"
@@ -185,6 +218,10 @@ export function LiveKitCall({
         onLeave={() => {
           leavingRef.current = true;
         }}
+        layout={layout}
+        hideSelf={hideSelf}
+        onHideSelfChange={onHideSelfChange}
+        onFocusChange={onFocusChange}
       />
     </LiveKitRoom>
   );
@@ -198,6 +235,10 @@ function CallStage({
   wantsMicrophone,
   onDevicesRecovered,
   onLeave,
+  layout,
+  hideSelf,
+  onHideSelfChange,
+  onFocusChange,
 }: {
   counterpartName: string;
   displayName: string;
@@ -206,8 +247,13 @@ function CallStage({
   wantsMicrophone: boolean;
   onDevicesRecovered: () => void;
   onLeave: () => void;
+  layout: CallLayout;
+  hideSelf: boolean;
+  onHideSelfChange?: (hide: boolean) => void;
+  onFocusChange?: (focus: boolean) => void;
 }) {
   const t = useTranslations("sessions.room.call");
+  const tLayout = useTranslations("sessions.room.layout");
   const room = useRoomContext();
   const { isCameraEnabled, isMicrophoneEnabled } = useLocalParticipant();
   const notice = deviceNotice({
@@ -245,30 +291,119 @@ function CallStage({
   );
   const counterpartPresent = remoteParticipants.length > 0;
   const main = remoteScreen ?? remoteCamera;
+  const reconnecting = connectionState === ConnectionState.Reconnecting;
+
+  if (layout === "focus") {
+    return (
+      <FocusBar
+        reconnecting={reconnecting}
+        onLeave={onLeave}
+        onExitFocus={() => onFocusChange?.(false)}
+      />
+    );
+  }
+
+  const mainTile =
+    main && counterpartPresent ? (
+      <Tile
+        trackRef={main}
+        label={
+          remoteScreen
+            ? t("screenOf", { name: counterpartName })
+            : counterpartName
+        }
+        fill={layout === "stage" || remoteScreen !== undefined}
+      />
+    ) : (
+      <div className="flex h-full flex-col items-center justify-center gap-3 p-4 text-center">
+        <Initial name={counterpartName} size="lg" />
+        <div className="text-sm text-white/80">
+          {connectionState === ConnectionState.Connecting
+            ? t("connecting")
+            : t("waiting", { name: counterpartName })}
+        </div>
+      </div>
+    );
+
+  const overlays = (
+    <>
+      <QualityBadge />
+      {notice ? (
+        <div className="absolute left-3 top-10 max-w-[70%] rounded bg-black/70 px-2 py-1 text-[12px] text-amber-200">
+          {notice === "camera"
+            ? t("cameraUnavailable")
+            : notice === "microphone"
+              ? t("micUnavailable")
+              : t("mediaUnavailable")}
+        </div>
+      ) : null}
+      {reconnecting ? (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-sm font-medium text-white">
+          {t("reconnecting")}
+        </div>
+      ) : null}
+    </>
+  );
+
+  if (layout === "rail") {
+    return (
+      <div className="flex h-full min-h-0 flex-col gap-2 max-[999px]:flex-row max-[999px]:flex-wrap">
+        <div className="text-[11px] font-medium uppercase tracking-wide text-text-tertiary max-[999px]:hidden">
+          {tLayout("onCall")}
+        </div>
+        <div
+          data-testid="rail-counterpart"
+          className="relative min-h-[120px] flex-1 overflow-hidden rounded-card border border-border bg-black max-[999px]:aspect-video max-[999px]:min-h-0 max-[999px]:min-w-[200px] max-[999px]:basis-0"
+        >
+          {mainTile}
+          {remoteScreen && remoteCamera ? (
+            <div className="absolute bottom-2 right-2">
+              <Tile trackRef={remoteCamera} label={counterpartName} small />
+            </div>
+          ) : null}
+          {overlays}
+        </div>
+        {hideSelf ? null : (
+          <div
+            data-testid="rail-self"
+            className="relative aspect-video shrink-0 overflow-hidden rounded-card border border-border bg-black max-[999px]:min-w-[160px] max-[999px]:flex-1 max-[999px]:basis-0"
+          >
+            <Tile
+              trackRef={localCamera}
+              label={t("you")}
+              mirror
+              fallbackName={displayName}
+            />
+          </div>
+        )}
+        <div className="flex flex-col items-center justify-center gap-1.5 max-[999px]:basis-full min-[640px]:max-[999px]:basis-auto">
+          <CallControls onLeave={onLeave} variant="rail" />
+          <div className="flex items-center gap-1">
+            <RailToggle
+              label={hideSelf ? tLayout("showSelf") : tLayout("hideSelf")}
+              hint={tLayout("hideSelfHint")}
+              pressed={hideSelf}
+              onClick={() => onHideSelfChange?.(!hideSelf)}
+            >
+              {hideSelf ? <Eye size={16} /> : <EyeOff size={16} />}
+            </RailToggle>
+            <RailToggle
+              label={tLayout("focus")}
+              pressed={false}
+              onClick={() => onFocusChange?.(true)}
+            >
+              <Maximize2 size={16} />
+            </RailToggle>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
       <CallFrame>
-        {main && counterpartPresent ? (
-          <Tile
-            trackRef={main}
-            label={
-              remoteScreen
-                ? t("screenOf", { name: counterpartName })
-                : counterpartName
-            }
-            fill
-          />
-        ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-            <Initial name={counterpartName} size="lg" />
-            <div className="text-sm text-white/80">
-              {connectionState === ConnectionState.Connecting
-                ? t("connecting")
-                : t("waiting", { name: counterpartName })}
-            </div>
-          </div>
-        )}
+        {mainTile}
 
         <div className="absolute bottom-3 right-3 flex flex-col items-end gap-2">
           {remoteScreen && remoteCamera ? (
@@ -283,25 +418,9 @@ function CallStage({
           />
         </div>
 
-        <QualityBadge />
-
-        {notice ? (
-          <div className="absolute left-3 top-10 max-w-[70%] rounded bg-black/70 px-2 py-1 text-[12px] text-amber-200">
-            {notice === "camera"
-              ? t("cameraUnavailable")
-              : notice === "microphone"
-                ? t("micUnavailable")
-                : t("mediaUnavailable")}
-          </div>
-        ) : null}
-
-        {connectionState === ConnectionState.Reconnecting ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-sm font-medium text-white">
-            {t("reconnecting")}
-          </div>
-        ) : null}
+        {overlays}
       </CallFrame>
-      <CallControls onLeave={onLeave} />
+      <CallControls onLeave={onLeave} variant="stage" />
     </div>
   );
 }
@@ -401,7 +520,13 @@ function QualityBadge() {
   );
 }
 
-function CallControls({ onLeave }: { onLeave: () => void }) {
+function CallControls({
+  onLeave,
+  variant,
+}: {
+  onLeave: () => void;
+  variant: "stage" | "rail";
+}) {
   const t = useTranslations("sessions.room.call.controls");
   const room = useRoomContext();
   const mic = useTrackToggle({ source: Track.Source.Microphone });
@@ -412,7 +537,11 @@ function CallControls({ onLeave }: { onLeave: () => void }) {
     typeof navigator.mediaDevices?.getDisplayMedia === "function";
 
   return (
-    <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+    <div
+      className={`flex flex-wrap items-center justify-center ${
+        variant === "stage" ? "mt-3 gap-2" : "gap-1.5"
+      }`}
+    >
       <ControlButton
         active={mic.enabled}
         pending={mic.pending}
@@ -450,12 +579,98 @@ function CallControls({ onLeave }: { onLeave: () => void }) {
           onLeave();
           void room.disconnect();
         }}
-        className="ml-2 inline-flex cursor-pointer items-center gap-2 rounded-full bg-destructive px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+        className={`inline-flex cursor-pointer items-center gap-2 rounded-full bg-destructive py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 max-[639px]:py-3 ${
+          variant === "stage" ? "ml-2 px-4" : "px-3"
+        }`}
       >
         <PhoneOff size={18} />
         {t("leave")}
       </button>
     </div>
+  );
+}
+
+/** While the clip is in focus: the call keeps running behind a small bar. */
+function FocusBar({
+  reconnecting,
+  onLeave,
+  onExitFocus,
+}: {
+  reconnecting: boolean;
+  onLeave: () => void;
+  onExitFocus: () => void;
+}) {
+  const t = useTranslations("sessions.room.call");
+  const tLayout = useTranslations("sessions.room.layout");
+  const room = useRoomContext();
+  const mic = useTrackToggle({ source: Track.Source.Microphone });
+
+  return (
+    <div
+      role="group"
+      aria-label={tLayout("onCall")}
+      className="fixed bottom-4 right-4 z-40 flex items-center gap-2 rounded-full border border-white/10 bg-neutral-900/90 p-1.5 shadow-lg"
+    >
+      {reconnecting ? (
+        <span className="px-2 text-xs text-white/80">{t("reconnecting")}</span>
+      ) : null}
+      <ControlButton
+        active={mic.enabled}
+        pending={mic.pending}
+        label={mic.enabled ? t("controls.mute") : t("controls.unmute")}
+        onClick={() => void mic.toggle()}
+      >
+        {mic.enabled ? <Mic size={18} /> : <MicOff size={18} />}
+      </ControlButton>
+      <button
+        type="button"
+        aria-label={t("controls.leave")}
+        title={t("controls.leave")}
+        onClick={() => {
+          onLeave();
+          void room.disconnect();
+        }}
+        className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-destructive text-white transition-colors hover:bg-red-700 max-[639px]:h-11 max-[639px]:w-11"
+      >
+        <PhoneOff size={18} />
+      </button>
+      <button
+        type="button"
+        aria-label={tLayout("exitFocus")}
+        title={tLayout("exitFocus")}
+        onClick={onExitFocus}
+        className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 max-[639px]:h-11 max-[639px]:w-11"
+      >
+        <PanelRightOpen size={18} />
+      </button>
+    </div>
+  );
+}
+
+function RailToggle({
+  label,
+  hint,
+  pressed,
+  onClick,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  pressed: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      aria-pressed={pressed}
+      title={hint ? `${label} — ${hint}` : label}
+      onClick={onClick}
+      className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-bg-hover hover:text-text max-[639px]:h-11 max-[639px]:w-11"
+    >
+      {children}
+    </button>
   );
 }
 
@@ -488,7 +703,7 @@ function ControlButton({
       title={label}
       disabled={pending}
       onClick={onClick}
-      className={`inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${look}`}
+      className={`inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-60 max-[639px]:h-11 max-[639px]:w-11 ${look}`}
     >
       {children}
     </button>

@@ -3,7 +3,6 @@
 import {
   ANNOTATION_ROLE_COLORS,
   MOMENT_TOLERANCE_SECONDS,
-  PLAYBACK_RATE_PRESETS,
   Role,
   momentKeyOf,
   momentSecondsOf,
@@ -19,6 +18,7 @@ import {
   type LayerTool,
 } from "@/components/sessions/annotation-layer";
 import { AnnotationToolbar } from "@/components/sessions/annotation-toolbar";
+import { ReviewPlayerBar } from "@/components/sessions/review-player-bar";
 import { formatMoment } from "@/lib/annotation-geometry";
 import { apiFetch } from "@/lib/api";
 import { clipAnnotations, useAnnotations } from "@/lib/use-annotations";
@@ -27,7 +27,16 @@ import { useSyncedPlayback } from "@/lib/use-synced-playback";
 interface PlayerPosition {
   paused: boolean;
   timeSeconds: number;
+  durationSeconds: number;
 }
+
+/** Where the video card sits inside the panel, for aligning the call rail. */
+export interface CardLayout {
+  top: number;
+  height: number;
+}
+
+const LANDSCAPE = 16 / 9;
 
 /** The annotated moment the paused player sits on, if any (within tolerance). */
 function nearestMoment(keys: string[], timeSeconds: number): string | null {
@@ -43,26 +52,35 @@ function nearestMoment(keys: string[], timeSeconds: number): string | null {
   return best;
 }
 
+type FullscreenVideo = HTMLVideoElement & {
+  webkitEnterFullscreen?: () => void;
+};
+
 /**
- * The attached clips next to the call in video-analysis rooms: a tab per
- * clip and a player for the active one, over short-lived pre-signed URLs
- * (the API admits both the owner and the session coach). Playback state —
- * including which clip is active — is shared between the parties over the
- * sync channel, with a per-user toggle to detach and browse privately. An
- * annotation layer over the paused frame lets both parties draw for each
- * other in real time; strokes belong to the clip they were drawn on.
+ * The attached clips in video-analysis rooms: a tab per clip and a video
+ * card for the active one — frame, left-edge annotation tools and the review
+ * player bar — over short-lived pre-signed URLs (the API admits both the
+ * owner and the session coach). Playback state — including which clip is
+ * active — is shared between the parties over the sync channel, with a
+ * per-user toggle to detach and browse privately. Strokes belong to the clip
+ * they were drawn on. The card's aspect ratio and position are reported so
+ * the room can size the card and align the call rail with it.
  */
 export function RoomVideoPanel({
   sessionId,
   videos,
   userId,
   role,
+  onAspectChange,
+  onCardLayout,
 }: {
   sessionId: string;
   /** The session's clips in order; at least one. */
   videos: SessionVideoItem[];
   userId: string;
   role: Role;
+  onAspectChange?: (aspect: number) => void;
+  onCardLayout?: (layout: CardLayout) => void;
 }) {
   const t = useTranslations("sessions.room");
   const [activeId, setActiveId] = useState<string | null>(
@@ -72,8 +90,14 @@ export function RoomVideoPanel({
   /** Signed URLs per clip, so switching back does not re-request. */
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [failedIds, setFailedIds] = useState<Record<string, true>>({});
+  /** Frame aspect read from the loaded media, which beats the probe. */
+  const [loadedAspects, setLoadedAspects] = useState<Record<string, number>>(
+    {},
+  );
   const playbackUrl = activeId ? (urls[activeId] ?? null) : null;
   const failed = activeId ? failedIds[activeId] === true : false;
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const cardRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const onRemoteClip = useCallback(
     (videoId: string) => {
@@ -89,15 +113,16 @@ export function RoomVideoPanel({
   });
   const annotations = useAnnotations(sync.socket, userId);
   const clipState = clipAnnotations(annotations.state, activeId);
-  /** Mirrors the element's playbackRate for the speed control (any source). */
+  /** Mirrors the element's playbackRate for the speed menu (any source). */
   const [rate, setRate] = useState(1);
   const applyRate = (next: number) => {
     const video = videoRef.current;
     if (!video) return;
-    // The ratechange event publishes it, so presets and the native menu
-    // share one path.
+    // The ratechange event publishes it, so every rate source shares one path.
     video.playbackRate = next;
   };
+  const [loop, setLoop] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
 
   const defaultColor =
     role === Role.Amateur
@@ -108,7 +133,42 @@ export function RoomVideoPanel({
   const [position, setPosition] = useState<PlayerPosition>({
     paused: true,
     timeSeconds: 0,
+    durationSeconds: 0,
   });
+
+  const probedAspect =
+    active?.width && active.height ? active.width / active.height : null;
+  const aspect =
+    (activeId ? loadedAspects[activeId] : undefined) ??
+    probedAspect ??
+    LANDSCAPE;
+
+  useEffect(() => {
+    onAspectChange?.(aspect);
+  }, [aspect, onAspectChange]);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    const card = cardRef.current;
+    if (!root || !card || !onCardLayout) return;
+    if (typeof ResizeObserver === "undefined") return;
+    const report = () =>
+      onCardLayout({ top: card.offsetTop, height: card.offsetHeight });
+    const observer = new ResizeObserver(report);
+    observer.observe(root);
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, [onCardLayout]);
+
+  useEffect(() => {
+    const onChange = () =>
+      setFullscreen(
+        cardRef.current !== null &&
+          document.fullscreenElement === cardRef.current,
+      );
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
 
   useEffect(() => {
     if (!activeId || urls[activeId] || failedIds[activeId]) return;
@@ -140,6 +200,7 @@ export function RoomVideoPanel({
     setPosition({
       paused: video.paused || video.ended,
       timeSeconds: video.currentTime,
+      durationSeconds: Number.isFinite(video.duration) ? video.duration : 0,
     });
   }, []);
 
@@ -159,6 +220,10 @@ export function RoomVideoPanel({
         (a, b) => momentSecondsOf(a) - momentSecondsOf(b),
       ),
     [clipState],
+  );
+  const timelineMoments = useMemo(
+    () => momentKeys.map((key) => ({ key, seconds: momentSecondsOf(key) })),
+    [momentKeys],
   );
   const shownMoment = position.paused
     ? nearestMoment(momentKeys, position.timeSeconds)
@@ -190,7 +255,7 @@ export function RoomVideoPanel({
   const selectClip = (videoId: string) => {
     if (videoId === activeId) return;
     setTool("select");
-    setPosition({ paused: true, timeSeconds: 0 });
+    setPosition({ paused: true, timeSeconds: 0, durationSeconds: 0 });
     setActiveId(videoId);
   };
 
@@ -202,8 +267,25 @@ export function RoomVideoPanel({
     readPosition();
   };
 
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) {
+      void Promise.resolve(document.exitFullscreen()).catch(() => undefined);
+      return;
+    }
+    const card = cardRef.current;
+    if (card && typeof card.requestFullscreen === "function") {
+      void Promise.resolve(card.requestFullscreen()).catch(() => undefined);
+      return;
+    }
+    // iOS Safari: only the video element itself can go full screen (native
+    // controls, no annotation layer).
+    (videoRef.current as FullscreenVideo | null)?.webkitEnterFullscreen?.();
+  };
+
+  const ready = playbackUrl !== null && !failed;
+
   return (
-    <div>
+    <div ref={rootRef} className="relative min-w-0">
       {videos.length > 1 ? (
         <div
           role="tablist"
@@ -228,170 +310,178 @@ export function RoomVideoPanel({
           ))}
         </div>
       ) : null}
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-text">
-          📹{" "}
-          <span className="truncate">
-            {active?.title ?? t("videoPanelTitle")}
+      <div className="mb-2 flex min-w-0 items-center gap-2 text-sm font-semibold text-text">
+        📹{" "}
+        <span className="truncate">
+          {active?.title ?? t("videoPanelTitle")}
+        </span>
+        {active?.note ? (
+          <span className="truncate text-[13px] font-normal text-text-secondary">
+            — {active.note}
           </span>
-          {active?.note ? (
-            <span className="truncate text-[13px] font-normal text-text-secondary">
-              — {active.note}
-            </span>
-          ) : null}
-        </div>
-        <button
-          type="button"
-          aria-pressed={sync.synced}
-          onClick={() => sync.setSynced(!sync.synced)}
-          className={`shrink-0 rounded-md border px-2 py-1 text-xs font-medium transition-colors ${
-            sync.synced
-              ? "border-border bg-bg-secondary text-text"
-              : "border-border text-text-tertiary hover:text-text"
-          }`}
-          title={sync.synced ? t("sync.onHint") : t("sync.offHint")}
-        >
-          {sync.synced ? `🔄 ${t("sync.on")}` : t("sync.off")}
-        </button>
+        ) : null}
       </div>
-      <div className="relative overflow-hidden rounded-card border border-border bg-black">
-        {failed ? (
-          <div className="flex h-64 items-center justify-center text-sm text-white">
-            {t("videoLoadFailed")}
-          </div>
-        ) : playbackUrl ? (
-          <>
-            <video
-              key={activeId ?? "none"}
-              ref={videoRef}
-              src={playbackUrl}
-              controls
-              playsInline
-              onPlay={() => {
-                readPosition();
-                sync.onPlay();
-              }}
-              onPause={() => {
-                readPosition();
-                sync.onPause();
-              }}
-              onSeeked={() => {
-                readPosition();
-                sync.onSeeked();
-              }}
-              onRateChange={() => {
-                setRate(videoRef.current?.playbackRate ?? 1);
-                sync.onRateChange();
-              }}
-              onTimeUpdate={readPosition}
-              onLoadedMetadata={() => {
-                readPosition();
-                sync.onSourceReady();
-              }}
-              className="block max-h-[520px] w-full"
-            />
-            <AnnotationLayer
-              videoRef={videoRef}
-              strokes={shownStrokes}
-              tool={tool}
-              color={color}
-              visible={position.paused}
-              onStrokeComplete={onStrokeComplete}
-            />
-            {sync.blocked ? (
-              <button
-                type="button"
-                onClick={sync.resume}
-                className="absolute inset-0 flex items-center justify-center bg-black/70 text-sm font-semibold text-white"
-              >
-                ▶️ {t("sync.resume")}
-              </button>
-            ) : null}
-          </>
-        ) : (
-          <div className="flex h-64 items-center justify-center text-sm text-white/70">
-            {t("videoLoading")}
-          </div>
-        )}
-      </div>
-      {playbackUrl && !failed ? (
+      <div
+        ref={cardRef}
+        className={`overflow-hidden bg-black ${
+          fullscreen
+            ? "flex h-full w-full flex-col"
+            : "rounded-card border border-border"
+        }`}
+      >
         <div
-          className="mt-2 flex flex-wrap items-center gap-1"
-          role="group"
-          aria-label={t("speed.label")}
+          className={`relative w-full ${
+            fullscreen ? "min-h-0 flex-1" : "max-h-[var(--frame-h,520px)]"
+          }`}
+          style={fullscreen ? undefined : { aspectRatio: String(aspect) }}
         >
-          <span className="mr-1 text-[12px] text-text-tertiary">
-            {t("speed.label")}
+          {failed ? (
+            <div className="absolute inset-0 flex items-center justify-center text-sm text-white">
+              {t("videoLoadFailed")}
+            </div>
+          ) : playbackUrl ? (
+            <>
+              <video
+                key={activeId ?? "none"}
+                ref={videoRef}
+                src={playbackUrl}
+                playsInline
+                onPlay={() => {
+                  readPosition();
+                  sync.onPlay();
+                }}
+                onPause={() => {
+                  readPosition();
+                  sync.onPause();
+                }}
+                onSeeked={() => {
+                  readPosition();
+                  sync.onSeeked();
+                }}
+                onRateChange={() => {
+                  setRate(videoRef.current?.playbackRate ?? 1);
+                  sync.onRateChange();
+                }}
+                onTimeUpdate={readPosition}
+                onDurationChange={readPosition}
+                onEnded={() => {
+                  const video = videoRef.current;
+                  if (!loop || !video) return;
+                  video.currentTime = 0;
+                  void Promise.resolve(video.play()).catch(() => undefined);
+                }}
+                onLoadedMetadata={() => {
+                  const video = videoRef.current;
+                  if (
+                    video &&
+                    activeId &&
+                    video.videoWidth &&
+                    video.videoHeight
+                  ) {
+                    const loaded = video.videoWidth / video.videoHeight;
+                    setLoadedAspects((prev) =>
+                      prev[activeId] === loaded
+                        ? prev
+                        : { ...prev, [activeId]: loaded },
+                    );
+                  }
+                  readPosition();
+                  sync.onSourceReady();
+                }}
+                className="absolute inset-0 block h-full w-full object-contain"
+              />
+              <AnnotationLayer
+                videoRef={videoRef}
+                strokes={shownStrokes}
+                tool={tool}
+                color={color}
+                visible={position.paused}
+                onStrokeComplete={onStrokeComplete}
+              />
+              <AnnotationToolbar
+                tool={tool}
+                onToolChange={activateTool}
+                color={color}
+                defaultColor={defaultColor}
+                onColorChange={setColor}
+                onUndo={() =>
+                  activeId &&
+                  shownMoment &&
+                  annotations.undo(activeId, shownMoment)
+                }
+                onClear={() =>
+                  activeId &&
+                  shownMoment &&
+                  annotations.clear(activeId, shownMoment)
+                }
+                canUndo={canUndo}
+                canClear={shownStrokes.length > 0}
+              />
+              {sync.blocked ? (
+                <button
+                  type="button"
+                  onClick={sync.resume}
+                  className="absolute inset-0 z-20 flex items-center justify-center bg-black/70 text-sm font-semibold text-white"
+                >
+                  ▶️ {t("sync.resume")}
+                </button>
+              ) : null}
+            </>
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-sm text-white/70">
+              {t("videoLoading")}
+            </div>
+          )}
+        </div>
+        {ready ? (
+          <ReviewPlayerBar
+            videoRef={videoRef}
+            fps={active?.fps ?? null}
+            paused={position.paused}
+            currentTime={position.timeSeconds}
+            duration={
+              position.durationSeconds || (active?.durationSeconds ?? 0)
+            }
+            rate={rate}
+            onRateChange={applyRate}
+            moments={timelineMoments}
+            activeMoment={shownMoment}
+            onSeekMoment={seekToMoment}
+            loop={loop}
+            onLoopChange={setLoop}
+            synced={sync.synced}
+            onSyncedChange={sync.setSynced}
+            fullscreen={fullscreen}
+            onFullscreenToggle={toggleFullscreen}
+          />
+        ) : null}
+      </div>
+      {ready && momentKeys.length > 0 ? (
+        <div
+          role="group"
+          aria-label={t("annotations.moments")}
+          className="mt-2 flex flex-wrap items-center gap-1"
+        >
+          <span className="text-xs text-text-tertiary">
+            {t("annotations.moments")}:
           </span>
-          {PLAYBACK_RATE_PRESETS.map((preset) => (
+          {momentKeys.map((key) => (
             <button
-              key={preset}
+              key={key}
               type="button"
-              aria-pressed={rate === preset}
-              onClick={() => applyRate(preset)}
-              className={`rounded-md border px-2 py-0.5 text-xs font-medium tabular-nums transition-colors ${
-                rate === preset
-                  ? "border-text bg-text text-white"
+              onClick={() => seekToMoment(key)}
+              aria-pressed={shownMoment === key}
+              title={t("annotations.jumpTo", { time: formatMoment(key) })}
+              className={`rounded-tag border px-2 py-0.5 text-xs tabular-nums transition-colors max-[639px]:py-2 ${
+                shownMoment === key
+                  ? "border-border-strong bg-bg-secondary text-text"
                   : "border-border text-text-secondary hover:text-text"
               }`}
             >
-              {t("speed.value", { rate: preset })}
+              {formatMoment(key)}
             </button>
           ))}
-          {!PLAYBACK_RATE_PRESETS.some((preset) => preset === rate) ? (
-            <span className="rounded-md border border-text bg-text px-2 py-0.5 text-xs font-medium tabular-nums text-white">
-              {t("speed.value", { rate })}
-            </span>
-          ) : null}
         </div>
-      ) : null}
-      {playbackUrl && !failed ? (
-        <>
-          <AnnotationToolbar
-            tool={tool}
-            onToolChange={activateTool}
-            color={color}
-            defaultColor={defaultColor}
-            onColorChange={setColor}
-            onUndo={() =>
-              activeId && shownMoment && annotations.undo(activeId, shownMoment)
-            }
-            onClear={() =>
-              activeId &&
-              shownMoment &&
-              annotations.clear(activeId, shownMoment)
-            }
-            canUndo={canUndo}
-            canClear={shownStrokes.length > 0}
-          />
-          {momentKeys.length > 0 ? (
-            <div
-              role="group"
-              aria-label={t("annotations.moments")}
-              className="mt-2 flex flex-wrap items-center gap-1"
-            >
-              <span className="text-xs text-text-tertiary">
-                {t("annotations.moments")}:
-              </span>
-              {momentKeys.map((key) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => seekToMoment(key)}
-                  aria-pressed={shownMoment === key}
-                  title={t("annotations.jumpTo", { time: formatMoment(key) })}
-                  className={`rounded-tag border px-2 py-0.5 text-xs tabular-nums transition-colors ${
-                    shownMoment === key
-                      ? "border-border-strong bg-bg-secondary text-text"
-                      : "border-border text-text-secondary hover:text-text"
-                  }`}
-                >
-                  {formatMoment(key)}
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </>
       ) : null}
     </div>
   );

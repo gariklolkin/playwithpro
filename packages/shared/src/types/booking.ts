@@ -19,6 +19,11 @@ export interface SessionVideoItem {
   title: string;
   note: string | null;
   durationSeconds: number | null;
+  /** Probed average frame rate; null when unknown. */
+  fps: number | null;
+  /** Probed frame size in pixels; null when unknown. */
+  width: number | null;
+  height: number | null;
   /** 0-based order; gaps after a library delete are possible. */
   position: number;
 }

@@ -28,7 +28,10 @@ export type SessionWithParties = Session & {
   videos: Array<{
     position: number;
     note: string | null;
-    video: Pick<Video, 'id' | 'title' | 'durationSeconds'>;
+    video: Pick<
+      Video,
+      'id' | 'title' | 'durationSeconds' | 'fps' | 'width' | 'height'
+    >;
   }>;
   payments: Array<Pick<Payment, 'status'>>;
   dispute: Pick<Dispute, 'status' | 'reason' | 'outcome'> | null;
@@ -41,6 +44,16 @@ const SETTLED_OR_HELD: PaymentStatus[] = [
   PaymentStatus.RELEASED,
   PaymentStatus.REFUNDED,
 ];
+
+/** The clip fields both parties see (the room needs frame rate and size). */
+export const SESSION_VIDEO_SELECT = {
+  id: true,
+  title: true,
+  durationSeconds: true,
+  fps: true,
+  width: true,
+  height: true,
+} as const;
 
 export const SESSION_INCLUDE = {
   player: { select: { id: true, displayName: true, avatarKey: true } },
@@ -55,7 +68,7 @@ export const SESSION_INCLUDE = {
     select: {
       position: true,
       note: true,
-      video: { select: { id: true, title: true, durationSeconds: true } },
+      video: { select: SESSION_VIDEO_SELECT },
     },
     orderBy: { position: 'asc' },
   },
@@ -182,6 +195,9 @@ export function toSessionVideoItems(
     title: row.video.title,
     note: row.note,
     durationSeconds: row.video.durationSeconds,
+    fps: row.video.fps,
+    width: row.video.width,
+    height: row.video.height,
     position: row.position,
   }));
 }

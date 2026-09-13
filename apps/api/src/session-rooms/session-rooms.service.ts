@@ -18,7 +18,10 @@ import {
   isOnlineService,
 } from '../bookings/session-access';
 import { SessionProgressionService } from '../bookings/session-progression.service';
-import { toSessionVideoItems } from '../bookings/session.mapper';
+import {
+  SESSION_VIDEO_SELECT,
+  toSessionVideoItems,
+} from '../bookings/session.mapper';
 import { toSharedServiceType } from '../pros/pro-profile.mapper';
 import { PrismaService } from '../prisma/prisma.service';
 import type { VideoProvider } from './video-provider';
@@ -35,7 +38,7 @@ const ROOM_INCLUDE = {
     select: {
       position: true,
       note: true,
-      video: { select: { id: true, title: true, durationSeconds: true } },
+      video: { select: SESSION_VIDEO_SELECT },
     },
     orderBy: { position: 'asc' },
   },

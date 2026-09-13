@@ -749,6 +749,26 @@
       "clips": {
         "label": "Clips",
         "removed": "Die Clips dieser Sitzung wurden aus der Bibliothek gelöscht. Der Spieler kann bis zum Beginn der Sitzung neue anhängen."
+      },
+      "player": {
+        "play": "Abspielen",
+        "pause": "Pause",
+        "frameBack": "Vorheriges Bild",
+        "frameForward": "Nächstes Bild",
+        "timeline": "Zeitleiste",
+        "markers": "Annotierte Momente auf der Zeitleiste",
+        "speed": "Wiedergabegeschwindigkeit: {rate}×",
+        "loop": "Schleife",
+        "fullscreen": "Vollbild",
+        "exitFullscreen": "Vollbild beenden"
+      },
+      "layout": {
+        "onCall": "Im Anruf",
+        "focus": "Auf das Video fokussieren",
+        "exitFocus": "Anruf anzeigen",
+        "hideSelf": "Meine Kamera ausblenden",
+        "showSelf": "Meine Kamera einblenden",
+        "hideSelfHint": "Nur auf Ihrem Bildschirm ausgeblendet – die andere Person sieht Sie weiterhin."
       }
     },
     "actions": {

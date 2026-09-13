@@ -60,6 +60,9 @@ const CLIPS = [
     title: "Match footage",
     note: null,
     durationSeconds: 300,
+    fps: 30,
+    width: 1920,
+    height: 1080,
     position: 0,
   },
   {
@@ -67,11 +70,19 @@ const CLIPS = [
     title: "Serve drill",
     note: "serve",
     durationSeconds: 45,
+    fps: null,
+    width: null,
+    height: null,
     position: 1,
   },
 ];
 
-async function renderPanel(videos = CLIPS.slice(0, 1)) {
+async function renderPanel(
+  videos = CLIPS.slice(0, 1),
+  extra: {
+    onAspectChange?: (aspect: number) => void;
+  } = {},
+) {
   const utils = render(
     <NextIntlClientProvider locale="en" messages={messages}>
       <RoomVideoPanel
@@ -79,6 +90,7 @@ async function renderPanel(videos = CLIPS.slice(0, 1)) {
         videos={videos}
         userId="coach-1"
         role={Role.Professional}
+        {...extra}
       />
     </NextIntlClientProvider>,
   );
@@ -88,6 +100,15 @@ async function renderPanel(videos = CLIPS.slice(0, 1)) {
     return el;
   })) as HTMLVideoElement;
   return { ...utils, video };
+}
+
+/** jsdom media elements have no duration; give one and announce it. */
+function setDuration(video: HTMLVideoElement, seconds: number) {
+  Object.defineProperty(video, "duration", {
+    configurable: true,
+    value: seconds,
+  });
+  fireEvent(video, new Event("durationchange"));
 }
 
 function receiveState(state: {
@@ -134,19 +155,20 @@ describe("RoomVideoPanel synced playback", () => {
     );
   });
 
-  it("publishes the playback rate and applies a remote one", async () => {
+  it("publishes the rate picked in the speed menu and applies a remote one", async () => {
     const { video } = await renderPanel();
-    fireEvent.click(screen.getByRole("button", { name: "0.5×" }));
+    fireEvent.click(screen.getByRole("button", { name: "Playback speed: 1×" }));
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "0.5×" }));
     expect(video.playbackRate).toBe(0.5);
     fireEvent(video, new Event("ratechange"));
     expect(socketEmit).toHaveBeenCalledWith(
       "playback:publish",
       expect.objectContaining({ rate: 0.5 }),
     );
-    expect(screen.getByRole("button", { name: "0.5×" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Playback speed: 0.5×" }),
+    ).toBeInTheDocument();
 
     socketEmit.mockClear();
     receiveState({ playing: false, positionSeconds: 12, rate: 0.25 });
@@ -157,21 +179,25 @@ describe("RoomVideoPanel synced playback", () => {
       "playback:publish",
       expect.anything(),
     );
-    expect(screen.getByRole("button", { name: "0.25×" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
+    fireEvent.click(
+      screen.getByRole("button", { name: "Playback speed: 0.25×" }),
     );
+    expect(
+      screen.getByRole("menuitemradio", { name: "0.25×" }),
+    ).toHaveAttribute("aria-checked", "true");
   });
 
-  it("shows a non-preset rate from the native menu", async () => {
+  it("shows a non-preset shared rate on the menu trigger", async () => {
     const { video } = await renderPanel();
-    video.playbackRate = 1.75;
+    receiveState({ playing: false, positionSeconds: 3, rate: 1.75 });
     fireEvent(video, new Event("ratechange"));
     expect(screen.getByText("1.75×")).toBeInTheDocument();
-    expect(socketEmit).toHaveBeenCalledWith(
-      "playback:publish",
-      expect.objectContaining({ rate: 1.75 }),
+    fireEvent.click(
+      screen.getByRole("button", { name: "Playback speed: 1.75×" }),
     );
+    for (const item of screen.getAllByRole("menuitemradio")) {
+      expect(item).toHaveAttribute("aria-checked", "false");
+    }
   });
 
   it("detaches on toggle off and snaps back on toggle on", async () => {
@@ -217,6 +243,92 @@ describe("RoomVideoPanel synced playback", () => {
       expect(
         screen.queryByRole("button", { name: /resume synced playback/i }),
       ).not.toBeInTheDocument(),
+    );
+  });
+});
+
+describe("RoomVideoPanel review player bar", () => {
+  it("replaces the native controls", async () => {
+    const { video } = await renderPanel();
+    expect(video).not.toHaveAttribute("controls");
+    expect(screen.getByRole("button", { name: "Play" })).toBeInTheDocument();
+  });
+
+  it("steps one frame at the clip's frame rate, pausing first", async () => {
+    const { video } = await renderPanel();
+    setDuration(video, 300);
+    video.currentTime = 10;
+    fireEvent.click(screen.getByRole("button", { name: "Next frame" }));
+    expect(HTMLMediaElement.prototype.pause).toHaveBeenCalled();
+    expect(Math.floor(video.currentTime * 30)).toBe(301);
+
+    fireEvent.click(screen.getByRole("button", { name: "Previous frame" }));
+    expect(Math.floor(video.currentTime * 30)).toBe(300);
+  });
+
+  it("falls back to the default rate for a clip without a probed one", async () => {
+    const { video } = await renderPanel([CLIPS[1]]);
+    setDuration(video, 45);
+    video.currentTime = 1;
+    fireEvent.click(screen.getByRole("button", { name: "Next frame" }));
+    expect(Math.floor(video.currentTime * 30)).toBe(31);
+  });
+
+  it("seeks once when a scrub drag is released and at once from the keyboard", async () => {
+    const { video } = await renderPanel();
+    setDuration(video, 300);
+    const slider = screen.getByRole("slider", { name: "Timeline" });
+
+    fireEvent.pointerDown(slider);
+    fireEvent.change(slider, { target: { value: "40" } });
+    fireEvent.change(slider, { target: { value: "50" } });
+    expect(video.currentTime).toBe(0);
+    fireEvent.pointerUp(slider);
+    expect(video.currentTime).toBe(50);
+
+    fireEvent.change(slider, { target: { value: "70" } });
+    expect(video.currentTime).toBe(70);
+  });
+
+  it("restarts the clip at its end while loop is on", async () => {
+    const { video } = await renderPanel();
+    setDuration(video, 300);
+    fireEvent(video, new Event("ended"));
+    expect(playMock).not.toHaveBeenCalled();
+
+    const loop = screen.getByRole("button", { name: "Loop" });
+    fireEvent.click(loop);
+    expect(loop).toHaveAttribute("aria-pressed", "true");
+    video.currentTime = 300;
+    fireEvent(video, new Event("ended"));
+    expect(video.currentTime).toBe(0);
+    expect(playMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("requests full screen for the video card", async () => {
+    const requestFullscreen = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(HTMLElement.prototype, "requestFullscreen", {
+      configurable: true,
+      value: requestFullscreen,
+    });
+    const { video } = await renderPanel();
+    fireEvent.click(screen.getByRole("button", { name: "Full screen" }));
+    expect(requestFullscreen).toHaveBeenCalledTimes(1);
+    const card = requestFullscreen.mock.contexts[0] as HTMLElement;
+    expect(card.contains(video)).toBe(true);
+    delete (HTMLElement.prototype as { requestFullscreen?: unknown })
+      .requestFullscreen;
+  });
+
+  it("reports the clip's aspect ratio from the probe, then from the media", async () => {
+    const onAspectChange = vi.fn();
+    const { video } = await renderPanel(CLIPS.slice(0, 1), { onAspectChange });
+    expect(onAspectChange).toHaveBeenLastCalledWith(1920 / 1080);
+    Object.defineProperty(video, "videoWidth", { value: 1080 });
+    Object.defineProperty(video, "videoHeight", { value: 1920 });
+    fireEvent(video, new Event("loadedmetadata"));
+    await waitFor(() =>
+      expect(onAspectChange).toHaveBeenLastCalledWith(1080 / 1920),
     );
   });
 });
@@ -321,7 +433,7 @@ describe("RoomVideoPanel annotations", () => {
       "34.0": [lineStroke("s2", "player-1", "34.0")],
     });
     const group = await screen.findByRole("group", {
-      name: /annotated moments/i,
+      name: "Annotated moments",
     });
     const chips = group.querySelectorAll("button");
     expect([...chips].map((c) => c.textContent)).toEqual(["0:34", "2:14.2"]);
@@ -329,6 +441,22 @@ describe("RoomVideoPanel annotations", () => {
     fireEvent.click(chips[1]);
     expect(video.currentTime).toBeCloseTo(134.2);
     expect(HTMLMediaElement.prototype.pause).toHaveBeenCalled();
+  });
+
+  it("marks annotated moments on the timeline and seeks from a marker", async () => {
+    const { video } = await renderPanel();
+    setDuration(video, 300);
+    await receiveAnnotationState({
+      "11.0": [lineStroke("s1", "coach-1", "11.0")],
+    });
+    const markers = await screen.findByRole("group", {
+      name: "Annotated moments on the timeline",
+    });
+    const marker = markers.querySelector("button") as HTMLButtonElement;
+    expect(marker).toHaveAttribute("aria-label", "Jump to 0:11");
+    expect(marker.style.left).toBe(`${(11 / 300) * 100}%`);
+    fireEvent.click(marker);
+    expect(video.currentTime).toBe(11);
   });
 
   it("pauses the video when a drawing tool is activated and exits on Escape", async () => {
@@ -386,7 +514,7 @@ describe("RoomVideoPanel annotations", () => {
       },
     });
     const group = await screen.findByRole("group", {
-      name: /annotated moments/i,
+      name: "Annotated moments",
     });
     expect(
       [...group.querySelectorAll("button")].map((c) => c.textContent),
@@ -397,7 +525,7 @@ describe("RoomVideoPanel annotations", () => {
       expect(
         [
           ...screen
-            .getByRole("group", { name: /annotated moments/i })
+            .getByRole("group", { name: "Annotated moments" })
             .querySelectorAll("button"),
         ].map((c) => c.textContent),
       ).toEqual(["0:20"]),
@@ -406,6 +534,7 @@ describe("RoomVideoPanel annotations", () => {
 
   it("uses the role default color", async () => {
     await renderPanel();
+    fireEvent.click(screen.getByRole("button", { name: "Stroke color" }));
     const swatches = screen.getAllByRole("radio");
     expect(swatches[0]).toHaveAttribute("aria-label", "#2563eb");
     expect(swatches[0]).toHaveAttribute("aria-checked", "true");
