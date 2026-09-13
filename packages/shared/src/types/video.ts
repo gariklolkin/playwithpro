@@ -1,4 +1,8 @@
-import type { VideoRejectionReason, VideoStatus } from "../enums/video";
+import type {
+  UploadRefusalReason,
+  VideoRejectionReason,
+  VideoStatus,
+} from "../enums/video";
 
 /** Part size the client should slice with (also the server-side hint). */
 export const VIDEO_PART_SIZE_BYTES = 8 * 1024 * 1024;
@@ -51,11 +55,38 @@ export interface VideoResponse {
   fps: number | null;
   codec: string | null;
   rejectionReason: VideoRejectionReason | null;
+  /**
+   * When the retention sweep will delete this ready video unless it gets
+   * attached to a live session; null while attached or not ready.
+   */
+  expiresAt: string | null;
+  /** Live (not cancelled) upcoming sessions this video is attached to; owner view only. */
+  attachedUpcomingSessions: number;
   createdAt: string;
+}
+
+/** Platform limits the client shows before the player hits them. */
+export interface VideoLimits {
+  file: { maxSizeBytes: number; maxDurationSeconds: number };
+  session: { maxClips: number; maxTotalSeconds: number };
+  library: {
+    maxBytes: number;
+    maxVideos: number;
+    usedBytes: number;
+    count: number;
+  };
 }
 
 export interface VideoListResponse {
   videos: VideoResponse[];
+  limits: VideoLimits;
+}
+
+/** Body of the 409 when upload initiation would exceed the library quota. */
+export interface UploadRefusal {
+  reason: UploadRefusalReason;
+  remainingBytes: number;
+  maxVideos: number;
 }
 
 /** Short-lived pre-signed GET; expires, so never persist it client-side. */

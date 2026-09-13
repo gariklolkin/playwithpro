@@ -18,6 +18,7 @@ import {
   isOnlineService,
 } from '../bookings/session-access';
 import { SessionProgressionService } from '../bookings/session-progression.service';
+import { toSessionVideoItems } from '../bookings/session.mapper';
 import { toSharedServiceType } from '../pros/pro-profile.mapper';
 import { PrismaService } from '../prisma/prisma.service';
 import type { VideoProvider } from './video-provider';
@@ -30,7 +31,14 @@ const ROOM_INCLUDE = {
   proProfile: {
     select: { userId: true, user: { select: { displayName: true } } },
   },
-  video: { select: { id: true, title: true } },
+  videos: {
+    select: {
+      position: true,
+      note: true,
+      video: { select: { id: true, title: true, durationSeconds: true } },
+    },
+    orderBy: { position: 'asc' },
+  },
 } as const;
 
 type RoomSession = Prisma.SessionGetPayload<{ include: typeof ROOM_INCLUDE }>;
@@ -67,8 +75,7 @@ export class SessionRoomsService {
         joinable && session.roomSlug !== null
           ? this.video.describeRoom({ roomSlug: session.roomSlug })
           : null,
-      videoId: session.video?.id ?? null,
-      videoTitle: session.video?.title ?? null,
+      videos: toSessionVideoItems(session.videos),
       counterpartName: viewerIsPlayer
         ? session.proProfile.user.displayName
         : session.player.displayName,
@@ -146,6 +153,16 @@ export class SessionRoomsService {
     if (now < opensAt.getTime() || now > closesAt.getTime()) {
       throw new ConflictException('The session room is closed.');
     }
+  }
+
+  /** Ids of the clips currently attached; the sync channel accepts only these. */
+  async attachedVideoIds(sessionId: string): Promise<string[]> {
+    const rows = await this.prisma.sessionVideo.findMany({
+      where: { sessionId },
+      select: { videoId: true },
+      orderBy: { position: 'asc' },
+    });
+    return rows.map((row) => row.videoId);
   }
 
   /**

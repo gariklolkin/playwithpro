@@ -7,6 +7,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
@@ -24,6 +25,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { PaySessionDto } from './dto/pay-session.dto';
+import { UpdateSessionVideosDto } from './dto/update-session-videos.dto';
 
 @ApiTags('bookings')
 @Controller()
@@ -85,6 +87,20 @@ export class BookingsController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<SessionResponse> {
     return this.bookings.cancel(user, id);
+  }
+
+  @Put('sessions/:id/videos')
+  @Roles(Role.Amateur)
+  @ApiOkResponse({
+    description:
+      'Replaces the clip set of a video-analysis session; player only, until the session starts.',
+  })
+  async updateVideos(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateSessionVideosDto,
+  ): Promise<SessionResponse> {
+    return this.bookings.updateVideos(user.id, id, dto.videos);
   }
 
   @Post('sessions/:id/pay')

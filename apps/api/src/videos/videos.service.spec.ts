@@ -19,6 +19,7 @@ describe('VideosService', () => {
       create: jest.fn<Promise<unknown>, [{ data: Record<string, unknown> }]>(),
       findUnique: jest.fn(),
       findMany: jest.fn(),
+      aggregate: jest.fn(),
       update: jest.fn<
         Promise<unknown>,
         [{ where: Record<string, unknown>; data: Record<string, unknown> }]
@@ -28,6 +29,7 @@ describe('VideosService', () => {
     session: {
       findFirst: jest.fn<Promise<unknown>, [unknown]>(),
     },
+    sessionVideo: { groupBy: jest.fn() },
   };
   const storage = {
     createMultipartUpload: jest.fn(),
@@ -39,11 +41,24 @@ describe('VideosService', () => {
     presignGet: jest.fn(),
   };
   const processing = { enqueue: jest.fn() };
-  // 1 MB size limit keeps test numbers small.
+  // 1 MB file limit and a 3 MB / 3-video library keep test numbers small.
   const config = {
     getOrThrow: (name: string) =>
-      ({ VIDEO_MAX_SIZE_MB: 1, VIDEO_MAX_DURATION_MIN: 30 })[name],
+      ({
+        VIDEO_MAX_SIZE_MB: 1,
+        VIDEO_MAX_DURATION_MIN: 30,
+        SESSION_VIDEO_MAX_COUNT: 5,
+        SESSION_VIDEO_MAX_TOTAL_MIN: 60,
+        // 3 MB expressed in GB so the service's GB → bytes math is exercised.
+        LIBRARY_MAX_TOTAL_GB: 3 / 1024,
+        LIBRARY_MAX_VIDEOS: 3,
+        VIDEO_UNATTACHED_RETENTION_DAYS: 90,
+      })[name],
   };
+  const usage = (count: number, usedBytes: number) => ({
+    _sum: { sizeBytes: BigInt(usedBytes) },
+    _count: { _all: count },
+  });
 
   const uploadingVideo = {
     id: 'video-1',
@@ -61,12 +76,15 @@ describe('VideosService', () => {
     codec: null,
     container: null,
     rejectionReason: null,
+    unattachedSince: null,
     createdAt: new Date('2026-07-20T10:00:00Z'),
     updatedAt: new Date('2026-07-20T10:00:00Z'),
   };
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    prisma.video.aggregate.mockResolvedValue(usage(0, 0));
+    prisma.sessionVideo.groupBy.mockResolvedValue([]);
     const moduleRef = await Test.createTestingModule({
       providers: [
         VideosService,
@@ -106,6 +124,92 @@ describe('VideosService', () => {
       const data = prisma.video.create.mock.calls[0][0].data;
       expect(data.ownerId).toBe('user-1');
       expect(data.title).toBe('My Match');
+      // The declared size counts against the quota while in flight.
+      expect(data.sizeBytes).toBe(BigInt(1024));
+    });
+
+    it('refuses initiation once the library holds the maximum number of videos', async () => {
+      prisma.video.aggregate.mockResolvedValue(usage(3, 1024));
+
+      const attempt = service.createUpload('user-1', {
+        fileName: 'one-more.mp4',
+        contentType: 'video/mp4',
+        sizeBytes: 1024,
+      });
+      await expect(attempt).rejects.toBeInstanceOf(ConflictException);
+      await expect(attempt).rejects.toMatchObject({
+        response: { reason: 'library_full_count', maxVideos: 3 },
+      });
+      expect(storage.createMultipartUpload).not.toHaveBeenCalled();
+      expect(prisma.video.create).not.toHaveBeenCalled();
+    });
+
+    it('refuses initiation when the declared size exceeds the remaining quota', async () => {
+      prisma.video.aggregate.mockResolvedValue(usage(2, 2.5 * 1024 * 1024));
+
+      const attempt = service.createUpload('user-1', {
+        fileName: 'big.mp4',
+        contentType: 'video/mp4',
+        sizeBytes: 1024 * 1024,
+      });
+      await expect(attempt).rejects.toMatchObject({
+        response: {
+          reason: 'library_full_bytes',
+          remainingBytes: 0.5 * 1024 * 1024,
+        },
+      });
+      expect(storage.createMultipartUpload).not.toHaveBeenCalled();
+    });
+
+    it('counts only non-rejected videos toward the quota', async () => {
+      storage.createMultipartUpload.mockResolvedValue('upload-1');
+      prisma.video.create.mockResolvedValue(uploadingVideo);
+
+      await service.createUpload('user-1', {
+        fileName: 'ok.mp4',
+        contentType: 'video/mp4',
+        sizeBytes: 1024,
+      });
+
+      expect(prisma.video.aggregate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { ownerId: 'user-1', status: { not: 'REJECTED' } },
+        }),
+      );
+    });
+  });
+
+  describe('list', () => {
+    it('returns the limits with usage and the expiry of unattached ready videos', async () => {
+      const unattachedSince = new Date('2026-09-01T00:00:00Z');
+      prisma.video.findMany.mockResolvedValue([
+        { ...uploadingVideo, id: 'v-ready', status: 'READY', unattachedSince },
+        { ...uploadingVideo, id: 'v-attached', status: 'READY' },
+        { ...uploadingVideo, id: 'v-up' },
+      ]);
+      prisma.video.aggregate.mockResolvedValue(usage(3, 2048));
+      prisma.sessionVideo.groupBy.mockResolvedValue([
+        { videoId: 'v-attached', _count: { _all: 2 } },
+      ]);
+
+      const result = await service.list('user-1');
+
+      expect(result.limits).toEqual({
+        file: { maxSizeBytes: 1024 * 1024, maxDurationSeconds: 1800 },
+        session: { maxClips: 5, maxTotalSeconds: 3600 },
+        library: {
+          maxBytes: 3 * 1024 * 1024,
+          maxVideos: 3,
+          usedBytes: 2048,
+          count: 3,
+        },
+      });
+      const byId = new Map(result.videos.map((video) => [video.id, video]));
+      expect(byId.get('v-ready')?.expiresAt).toBe('2026-11-30T00:00:00.000Z');
+      expect(byId.get('v-ready')?.attachedUpcomingSessions).toBe(0);
+      expect(byId.get('v-attached')?.expiresAt).toBeNull();
+      expect(byId.get('v-attached')?.attachedUpcomingSessions).toBe(2);
+      expect(byId.get('v-up')?.expiresAt).toBeNull();
     });
   });
 
@@ -308,7 +412,7 @@ describe('VideosService', () => {
       expect(prisma.session.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            videoId: 'video-1',
+            videos: { some: { videoId: 'video-1' } },
             proProfile: { userId: 'coach-1' },
           }) as object,
         }),

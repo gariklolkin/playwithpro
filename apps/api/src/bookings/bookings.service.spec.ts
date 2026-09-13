@@ -12,7 +12,9 @@ import { CALENDAR_PROVIDER } from '../calendar/calendar-provider';
 import { PAYMENT_PROVIDER } from '../payments/payment-provider';
 import { BookingsService } from './bookings.service';
 import { SessionProgressionService } from './session-progression.service';
+import { SessionVideosService } from './session-videos.service';
 import { SettlementService } from './settlement.service';
+import { UnattachedVideosService } from '../videos/unattached-videos.service';
 
 const HOUR = 3_600_000;
 
@@ -49,7 +51,6 @@ const pendingSession = {
   currency: 'EUR',
   platformFeeMinor: 401,
   slotId: 'slot-1',
-  videoId: null,
   status: 'PENDING_PAYMENT',
   startsAt: futureSlot.startsAt,
   endsAt: futureSlot.endsAt,
@@ -63,7 +64,7 @@ const pendingSession = {
     ...verifiedProfile,
     user: { displayName: 'Coach', avatarKey: null },
   },
-  video: null,
+  videos: [],
   payments: [],
   dispute: null,
   review: null,
@@ -84,7 +85,7 @@ describe('BookingsService', () => {
   const prisma = {
     proProfile: { findUnique: jest.fn() },
     availabilitySlot: { findUnique: jest.fn() },
-    video: { findUnique: jest.fn() },
+    sessionVideo: { findMany: jest.fn() },
     session: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
@@ -107,6 +108,19 @@ describe('BookingsService', () => {
     normalize: jest.fn(<T>(session: T) => Promise.resolve(session)),
   };
   const settlement = { settle: jest.fn() };
+  const sessionVideos = {
+    validate: jest.fn(),
+    rowsFor: jest.fn(
+      (clips: { video: { id: string }; note: string | null }[]) =>
+        clips.map((clip, position) => ({
+          position,
+          note: clip.note,
+          video: { connect: { id: clip.video.id } },
+        })),
+    ),
+    replace: jest.fn(),
+  };
+  const unattached = { recompute: jest.fn() };
   const config = {
     getOrThrow: (name: string) =>
       ({
@@ -125,6 +139,8 @@ describe('BookingsService', () => {
     prisma.$transaction.mockImplementation(
       (fn: (t: typeof tx) => Promise<unknown>) => fn(tx),
     );
+    prisma.sessionVideo.findMany.mockResolvedValue([]);
+    sessionVideos.validate.mockResolvedValue([]);
     const moduleRef = await Test.createTestingModule({
       providers: [
         BookingsService,
@@ -135,6 +151,8 @@ describe('BookingsService', () => {
         { provide: CALENDAR_PROVIDER, useValue: calendar },
         { provide: SessionProgressionService, useValue: progression },
         { provide: SettlementService, useValue: settlement },
+        { provide: SessionVideosService, useValue: sessionVideos },
+        { provide: UnattachedVideosService, useValue: unattached },
       ],
     }).compile();
     service = moduleRef.get(BookingsService);
@@ -213,7 +231,7 @@ describe('BookingsService', () => {
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
-    it('requires a ready own video for video analysis', async () => {
+    it('validates the clip set for video analysis and writes the rows', async () => {
       prisma.proProfile.findUnique.mockResolvedValue({
         ...verifiedProfile,
         services: [
@@ -226,53 +244,101 @@ describe('BookingsService', () => {
           },
         ],
       });
+      sessionVideos.validate.mockResolvedValue([
+        { video: { id: 'video-1' }, note: 'serve' },
+        { video: { id: 'video-2' }, note: null },
+      ]);
 
-      await expect(
-        service.create('player-1', {
-          proId: 'profile-1',
-          serviceType: ServiceType.VideoAnalysis,
-          slotId: 'slot-1',
-        }),
-      ).rejects.toBeInstanceOf(BadRequestException);
-
-      prisma.video.findUnique.mockResolvedValue({
-        id: 'video-1',
-        ownerId: 'someone-else',
-        status: 'READY',
+      await service.create('player-1', {
+        proId: 'profile-1',
+        serviceType: ServiceType.VideoAnalysis,
+        slotId: 'slot-1',
+        videos: [{ videoId: 'video-1', note: 'serve' }, { videoId: 'video-2' }],
       });
-      await expect(
-        service.create('player-1', {
-          proId: 'profile-1',
-          serviceType: ServiceType.VideoAnalysis,
-          slotId: 'slot-1',
-          videoId: 'video-1',
-        }),
-      ).rejects.toBeInstanceOf(NotFoundException);
 
-      prisma.video.findUnique.mockResolvedValue({
-        id: 'video-1',
-        ownerId: 'player-1',
-        status: 'PROCESSING',
-      });
-      await expect(
-        service.create('player-1', {
-          proId: 'profile-1',
-          serviceType: ServiceType.VideoAnalysis,
-          slotId: 'slot-1',
-          videoId: 'video-1',
+      expect(sessionVideos.validate).toHaveBeenCalledWith('player-1', [
+        { videoId: 'video-1', note: 'serve' },
+        { videoId: 'video-2' },
+      ]);
+      expect(tx.session.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            videos: {
+              create: [
+                {
+                  position: 0,
+                  note: 'serve',
+                  video: { connect: { id: 'video-1' } },
+                },
+                {
+                  position: 1,
+                  note: null,
+                  video: { connect: { id: 'video-2' } },
+                },
+              ],
+            },
+          }) as object,
         }),
-      ).rejects.toBeInstanceOf(BadRequestException);
+      );
+      // Attaching stops the retention clock.
+      expect(unattached.recompute).toHaveBeenCalledWith(['video-1', 'video-2']);
     });
 
-    it('forbids a video on non-video-analysis bookings', async () => {
+    it('surfaces the validator rejection for video analysis and books nothing', async () => {
+      prisma.proProfile.findUnique.mockResolvedValue({
+        ...verifiedProfile,
+        services: [
+          {
+            id: 's2',
+            type: 'VIDEO_ANALYSIS',
+            priceMinor: 6000,
+            currency: 'EUR',
+            active: true,
+          },
+        ],
+      });
+      sessionVideos.validate.mockRejectedValue(
+        new BadRequestException({ reason: 'empty' }),
+      );
+
+      await expect(
+        service.create('player-1', {
+          proId: 'profile-1',
+          serviceType: ServiceType.VideoAnalysis,
+          slotId: 'slot-1',
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(sessionVideos.validate).toHaveBeenCalledWith('player-1', []);
+      expect(tx.session.create).not.toHaveBeenCalled();
+    });
+
+    it('forbids clips on non-video-analysis bookings', async () => {
       await expect(
         service.create('player-1', {
           proId: 'profile-1',
           serviceType: ServiceType.Consultation,
           slotId: 'slot-1',
-          videoId: 'video-1',
+          videos: [{ videoId: 'video-1' }],
         }),
       ).rejects.toBeInstanceOf(BadRequestException);
+      expect(sessionVideos.validate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateVideos', () => {
+    it('delegates the replace and returns the fresh session', async () => {
+      prisma.session.findUniqueOrThrow.mockResolvedValue(pendingSession);
+
+      const result = await service.updateVideos('player-1', 'session-1', [
+        { videoId: 'video-1' },
+      ]);
+
+      expect(sessionVideos.replace).toHaveBeenCalledWith(
+        'player-1',
+        'session-1',
+        [{ videoId: 'video-1' }],
+      );
+      expect(result.id).toBe('session-1');
     });
   });
 

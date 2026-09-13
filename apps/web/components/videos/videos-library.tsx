@@ -2,11 +2,14 @@
 
 import {
   VideoStatus,
+  type VideoLimits,
   type VideoListResponse,
   type VideoResponse,
 } from "@playwithpro/shared";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { useMounted } from "@/components/catalog/local-time";
+import { LibraryLimits } from "@/components/videos/library-limits";
 import { Link } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -37,11 +40,18 @@ function formatSize(bytes: number | null): string | null {
 
 export function VideosLibrary({
   initialVideos,
+  initialLimits,
 }: {
   initialVideos: VideoResponse[];
+  initialLimits: VideoLimits | null;
 }) {
   const t = useTranslations("videos");
+  const locale = useLocale();
   const [videos, setVideos] = useState(initialVideos);
+  const [limits, setLimits] = useState(initialLimits);
+  // Dates render in the viewer's timezone after mount only, so the server
+  // HTML never disagrees with the browser.
+  const mounted = useMounted();
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
 
@@ -56,7 +66,9 @@ export function VideosLibrary({
     const timer = setInterval(() => {
       void apiFetch("/videos").then(async (response) => {
         if (response.ok) {
-          setVideos(((await response.json()) as VideoListResponse).videos);
+          const list = (await response.json()) as VideoListResponse;
+          setVideos(list.videos);
+          setLimits(list.limits);
         }
       });
     }, POLL_INTERVAL_MS);
@@ -80,113 +92,167 @@ export function VideosLibrary({
   }
 
   async function deleteVideo(video: VideoResponse) {
-    if (!window.confirm(t("deleteConfirm", { title: video.title }))) return;
+    // Deleting an attached clip is allowed but warned: the coach loses it.
+    const prompt =
+      video.attachedUpcomingSessions > 0
+        ? t("quota.deleteConfirmAttached", {
+            title: video.title,
+            count: video.attachedUpcomingSessions,
+          })
+        : t("deleteConfirm", { title: video.title });
+    if (!window.confirm(prompt)) return;
     const response = await apiFetch(`/videos/${video.id}`, {
       method: "DELETE",
     });
     if (response.ok || response.status === 404) {
       setVideos((current) => current.filter((item) => item.id !== video.id));
+      setLimits((current) =>
+        current
+          ? {
+              ...current,
+              library: {
+                ...current.library,
+                usedBytes: Math.max(
+                  0,
+                  current.library.usedBytes - (video.sizeBytes ?? 0),
+                ),
+                count: Math.max(0, current.library.count - 1),
+              },
+            }
+          : current,
+      );
     }
   }
 
+  const limitsBlock = limits ? (
+    <div className="mt-6">
+      <LibraryLimits limits={limits} />
+    </div>
+  ) : null;
+
   if (videos.length === 0) {
     return (
-      <div className="mt-8 rounded-card border border-border p-10 text-center">
-        <div className="text-3xl">📹</div>
-        <div className="mt-2 font-semibold text-text">{t("emptyTitle")}</div>
-        <p className="mt-1 text-sm text-text-secondary">{t("emptySubtitle")}</p>
-      </div>
+      <>
+        {limitsBlock}
+        <div className="mt-8 rounded-card border border-border p-10 text-center">
+          <div className="text-3xl">📹</div>
+          <div className="mt-2 font-semibold text-text">{t("emptyTitle")}</div>
+          <p className="mt-1 text-sm text-text-secondary">
+            {t("emptySubtitle")}
+          </p>
+        </div>
+      </>
     );
   }
 
-  return (
-    <ul className="mt-6 space-y-3">
-      {videos.map((video) => {
-        const duration = formatDuration(video.durationSeconds);
-        const size = formatSize(video.sizeBytes);
-        const details = [
-          duration,
-          video.width && video.height ? `${video.width}×${video.height}` : null,
-          video.fps ? `${Math.round(video.fps)} fps` : null,
-          size,
-          new Date(video.createdAt).toLocaleDateString(),
-        ]
-          .filter(Boolean)
-          .join(" · ");
+  const dateFormat = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
 
-        return (
-          <li
-            key={video.id}
-            className="rounded-card border border-border bg-bg p-4"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                {renamingId === video.id ? (
-                  <form
-                    className="flex items-center gap-2"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      void submitRename(video);
+  return (
+    <>
+      {limitsBlock}
+      <ul className="mt-6 space-y-3">
+        {videos.map((video) => {
+          const duration = formatDuration(video.durationSeconds);
+          const size = formatSize(video.sizeBytes);
+          const details = [
+            duration,
+            video.width && video.height
+              ? `${video.width}×${video.height}`
+              : null,
+            video.fps ? `${Math.round(video.fps)} fps` : null,
+            size,
+            new Date(video.createdAt).toLocaleDateString(),
+          ]
+            .filter(Boolean)
+            .join(" · ");
+
+          return (
+            <li
+              key={video.id}
+              className="rounded-card border border-border bg-bg p-4"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  {renamingId === video.id ? (
+                    <form
+                      className="flex items-center gap-2"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        void submitRename(video);
+                      }}
+                    >
+                      <Input
+                        autoFocus
+                        value={renameValue}
+                        onChange={(event) => setRenameValue(event.target.value)}
+                        onBlur={() => void submitRename(video)}
+                      />
+                    </form>
+                  ) : video.status === VideoStatus.Ready ? (
+                    <Link
+                      href={`/dashboard/videos/${video.id}`}
+                      className="truncate font-semibold text-text hover:underline"
+                    >
+                      {video.title}
+                    </Link>
+                  ) : (
+                    <span className="truncate font-semibold text-text">
+                      {video.title}
+                    </span>
+                  )}
+                  <div className="mt-1 text-[13px] text-text-secondary">
+                    {details}
+                  </div>
+                  {video.status === VideoStatus.Rejected &&
+                  video.rejectionReason ? (
+                    <p className="mt-1 text-[13px] text-[#C4554D]">
+                      {t(`rejection.${video.rejectionReason}`)}
+                    </p>
+                  ) : null}
+                  {video.expiresAt ? (
+                    <p
+                      className="mt-1 text-[13px] text-[#8A6C1B]"
+                      suppressHydrationWarning
+                    >
+                      ⏳{" "}
+                      {mounted
+                        ? t("quota.expires", {
+                            date: dateFormat.format(new Date(video.expiresAt)),
+                          })
+                        : "…"}
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2">
+                  <span
+                    className={`rounded px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[video.status]}`}
+                  >
+                    {t(`status.${video.status}`)}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setRenamingId(video.id);
+                      setRenameValue(video.title);
                     }}
                   >
-                    <Input
-                      autoFocus
-                      value={renameValue}
-                      onChange={(event) => setRenameValue(event.target.value)}
-                      onBlur={() => void submitRename(video)}
-                    />
-                  </form>
-                ) : video.status === VideoStatus.Ready ? (
-                  <Link
-                    href={`/dashboard/videos/${video.id}`}
-                    className="truncate font-semibold text-text hover:underline"
+                    {t("rename")}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => void deleteVideo(video)}
                   >
-                    {video.title}
-                  </Link>
-                ) : (
-                  <span className="truncate font-semibold text-text">
-                    {video.title}
-                  </span>
-                )}
-                <div className="mt-1 text-[13px] text-text-secondary">
-                  {details}
+                    {t("delete")}
+                  </Button>
                 </div>
-                {video.status === VideoStatus.Rejected &&
-                video.rejectionReason ? (
-                  <p className="mt-1 text-[13px] text-[#C4554D]">
-                    {t(`rejection.${video.rejectionReason}`)}
-                  </p>
-                ) : null}
               </div>
-
-              <div className="flex shrink-0 items-center gap-2">
-                <span
-                  className={`rounded px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[video.status]}`}
-                >
-                  {t(`status.${video.status}`)}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setRenamingId(video.id);
-                    setRenameValue(video.title);
-                  }}
-                >
-                  {t("rename")}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => void deleteVideo(video)}
-                >
-                  {t("delete")}
-                </Button>
-              </div>
-            </div>
-          </li>
-        );
-      })}
-    </ul>
+            </li>
+          );
+        })}
+      </ul>
+    </>
   );
 }

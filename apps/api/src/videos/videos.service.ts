@@ -8,12 +8,16 @@ import { ConfigService } from '@nestjs/config';
 import {
   CreateVideoUploadResponse,
   SignVideoPartsResponse,
+  UploadRefusal,
+  UploadRefusalReason,
   VIDEO_PART_SIZE_BYTES,
+  VideoLimits,
   VideoListResponse,
   VideoRejectionReason,
   VideoResponse,
   VideoUrlResponse,
 } from '@playwithpro/shared';
+import { SessionStatus, VideoStatus } from '@prisma/client';
 import type { Video } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -24,9 +28,10 @@ import { CreateVideoUploadDto } from './dto/create-video-upload.dto';
 import { RenameVideoDto } from './dto/rename-video.dto';
 import { SignVideoPartsDto } from './dto/sign-video-parts.dto';
 import { VideoProcessingService } from './video-processing.service';
-import { toVideoResponse } from './video.mapper';
+import { toVideoResponse, VideoResponseExtras } from './video.mapper';
 
 const URL_TTL_SECONDS = 3600;
+const GB = 1024 * 1024 * 1024;
 
 @Injectable()
 export class VideosService {
@@ -41,17 +46,65 @@ export class VideosService {
     return this.config.getOrThrow<number>('VIDEO_MAX_SIZE_MB') * 1024 * 1024;
   }
 
+  private retentionDays(): number {
+    return this.config.getOrThrow<number>('VIDEO_UNATTACHED_RETENTION_DAYS');
+  }
+
+  /**
+   * The three limit levels the client shows up front: per file, per
+   * video-analysis session, per account library (with current usage).
+   * Rejected videos hold no object and do not count; in-flight uploads count
+   * with their declared size.
+   */
+  async limits(userId: string): Promise<VideoLimits> {
+    const usage = await this.prisma.video.aggregate({
+      where: { ownerId: userId, status: { not: VideoStatus.REJECTED } },
+      _sum: { sizeBytes: true },
+      _count: { _all: true },
+    });
+    return {
+      file: {
+        maxSizeBytes: this.maxSizeBytes(),
+        maxDurationSeconds:
+          this.config.getOrThrow<number>('VIDEO_MAX_DURATION_MIN') * 60,
+      },
+      session: {
+        maxClips: this.config.getOrThrow<number>('SESSION_VIDEO_MAX_COUNT'),
+        maxTotalSeconds:
+          this.config.getOrThrow<number>('SESSION_VIDEO_MAX_TOTAL_MIN') * 60,
+      },
+      library: {
+        maxBytes: this.config.getOrThrow<number>('LIBRARY_MAX_TOTAL_GB') * GB,
+        maxVideos: this.config.getOrThrow<number>('LIBRARY_MAX_VIDEOS'),
+        usedBytes: Number(usage._sum.sizeBytes ?? 0),
+        count: usage._count._all,
+      },
+    };
+  }
+
   async createUpload(
     userId: string,
     dto: CreateVideoUploadDto,
   ): Promise<CreateVideoUploadResponse> {
     if (dto.sizeBytes > this.maxSizeBytes()) {
       throw new BadRequestException(
-        `File exceeds the ${this.config.getOrThrow<number>('VIDEO_MAX_SIZE_MB')} MB limit.`,
+        `File exceeds the ${this.config.getOrThrow<number>(
+          'VIDEO_MAX_SIZE_MB',
+        )} MB limit.`,
       );
     }
+    const { library } = await this.limits(userId);
+    const remainingBytes = Math.max(0, library.maxBytes - library.usedBytes);
+    if (library.count >= library.maxVideos) {
+      refuse(UploadRefusalReason.LibraryFullCount, remainingBytes, library);
+    }
+    if (dto.sizeBytes > remainingBytes) {
+      refuse(UploadRefusalReason.LibraryFullBytes, remainingBytes, library);
+    }
     const videoId = randomUUID();
-    const key = `videos/${userId}/${videoId}/original.${fileExtension(dto.fileName)}`;
+    const key = `videos/${userId}/${videoId}/original.${fileExtension(
+      dto.fileName,
+    )}`;
     const uploadId = await this.storage.createMultipartUpload(
       key,
       dto.contentType,
@@ -63,6 +116,9 @@ export class VideosService {
         title: titleFromFileName(dto.fileName),
         originalKey: key,
         s3UploadId: uploadId,
+        // Declared size counts against the quota while the upload is in
+        // flight; completion overwrites it with the stored object's size.
+        sizeBytes: BigInt(dto.sizeBytes),
       },
     });
     return { videoId, uploadId, key, partSizeBytes: VIDEO_PART_SIZE_BYTES };
@@ -133,15 +189,57 @@ export class VideosService {
   }
 
   async list(userId: string): Promise<VideoListResponse> {
-    const videos = await this.prisma.video.findMany({
-      where: { ownerId: userId },
-      orderBy: { createdAt: 'desc' },
-    });
-    return { videos: videos.map(toVideoResponse) };
+    const [videos, limits, attached] = await Promise.all([
+      this.prisma.video.findMany({
+        where: { ownerId: userId },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.limits(userId),
+      this.attachedUpcomingCounts(userId),
+    ]);
+    const retentionDays = this.retentionDays();
+    return {
+      videos: videos.map((video) =>
+        toVideoResponse(video, {
+          retentionDays,
+          attachedUpcomingSessions: attached.get(video.id) ?? 0,
+        }),
+      ),
+      limits,
+    };
   }
 
   async get(userId: string, videoId: string): Promise<VideoResponse> {
-    return toVideoResponse(await this.requireViewable(userId, videoId));
+    const video = await this.requireViewable(userId, videoId);
+    const extras: VideoResponseExtras = {
+      retentionDays: this.retentionDays(),
+      attachedUpcomingSessions:
+        video.ownerId === userId
+          ? ((await this.attachedUpcomingCounts(userId, video.id)).get(
+              video.id,
+            ) ?? 0)
+          : 0,
+    };
+    return toVideoResponse(video, extras);
+  }
+
+  /** Per video: live (not cancelled) sessions that have not started yet. */
+  private async attachedUpcomingCounts(
+    ownerId: string,
+    videoId?: string,
+  ): Promise<Map<string, number>> {
+    const rows = await this.prisma.sessionVideo.groupBy({
+      by: ['videoId'],
+      where: {
+        video: { ownerId, ...(videoId ? { id: videoId } : {}) },
+        session: {
+          status: { not: SessionStatus.CANCELLED },
+          startsAt: { gt: new Date() },
+        },
+      },
+      _count: { _all: true },
+    });
+    return new Map(rows.map((row) => [row.videoId, row._count._all]));
   }
 
   async rename(
@@ -158,7 +256,14 @@ export class VideosService {
   }
 
   async delete(userId: string, videoId: string): Promise<void> {
-    const video = await this.requireOwned(userId, videoId);
+    await this.purge(await this.requireOwned(userId, videoId));
+  }
+
+  /**
+   * Removes the stored objects and the row (attachment rows cascade). Shared
+   * by the owner's delete and the retention sweep.
+   */
+  async purge(video: Video): Promise<void> {
     if (video.s3UploadId) {
       await this.storage.abortMultipartUpload(
         video.originalKey,
@@ -237,7 +342,7 @@ export class VideosService {
     }
     const qualifying = await this.prisma.session.findFirst({
       where: {
-        videoId,
+        videos: { some: { videoId } },
         proProfile: { userId },
         status: { in: COACH_ACCESS_STATUSES },
       },
@@ -267,6 +372,24 @@ export class VideosService {
     }
     return video;
   }
+}
+
+function refuse(
+  reason: UploadRefusalReason,
+  remainingBytes: number,
+  library: VideoLimits['library'],
+): never {
+  const body: UploadRefusal & { statusCode: number; message: string } = {
+    statusCode: 409,
+    message:
+      reason === UploadRefusalReason.LibraryFullCount
+        ? `Your library already holds ${library.maxVideos} videos.`
+        : 'Not enough space left in your library for this file.',
+    reason,
+    remainingBytes,
+    maxVideos: library.maxVideos,
+  };
+  throw new ConflictException(body);
 }
 
 function fileExtension(fileName: string): string {

@@ -54,13 +54,29 @@ afterEach(() => {
   socketHandlers.clear();
 });
 
-async function renderPanel() {
+const CLIPS = [
+  {
+    videoId: "video-1",
+    title: "Match footage",
+    note: null,
+    durationSeconds: 300,
+    position: 0,
+  },
+  {
+    videoId: "video-2",
+    title: "Serve drill",
+    note: "serve",
+    durationSeconds: 45,
+    position: 1,
+  },
+];
+
+async function renderPanel(videos = CLIPS.slice(0, 1)) {
   const utils = render(
     <NextIntlClientProvider locale="en" messages={messages}>
       <RoomVideoPanel
         sessionId="session-1"
-        videoId="video-1"
-        videoTitle="Match footage"
+        videos={videos}
         userId="coach-1"
         role={Role.Professional}
       />
@@ -77,12 +93,13 @@ async function renderPanel() {
 function receiveState(state: {
   playing: boolean;
   positionSeconds: number;
+  videoId?: string;
   rate?: number;
   emittedAtMs?: number;
 }) {
   const handler = socketHandlers.get("playback:state");
   expect(handler).toBeDefined();
-  handler?.({ emittedAtMs: Date.now(), rate: 1, ...state });
+  handler?.({ videoId: "video-1", emittedAtMs: Date.now(), rate: 1, ...state });
 }
 
 describe("RoomVideoPanel synced playback", () => {
@@ -109,7 +126,11 @@ describe("RoomVideoPanel synced playback", () => {
     fireEvent(video, new Event("seeked"));
     expect(socketEmit).toHaveBeenCalledWith(
       "playback:publish",
-      expect.objectContaining({ playing: false, positionSeconds: 10 }),
+      expect.objectContaining({
+        videoId: "video-1",
+        playing: false,
+        positionSeconds: 10,
+      }),
     );
   });
 
@@ -200,9 +221,78 @@ describe("RoomVideoPanel synced playback", () => {
   });
 });
 
+describe("RoomVideoPanel clips", () => {
+  it("shows no tabs for a single clip and tabs with the note for several", async () => {
+    await renderPanel();
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+  });
+
+  it("switches clips locally and publishes the switch as a paused snapshot", async () => {
+    const { container } = await renderPanel(CLIPS);
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs.map((tab) => tab.textContent)).toEqual([
+      "1. Match footage",
+      "2. Serve drill",
+    ]);
+    expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+
+    fireEvent.click(tabs[1]);
+    expect(tabs[1]).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByText(/— serve/)).toBeInTheDocument();
+    expect(socketEmit).toHaveBeenCalledWith(
+      "playback:publish",
+      expect.objectContaining({
+        videoId: "video-2",
+        playing: false,
+        positionSeconds: 0,
+      }),
+    );
+    // The second clip's playback URL is requested once it becomes active.
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining("/videos/video-2/playback-url"),
+        expect.anything(),
+      ),
+    );
+    expect(container.querySelector("video")).not.toBeNull();
+  });
+
+  it("follows the peer to another clip and applies the state once the source loads", async () => {
+    const { container } = await renderPanel(CLIPS);
+    socketEmit.mockClear();
+    receiveState({ videoId: "video-2", playing: false, positionSeconds: 7 });
+    const tabs = screen.getAllByRole("tab");
+    await waitFor(() =>
+      expect(tabs[1]).toHaveAttribute("aria-selected", "true"),
+    );
+    // Following the peer is not echoed back as a new command.
+    expect(socketEmit).not.toHaveBeenCalledWith(
+      "playback:publish",
+      expect.anything(),
+    );
+    const video = (await waitFor(() => {
+      const el = container.querySelector("video");
+      expect(el?.getAttribute("src")).toContain("cdn.example");
+      return el;
+    })) as HTMLVideoElement;
+    fireEvent(video, new Event("loadedmetadata"));
+    expect(video.currentTime).toBe(7);
+  });
+
+  it("ignores a shared state naming a clip that is not attached", async () => {
+    await renderPanel(CLIPS);
+    receiveState({ videoId: "video-9", playing: false, positionSeconds: 7 });
+    expect(screen.getAllByRole("tab")[0]).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+});
+
 describe("RoomVideoPanel annotations", () => {
   const lineStroke = (id: string, authorId: string, momentKey = "134.2") => ({
     id,
+    videoId: "video-1",
     momentKey,
     authorId,
     tool: "line" as const,
@@ -214,11 +304,14 @@ describe("RoomVideoPanel annotations", () => {
     createdAtMs: 1,
   });
 
-  async function receiveAnnotationState(state: Record<string, unknown[]>) {
+  async function receiveAnnotationState(
+    clip: Record<string, unknown[]>,
+    videoId = "video-1",
+  ) {
     await waitFor(() =>
       expect(socketHandlers.get("annotation:state")).toBeDefined(),
     );
-    socketHandlers.get("annotation:state")?.(state);
+    socketHandlers.get("annotation:state")?.({ [videoId]: clip });
   }
 
   it("lists annotated moments and seeks to them, pausing the player", async () => {
@@ -271,11 +364,44 @@ describe("RoomVideoPanel annotations", () => {
     await waitFor(() => expect(undo).toBeEnabled());
     fireEvent.click(undo);
     expect(socketEmit).toHaveBeenCalledWith("annotation:undo", {
+      videoId: "video-1",
       momentKey: "134.2",
     });
     // Only the peer's stroke is left, so undo is no longer available.
     await waitFor(() => expect(undo).toBeDisabled());
     expect(screen.getByRole("button", { name: /clear/i })).toBeEnabled();
+  });
+
+  it("shows only the active clip's moments and keeps the other clip's strokes", async () => {
+    await renderPanel(CLIPS);
+    await waitFor(() =>
+      expect(socketHandlers.get("annotation:state")).toBeDefined(),
+    );
+    socketHandlers.get("annotation:state")?.({
+      "video-1": { "10.0": [lineStroke("s1", "coach-1", "10.0")] },
+      "video-2": {
+        "20.0": [
+          { ...lineStroke("s2", "coach-1", "20.0"), videoId: "video-2" },
+        ],
+      },
+    });
+    const group = await screen.findByRole("group", {
+      name: /annotated moments/i,
+    });
+    expect(
+      [...group.querySelectorAll("button")].map((c) => c.textContent),
+    ).toEqual(["0:10"]);
+
+    fireEvent.click(screen.getAllByRole("tab")[1]);
+    await waitFor(() =>
+      expect(
+        [
+          ...screen
+            .getByRole("group", { name: /annotated moments/i })
+            .querySelectorAll("button"),
+        ].map((c) => c.textContent),
+      ).toEqual(["0:20"]),
+    );
   });
 
   it("uses the role default color", async () => {

@@ -4,14 +4,19 @@ import AwsS3 from "@uppy/aws-s3";
 import Uppy from "@uppy/core";
 import { useUppyEvent, useUppyState } from "@uppy/react";
 import {
+  UploadRefusalReason,
   VIDEO_PART_SIZE_BYTES,
   type CreateVideoUploadResponse,
   type SignVideoPartsResponse,
+  type UploadRefusal,
+  type VideoLimits,
 } from "@playwithpro/shared";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRef, useState } from "react";
+import { LibraryLimits } from "@/components/videos/library-limits";
 import { useRouter } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api";
+import { formatBytes } from "@/lib/format-duration";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -19,7 +24,7 @@ import { Button } from "@/components/ui/button";
  * part URLs, so the original file leaves the browser byte-identical —
  * no client-side re-encode that would smear fast strokes.
  */
-function createUppy(): Uppy {
+function createUppy(refusalMessage: (refusal: UploadRefusal) => string): Uppy {
   const uppy = new Uppy({
     restrictions: { allowedFileTypes: ["video/*"] },
     autoProceed: true,
@@ -44,9 +49,12 @@ function createUppy(): Uppy {
         }),
       });
       if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as {
-          message?: string | string[];
-        } | null;
+        const body = (await response.json().catch(() => null)) as
+          ({ message?: string | string[] } & Partial<UploadRefusal>) | null;
+        if (response.status === 409 && body?.reason) {
+          // Library quota: localized, with the remaining space.
+          throw new Error(refusalMessage(body as UploadRefusal));
+        }
         throw new Error(
           Array.isArray(body?.message)
             ? body.message.join(", ")
@@ -94,11 +102,22 @@ function createUppy(): Uppy {
   return uppy;
 }
 
-export function VideoUploader() {
+export function VideoUploader({ limits }: { limits: VideoLimits | null }) {
   const t = useTranslations("videos.upload");
+  const tQuota = useTranslations("videos.quota");
+  const tLimits = useTranslations("videos.limits");
+  const locale = useLocale();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [uppy] = useState(createUppy);
+  const [uppy] = useState(() =>
+    createUppy((refusal) =>
+      refusal.reason === UploadRefusalReason.LibraryFullCount
+        ? tQuota("refusal.library_full_count", { max: refusal.maxVideos })
+        : tQuota("refusal.library_full_bytes", {
+            remaining: formatBytes(refusal.remainingBytes, locale),
+          }),
+    ),
+  );
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -121,6 +140,15 @@ export function VideoUploader() {
   function addFiles(list: FileList | File[]) {
     setError(null);
     for (const file of Array.from(list)) {
+      // The per-file cap is refused here, before any upload is initiated.
+      if (limits && file.size > limits.file.maxSizeBytes) {
+        setError(
+          tLimits("tooLarge", {
+            size: formatBytes(limits.file.maxSizeBytes, locale),
+          }),
+        );
+        continue;
+      }
       try {
         uppy.addFile({ name: file.name, type: file.type, data: file });
       } catch {
@@ -139,6 +167,11 @@ export function VideoUploader() {
       <div className="rounded-card border border-border bg-bg-secondary p-4 text-sm text-text-secondary">
         💡 {t("qualityHint")}
       </div>
+      {limits ? (
+        <div className="mt-4">
+          <LibraryLimits limits={limits} />
+        </div>
+      ) : null}
 
       <div
         role="button"

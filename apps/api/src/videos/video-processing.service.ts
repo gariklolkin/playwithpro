@@ -134,7 +134,9 @@ export class VideoProcessingService implements OnModuleInit {
 
     await this.prisma.video.update({
       where: { id: videoId },
-      data: { status: 'READY', playbackKey },
+      // A video cannot be attached before it is ready, so the retention
+      // clock always starts here; the first attachment clears it.
+      data: { status: 'READY', playbackKey, unattachedSince: new Date() },
     });
     this.logger.log(`Video ${videoId} is ready (playback: ${playbackKey})`);
   }

@@ -1,13 +1,36 @@
 "use client";
 
-import { SessionStatus, type SessionResponse } from "@playwithpro/shared";
+import {
+  ServiceType,
+  SessionStatus,
+  type SessionResponse,
+} from "@playwithpro/shared";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { LocalTime } from "@/components/catalog/local-time";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { Link } from "@/i18n/navigation";
+import { formatDuration } from "@/lib/format-duration";
 import { useNow } from "@/lib/use-now";
 import { SessionActions } from "./session-actions";
 import { SessionReview } from "./session-review";
+import { SessionVideosEditor } from "./session-videos-editor";
+
+/** Statuses in which the coach may open the attached clips (paid, not cancelled). */
+const COACH_CLIP_ACCESS: SessionStatus[] = [
+  SessionStatus.PaidEscrow,
+  SessionStatus.InProgress,
+  SessionStatus.AwaitingConfirmation,
+  SessionStatus.CompletedPaid,
+  SessionStatus.Disputed,
+  SessionStatus.Resolved,
+];
+
+/** The player may still change the clip set: unpaid or paid, before start. */
+const CLIP_EDIT_STATUSES: SessionStatus[] = [
+  SessionStatus.PendingPayment,
+  SessionStatus.PaidEscrow,
+];
 
 /** Pastel status tags per DESIGN.md: blue = trust/escrow, yellow = action needed. */
 const STATUS_BADGE: Partial<Record<SessionStatus, string>> = {
@@ -31,9 +54,20 @@ function SessionCard({
   const t = useTranslations("sessions");
   const tCatalog = useTranslations("catalog");
   const other = isCoach ? session.player : session.coach;
+  // The clip set edited in place; the rest of the card keeps the server's
+  // session until the next refresh.
+  const [edited, setEdited] = useState<SessionResponse | null>(null);
+  const clips = (edited ?? session).videos;
   // Window check happens after mount only, so server HTML never disagrees
   // with the client clock.
   const now = useNow();
+  const clipsEditable =
+    !isCoach &&
+    session.serviceType === ServiceType.VideoAnalysis &&
+    CLIP_EDIT_STATUSES.includes(session.status) &&
+    now !== null &&
+    now < new Date(session.startsAt).getTime();
+  const coachCanOpen = isCoach && COACH_CLIP_ACCESS.includes(session.status);
   const roomOpen =
     now !== null &&
     session.room !== null &&
@@ -70,15 +104,47 @@ function SessionCard({
               <LocalTime iso={session.startsAt} />{" "}
               <span className="text-text-tertiary">{t("yourTime")}</span>
             </div>
-            {isCoach && session.videoId ? (
-              <div className="mt-0.5 text-[13px]">
-                <Link
-                  href={`/dashboard/videos/${session.videoId}`}
-                  className="text-[#2A5FC7] hover:underline"
-                >
-                  📹 {session.videoTitle}
-                </Link>
-              </div>
+            {session.serviceType === ServiceType.VideoAnalysis ? (
+              clips.length === 0 ? (
+                <div className="mt-0.5 text-[13px] text-[#8A6C1B]">
+                  {t("videos.removed")}
+                </div>
+              ) : (
+                <ol className="mt-0.5 space-y-0.5 text-[13px]">
+                  {clips.map((clip) => (
+                    <li key={clip.videoId} className="flex min-w-0 gap-1.5">
+                      {coachCanOpen ? (
+                        <Link
+                          href={`/dashboard/videos/${clip.videoId}`}
+                          className="truncate text-[#2A5FC7] hover:underline"
+                        >
+                          📹 {clip.title}
+                        </Link>
+                      ) : (
+                        <span className="truncate text-text">
+                          📹 {clip.title}
+                        </span>
+                      )}
+                      {clip.durationSeconds !== null ? (
+                        <span className="shrink-0 tabular-nums text-text-tertiary">
+                          {formatDuration(clip.durationSeconds)}
+                        </span>
+                      ) : null}
+                      {clip.note ? (
+                        <span className="truncate text-text-secondary">
+                          — {clip.note}
+                        </span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ol>
+              )
+            ) : null}
+            {clipsEditable ? (
+              <SessionVideosEditor
+                session={edited ?? session}
+                onUpdated={setEdited}
+              />
             ) : null}
             {session.venue ? (
               <div className="mt-0.5 text-[13px] text-text-secondary">

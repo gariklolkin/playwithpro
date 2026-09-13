@@ -163,7 +163,7 @@ async function main() {
         currency: service.currency,
         platformFeeMinor: feeMinor,
         slotId: slot.id,
-        videoId: video.id,
+        videos: { create: [{ videoId: video.id, position: 0, note: null }] },
         status: 'PAID_ESCROW',
         startsAt,
         endsAt,

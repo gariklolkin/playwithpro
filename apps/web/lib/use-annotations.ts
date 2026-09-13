@@ -7,58 +7,92 @@ import {
   type AnnotationRemovedPayload,
   type AnnotationState,
   type AnnotationTool,
+  type ClipAnnotationState,
   type Stroke,
 } from "@playwithpro/shared";
 import { useCallback, useEffect, useState } from "react";
 import type { Socket } from "socket.io-client";
 
 export interface Annotations {
-  /** Moment key → strokes, mirroring the server's ephemeral store. */
+  /** Video id → moment key → strokes, mirroring the server's ephemeral store. */
   state: AnnotationState;
-  /** Optimistically adds a stroke by this user and sends it to the peer. */
+  /** Optimistically adds a stroke by this user on a clip and sends it to the peer. */
   add: (
+    videoId: string,
     momentKey: string,
     tool: AnnotationTool,
     color: string,
     points: AnnotationPoint[],
   ) => void;
-  /** Removes this user's latest stroke on the moment (locally and remotely). */
-  undo: (momentKey: string) => void;
-  /** Empties the moment for both parties. */
-  clear: (momentKey: string) => void;
+  /** Removes this user's latest stroke on the clip's moment (locally and remotely). */
+  undo: (videoId: string, momentKey: string) => void;
+  /** Empties the clip's moment for both parties. */
+  clear: (videoId: string, momentKey: string) => void;
 }
 
-function withoutStroke(
+const EMPTY_CLIP: ClipAnnotationState = {};
+
+/** The annotations of one clip; a stable empty object when none. */
+export function clipAnnotations(
   state: AnnotationState,
-  momentKey: string,
-  strokeId: string,
+  videoId: string | null,
+): ClipAnnotationState {
+  return (videoId && state[videoId]) || EMPTY_CLIP;
+}
+
+function withClip(
+  state: AnnotationState,
+  videoId: string,
+  clip: ClipAnnotationState,
 ): AnnotationState {
-  const strokes = state[momentKey];
-  if (!strokes?.some((s) => s.id === strokeId)) return state;
-  const rest = strokes.filter((s) => s.id !== strokeId);
   const next = { ...state };
-  if (rest.length === 0) {
-    delete next[momentKey];
+  if (Object.keys(clip).length === 0) {
+    delete next[videoId];
   } else {
-    next[momentKey] = rest;
+    next[videoId] = clip;
   }
   return next;
 }
 
+function withoutStroke(
+  state: AnnotationState,
+  videoId: string,
+  momentKey: string,
+  strokeId: string,
+): AnnotationState {
+  const clip = state[videoId];
+  const strokes = clip?.[momentKey];
+  if (!clip || !strokes?.some((s) => s.id === strokeId)) return state;
+  const rest = strokes.filter((s) => s.id !== strokeId);
+  const nextClip = { ...clip };
+  if (rest.length === 0) {
+    delete nextClip[momentKey];
+  } else {
+    nextClip[momentKey] = rest;
+  }
+  return withClip(state, videoId, nextClip);
+}
+
 function withoutMoment(
   state: AnnotationState,
+  videoId: string,
   momentKey: string,
 ): AnnotationState {
-  if (!(momentKey in state)) return state;
-  const next = { ...state };
-  delete next[momentKey];
-  return next;
+  const clip = state[videoId];
+  if (!clip || !(momentKey in clip)) return state;
+  const nextClip = { ...clip };
+  delete nextClip[momentKey];
+  return withClip(state, videoId, nextClip);
 }
 
 function withStroke(state: AnnotationState, stroke: Stroke): AnnotationState {
-  const strokes = state[stroke.momentKey] ?? [];
+  const clip = state[stroke.videoId] ?? {};
+  const strokes = clip[stroke.momentKey] ?? [];
   if (strokes.some((s) => s.id === stroke.id)) return state;
-  return { ...state, [stroke.momentKey]: [...strokes, stroke] };
+  return withClip(state, stroke.videoId, {
+    ...clip,
+    [stroke.momentKey]: [...strokes, stroke],
+  });
 }
 
 function newStrokeId(): string {
@@ -72,9 +106,10 @@ function newStrokeId(): string {
 }
 
 /**
- * Shared annotation state over the playback-sync socket. The server holds
- * the truth: local edits are optimistic and reconciled by the echoed events,
- * and the full state arrives on (re)connect or on request.
+ * Shared annotation state over the playback-sync socket, kept per attached
+ * clip. The server holds the truth: local edits are optimistic and
+ * reconciled by the echoed events, and the full state arrives on
+ * (re)connect or on request.
  */
 export function useAnnotations(
   socket: Socket | null,
@@ -87,10 +122,14 @@ export function useAnnotations(
     const onState = (full: AnnotationState) => setState(full);
     const onAdded = (stroke: Stroke) =>
       setState((prev) => withStroke(prev, stroke));
-    const onRemoved = ({ momentKey, strokeId }: AnnotationRemovedPayload) =>
-      setState((prev) => withoutStroke(prev, momentKey, strokeId));
-    const onCleared = ({ momentKey }: AnnotationClearedPayload) =>
-      setState((prev) => withoutMoment(prev, momentKey));
+    const onRemoved = ({
+      videoId,
+      momentKey,
+      strokeId,
+    }: AnnotationRemovedPayload) =>
+      setState((prev) => withoutStroke(prev, videoId, momentKey, strokeId));
+    const onCleared = ({ videoId, momentKey }: AnnotationClearedPayload) =>
+      setState((prev) => withoutMoment(prev, videoId, momentKey));
     // A reconnect gets the state pushed by the server; the explicit request
     // covers listeners attached after the connect ack already arrived.
     const onConnect = () => socket.emit(ANNOTATION_EVENTS.requestState);
@@ -110,9 +149,10 @@ export function useAnnotations(
   }, [socket]);
 
   const add = useCallback<Annotations["add"]>(
-    (momentKey, tool, color, points) => {
+    (videoId, momentKey, tool, color, points) => {
       const stroke: Stroke = {
         id: newStrokeId(),
+        videoId,
         momentKey,
         authorId: userId,
         tool,
@@ -127,23 +167,23 @@ export function useAnnotations(
   );
 
   const undo = useCallback<Annotations["undo"]>(
-    (momentKey) => {
+    (videoId, momentKey) => {
       setState((prev) => {
-        const mine = (prev[momentKey] ?? []).filter(
+        const mine = (prev[videoId]?.[momentKey] ?? []).filter(
           (s) => s.authorId === userId,
         );
         const last = mine.at(-1);
-        return last ? withoutStroke(prev, momentKey, last.id) : prev;
+        return last ? withoutStroke(prev, videoId, momentKey, last.id) : prev;
       });
-      socket?.emit(ANNOTATION_EVENTS.undo, { momentKey });
+      socket?.emit(ANNOTATION_EVENTS.undo, { videoId, momentKey });
     },
     [socket, userId],
   );
 
   const clear = useCallback<Annotations["clear"]>(
-    (momentKey) => {
-      setState((prev) => withoutMoment(prev, momentKey));
-      socket?.emit(ANNOTATION_EVENTS.clear, { momentKey });
+    (videoId, momentKey) => {
+      setState((prev) => withoutMoment(prev, videoId, momentKey));
+      socket?.emit(ANNOTATION_EVENTS.clear, { videoId, momentKey });
     },
     [socket],
   );

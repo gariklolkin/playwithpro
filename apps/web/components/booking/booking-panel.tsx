@@ -8,14 +8,19 @@ import {
   type PublicAvailabilitySlot,
   type SessionListResponse,
   type SessionResponse,
+  type SessionVideoInput,
+  type VideoLimits,
   type VideoListResponse,
   type VideoResponse,
 } from "@playwithpro/shared";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { useMounted } from "@/components/catalog/local-time";
+import { ClipPicker } from "@/components/sessions/clip-picker";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api";
+import { clipSetErrorMessage, clipSetStatus } from "@/lib/clip-set";
+import { formatDuration } from "@/lib/format-duration";
 import { formatMoney } from "@/lib/money";
 import { Button } from "@/components/ui/button";
 
@@ -59,6 +64,7 @@ function groupByDay(
 
 export function BookingPanel({ proId, services, initialSlots, viewer }: Props) {
   const t = useTranslations("coach.booking");
+  const tClips = useTranslations("clips");
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
@@ -70,7 +76,8 @@ export function BookingPanel({ proId, services, initialSlots, viewer }: Props) {
   const [dayKey, setDayKey] = useState<string | null>(null);
   const [slotId, setSlotId] = useState<string | null>(null);
   const [videos, setVideos] = useState<VideoResponse[] | null>(null);
-  const [videoId, setVideoId] = useState<string | null>(null);
+  const [limits, setLimits] = useState<VideoLimits | null>(null);
+  const [clips, setClips] = useState<SessionVideoInput[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -104,8 +111,13 @@ export function BookingPanel({ proId, services, initialSlots, viewer }: Props) {
       setVideos(
         library.videos.filter((video) => video.status === VideoStatus.Ready),
       );
+      setLimits(library.limits);
     });
   }, [needsVideo, viewer, videos]);
+
+  const clipStatus =
+    videos && limits ? clipSetStatus(clips, videos, limits.session) : null;
+  const clipTitles = new Map(videos?.map((video) => [video.id, video]) ?? []);
 
   useEffect(() => {
     if (viewer !== "amateur") return;
@@ -173,12 +185,20 @@ export function BookingPanel({ proId, services, initialSlots, viewer }: Props) {
           proId,
           serviceType,
           slotId,
-          ...(needsVideo && videoId ? { videoId } : {}),
+          ...(needsVideo ? { videos: clips } : {}),
         }),
       });
       if (response.status === 409) {
         setError(t("slotTaken"));
         await refreshSlots();
+        return;
+      }
+      if (response.status === 400) {
+        const body = (await response.json().catch(() => null)) as Record<
+          string,
+          unknown
+        > | null;
+        setError(clipSetErrorMessage(tClips, body, t("bookFailed")));
         return;
       }
       if (!response.ok) {
@@ -196,7 +216,7 @@ export function BookingPanel({ proId, services, initialSlots, viewer }: Props) {
     viewer === "amateur" &&
     service !== null &&
     slotId !== null &&
-    (!needsVideo || videoId !== null) &&
+    (!needsVideo || (clipStatus !== null && !clipStatus.invalid)) &&
     !submitting;
 
   const panel = (
@@ -318,40 +338,21 @@ export function BookingPanel({ proId, services, initialSlots, viewer }: Props) {
         )}
       </div>
 
-      {/* Step 3 — video (video analysis only) */}
+      {/* Step 3 — clips (video analysis only) */}
       {needsVideo && viewer === "amateur" ? (
         <div className="mt-4">
           <div className="mb-1.5 text-[13px] font-medium text-text-secondary">
             {t("attachVideo")}
           </div>
-          {videos === null ? (
+          {videos === null || limits === null ? (
             <div className="py-2 text-center text-sm text-text-tertiary">…</div>
-          ) : videos.length === 0 ? (
-            <p className="rounded-md bg-bg-secondary p-3 text-[13px] text-text-secondary">
-              {t("noVideos")}{" "}
-              <Link
-                href="/dashboard/videos/upload"
-                className="font-medium text-[#2A5FC7] hover:underline"
-              >
-                {t("uploadCta")}
-              </Link>
-            </p>
           ) : (
-            <ul className="max-h-40 space-y-1 overflow-y-auto">
-              {videos.map((video) => (
-                <li key={video.id}>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-text hover:bg-bg-hover">
-                    <input
-                      type="radio"
-                      name="booking-video"
-                      checked={videoId === video.id}
-                      onChange={() => setVideoId(video.id)}
-                    />
-                    <span className="truncate">📹 {video.title}</span>
-                  </label>
-                </li>
-              ))}
-            </ul>
+            <ClipPicker
+              videos={videos}
+              caps={limits.session}
+              value={clips}
+              onChange={setClips}
+            />
           )}
         </div>
       ) : null}
@@ -365,6 +366,26 @@ export function BookingPanel({ proId, services, initialSlots, viewer }: Props) {
               {formatMoney(service.priceMinor, service.currency, locale)}
             </span>
           </div>
+          {needsVideo && clips.length > 0 ? (
+            <ol className="mt-2 space-y-0.5 text-[13px] text-text-secondary">
+              {clips.map((clip, index) => {
+                const video = clipTitles.get(clip.videoId);
+                return (
+                  <li key={clip.videoId} className="flex gap-1.5">
+                    <span className="tabular-nums">{index + 1}.</span>
+                    <span className="min-w-0 truncate">
+                      {video?.title ?? clip.videoId}
+                      {video?.durationSeconds !== null &&
+                      video?.durationSeconds !== undefined
+                        ? ` · ${formatDuration(video.durationSeconds)}`
+                        : ""}
+                      {clip.note ? ` — ${clip.note}` : ""}
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+          ) : null}
           <p className="mt-2 rounded-md bg-[#EAF2FD] p-2.5 text-[12px] leading-snug text-[#2A5FC7]">
             🔒 {t("escrowNotice")}
           </p>

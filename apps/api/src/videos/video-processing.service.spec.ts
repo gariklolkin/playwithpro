@@ -165,6 +165,8 @@ describe('VideoProcessingService', () => {
     expect(readyUpdate.data).toEqual({
       status: 'READY',
       playbackKey: processingVideo.originalKey,
+      // The retention clock starts at READY; the first attachment clears it.
+      unattachedSince: expect.any(Date) as Date,
     });
     // Metadata persisted from the probe.
     const metadataUpdate = prisma.video.update.mock.calls[0][0];

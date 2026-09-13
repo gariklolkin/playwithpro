@@ -20,6 +20,14 @@ interface RemoteState {
   receivedAtMs: number;
 }
 
+/** The attached clip the local player shows, and how to follow the peer's. */
+export interface ClipBinding {
+  /** Null until the panel has picked a clip; nothing is published meanwhile. */
+  videoId: string | null;
+  /** The peer is on another attached clip: swap the source, then call `onSourceReady`. */
+  onRemoteClip: (videoId: string) => void;
+}
+
 export interface SyncedPlayback {
   /** Whether this client follows and publishes shared state. */
   synced: boolean;
@@ -33,6 +41,8 @@ export interface SyncedPlayback {
   onPause: () => void;
   onSeeked: () => void;
   onRateChange: () => void;
+  /** The <video> loaded a new source: apply the shared state waiting for it. */
+  onSourceReady: () => void;
   /**
    * The underlying /playback-sync socket, for features that share the
    * channel (annotations). Null until the effect creates it.
@@ -48,6 +58,7 @@ export interface SyncedPlayback {
 export function useSyncedPlayback(
   sessionId: string,
   videoRef: React.RefObject<HTMLVideoElement | null>,
+  clip: ClipBinding,
 ): SyncedPlayback {
   const [synced, setSyncedState] = useState(true);
   const [blocked, setBlocked] = useState(false);
@@ -60,13 +71,25 @@ export function useSyncedPlayback(
   /** True while our own gesture was the room's most recent command. */
   const commanderRef = useRef(false);
   const syncedRef = useRef(true);
+  /** The clip the local player is on; snapshots name it. */
+  const videoIdRef = useRef<string | null>(clip.videoId);
+  /** A clip switch the peer asked for, so the panel's change is not re-published. */
+  const remoteClipRef = useRef<string | null>(null);
+  /** A shared state waiting for the panel to load its clip. */
+  const pendingRef = useRef<RemoteState | null>(null);
+  const onRemoteClipRef = useRef(clip.onRemoteClip);
+  useEffect(() => {
+    onRemoteClipRef.current = clip.onRemoteClip;
+  }, [clip.onRemoteClip]);
 
   const publish = useCallback(() => {
     const video = videoRef.current;
     const socket = socketRef.current;
-    if (!video || !socket || !syncedRef.current) return;
+    const videoId = videoIdRef.current;
+    if (!video || !socket || !videoId || !syncedRef.current) return;
     commanderRef.current = true;
     const state: PlaybackState = {
+      videoId,
       playing: !video.paused && !video.ended,
       positionSeconds: video.currentTime,
       rate: video.playbackRate,
@@ -81,6 +104,15 @@ export function useSyncedPlayback(
       const video = videoRef.current;
       if (!video) return;
       const { state } = remote;
+      if (state.videoId !== videoIdRef.current) {
+        // The peer is on another clip: the panel swaps the source and calls
+        // onSourceReady, which applies this state to the new element.
+        remoteClipRef.current = state.videoId;
+        pendingRef.current = remote;
+        onRemoteClipRef.current(state.videoId);
+        return;
+      }
+      pendingRef.current = null;
       // Position advances at the shared rate: slow motion is not drift.
       const target = state.playing
         ? state.positionSeconds +
@@ -136,6 +168,38 @@ export function useSyncedPlayback(
   useEffect(() => {
     syncedRef.current = synced;
   }, [synced]);
+
+  // A local clip switch is a shared command: the peer lands on the new clip
+  // at its start, paused. A switch the peer asked for is not echoed.
+  useEffect(() => {
+    const previous = videoIdRef.current;
+    videoIdRef.current = clip.videoId;
+    if (!clip.videoId || previous === null || previous === clip.videoId) {
+      return;
+    }
+    if (remoteClipRef.current === clip.videoId) {
+      remoteClipRef.current = null;
+      return;
+    }
+    const socket = socketRef.current;
+    if (!socket || !syncedRef.current) return;
+    commanderRef.current = true;
+    const state: PlaybackState = {
+      videoId: clip.videoId,
+      playing: false,
+      positionSeconds: 0,
+      rate: videoRef.current?.playbackRate ?? 1,
+      emittedAtMs: Date.now(),
+    };
+    socket.emit(PLAYBACK_SYNC_EVENTS.publish, state);
+  }, [clip.videoId, videoRef]);
+
+  const onSourceReady = useCallback(() => {
+    const pending = pendingRef.current;
+    if (!pending || !syncedRef.current) return;
+    if (pending.state.videoId !== videoIdRef.current) return;
+    apply(pending);
+  }, [apply]);
 
   useEffect(() => {
     const socket = io(`${API_URL}${PLAYBACK_SYNC_NAMESPACE}`, {
@@ -220,6 +284,7 @@ export function useSyncedPlayback(
     onPause: onLocalGesture,
     onSeeked: onLocalGesture,
     onRateChange: onLocalGesture,
+    onSourceReady,
     socket,
   };
 }

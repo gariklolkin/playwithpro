@@ -509,6 +509,21 @@
       "loadFailed": "Impossible de charger la vidéo. Actualisez la page pour réessayer.",
       "downloadHint": "Pour une analyse image par image, téléchargez l'original intact.",
       "downloadOriginal": "Télécharger l'original"
+    },
+    "quota": {
+      "title": "Espace de la bibliothèque",
+      "usage": "{used} sur {max} · {count} sur {maxVideos} vidéos",
+      "expires": "Supprimée le {date} si elle n'est pas jointe à une séance",
+      "deleteConfirmAttached": "Supprimer « {title} » ? Elle est jointe à {count, plural, one {# séance à venir} other {# séances à venir}}. Cette action est irréversible.",
+      "refusal": {
+        "library_full_bytes": "Pas assez d'espace dans votre bibliothèque : il reste {remaining}. Supprimez une vidéo pour libérer de la place.",
+        "library_full_count": "Votre bibliothèque contient déjà le maximum de {max} vidéos. Supprimez-en une pour libérer de la place."
+      }
+    },
+    "limits": {
+      "file": "Jusqu'à {size} et {duration} par fichier",
+      "session": "Jusqu'à {clips} clips et {duration} au total par séance",
+      "tooLarge": "Ce fichier dépasse la limite de {size}."
     }
   },
   "catalog": {
@@ -569,9 +584,7 @@
       "chooseSlot": "2. Choisissez un horaire",
       "yourTime": "(votre heure)",
       "noSlots": "Ce coach n'a aucun créneau ouvert pour le moment. Revenez plus tard.",
-      "attachVideo": "3. Joignez votre vidéo de jeu",
-      "noVideos": "Aucune vidéo prête dans votre bibliothèque.",
-      "uploadCta": "Téléverser une vidéo",
+      "attachVideo": "3. Joignez vos clips",
       "price": "Prix (1 heure)",
       "escrowNotice": "Votre paiement est placé sous séquestre et versé au coach uniquement après confirmation de la séance.",
       "bookCta": "Réserver et passer au paiement",
@@ -594,7 +607,7 @@
     "orderSummary": "Récapitulatif",
     "coach": "Coach",
     "service": "Service",
-    "video": "Vidéo",
+    "videos": "Clips",
     "dateTime": "Date et heure",
     "yourTime": "(votre heure)",
     "total": "Total",
@@ -732,6 +745,10 @@
       "speed": {
         "label": "Vitesse",
         "value": "{rate}×"
+      },
+      "clips": {
+        "label": "Clips",
+        "removed": "Les clips de cette séance ont été supprimés de la bibliothèque. Le joueur peut en joindre de nouveaux jusqu'au début de la séance."
       }
     },
     "actions": {
@@ -767,6 +784,15 @@
       "error": "Une erreur est survenue. Réessayez.",
       "givenLabel": "Votre avis",
       "receivedLabel": "Avis du joueur"
+    },
+    "videos": {
+      "title": "Clips de cette séance",
+      "edit": "Modifier les clips",
+      "removed": "Les clips de cette séance ont été supprimés de la bibliothèque.",
+      "save": "Enregistrer les clips",
+      "cancel": "Annuler",
+      "saveFailed": "Impossible d'enregistrer les clips. Réessayez.",
+      "locked": "Les clips de cette séance ne peuvent plus être modifiés."
     }
   },
   "adminDisputes": {
@@ -908,6 +934,26 @@
         "next": "Suivant",
         "pageOf": "Page {page} sur {total}"
       }
+    }
+  },
+  "clips": {
+    "meter": {
+      "clips": "{count} sur {max} clips",
+      "duration": "{used} sur {max} au total"
+    },
+    "noVideos": "Aucune vidéo prête dans votre bibliothèque.",
+    "uploadCta": "Téléverser une vidéo",
+    "notePlaceholder": "Note pour le coach, p. ex. « service » ou « top-spin coup droit »",
+    "noteLabel": "Note pour {title}",
+    "moveUp": "Monter {title}",
+    "moveDown": "Descendre {title}",
+    "capReached": "Limite atteinte : au plus {max} clips par séance.",
+    "errors": {
+      "empty": "Joignez au moins un clip.",
+      "duplicate": "Le même clip apparaît deux fois.",
+      "not_ready": "L'un des clips n'est pas encore prêt.",
+      "too_many_clips": "Au plus {max} clips par séance (vous en avez choisi {count}).",
+      "too_long": "Les clips ne peuvent pas dépasser {max} au total ; les vôtres font {total}."
     }
   }
 }

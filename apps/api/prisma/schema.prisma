@@ -112,13 +112,17 @@ model Video {
   container       String?
   /// Machine-readable reason key, localized in the UI.
   rejectionReason String?
+  /// Start of the retention clock: set when the video becomes READY or when
+  /// its last live attachment goes away, cleared when it is attached again.
+  unattachedSince DateTime?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   owner           User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  sessions        Session[]
+  attachments     SessionVideo[]
 
   @@index([ownerId, createdAt])
   @@index([status, updatedAt])
+  @@index([status, unattachedSince])
 }
 
 model OAuthAccount {
@@ -355,7 +359,6 @@ model Session {
   /// A slot can carry many sessions over time (cancelled or expired ones keep
   /// their link); the atomic OPEN → BOOKED claim guarantees one live booking.
   slotId           String
-  videoId          String? // VIDEO_ANALYSIS only
   status           SessionStatus @default(PENDING_PAYMENT)
   startsAt         DateTime
   endsAt           DateTime
@@ -375,7 +378,8 @@ model Session {
   player     User             @relation(fields: [playerId], references: [id])
   proProfile ProProfile       @relation(fields: [proProfileId], references: [id])
   slot       AvailabilitySlot @relation(fields: [slotId], references: [id])
-  video      Video?           @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  /// Attached clips (VIDEO_ANALYSIS only), ordered by position.
+  videos     SessionVideo[]
   payments   Payment[]
   attendance SessionAttendance[]
   dispute    Dispute?
@@ -385,6 +389,27 @@ model Session {
   @@index([proProfileId, startsAt])
   @@index([status, expiresAt])
   @@index([slotId])
+}
+
+/// One attached clip of a video-analysis session. The set is replaced
+/// atomically by the player until the session starts; a deleted video takes
+/// its rows with it (the session stays valid with fewer clips).
+model SessionVideo {
+  id        String   @id @default(uuid())
+  sessionId String
+  videoId   String
+  /// 0-based order chosen by the player; gaps after a video delete are tolerated.
+  position  Int
+  /// Player's short hint for the coach ("serve", "forehand loop").
+  note      String?
+  addedAt   DateTime @default(now())
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  video   Video   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, videoId])
+  @@unique([sessionId, position])
+  @@index([videoId])
 }
 
 /// One row per room entry; evidence for confirmation/disputes, never a status trigger.

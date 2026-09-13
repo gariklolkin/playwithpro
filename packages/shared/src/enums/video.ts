@@ -12,3 +12,9 @@ export enum VideoRejectionReason {
   TooLarge = "too_large",
   ProcessingFailed = "processing_failed",
 }
+
+/** Why an upload was refused at initiation; the UI localizes them. */
+export enum UploadRefusalReason {
+  LibraryFullBytes = "library_full_bytes",
+  LibraryFullCount = "library_full_count",
+}

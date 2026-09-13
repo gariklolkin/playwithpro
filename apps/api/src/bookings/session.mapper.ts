@@ -4,6 +4,7 @@ import {
   PaymentStatus as SharedPaymentStatus,
   SessionResponse,
   SessionStatus,
+  SessionVideoItem,
 } from '@playwithpro/shared';
 import type {
   Dispute,
@@ -24,7 +25,11 @@ export type SessionWithParties = Session & {
     user: Pick<User, 'displayName' | 'avatarKey'>;
     services: Array<{ venueLabel: string }>;
   };
-  video: Pick<Video, 'id' | 'title'> | null;
+  videos: Array<{
+    position: number;
+    note: string | null;
+    video: Pick<Video, 'id' | 'title' | 'durationSeconds'>;
+  }>;
   payments: Array<Pick<Payment, 'status'>>;
   dispute: Pick<Dispute, 'status' | 'reason' | 'outcome'> | null;
   review: Pick<Review, 'rating' | 'text' | 'createdAt'> | null;
@@ -46,7 +51,14 @@ export const SESSION_INCLUDE = {
       services: { where: { type: 'GAME' }, select: { venueLabel: true } },
     },
   },
-  video: { select: { id: true, title: true } },
+  videos: {
+    select: {
+      position: true,
+      note: true,
+      video: { select: { id: true, title: true, durationSeconds: true } },
+    },
+    orderBy: { position: 'asc' },
+  },
   // The escrow state: at most one payment ever leaves HELD, so one row is
   // the whole story; failed attempts stay out of it.
   payments: {
@@ -111,8 +123,7 @@ export function toSessionResponse(
       displayName: session.player.displayName,
       avatarUrl: avatar(session.player.avatarKey),
     },
-    videoId: session.video?.id ?? null,
-    videoTitle: session.video?.title ?? null,
+    videos: toSessionVideoItems(session.videos),
     venue: online ? null : (session.proProfile.services[0]?.venueLabel ?? null),
     room: hasRoom
       ? {
@@ -160,6 +171,19 @@ export function toSessionResponse(
     reviewable: session.review === null && isPaidOut(session),
     createdAt: session.createdAt.toISOString(),
   };
+}
+
+/** Clip rows (already ordered by position) → the party-facing shape. */
+export function toSessionVideoItems(
+  rows: SessionWithParties['videos'],
+): SessionVideoItem[] {
+  return rows.map((row) => ({
+    videoId: row.video.id,
+    title: row.video.title,
+    note: row.note,
+    durationSeconds: row.video.durationSeconds,
+    position: row.position,
+  }));
 }
 
 /**

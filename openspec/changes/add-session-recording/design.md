@@ -62,3 +62,7 @@ Rollback: set `RECORDING_MAX_CONCURRENT=0` (every recording cancels for capacity
 - Add-on rate: 15% is a placeholder; owner to confirm before launch.
 - Whether to show a coach's decline history to admins (moderation) — deferred.
 - Retention for the audio + timeline replay: same 90 days as composite recordings, or longer since it is small? MVP uses the same setting.
+
+## Coordination with add-multi-video-attachments (2026-09-12)
+
+Change 18 (`add-multi-video-attachments`) replaced `Session.videoId` with the `SessionVideo` join table, added `videoId` to `PlaybackState` and `Stroke`, and scoped the in-memory annotation state per clip (`AnnotationState` = video id → moment key → strokes). This change must therefore store `videoId` on `SessionPlaybackEvent` rows (index it together with `sessionId`), key any per-session in-memory state per clip, and give its review/replay UI a clip switcher mirroring the room's tabs. `SessionResponse.videos` / `SessionRoomResponse.videos` replace the former `videoId`/`videoTitle` fields.

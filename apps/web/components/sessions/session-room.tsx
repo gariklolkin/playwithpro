@@ -147,8 +147,7 @@ export function SessionRoom({
     );
   }
 
-  const withVideo =
-    room.serviceType === ServiceType.VideoAnalysis && room.videoId !== null;
+  const withVideo = room.serviceType === ServiceType.VideoAnalysis;
   const closed = room.room === null && windowClosed;
 
   return (
@@ -213,14 +212,19 @@ export function SessionRoom({
               />
             ) : null}
           </div>
-          {withVideo && room.videoId ? (
-            <RoomVideoPanel
-              sessionId={sessionId}
-              videoId={room.videoId}
-              videoTitle={room.videoTitle}
-              userId={userId}
-              role={role}
-            />
+          {withVideo ? (
+            room.videos.length > 0 ? (
+              <RoomVideoPanel
+                sessionId={sessionId}
+                videos={room.videos}
+                userId={userId}
+                role={role}
+              />
+            ) : (
+              <div className="rounded-card border border-border p-6 text-center text-sm text-text-secondary">
+                📹 {t("clips.removed")}
+              </div>
+            )
           ) : null}
         </div>
       )}

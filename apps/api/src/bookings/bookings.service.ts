@@ -22,7 +22,6 @@ import {
   ProProfileStatus,
   SessionStatus,
   SlotStatus,
-  VideoStatus,
 } from '@prisma/client';
 import { MIN_NOTICE_MS } from '../availability/availability.service';
 import type { AuthenticatedUser } from '../auth/auth-cookies';
@@ -39,10 +38,12 @@ import {
 import { toPrismaServiceType } from '../pros/pro-profile.mapper';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { UnattachedVideosService } from '../videos/unattached-videos.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { PaySessionDto } from './dto/pay-session.dto';
 import { isOnlineService } from './session-access';
 import { SessionProgressionService } from './session-progression.service';
+import { SessionVideosService, ValidatedClip } from './session-videos.service';
 import { SettlementService } from './settlement.service';
 import {
   SESSION_INCLUDE,
@@ -66,6 +67,8 @@ export class BookingsService {
     @Inject(CALENDAR_PROVIDER) private readonly calendar: CalendarProvider,
     private readonly progression: SessionProgressionService,
     private readonly settlement: SettlementService,
+    private readonly sessionVideos: SessionVideosService,
+    private readonly unattached: UnattachedVideosService,
   ) {}
 
   private readonly avatarUrlOf = (key: string): string =>
@@ -101,7 +104,7 @@ export class BookingsService {
     if (!service || !service.active) {
       throw new BadRequestException('The coach does not offer this service.');
     }
-    await this.validateVideoRules(playerId, dto);
+    const clips = await this.validateVideoRules(playerId, dto);
 
     const slot = await this.prisma.availabilitySlot.findUnique({
       where: { id: dto.slotId },
@@ -139,7 +142,7 @@ export class BookingsService {
           currency: service.currency,
           platformFeeMinor: computePlatformFee(service.priceMinor, feePercent),
           slotId: slot.id,
-          videoId: dto.videoId ?? null,
+          videos: { create: this.sessionVideos.rowsFor(clips) },
           startsAt: slot.startsAt,
           endsAt: slot.endsAt,
           expiresAt: new Date(Date.now() + ttlMinutes * MINUTE),
@@ -147,7 +150,19 @@ export class BookingsService {
         include: SESSION_INCLUDE,
       });
     });
+    // Attaching stops the retention clock on the clips.
+    await this.unattached.recompute(clips.map((clip) => clip.video.id));
     return toSessionResponse(session, this.avatarUrlOf);
+  }
+
+  /** Player-only replace of the clip set; see SessionVideosService. */
+  async updateVideos(
+    playerId: string,
+    sessionId: string,
+    inputs: CreateBookingDto['videos'] & object,
+  ): Promise<SessionResponse> {
+    await this.sessionVideos.replace(playerId, sessionId, inputs);
+    return this.sessionResponse(sessionId);
   }
 
   async list(user: AuthenticatedUser): Promise<SessionListResponse> {
@@ -422,6 +437,7 @@ export class BookingsService {
     this.logger.log(`Session ${session.id} cancelled by user ${user.id}`);
     await this.settlement.settle(session.id);
     await this.sendCancellationIfInvited(session.id);
+    await this.releaseAttachments(session.id);
     return this.sessionResponse(session.id);
   }
 
@@ -551,8 +567,23 @@ export class BookingsService {
     return expired;
   }
 
+  /** A cancelled session no longer protects its clips from the retention sweep. */
+  private async releaseAttachments(sessionId: string): Promise<void> {
+    const rows = await this.prisma.sessionVideo.findMany({
+      where: { sessionId },
+      select: { videoId: true },
+    });
+    await this.unattached.recompute(rows.map((row) => row.videoId));
+  }
+
   /** Cancels a PENDING_PAYMENT session and reopens its slot; false if it was not unpaid. */
   private async cancelUnpaidSession(sessionId: string): Promise<boolean> {
+    const cancelled = await this.cancelUnpaidSessionTx(sessionId);
+    if (cancelled) await this.releaseAttachments(sessionId);
+    return cancelled;
+  }
+
+  private async cancelUnpaidSessionTx(sessionId: string): Promise<boolean> {
     return this.prisma.$transaction(async (tx) => {
       const cancelled = await tx.session.updateMany({
         where: { id: sessionId, status: SessionStatus.PENDING_PAYMENT },
@@ -576,32 +607,20 @@ export class BookingsService {
     });
   }
 
+  /** Clips are required for video analysis and forbidden for anything else. */
   private async validateVideoRules(
     playerId: string,
     dto: CreateBookingDto,
-  ): Promise<void> {
+  ): Promise<ValidatedClip[]> {
     if (dto.serviceType !== SharedServiceType.VideoAnalysis) {
-      if (dto.videoId) {
+      if (dto.videos && dto.videos.length > 0) {
         throw new BadRequestException(
-          'Only video-analysis bookings carry a video.',
+          'Only video-analysis bookings carry clips.',
         );
       }
-      return;
+      return [];
     }
-    if (!dto.videoId) {
-      throw new BadRequestException(
-        'A video-analysis booking requires a video.',
-      );
-    }
-    const video = await this.prisma.video.findUnique({
-      where: { id: dto.videoId },
-    });
-    if (!video || video.ownerId !== playerId) {
-      throw new NotFoundException();
-    }
-    if (video.status !== VideoStatus.READY) {
-      throw new BadRequestException('The video is not ready yet.');
-    }
+    return this.sessionVideos.validate(playerId, dto.videos ?? []);
   }
 
   private partyFilter(user: AuthenticatedUser): Prisma.SessionWhereInput {

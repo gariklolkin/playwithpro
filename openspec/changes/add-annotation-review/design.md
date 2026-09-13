@@ -49,3 +49,7 @@ One Prisma migration adding `SessionAnnotation`; additive, no backfill (ephemera
 
 - Should the review link also appear on the video library page (all sessions that annotated this video)? Deferred; the session list is enough for MVP.
 - Retention beyond the session's life (e.g. purge with the video after N months) — decide together with recording retention in `add-session-recording`.
+
+## Coordination with add-multi-video-attachments (2026-09-12)
+
+Change 18 (`add-multi-video-attachments`) replaced `Session.videoId` with the `SessionVideo` join table, added `videoId` to `PlaybackState` and `Stroke`, and scoped the in-memory annotation state per clip (`AnnotationState` = video id → moment key → strokes). This change must therefore store `videoId` on `SessionAnnotation` rows (index it together with `sessionId`), key any per-session in-memory state per clip, and give its review/replay UI a clip switcher mirroring the room's tabs. `SessionResponse.videos` / `SessionRoomResponse.videos` replace the former `videoId`/`videoTitle` fields.

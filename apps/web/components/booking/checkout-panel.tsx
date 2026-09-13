@@ -172,11 +172,23 @@ export function CheckoutPanel({
               {tCatalog(`service.${session.serviceType}`)}
             </dd>
           </div>
-          {session.videoTitle ? (
+          {session.videos.length > 0 ? (
             <div className="flex justify-between gap-3">
-              <dt className="text-text-secondary">{t("video")}</dt>
-              <dd className="max-w-[60%] truncate font-medium text-text">
-                📹 {session.videoTitle}
+              <dt className="text-text-secondary">{t("videos")}</dt>
+              <dd className="max-w-[60%] font-medium text-text">
+                <ol className="space-y-0.5">
+                  {session.videos.map((clip) => (
+                    <li key={clip.videoId} className="truncate">
+                      📹 {clip.title}
+                      {clip.note ? (
+                        <span className="font-normal text-text-secondary">
+                          {" "}
+                          — {clip.note}
+                        </span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ol>
               </dd>
             </div>
           ) : null}

@@ -34,7 +34,13 @@ describe('SessionRoomsService.authorizePlaybackSync', () => {
     playerId: 'player-1',
     proProfile: { userId: 'coach-1', user: { displayName: 'Coach' } },
     player: { id: 'player-1', displayName: 'Player' },
-    video: { id: 'video-1', title: 'Match footage' },
+    videos: [
+      {
+        position: 0,
+        note: null,
+        video: { id: 'video-1', title: 'Match footage', durationSeconds: 60 },
+      },
+    ],
     serviceType: ServiceType.VIDEO_ANALYSIS,
     status: SessionStatus.IN_PROGRESS,
     roomSlug: 'slug',

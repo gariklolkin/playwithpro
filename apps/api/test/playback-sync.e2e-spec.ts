@@ -65,6 +65,10 @@ describe('Playback sync (e2e)', () => {
   let analysisSessionId: string;
   let futureSessionId: string;
   let consultationSessionId: string;
+  let clipA: string;
+  let clipB: string;
+  /** A ready video of the player that is not attached to the session. */
+  let unattachedClip: string;
 
   const sockets: Socket[] = [];
 
@@ -143,6 +147,22 @@ describe('Playback sync (e2e)', () => {
     });
 
     const profileId = coach.proProfile!.id;
+    const seedVideo = async (title: string) =>
+      (
+        await prisma.video.create({
+          data: {
+            ownerId: player.id,
+            title,
+            status: 'READY',
+            originalKey: `videos/${player.id}/${title}/original.mp4`,
+            durationSeconds: 60,
+          },
+        })
+      ).id;
+    clipA = await seedVideo('match');
+    clipB = await seedVideo('serve');
+    unattachedClip = await seedVideo('spare');
+
     async function seedSession(
       slug: string,
       serviceType: 'VIDEO_ANALYSIS' | 'CONSULTATION',
@@ -166,6 +186,16 @@ describe('Playback sync (e2e)', () => {
           startsAt,
           endsAt,
           roomSlug: slug,
+          ...(serviceType === 'VIDEO_ANALYSIS'
+            ? {
+                videos: {
+                  create: [
+                    { videoId: clipA, position: 0 },
+                    { videoId: clipB, position: 1, note: 'serve' },
+                  ],
+                },
+              }
+            : {}),
         },
       });
       return session.id;
@@ -194,9 +224,18 @@ describe('Playback sync (e2e)', () => {
     );
 
     const tokens = app.get(TokenService);
-    playerCookie = `access_token=${tokens.signAccessToken(player.id, Role.Amateur)}`;
-    coachCookie = `access_token=${tokens.signAccessToken(coach.id, Role.Professional)}`;
-    rivalCookie = `access_token=${tokens.signAccessToken(rival.id, Role.Amateur)}`;
+    playerCookie = `access_token=${tokens.signAccessToken(
+      player.id,
+      Role.Amateur,
+    )}`;
+    coachCookie = `access_token=${tokens.signAccessToken(
+      coach.id,
+      Role.Professional,
+    )}`;
+    rivalCookie = `access_token=${tokens.signAccessToken(
+      rival.id,
+      Role.Amateur,
+    )}`;
   }, 30_000);
 
   afterEach(() => {
@@ -223,12 +262,14 @@ describe('Playback sync (e2e)', () => {
     );
     const before = Date.now();
     playerSocket.emit(PLAYBACK_SYNC_EVENTS.publish, {
+      videoId: clipA,
       playing: true,
       positionSeconds: 134,
       rate: 0.5,
       emittedAtMs: 1, // must be replaced by the server stamp
     });
     const state = await received;
+    expect(state.videoId).toBe(clipA);
     expect(state.playing).toBe(true);
     expect(state.positionSeconds).toBe(134);
     expect(state.rate).toBe(0.5);
@@ -239,6 +280,7 @@ describe('Playback sync (e2e)', () => {
     const playerSocket = connect(playerCookie, analysisSessionId);
     await waitForEvent(playerSocket, 'connect');
     playerSocket.emit(PLAYBACK_SYNC_EVENTS.publish, {
+      videoId: clipB,
       playing: false,
       positionSeconds: 42,
       emittedAtMs: 1,
@@ -251,7 +293,41 @@ describe('Playback sync (e2e)', () => {
       late,
       PLAYBACK_SYNC_EVENTS.state,
     );
-    expect(replay).toMatchObject({ playing: false, positionSeconds: 42 });
+    // The late joiner lands on the shared clip.
+    expect(replay).toMatchObject({
+      videoId: clipB,
+      playing: false,
+      positionSeconds: 42,
+    });
+  });
+
+  it('relays a clip switch and ignores a clip that is not attached', async () => {
+    const playerSocket = connect(playerCookie, analysisSessionId);
+    const coachSocket = connect(coachCookie, analysisSessionId);
+    await Promise.all([
+      waitForEvent(playerSocket, 'connect'),
+      waitForEvent(coachSocket, 'connect'),
+    ]);
+    const received: PlaybackState[] = [];
+    playerSocket.on(PLAYBACK_SYNC_EVENTS.state, (s: PlaybackState) =>
+      received.push(s),
+    );
+    coachSocket.emit(PLAYBACK_SYNC_EVENTS.publish, {
+      videoId: unattachedClip,
+      playing: true,
+      positionSeconds: 3,
+    });
+    const switched = waitForEvent<PlaybackState>(
+      playerSocket,
+      PLAYBACK_SYNC_EVENTS.state,
+    );
+    coachSocket.emit(PLAYBACK_SYNC_EVENTS.publish, {
+      videoId: clipB,
+      playing: false,
+      positionSeconds: 0,
+    });
+    await switched;
+    expect(received.map((s) => s.videoId)).toEqual([clipB]);
   });
 
   it('rejects a third party', async () => {
@@ -285,8 +361,9 @@ describe('Playback sync (e2e)', () => {
   });
 
   describe('annotations', () => {
-    const lineStroke = (id: string, momentKey = '134.2') => ({
+    const lineStroke = (id: string, momentKey = '134.2', videoId = clipA) => ({
       id,
+      videoId,
       momentKey,
       tool: 'line',
       color: '#2563eb',
@@ -330,8 +407,12 @@ describe('Playback sync (e2e)', () => {
         playerSocket,
         ANNOTATION_EVENTS.removed,
       );
-      coachSocket.emit(ANNOTATION_EVENTS.undo, { momentKey: '134.2' });
+      coachSocket.emit(ANNOTATION_EVENTS.undo, {
+        videoId: clipA,
+        momentKey: '134.2',
+      });
       expect(await removed).toEqual({
+        videoId: clipA,
         momentKey: '134.2',
         strokeId: 'c0000000-0000-4000-8000-000000000001',
       });
@@ -340,11 +421,14 @@ describe('Playback sync (e2e)', () => {
         coachSocket,
         ANNOTATION_EVENTS.cleared,
       );
-      playerSocket.emit(ANNOTATION_EVENTS.clear, { momentKey: '134.2' });
-      expect(await cleared).toEqual({ momentKey: '134.2' });
+      playerSocket.emit(ANNOTATION_EVENTS.clear, {
+        videoId: clipA,
+        momentKey: '134.2',
+      });
+      expect(await cleared).toEqual({ videoId: clipA, momentKey: '134.2' });
     });
 
-    it('sends the current annotation state to a late joiner', async () => {
+    it('sends the current per-clip annotation state to a late joiner', async () => {
       const coachSocket = connect(coachCookie, analysisSessionId);
       await waitForEvent(coachSocket, 'connect');
       coachSocket.emit(
@@ -353,7 +437,16 @@ describe('Playback sync (e2e)', () => {
       );
       coachSocket.emit(
         ANNOTATION_EVENTS.add,
-        lineStroke('c0000000-0000-4000-8000-000000000012', '134.2'),
+        lineStroke('c0000000-0000-4000-8000-000000000012', '134.2', clipB),
+      );
+      // A stroke on an unattached clip is dropped, not stored.
+      coachSocket.emit(
+        ANNOTATION_EVENTS.add,
+        lineStroke(
+          'c0000000-0000-4000-8000-000000000013',
+          '1.0',
+          unattachedClip,
+        ),
       );
 
       const late = connect(playerCookie, analysisSessionId);
@@ -361,8 +454,12 @@ describe('Playback sync (e2e)', () => {
         late,
         ANNOTATION_EVENTS.state,
       );
-      expect(Object.keys(state).sort()).toEqual(['134.2', '34.0']);
-      expect(state['34.0'][0].id).toBe('c0000000-0000-4000-8000-000000000011');
+      expect(Object.keys(state).sort()).toEqual([clipA, clipB].sort());
+      expect(Object.keys(state[clipA])).toEqual(['34.0']);
+      expect(state[clipA]['34.0'][0].id).toBe(
+        'c0000000-0000-4000-8000-000000000011',
+      );
+      expect(Object.keys(state[clipB])).toEqual(['134.2']);
     });
 
     it('ignores an oversized stroke', async () => {

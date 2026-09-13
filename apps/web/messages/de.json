@@ -509,6 +509,21 @@
       "loadFailed": "Das Video konnte nicht geladen werden. Lade die Seite neu und versuche es erneut.",
       "downloadHint": "Für die Bild-für-Bild-Analyse lade die unveränderte Originaldatei herunter.",
       "downloadOriginal": "Original herunterladen"
+    },
+    "quota": {
+      "title": "Speicherplatz der Bibliothek",
+      "usage": "{used} von {max} · {count} von {maxVideos} Videos",
+      "expires": "Wird am {date} gelöscht, sofern es keiner Sitzung angehängt wird",
+      "deleteConfirmAttached": "„{title}“ löschen? Es ist an {count, plural, one {# bevorstehende Sitzung} other {# bevorstehende Sitzungen}} angehängt. Das lässt sich nicht rückgängig machen.",
+      "refusal": {
+        "library_full_bytes": "Nicht genug Platz in deiner Bibliothek: {remaining} frei. Lösche ein Video, um Platz zu schaffen.",
+        "library_full_count": "Deine Bibliothek enthält bereits das Maximum von {max} Videos. Lösche eines, um Platz zu schaffen."
+      }
+    },
+    "limits": {
+      "file": "Bis zu {size} und {duration} pro Datei",
+      "session": "Bis zu {clips} Clips und {duration} insgesamt pro Sitzung",
+      "tooLarge": "Diese Datei ist größer als das Limit von {size}."
     }
   },
   "catalog": {
@@ -569,9 +584,7 @@
       "chooseSlot": "2. Zeit wählen",
       "yourTime": "(deine Zeit)",
       "noSlots": "Dieser Trainer hat aktuell keine freien Termine. Schau später wieder vorbei.",
-      "attachVideo": "3. Spielvideo anhängen",
-      "noVideos": "Noch keine fertigen Videos in deiner Bibliothek.",
-      "uploadCta": "Video hochladen",
+      "attachVideo": "3. Clips anhängen",
       "price": "Preis (1 Stunde)",
       "escrowNotice": "Deine Zahlung wird treuhänderisch verwahrt und erst nach Bestätigung der Session an den Trainer ausgezahlt.",
       "bookCta": "Buchen & zur Zahlung",
@@ -594,7 +607,7 @@
     "orderSummary": "Bestellübersicht",
     "coach": "Trainer",
     "service": "Leistung",
-    "video": "Video",
+    "videos": "Clips",
     "dateTime": "Datum & Uhrzeit",
     "yourTime": "(deine Zeit)",
     "total": "Gesamt",
@@ -732,6 +745,10 @@
       "speed": {
         "label": "Tempo",
         "value": "{rate}×"
+      },
+      "clips": {
+        "label": "Clips",
+        "removed": "Die Clips dieser Sitzung wurden aus der Bibliothek gelöscht. Der Spieler kann bis zum Beginn der Sitzung neue anhängen."
       }
     },
     "actions": {
@@ -767,6 +784,15 @@
       "error": "Etwas ist schiefgelaufen. Versuchen Sie es erneut.",
       "givenLabel": "Deine Bewertung",
       "receivedLabel": "Bewertung des Spielers"
+    },
+    "videos": {
+      "title": "Clips für diese Sitzung",
+      "edit": "Clips bearbeiten",
+      "removed": "Die Clips dieser Sitzung wurden aus der Bibliothek gelöscht.",
+      "save": "Clips speichern",
+      "cancel": "Abbrechen",
+      "saveFailed": "Die Clips konnten nicht gespeichert werden. Bitte versuche es erneut.",
+      "locked": "Die Clips dieser Sitzung können nicht mehr geändert werden."
     }
   },
   "adminDisputes": {
@@ -908,6 +934,26 @@
         "next": "Weiter",
         "pageOf": "Seite {page} von {total}"
       }
+    }
+  },
+  "clips": {
+    "meter": {
+      "clips": "{count} von {max} Clips",
+      "duration": "{used} von {max} insgesamt"
+    },
+    "noVideos": "Noch keine fertigen Videos in deiner Bibliothek.",
+    "uploadCta": "Video hochladen",
+    "notePlaceholder": "Hinweis für den Coach, z. B. „Aufschlag“ oder „Vorhand-Topspin“",
+    "noteLabel": "Hinweis zu {title}",
+    "moveUp": "{title} nach oben",
+    "moveDown": "{title} nach unten",
+    "capReached": "Limit erreicht: höchstens {max} Clips pro Sitzung.",
+    "errors": {
+      "empty": "Hänge mindestens einen Clip an.",
+      "duplicate": "Derselbe Clip ist zweimal aufgeführt.",
+      "not_ready": "Einer der Clips ist noch nicht fertig.",
+      "too_many_clips": "Höchstens {max} Clips pro Sitzung (du hast {count} ausgewählt).",
+      "too_long": "Die Clips dürfen zusammen höchstens {max} lang sein; deine sind {total}."
     }
   }
 }

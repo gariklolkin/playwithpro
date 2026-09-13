@@ -108,6 +108,36 @@ class EnvironmentVariables {
   @Min(1)
   VIDEO_MAX_DURATION_MIN = 30;
 
+  /** Clips a video-analysis session may carry. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  SESSION_VIDEO_MAX_COUNT = 5;
+
+  /** Total duration of a session's clips; independent of the session length. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  SESSION_VIDEO_MAX_TOTAL_MIN = 60;
+
+  /** Per-account library quota: total stored size. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  LIBRARY_MAX_TOTAL_GB = 10;
+
+  /** Per-account library quota: number of non-rejected videos. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  LIBRARY_MAX_VIDEOS = 20;
+
+  /** Days a ready video may stay unattached to any live session before the sweep deletes it. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  VIDEO_UNATTACHED_RETENTION_DAYS = 90;
+
   /** Coach-side fee percentage withheld from the payout at release. */
   @Type(() => Number)
   @IsInt()

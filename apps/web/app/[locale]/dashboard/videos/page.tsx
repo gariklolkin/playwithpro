@@ -41,7 +41,10 @@ export default async function VideosPage() {
           ⬆️ {t("uploadCta")}
         </Link>
       </header>
-      <VideosLibrary initialVideos={library?.videos ?? []} />
+      <VideosLibrary
+        initialVideos={library?.videos ?? []}
+        initialLimits={library?.limits ?? null}
+      />
     </div>
   );
 }

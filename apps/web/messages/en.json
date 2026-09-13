@@ -509,6 +509,21 @@
       "loadFailed": "Could not load the video. Refresh the page to try again.",
       "downloadHint": "For frame-by-frame analysis, download the untouched original file.",
       "downloadOriginal": "Download original"
+    },
+    "quota": {
+      "title": "Library space",
+      "usage": "{used} of {max} · {count} of {maxVideos} videos",
+      "expires": "Deleted on {date} unless attached to a session",
+      "deleteConfirmAttached": "Delete “{title}”? It is attached to {count, plural, one {# upcoming session} other {# upcoming sessions}}. This cannot be undone.",
+      "refusal": {
+        "library_full_bytes": "Not enough space in your library: {remaining} left. Delete a video to make room.",
+        "library_full_count": "Your library already holds the maximum of {max} videos. Delete one to make room."
+      }
+    },
+    "limits": {
+      "file": "Up to {size} and {duration} per file",
+      "session": "Up to {clips} clips and {duration} in total per session",
+      "tooLarge": "This file is larger than the {size} limit."
     }
   },
   "catalog": {
@@ -569,9 +584,7 @@
       "chooseSlot": "2. Pick a time",
       "yourTime": "(your time)",
       "noSlots": "This coach has no open slots at the moment. Check back later.",
-      "attachVideo": "3. Attach your game footage",
-      "noVideos": "No ready videos in your library yet.",
-      "uploadCta": "Upload a video",
+      "attachVideo": "3. Attach your clips",
       "price": "Price (1 hour)",
       "escrowNotice": "Your payment is held in escrow and released to the coach only after the session is confirmed.",
       "bookCta": "Book & continue to payment",
@@ -594,7 +607,7 @@
     "orderSummary": "Order summary",
     "coach": "Coach",
     "service": "Service",
-    "video": "Video",
+    "videos": "Clips",
     "dateTime": "Date & time",
     "yourTime": "(your time)",
     "total": "Total",
@@ -732,6 +745,10 @@
       "speed": {
         "label": "Speed",
         "value": "{rate}×"
+      },
+      "clips": {
+        "label": "Clips",
+        "removed": "The clips of this session were removed from the library. The player can attach new ones until the session starts."
       }
     },
     "actions": {
@@ -767,6 +784,15 @@
       "error": "Something went wrong. Try again.",
       "givenLabel": "Your review",
       "receivedLabel": "Player's review"
+    },
+    "videos": {
+      "title": "Clips for this session",
+      "edit": "Edit clips",
+      "removed": "The clips of this session were removed from the library.",
+      "save": "Save clips",
+      "cancel": "Cancel",
+      "saveFailed": "Could not save the clips. Please try again.",
+      "locked": "The clips of this session can no longer be changed."
     }
   },
   "adminDisputes": {
@@ -908,6 +934,26 @@
         "next": "Next",
         "pageOf": "Page {page} of {total}"
       }
+    }
+  },
+  "clips": {
+    "meter": {
+      "clips": "{count} of {max} clips",
+      "duration": "{used} of {max} in total"
+    },
+    "noVideos": "No ready videos in your library yet.",
+    "uploadCta": "Upload a video",
+    "notePlaceholder": "Note for the coach, e.g. “serve” or “forehand loop”",
+    "noteLabel": "Note for {title}",
+    "moveUp": "Move {title} up",
+    "moveDown": "Move {title} down",
+    "capReached": "Clip limit reached: at most {max} clips per session.",
+    "errors": {
+      "empty": "Attach at least one clip.",
+      "duplicate": "The same clip is listed twice.",
+      "not_ready": "One of the clips is not ready yet.",
+      "too_many_clips": "At most {max} clips per session (you selected {count}).",
+      "too_long": "Clips may total at most {max}; yours total {total}."
     }
   }
 }

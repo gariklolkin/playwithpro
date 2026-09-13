@@ -21,6 +21,8 @@ export interface PlaybackSyncHandshake {
 
 /** Full snapshot of the shared player state. */
 export interface PlaybackState {
+  /** The attached clip both parties are on; switching clips is a new snapshot. */
+  videoId: string;
   playing: boolean;
   positionSeconds: number;
   /** Playback rate (1 = normal); shared so slow motion stays in sync. */
@@ -62,6 +64,8 @@ export interface AnnotationPoint {
 export interface Stroke {
   /** Client-minted UUID; the server ignores duplicates. */
   id: string;
+  /** Attached clip the stroke was drawn on; must be in the session's set. */
+  videoId: string;
   /** Video moment the stroke belongs to — see `momentKeyOf`. */
   momentKey: string;
   /** Set by the server from the sending socket's user; client values ignored. */
@@ -77,8 +81,11 @@ export interface Stroke {
   createdAtMs: number;
 }
 
-/** All annotations of a session: moment key → strokes in arrival order. */
-export type AnnotationState = Record<string, Stroke[]>;
+/** Annotations of one clip: moment key → strokes in arrival order. */
+export type ClipAnnotationState = Record<string, Stroke[]>;
+
+/** All annotations of a session: video id → clip state. */
+export type AnnotationState = Record<string, ClipAnnotationState>;
 
 export const ANNOTATION_EVENTS = {
   /** client → server: a complete stroke to store and relay. */
@@ -100,27 +107,31 @@ export const ANNOTATION_EVENTS = {
 } as const;
 
 export interface AnnotationUndoPayload {
+  videoId: string;
   momentKey: string;
 }
 
 export interface AnnotationClearPayload {
+  videoId: string;
   momentKey: string;
 }
 
 export interface AnnotationRemovedPayload {
+  videoId: string;
   momentKey: string;
   strokeId: string;
 }
 
 export interface AnnotationClearedPayload {
+  videoId: string;
   momentKey: string;
 }
 
-/** Server-enforced caps; messages beyond them are dropped silently. */
+/** Server-enforced caps (per clip); messages beyond them are dropped silently. */
 export const ANNOTATION_LIMITS = {
   pointsPerStroke: 200,
   strokesPerMoment: 100,
-  momentsPerSession: 50,
+  momentsPerClip: 50,
   /** Length cap on the moment key and color strings. */
   maxKeyLength: 16,
 } as const;

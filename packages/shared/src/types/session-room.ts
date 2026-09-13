@@ -1,5 +1,6 @@
 import type { ServiceType } from "../enums/service-type";
 import type { SessionStatus } from "../enums/session-status";
+import type { SessionVideoItem } from "./booking";
 
 /**
  * Vendor-tagged descriptor of where the call lives. Carries no capability:
@@ -29,9 +30,8 @@ export interface SessionRoomResponse {
   closesAt: string;
   /** Null outside the join window — the page shows a countdown/closed state. */
   room: RoomDescriptor | null;
-  /** Attached video (video_analysis only), playable via the signed playback URL. */
-  videoId: string | null;
-  videoTitle: string | null;
+  /** Attached clips in order (video_analysis only), each playable via its signed playback URL. */
+  videos: SessionVideoItem[];
   /** Localized display name of the other party. */
   counterpartName: string;
 }

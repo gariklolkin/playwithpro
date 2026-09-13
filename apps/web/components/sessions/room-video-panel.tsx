@@ -9,6 +9,7 @@ import {
   momentSecondsOf,
   type AnnotationPoint,
   type AnnotationTool,
+  type SessionVideoItem,
   type VideoUrlResponse,
 } from "@playwithpro/shared";
 import { useTranslations } from "next-intl";
@@ -20,7 +21,7 @@ import {
 import { AnnotationToolbar } from "@/components/sessions/annotation-toolbar";
 import { formatMoment } from "@/lib/annotation-geometry";
 import { apiFetch } from "@/lib/api";
-import { useAnnotations } from "@/lib/use-annotations";
+import { clipAnnotations, useAnnotations } from "@/lib/use-annotations";
 import { useSyncedPlayback } from "@/lib/use-synced-playback";
 
 interface PlayerPosition {
@@ -43,31 +44,51 @@ function nearestMoment(keys: string[], timeSeconds: number): string | null {
 }
 
 /**
- * The attached video next to the call in video-analysis rooms. Plays over a
- * short-lived pre-signed URL; the API admits both the owner and the session
- * coach. Playback state is shared between the parties over the sync channel,
- * with a per-user toggle to detach and scrub privately. An annotation layer
- * over the paused frame lets both parties draw for each other in real time.
+ * The attached clips next to the call in video-analysis rooms: a tab per
+ * clip and a player for the active one, over short-lived pre-signed URLs
+ * (the API admits both the owner and the session coach). Playback state —
+ * including which clip is active — is shared between the parties over the
+ * sync channel, with a per-user toggle to detach and browse privately. An
+ * annotation layer over the paused frame lets both parties draw for each
+ * other in real time; strokes belong to the clip they were drawn on.
  */
 export function RoomVideoPanel({
   sessionId,
-  videoId,
-  videoTitle,
+  videos,
   userId,
   role,
 }: {
   sessionId: string;
-  videoId: string;
-  videoTitle: string | null;
+  /** The session's clips in order; at least one. */
+  videos: SessionVideoItem[];
   userId: string;
   role: Role;
 }) {
   const t = useTranslations("sessions.room");
-  const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
-  const [failed, setFailed] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(
+    videos[0]?.videoId ?? null,
+  );
+  const active = videos.find((clip) => clip.videoId === activeId) ?? null;
+  /** Signed URLs per clip, so switching back does not re-request. */
+  const [urls, setUrls] = useState<Record<string, string>>({});
+  const [failedIds, setFailedIds] = useState<Record<string, true>>({});
+  const playbackUrl = activeId ? (urls[activeId] ?? null) : null;
+  const failed = activeId ? failedIds[activeId] === true : false;
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const sync = useSyncedPlayback(sessionId, videoRef);
+  const onRemoteClip = useCallback(
+    (videoId: string) => {
+      if (videos.some((clip) => clip.videoId === videoId)) {
+        setActiveId(videoId);
+      }
+    },
+    [videos],
+  );
+  const sync = useSyncedPlayback(sessionId, videoRef, {
+    videoId: activeId,
+    onRemoteClip,
+  });
   const annotations = useAnnotations(sync.socket, userId);
+  const clipState = clipAnnotations(annotations.state, activeId);
   /** Mirrors the element's playbackRate for the speed control (any source). */
   const [rate, setRate] = useState(1);
   const applyRate = (next: number) => {
@@ -90,22 +111,28 @@ export function RoomVideoPanel({
   });
 
   useEffect(() => {
+    if (!activeId || urls[activeId] || failedIds[activeId]) return;
     let cancelled = false;
-    void apiFetch(`/videos/${videoId}/playback-url`).then(
+    const fail = () =>
+      setFailedIds((prev) => ({ ...prev, [activeId]: true as const }));
+    void apiFetch(`/videos/${activeId}/playback-url`).then(
       async (response) => {
         if (cancelled) return;
         if (!response.ok) {
-          setFailed(true);
+          fail();
           return;
         }
-        setPlaybackUrl(((await response.json()) as VideoUrlResponse).url);
+        const { url } = (await response.json()) as VideoUrlResponse;
+        if (!cancelled) setUrls((prev) => ({ ...prev, [activeId]: url }));
       },
-      () => setFailed(true),
+      () => {
+        if (!cancelled) fail();
+      },
     );
     return () => {
       cancelled = true;
     };
-  }, [videoId]);
+  }, [activeId, urls, failedIds]);
 
   const readPosition = useCallback(() => {
     const video = videoRef.current;
@@ -128,17 +155,17 @@ export function RoomVideoPanel({
 
   const momentKeys = useMemo(
     () =>
-      Object.keys(annotations.state).sort(
+      Object.keys(clipState).sort(
         (a, b) => momentSecondsOf(a) - momentSecondsOf(b),
       ),
-    [annotations.state],
+    [clipState],
   );
   const shownMoment = position.paused
     ? nearestMoment(momentKeys, position.timeSeconds)
     : null;
   /** Where a new stroke goes: the moment on screen, else the exact frame. */
   const targetMoment = shownMoment ?? momentKeyOf(position.timeSeconds);
-  const shownStrokes = shownMoment ? annotations.state[shownMoment] : [];
+  const shownStrokes = shownMoment ? (clipState[shownMoment] ?? []) : [];
   const canUndo = shownStrokes.some((s) => s.authorId === userId);
 
   const activateTool = (next: LayerTool) => {
@@ -155,7 +182,16 @@ export function RoomVideoPanel({
     strokeTool: AnnotationTool,
     points: AnnotationPoint[],
   ) => {
-    annotations.add(targetMoment, strokeTool, color, points);
+    if (!activeId) return;
+    annotations.add(activeId, targetMoment, strokeTool, color, points);
+  };
+
+  /** A local tab click; the sync hook publishes the switch for the peer. */
+  const selectClip = (videoId: string) => {
+    if (videoId === activeId) return;
+    setTool("select");
+    setPosition({ paused: true, timeSeconds: 0 });
+    setActiveId(videoId);
   };
 
   const seekToMoment = (key: string) => {
@@ -168,10 +204,41 @@ export function RoomVideoPanel({
 
   return (
     <div>
+      {videos.length > 1 ? (
+        <div
+          role="tablist"
+          aria-label={t("clips.label")}
+          className="mb-2 flex gap-1 overflow-x-auto pb-1"
+        >
+          {videos.map((clip, index) => (
+            <button
+              key={clip.videoId}
+              type="button"
+              role="tab"
+              aria-selected={clip.videoId === activeId}
+              onClick={() => selectClip(clip.videoId)}
+              className={`shrink-0 max-w-[200px] truncate rounded-md border px-2.5 py-1 text-[13px] transition-colors ${
+                clip.videoId === activeId
+                  ? "border-text bg-text text-white"
+                  : "border-border-strong text-text hover:bg-bg-hover"
+              }`}
+            >
+              {index + 1}. {clip.title}
+            </button>
+          ))}
+        </div>
+      ) : null}
       <div className="mb-2 flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-text">
           📹{" "}
-          <span className="truncate">{videoTitle ?? t("videoPanelTitle")}</span>
+          <span className="truncate">
+            {active?.title ?? t("videoPanelTitle")}
+          </span>
+          {active?.note ? (
+            <span className="truncate text-[13px] font-normal text-text-secondary">
+              — {active.note}
+            </span>
+          ) : null}
         </div>
         <button
           type="button"
@@ -195,6 +262,7 @@ export function RoomVideoPanel({
         ) : playbackUrl ? (
           <>
             <video
+              key={activeId ?? "none"}
               ref={videoRef}
               src={playbackUrl}
               controls
@@ -216,7 +284,10 @@ export function RoomVideoPanel({
                 sync.onRateChange();
               }}
               onTimeUpdate={readPosition}
-              onLoadedMetadata={readPosition}
+              onLoadedMetadata={() => {
+                readPosition();
+                sync.onSourceReady();
+              }}
               className="block max-h-[520px] w-full"
             />
             <AnnotationLayer
@@ -282,8 +353,14 @@ export function RoomVideoPanel({
             color={color}
             defaultColor={defaultColor}
             onColorChange={setColor}
-            onUndo={() => shownMoment && annotations.undo(shownMoment)}
-            onClear={() => shownMoment && annotations.clear(shownMoment)}
+            onUndo={() =>
+              activeId && shownMoment && annotations.undo(activeId, shownMoment)
+            }
+            onClear={() =>
+              activeId &&
+              shownMoment &&
+              annotations.clear(activeId, shownMoment)
+            }
             canUndo={canUndo}
             canClear={shownStrokes.length > 0}
           />

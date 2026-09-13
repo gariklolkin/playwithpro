@@ -509,6 +509,21 @@
       "loadFailed": "无法加载视频。请刷新页面重试。",
       "downloadHint": "如需逐帧分析，请下载未经处理的原始文件。",
       "downloadOriginal": "下载原始文件"
+    },
+    "quota": {
+      "title": "视频库空间",
+      "usage": "已用 {used} / {max} · {count} / {maxVideos} 个视频",
+      "expires": "若未附加到课程，将于 {date} 删除",
+      "deleteConfirmAttached": "删除“{title}”？它已附加到 {count, plural, one {# 次即将进行的课程} other {# 次即将进行的课程}}。此操作无法撤销。",
+      "refusal": {
+        "library_full_bytes": "视频库空间不足：仅剩 {remaining}。请删除视频以腾出空间。",
+        "library_full_count": "视频库已达上限 {max} 个视频。请删除一个以腾出空间。"
+      }
+    },
+    "limits": {
+      "file": "单个文件最大 {size}、时长 {duration}",
+      "session": "每次课程最多 {clips} 个片段、总时长 {duration}",
+      "tooLarge": "此文件超过 {size} 的限制。"
     }
   },
   "catalog": {
@@ -569,9 +584,7 @@
       "chooseSlot": "2. 选择时间",
       "yourTime": "（你的时间）",
       "noSlots": "该教练目前没有空闲时段，请稍后再来看看。",
-      "attachVideo": "3. 附上你的比赛视频",
-      "noVideos": "你的视频库中还没有可用的视频。",
-      "uploadCta": "上传视频",
+      "attachVideo": "3. 附上你的片段",
       "price": "价格（1 小时）",
       "escrowNotice": "你的付款将由平台托管，课程确认后才会转给教练。",
       "bookCta": "预约并前往支付",
@@ -594,7 +607,7 @@
     "orderSummary": "订单摘要",
     "coach": "教练",
     "service": "服务",
-    "video": "视频",
+    "videos": "片段",
     "dateTime": "日期与时间",
     "yourTime": "（你的时间）",
     "total": "合计",
@@ -732,6 +745,10 @@
       "speed": {
         "label": "速度",
         "value": "{rate}×"
+      },
+      "clips": {
+        "label": "片段",
+        "removed": "本次课程的片段已从视频库中删除。球员可在课程开始前重新附上片段。"
       }
     },
     "actions": {
@@ -767,6 +784,15 @@
       "error": "出错了，请重试。",
       "givenLabel": "您的评价",
       "receivedLabel": "球员的评价"
+    },
+    "videos": {
+      "title": "本次课程的片段",
+      "edit": "编辑片段",
+      "removed": "本次课程的片段已从视频库中删除。",
+      "save": "保存片段",
+      "cancel": "取消",
+      "saveFailed": "无法保存片段，请重试。",
+      "locked": "本次课程的片段已无法更改。"
     }
   },
   "adminDisputes": {
@@ -908,6 +934,26 @@
         "next": "下一页",
         "pageOf": "第 {page} 页，共 {total} 页"
       }
+    }
+  },
+  "clips": {
+    "meter": {
+      "clips": "已选 {count} / {max} 个片段",
+      "duration": "总时长 {used} / {max}"
+    },
+    "noVideos": "你的视频库中还没有可用的视频。",
+    "uploadCta": "上传视频",
+    "notePlaceholder": "给教练的备注，例如“发球”或“正手弧圈”",
+    "noteLabel": "{title} 的备注",
+    "moveUp": "上移 {title}",
+    "moveDown": "下移 {title}",
+    "capReached": "已达上限：每次课程最多 {max} 个片段。",
+    "errors": {
+      "empty": "请至少附上一个片段。",
+      "duplicate": "同一个片段被列出了两次。",
+      "not_ready": "有一个片段尚未处理完成。",
+      "too_many_clips": "每次课程最多 {max} 个片段（你选择了 {count} 个）。",
+      "too_long": "片段总时长不能超过 {max}；你的总时长为 {total}。"
     }
   }
 }

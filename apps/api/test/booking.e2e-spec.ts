@@ -10,6 +10,7 @@ import {
   Role,
   SessionListResponse,
   SessionResponse,
+  VideoResponse,
 } from '@playwithpro/shared';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
@@ -174,9 +175,18 @@ describe('Booking & escrow (e2e)', () => {
     videoId = video.id;
 
     const tokens = app.get(TokenService);
-    playerCookie = `access_token=${tokens.signAccessToken(playerId, Role.Amateur)}`;
-    rivalCookie = `access_token=${tokens.signAccessToken(rivalId, Role.Amateur)}`;
-    coachCookie = `access_token=${tokens.signAccessToken(coachId, Role.Professional)}`;
+    playerCookie = `access_token=${tokens.signAccessToken(
+      playerId,
+      Role.Amateur,
+    )}`;
+    rivalCookie = `access_token=${tokens.signAccessToken(
+      rivalId,
+      Role.Amateur,
+    )}`;
+    coachCookie = `access_token=${tokens.signAccessToken(
+      coachId,
+      Role.Professional,
+    )}`;
   }, 30_000);
 
   afterAll(async () => {
@@ -432,7 +442,23 @@ describe('Booking & escrow (e2e)', () => {
   describe('video attachment and coach access', () => {
     let sessionId: string;
 
-    it('rejects a foreign video and a missing video', async () => {
+    let secondVideoId: string;
+
+    beforeAll(async () => {
+      const second = await prisma.video.create({
+        data: {
+          ownerId: playerId,
+          title: 'serve drill',
+          status: 'READY',
+          originalKey: `videos/${playerId}/v2/original.mp4`,
+          playbackKey: `videos/${playerId}/v2/original.mp4`,
+          durationSeconds: 45,
+        },
+      });
+      secondVideoId = second.id;
+    });
+
+    it('rejects a foreign clip, a missing set, a duplicate, and the legacy videoId field', async () => {
       const foreign = await prisma.video.create({
         data: {
           ownerId: rivalId,
@@ -441,6 +467,22 @@ describe('Booking & escrow (e2e)', () => {
           originalKey: 'videos/x/original.mp4',
         },
       });
+      const booking = (videos: unknown) =>
+        request(server())
+          .post('/bookings')
+          .set('Cookie', playerCookie)
+          .send({
+            proId: coachProfileId,
+            serviceType: 'video_analysis',
+            slotId: slotIds[3],
+            ...(videos === undefined ? {} : { videos }),
+          });
+      await booking([{ videoId: foreign.id }]).expect(404);
+      const empty = await booking(undefined).expect(400);
+      expect(empty.body.reason).toBe('empty');
+      const duplicate = await booking([{ videoId }, { videoId }]).expect(400);
+      expect(duplicate.body.reason).toBe('duplicate');
+      // The pre-change contract is not silently honored.
       await request(server())
         .post('/bookings')
         .set('Cookie', playerCookie)
@@ -448,19 +490,43 @@ describe('Booking & escrow (e2e)', () => {
           proId: coachProfileId,
           serviceType: 'video_analysis',
           slotId: slotIds[3],
-          videoId: foreign.id,
-        })
-        .expect(404);
-
-      await request(server())
-        .post('/bookings')
-        .set('Cookie', playerCookie)
-        .send({
-          proId: coachProfileId,
-          serviceType: 'video_analysis',
-          slotId: slotIds[3],
+          videoId,
         })
         .expect(400);
+    });
+
+    it('rejects a set over the clip-count cap naming the cap', async () => {
+      const extra = await Promise.all(
+        Array.from({ length: 5 }, (_, i) =>
+          prisma.video.create({
+            data: {
+              ownerId: playerId,
+              title: `drill ${i}`,
+              status: 'READY',
+              originalKey: `videos/${playerId}/x${i}/original.mp4`,
+              durationSeconds: 10,
+            },
+          }),
+        ),
+      );
+      const res = await request(server())
+        .post('/bookings')
+        .set('Cookie', playerCookie)
+        .send({
+          proId: coachProfileId,
+          serviceType: 'video_analysis',
+          slotId: slotIds[3],
+          videos: [{ videoId }, ...extra.map((v) => ({ videoId: v.id }))],
+        })
+        .expect(400);
+      expect(res.body).toMatchObject({
+        reason: 'too_many_clips',
+        max: 5,
+        count: 6,
+      });
+      await prisma.video.deleteMany({
+        where: { id: { in: extra.map((v) => v.id) } },
+      });
     });
 
     it('denies the coach before payment and grants viewing after', async () => {
@@ -471,10 +537,31 @@ describe('Booking & escrow (e2e)', () => {
           proId: coachProfileId,
           serviceType: 'video_analysis',
           slotId: slotIds[3],
-          videoId,
+          videos: [{ videoId, note: ' match ' }, { videoId: secondVideoId }],
         })
         .expect(200);
-      sessionId = (res.body as SessionResponse).id;
+      const created = res.body as SessionResponse;
+      sessionId = created.id;
+      expect(created.videos).toEqual([
+        expect.objectContaining({
+          videoId,
+          title: 'my technique',
+          note: 'match',
+          durationSeconds: 60,
+          position: 0,
+        }),
+        expect.objectContaining({
+          videoId: secondVideoId,
+          note: null,
+          position: 1,
+        }),
+      ]);
+      // Attaching stops the retention clock on both clips.
+      const clocks = await prisma.video.findMany({
+        where: { id: { in: [videoId, secondVideoId] } },
+        select: { unattachedSince: true },
+      });
+      expect(clocks.every((v) => v.unattachedSince === null)).toBe(true);
 
       // Unpaid session grants nothing.
       await request(server())
@@ -497,6 +584,116 @@ describe('Booking & escrow (e2e)', () => {
         .get(`/videos/${videoId}/playback-url`)
         .set('Cookie', coachCookie)
         .expect(200);
+      // Every clip of the set, not only the first.
+      await request(server())
+        .get(`/videos/${secondVideoId}/playback-url`)
+        .set('Cookie', coachCookie)
+        .expect(200);
+    });
+
+    it('lets the player replace the set until start; the coach sees it and loses access to removed clips', async () => {
+      await request(server())
+        .put(`/sessions/${sessionId}/videos`)
+        .set('Cookie', coachCookie)
+        .send({ videos: [{ videoId }] })
+        .expect(403);
+
+      const res = await request(server())
+        .put(`/sessions/${sessionId}/videos`)
+        .set('Cookie', playerCookie)
+        .send({ videos: [{ videoId: secondVideoId, note: 'serve' }] })
+        .expect(200);
+      expect((res.body as SessionResponse).videos).toEqual([
+        expect.objectContaining({ videoId: secondVideoId, note: 'serve' }),
+      ]);
+
+      const coachList = await request(server())
+        .get('/sessions')
+        .set('Cookie', coachCookie)
+        .expect(200);
+      const seen = (coachList.body as SessionListResponse).upcoming.find(
+        (s) => s.id === sessionId,
+      );
+      expect(seen?.videos.map((v) => v.videoId)).toEqual([secondVideoId]);
+
+      await request(server())
+        .get(`/videos/${videoId}/playback-url`)
+        .set('Cookie', coachCookie)
+        .expect(404);
+      // The removed clip's retention clock starts; the kept one stays clear.
+      const removed = await prisma.video.findUniqueOrThrow({
+        where: { id: videoId },
+      });
+      expect(removed.unattachedSince).not.toBeNull();
+      const kept = await prisma.video.findUniqueOrThrow({
+        where: { id: secondVideoId },
+      });
+      expect(kept.unattachedSince).toBeNull();
+
+      // Put it back for the remaining tests.
+      await request(server())
+        .put(`/sessions/${sessionId}/videos`)
+        .set('Cookie', playerCookie)
+        .send({ videos: [{ videoId }, { videoId: secondVideoId }] })
+        .expect(200);
+    });
+
+    it('rejects a replace once the session has started', async () => {
+      await prisma.session.update({
+        where: { id: sessionId },
+        data: { startsAt: new Date(Date.now() - 60_000) },
+      });
+      await request(server())
+        .put(`/sessions/${sessionId}/videos`)
+        .set('Cookie', playerCookie)
+        .send({ videos: [{ videoId }] })
+        .expect(409);
+      await prisma.session.update({
+        where: { id: sessionId },
+        data: { startsAt: new Date(Date.now() + 4 * HOUR) },
+      });
+    });
+
+    it('shows the library limits, usage, and attachment counts to the owner', async () => {
+      const res = await request(server())
+        .get('/videos')
+        .set('Cookie', playerCookie)
+        .expect(200);
+      expect(res.body.limits).toMatchObject({
+        file: { maxSizeBytes: 2048 * 1024 * 1024 },
+        session: { maxClips: 5, maxTotalSeconds: 3600 },
+        library: { maxVideos: 20 },
+      });
+      const mine = (res.body.videos as VideoResponse[]).find(
+        (v) => v.id === videoId,
+      );
+      expect(mine?.attachedUpcomingSessions).toBe(1);
+      expect(mine?.expiresAt).toBeNull();
+    });
+
+    it('refuses upload initiation once the library count cap is reached', async () => {
+      await prisma.video.createMany({
+        data: Array.from({ length: 20 }, (_, i) => ({
+          ownerId: rivalId,
+          title: `filler ${i}`,
+          status: 'READY' as const,
+          originalKey: `videos/${rivalId}/f${i}/original.mp4`,
+          sizeBytes: BigInt(1024),
+        })),
+      });
+      const res = await request(server())
+        .post('/videos')
+        .set('Cookie', rivalCookie)
+        .send({
+          fileName: 'more.mp4',
+          contentType: 'video/mp4',
+          sizeBytes: 1024,
+        })
+        .expect(409);
+      expect(res.body).toMatchObject({
+        reason: 'library_full_count',
+        maxVideos: 20,
+      });
     });
 
     it('keeps management and download owner-only for the coach', async () => {
@@ -528,8 +725,11 @@ describe('Booking & escrow (e2e)', () => {
         .expect(200);
       const list = res.body as SessionListResponse;
       const withVideo = list.upcoming.find((s) => s.id === sessionId);
-      expect(withVideo?.videoId).toBe(videoId);
-      expect(withVideo?.videoTitle).toBe('my technique');
+      expect(withVideo?.videos.map((v) => v.videoId)).toEqual([
+        videoId,
+        secondVideoId,
+      ]);
+      expect(withVideo?.videos[0].title).toBe('my technique');
     });
   });
 });
