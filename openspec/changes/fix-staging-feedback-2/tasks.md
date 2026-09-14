@@ -27,4 +27,4 @@
 - [x] 5.1 `pnpm lint`, typecheck, web + api unit tests green
 - [x] 2.4 `session-room.tsx`: theatre columns via `grid-cols-(--card-cols)` — Tailwind 4 emitted no CSS for the square-bracket arbitrary-property spelling used by change 21, so the grid had been running on content-sized auto tracks (found during 5.2); layout test asserts the class
 - [x] 5.2 Local browser check with the owner's IMG_9738 (dev fixture: Video `5a1d0000-0000-4000-8000-000000009738`, clip 4 of smoke session 739905fa): probe stored 1080×1920 → portrait card from first paint, card 405×716 at 1440×900 with no side bars, rail 420 px and pair centred, timeline on its own row; landscape clip back to 860/260; pen stroke after 1→4→1 switch paints a thin line (0.2 % of the canvas), not the card; devices menu lists camera/microphone/speaker, Escape closes (camera blocked in the test pane, so no live switch)
-- [ ] 5.3 Deploy to staging, owner re-test
+- [x] 5.3 Deployed to staging 2026-09-14 (`048b428`, api + web, pre-deploy dump `backups/playwithpro-2026-09-14.pgdump`, no migration); owner re-test pending: portrait clip from a phone, device switch mid-call, pen after clip switch
