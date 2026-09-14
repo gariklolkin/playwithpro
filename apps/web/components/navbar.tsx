@@ -1,14 +1,11 @@
+import type { MeResponse } from "@playwithpro/shared";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { getCurrentUser } from "@/lib/server-user";
 import { LocaleSwitcher } from "./locale-switcher";
 import { UserMenu } from "./user-menu";
 
-export async function Navbar() {
-  const [t, user] = await Promise.all([
-    getTranslations("nav"),
-    getCurrentUser(),
-  ]);
+export async function Navbar({ user }: { user: MeResponse | null }) {
+  const t = await getTranslations("nav");
 
   return (
     <nav className="flex w-full items-center gap-5 border-b border-border bg-bg px-8 py-3">

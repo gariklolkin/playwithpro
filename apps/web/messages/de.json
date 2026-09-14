@@ -201,6 +201,13 @@
         "cancel": "Abbrechen",
         "error": "Bild konnte nicht verarbeitet werden. Versuchen Sie eine andere Datei."
       }
+    },
+    "dialog": {
+      "close": "Schließen",
+      "tabs": {
+        "profile": "Profil",
+        "security": "Sicherheit"
+      }
     }
   },
   "proProfile": {

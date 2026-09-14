@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import Cropper from "react-easy-crop";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   cropToAvatar,
   type CroppedAvatar,
@@ -12,7 +13,9 @@ import {
 
 /**
  * Square crop modal: zoom slider + drag to pan. Confirms with a normalized
- * 512×512 blob; cancelling produces nothing.
+ * 512×512 blob; cancelling produces nothing. Rendered as a Base UI dialog so
+ * it nests correctly inside the settings dialog (stacks above it, covers the
+ * viewport regardless of the parent's transform, returns focus on close).
  */
 export function AvatarCropDialog({
   imageUrl,
@@ -45,16 +48,14 @@ export function AvatarCropDialog({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      role="dialog"
-      aria-modal
-      aria-label={t("title")}
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onCancel();
+      }}
     >
-      <div className="w-full max-w-[440px] rounded-card bg-bg p-5 shadow-card">
-        <h2 className="mb-3 text-[15px] font-semibold text-text">
-          {t("title")}
-        </h2>
+      <DialogContent>
+        <DialogTitle className="mb-3">{t("title")}</DialogTitle>
         <div className="relative h-[320px] overflow-hidden rounded-lg bg-bg-secondary">
           <Cropper
             image={imageUrl}
@@ -95,7 +96,7 @@ export function AvatarCropDialog({
             {status === "exporting" ? t("saving") : t("save")}
           </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,33 +1,34 @@
-import type { Metadata } from "next";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getLocale } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
-import { AccountSettings } from "@/components/settings/account-settings";
 import { getCurrentUser } from "@/lib/server-user";
+import { normalizeSettingsTab } from "@/lib/settings-dialog-url";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("meta");
-  return { title: t("settingsTitle") };
-}
-
-export default async function AccountSettingsPage() {
-  const user = await getCurrentUser();
+/**
+ * Legacy settings URL. Account settings now open as a dialog over any page
+ * (`?settings=<tab>`), so old links, bookmarks and post-login returns land on
+ * the dashboard with the dialog open. `?tab=security` picks the tab.
+ */
+export default async function AccountSettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const [user, locale, { tab }] = await Promise.all([
+    getCurrentUser(),
+    getLocale(),
+    searchParams,
+  ]);
   if (!user) {
-    redirect({
-      href: "/login?next=/settings/account",
-      locale: await getLocale(),
-    });
+    redirect({ href: "/login?next=/settings/account", locale });
     return null;
   }
 
-  const t = await getTranslations("settings");
-
-  return (
-    <div className="mx-auto w-full max-w-[720px] px-8 pb-16">
-      <header className="pb-2 pt-9">
-        <h1 className="text-[28px] font-bold text-text">⚙️ {t("title")}</h1>
-        <p className="mt-1 text-text-secondary">{t("subtitle")}</p>
-      </header>
-      <AccountSettings initialUser={user} />
-    </div>
-  );
+  redirect({
+    href: {
+      pathname: "/dashboard",
+      query: { settings: normalizeSettingsTab(tab ?? null) },
+    },
+    locale,
+  });
+  return null;
 }

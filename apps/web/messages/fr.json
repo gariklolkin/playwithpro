@@ -201,6 +201,13 @@
         "cancel": "Annuler",
         "error": "Impossible de traiter l'image. Essayez un autre fichier."
       }
+    },
+    "dialog": {
+      "close": "Fermer",
+      "tabs": {
+        "profile": "Profil",
+        "security": "Sécurité"
+      }
     }
   },
   "proProfile": {

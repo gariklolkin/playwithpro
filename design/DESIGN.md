@@ -64,6 +64,8 @@ Professional: Overview · Availability · Bookings · Earnings · My profile · 
 Admin:       Verification queue · Disputes · Users · Transactions · Analytics
 ```
 
+"Settings" is not a section but a tabbed dialog (Profile / Security) that opens over whatever page the user is on (`?settings=profile|security`, from the user menu or the dashboard sidebar); on phones it becomes a full-screen sheet.
+
 ## 3. Key Screens (see mockup)
 
 1. **Landing** — value prop, 3-step "how it works" (upload video → pick coach & slot → meet & improve), trust strip (verification, escrow, Google Meet, 5 languages).

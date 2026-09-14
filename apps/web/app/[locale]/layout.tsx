@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { Navbar } from "@/components/navbar";
+import { SettingsDialogHost } from "@/components/settings/settings-dialog-host";
+import { getCurrentUser } from "@/lib/server-user";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
@@ -30,14 +33,22 @@ export default async function LocaleLayout({
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
-  const messages = await getMessages();
+  const [messages, user] = await Promise.all([getMessages(), getCurrentUser()]);
 
   return (
     <html lang={locale} className="h-full antialiased font-sans">
       <body className="min-h-full flex flex-col bg-bg text-text">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <Navbar />
+          <Navbar user={user} />
           {children}
+          {/* `useSearchParams` in a layout-level client component needs a
+              Suspense boundary; the host renders nothing unless
+              `?settings=` is present. */}
+          {user ? (
+            <Suspense fallback={null}>
+              <SettingsDialogHost user={user} />
+            </Suspense>
+          ) : null}
         </NextIntlClientProvider>
       </body>
     </html>

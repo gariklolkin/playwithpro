@@ -3,6 +3,7 @@
 import { Link, useRouter } from "@/i18n/navigation";
 import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { useSettingsHref } from "@/lib/use-settings-href";
 import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface UserMenuLabels {
@@ -21,6 +22,7 @@ export function UserMenu({
   labels: UserMenuLabels;
 }) {
   const router = useRouter();
+  const settingsHref = useSettingsHref("profile");
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -66,8 +68,11 @@ export function UserMenu({
           >
             {labels.dashboard}
           </Link>
+          {/* Opens the settings dialog over the current page (see
+              SettingsDialogHost); the dashboard link stays because on phones
+              this menu is the only way into the app from public pages. */}
           <Link
-            href="/settings/account"
+            href={settingsHref}
             className={itemClass}
             onClick={() => setOpen(false)}
           >

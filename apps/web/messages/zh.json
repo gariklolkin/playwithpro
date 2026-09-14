@@ -201,6 +201,13 @@
         "cancel": "取消",
         "error": "无法处理该图片，请尝试其他文件。"
       }
+    },
+    "dialog": {
+      "close": "关闭",
+      "tabs": {
+        "profile": "个人资料",
+        "security": "安全"
+      }
     }
   },
   "proProfile": {

@@ -1,13 +1,20 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Role, type MeResponse } from "@playwithpro/shared";
 import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import messages from "../../messages/en.json";
-import { AccountSettings } from "@/components/settings/account-settings";
+import { ProfileSettingsPanel } from "@/components/settings/panels/profile-settings-panel";
+import { SecuritySettingsPanel } from "@/components/settings/panels/security-settings-panel";
+
+const replace = vi.fn();
 
 vi.mock("@/i18n/navigation", () => ({
-  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
-  usePathname: () => "/settings/account",
+  useRouter: () => ({ replace, refresh: vi.fn() }),
+  usePathname: () => "/dashboard",
+}));
+
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => new URLSearchParams("settings=profile"),
 }));
 
 const fetchMock = vi.fn();
@@ -34,17 +41,25 @@ const user: MeResponse = {
   avatarUrl: null,
 };
 
-function renderSettings() {
+function renderProfile() {
   return render(
     <NextIntlClientProvider locale="en" messages={messages}>
-      <AccountSettings initialUser={user} />
+      <ProfileSettingsPanel user={user} onUserChange={vi.fn()} />
     </NextIntlClientProvider>,
   );
 }
 
-describe("AccountSettings timezone", () => {
+function renderSecurity() {
+  return render(
+    <NextIntlClientProvider locale="en" messages={messages}>
+      <SecuritySettingsPanel user={user} onUserChange={vi.fn()} />
+    </NextIntlClientProvider>,
+  );
+}
+
+describe("ProfileSettingsPanel timezone", () => {
   it("opens the full zone list on click", () => {
-    renderSettings();
+    renderProfile();
 
     fireEvent.click(screen.getByLabelText("Timezone"));
 
@@ -56,7 +71,7 @@ describe("AccountSettings timezone", () => {
   });
 
   it("narrows the list while typing", () => {
-    renderSettings();
+    renderProfile();
 
     fireEvent.change(screen.getByLabelText("Timezone"), {
       target: { value: "berl" },
@@ -71,7 +86,7 @@ describe("AccountSettings timezone", () => {
   });
 
   it("blocks saving a value outside the supported zones", async () => {
-    renderSettings();
+    renderProfile();
 
     fireEvent.change(screen.getByLabelText("Timezone"), {
       target: { value: "Not/AZone" },
@@ -90,7 +105,7 @@ describe("AccountSettings timezone", () => {
       status: 200,
       json: () => Promise.resolve({ ...user, timezone: "Europe/Berlin" }),
     });
-    renderSettings();
+    renderProfile();
 
     fireEvent.change(screen.getByLabelText("Timezone"), {
       target: { value: "berl" },
@@ -107,11 +122,32 @@ describe("AccountSettings timezone", () => {
       JSON.parse((patchCall![1] as RequestInit).body as string).timezone,
     ).toBe("Europe/Berlin");
   });
+
+  it("keeps the settings dialog open when switching the interface language", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ ...user, locale: "de" }),
+    });
+    renderProfile();
+
+    fireEvent.change(screen.getByLabelText("Interface language"), {
+      target: { value: "de" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() =>
+      expect(replace).toHaveBeenCalledWith(
+        { pathname: "/dashboard", query: { settings: "profile" } },
+        { locale: "de" },
+      ),
+    );
+  });
 });
 
-describe("AccountSettings password", () => {
+describe("SecuritySettingsPanel password", () => {
   it("blocks the change when the confirmation does not match", async () => {
-    renderSettings();
+    renderSecurity();
 
     fireEvent.change(screen.getByLabelText("Current password"), {
       target: { value: "oldpass12" },

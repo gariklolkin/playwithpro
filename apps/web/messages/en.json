@@ -201,6 +201,13 @@
         "cancel": "Cancel",
         "error": "Could not process the image. Try a different file."
       }
+    },
+    "dialog": {
+      "close": "Close",
+      "tabs": {
+        "profile": "Profile",
+        "security": "Security"
+      }
     }
   },
   "proProfile": {

@@ -1,60 +1,25 @@
 "use client";
 
-import {
-  SUPPORTED_LOCALES,
-  type Locale,
-  type MeResponse,
-} from "@playwithpro/shared";
-import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
-import { LOCALE_LABELS } from "@/i18n/locale-labels";
-import { usePathname, useRouter } from "@/i18n/navigation";
+import type { MeResponse } from "@playwithpro/shared";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { API_URL, apiFetch } from "@/lib/api";
-import { AvatarUploader } from "@/components/settings/avatar-uploader";
+import { SettingsCard } from "@/components/settings/settings-card";
 import { Button } from "@/components/ui/button";
 import { GoogleLogo } from "@/components/ui/google-logo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { TimezoneSelect } from "@/components/ui/timezone-select";
 
-function SettingsCard({
-  title,
-  children,
+/** Security tab: password change and the connected Google account. */
+export function SecuritySettingsPanel({
+  user,
+  onUserChange,
 }: {
-  title: string;
-  children: React.ReactNode;
+  user: MeResponse;
+  onUserChange: (user: MeResponse) => void;
 }) {
-  return (
-    <section className="mt-6 rounded-card bg-bg p-6 shadow-card">
-      <h2 className="mb-4 text-[13px] font-medium uppercase tracking-[0.5px] text-text-tertiary">
-        {title}
-      </h2>
-      {children}
-    </section>
-  );
-}
-
-export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
   const t = useTranslations("settings");
-  const router = useRouter();
-  const pathname = usePathname();
-  const activeLocale = useLocale();
-  const [user, setUser] = useState(initialUser);
 
-  const timezones = useMemo<string[]>(
-    () => Intl.supportedValuesOf("timeZone"),
-    [],
-  );
-
-  // Profile form
-  const [displayName, setDisplayName] = useState(user.displayName);
-  const [locale, setLocale] = useState(user.locale);
-  const [timezone, setTimezone] = useState(user.timezone);
-  const [profileStatus, setProfileStatus] = useState<
-    "idle" | "saving" | "saved" | "error" | "invalidTimezone"
-  >("idle");
-
-  // Password form
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -62,34 +27,9 @@ export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
     "idle" | "saving" | "changed" | "wrong" | "mismatch"
   >("idle");
 
-  // Google linking
   const [googleStatus, setGoogleStatus] = useState<
     "idle" | "unlinking" | "unlinked"
   >("idle");
-
-  async function handleProfileSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    if (!timezones.includes(timezone)) {
-      setProfileStatus("invalidTimezone");
-      return;
-    }
-    setProfileStatus("saving");
-    const response = await apiFetch("/users/me", {
-      method: "PATCH",
-      body: JSON.stringify({ displayName, locale, timezone }),
-    });
-    if (!response.ok) {
-      setProfileStatus("error");
-      return;
-    }
-    setUser((await response.json()) as MeResponse);
-    setProfileStatus("saved");
-    if (locale !== activeLocale) {
-      router.replace(pathname, { locale: locale as Locale });
-    } else {
-      router.refresh();
-    }
-  }
 
   async function handlePasswordSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -118,7 +58,7 @@ export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
       method: "DELETE",
     });
     if (response.ok) {
-      setUser((await response.json()) as MeResponse);
+      onUserChange((await response.json()) as MeResponse);
       setGoogleStatus("unlinked");
     } else {
       setGoogleStatus("idle");
@@ -126,79 +66,7 @@ export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
   }
 
   return (
-    <>
-      <SettingsCard title={t("avatar.title")}>
-        <AvatarUploader
-          user={user}
-          onUserChange={(next) => {
-            setUser(next);
-            router.refresh();
-          }}
-        />
-      </SettingsCard>
-
-      <SettingsCard title={t("profile.title")}>
-        <form onSubmit={handleProfileSubmit} noValidate>
-          <Label htmlFor="settings-name">{t("profile.displayName")}</Label>
-          <Input
-            id="settings-name"
-            required
-            value={displayName}
-            onChange={(event) => setDisplayName(event.target.value)}
-            className="mb-3"
-          />
-          <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="settings-locale">{t("profile.locale")}</Label>
-              <select
-                id="settings-locale"
-                value={locale}
-                onChange={(event) => setLocale(event.target.value)}
-                className="w-full rounded-lg border border-border-strong bg-bg px-3 py-[9px] text-sm text-text"
-              >
-                {SUPPORTED_LOCALES.map((value) => (
-                  <option key={value} value={value}>
-                    {LOCALE_LABELS[value]}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label htmlFor="settings-timezone">{t("profile.timezone")}</Label>
-              <TimezoneSelect
-                id="settings-timezone"
-                value={timezone}
-                options={timezones}
-                onChange={setTimezone}
-                placeholder="Europe/Berlin"
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button type="submit" disabled={profileStatus === "saving"}>
-              {profileStatus === "saving"
-                ? t("profile.saving")
-                : t("profile.save")}
-            </Button>
-            {profileStatus === "saved" ? (
-              <span className="text-[13px] text-text-secondary">
-                {t("profile.saved")}
-              </span>
-            ) : null}
-            {profileStatus === "error" ? (
-              <span className="text-[13px] text-[#E03E3E]">
-                {t("profile.error")}
-              </span>
-            ) : null}
-            {profileStatus === "invalidTimezone" ? (
-              <span className="text-[13px] text-[#E03E3E]">
-                {t("profile.timezoneInvalid")}
-              </span>
-            ) : null}
-          </div>
-        </form>
-      </SettingsCard>
-
+    <div className="flex flex-col gap-6">
       <SettingsCard title={t("password.title")}>
         {user.hasPassword ? (
           <form onSubmit={handlePasswordSubmit} noValidate>
@@ -308,6 +176,6 @@ export function AccountSettings({ initialUser }: { initialUser: MeResponse }) {
           </p>
         ) : null}
       </SettingsCard>
-    </>
+    </div>
   );
 }

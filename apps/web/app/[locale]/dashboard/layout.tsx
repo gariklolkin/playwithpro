@@ -9,7 +9,15 @@ import { getCurrentUser } from "@/lib/server-user";
 
 const NAV: Record<
   Role,
-  { section: string; items: { key: string; emoji: string; href?: string }[] }
+  {
+    section: string;
+    items: {
+      key: string;
+      emoji: string;
+      href?: string;
+      query?: Record<string, string>;
+    }[];
+  }
 > = {
   [Role.Amateur]: {
     section: "amateur",
@@ -18,7 +26,7 @@ const NAV: Record<
       { key: "videos", emoji: "📹", href: "/dashboard/videos" },
       { key: "payments", emoji: "💳" },
       { key: "profile", emoji: "🏓", href: "/dashboard/profile" },
-      { key: "settings", emoji: "⚙️", href: "/settings/account" },
+      { key: "settings", emoji: "⚙️", query: { settings: "profile" } },
     ],
   },
   [Role.Professional]: {
@@ -29,7 +37,7 @@ const NAV: Record<
       { key: "bookings", emoji: "📒", href: "/dashboard/sessions" },
       { key: "earnings", emoji: "💰" },
       { key: "profile", emoji: "🏆", href: "/dashboard/profile" },
-      { key: "settings", emoji: "⚙️", href: "/settings/account" },
+      { key: "settings", emoji: "⚙️", query: { settings: "profile" } },
     ],
   },
   [Role.Admin]: {
