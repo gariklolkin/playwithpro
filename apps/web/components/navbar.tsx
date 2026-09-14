@@ -12,8 +12,9 @@ export async function Navbar() {
 
   return (
     <nav className="flex w-full items-center gap-5 border-b border-border bg-bg px-8 py-3">
+      {/* Signed-in users (players and coaches alike) land on their dashboard. */}
       <Link
-        href="/"
+        href={user ? "/dashboard" : "/"}
         className="flex items-center gap-2 text-[17px] font-bold text-text no-underline"
       >
         🏓 PlayWithPro
