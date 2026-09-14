@@ -198,16 +198,24 @@ export class VideoProcessingService implements OnModuleInit {
         height?: number;
         avg_frame_rate?: string;
         r_frame_rate?: string;
+        side_data_list?: { rotation?: number }[];
+        tags?: { rotate?: string };
       }[];
     };
     const videoStream = (parsed.streams ?? []).find(
       (stream) => stream.codec_type === 'video',
     );
+    // Phones store the sensor frame plus a rotation; browsers and ffmpeg
+    // render it rotated, so a quarter turn swaps the displayed dimensions.
+    const quarterTurn = isQuarterTurn(
+      videoStream?.side_data_list?.find((d) => d.rotation !== undefined)
+        ?.rotation ?? videoStream?.tags?.rotate,
+    );
     return {
       hasVideoStream: Boolean(videoStream),
       durationSeconds: Number(parsed.format?.duration ?? 0),
-      width: videoStream?.width ?? null,
-      height: videoStream?.height ?? null,
+      width: (quarterTurn ? videoStream?.height : videoStream?.width) ?? null,
+      height: (quarterTurn ? videoStream?.width : videoStream?.height) ?? null,
       fps: parseFrameRate(
         videoStream?.avg_frame_rate ?? videoStream?.r_frame_rate,
       ),
@@ -295,6 +303,12 @@ export class VideoProcessingService implements OnModuleInit {
       this.logger.log(`Swept stale upload ${video.id}`);
     }
   }
+}
+
+/** ±90° or 270° (display matrix or legacy `rotate` tag) → width/height swap. */
+function isQuarterTurn(rotation: number | string | undefined): boolean {
+  const degrees = Number(rotation);
+  return Number.isFinite(degrees) && Math.abs(degrees) % 180 === 90;
 }
 
 function parseFrameRate(rate: string | undefined): number | null {

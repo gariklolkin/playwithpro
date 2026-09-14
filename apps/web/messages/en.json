@@ -713,6 +713,13 @@
           "stopShare": "Stop sharing",
           "leave": "Leave"
         },
+        "devices": {
+          "open": "Devices",
+          "title": "Camera, microphone and speaker",
+          "camera": "Camera",
+          "microphone": "Microphone",
+          "speaker": "Speaker"
+        },
         "waiting": "Waiting for {name} to join…",
         "connecting": "Connecting…",
         "reconnecting": "Reconnecting…",

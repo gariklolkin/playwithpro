@@ -37,8 +37,10 @@ import {
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { DeviceMenu } from "./call-device-menu";
 import { CallFrame } from "./call-frame";
 import { CallPreJoin, type PreJoinChoices } from "./call-prejoin";
+import { ControlButton } from "./control-button";
 import { deviceNotice } from "@/lib/device-notice";
 
 type CallPhase =
@@ -573,6 +575,7 @@ function CallControls({
           )}
         </ControlButton>
       ) : null}
+      <DeviceMenu />
       <button
         type="button"
         onClick={() => {
@@ -622,6 +625,7 @@ function FocusBar({
       >
         {mic.enabled ? <Mic size={18} /> : <MicOff size={18} />}
       </ControlButton>
+      <DeviceMenu align="end" />
       <button
         type="button"
         aria-label={t("controls.leave")}
@@ -668,42 +672,6 @@ function RailToggle({
       title={hint ? `${label} — ${hint}` : label}
       onClick={onClick}
       className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-bg-hover hover:text-text max-[639px]:h-11 max-[639px]:w-11"
-    >
-      {children}
-    </button>
-  );
-}
-
-function ControlButton({
-  active,
-  highlight,
-  pending,
-  label,
-  onClick,
-  children,
-}: {
-  /** Neutral look when true; "off" look (muted/disabled) when false. */
-  active: boolean;
-  highlight?: boolean;
-  pending: boolean;
-  label: string;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  const look = highlight
-    ? "border-accent bg-accent text-white hover:bg-accent/90"
-    : active
-      ? "border-border-strong bg-bg text-text hover:bg-bg-hover"
-      : "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20";
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      aria-pressed={!active}
-      title={label}
-      disabled={pending}
-      onClick={onClick}
-      className={`inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-60 max-[639px]:h-11 max-[639px]:w-11 ${look}`}
     >
       {children}
     </button>

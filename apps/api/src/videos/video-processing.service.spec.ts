@@ -36,6 +36,10 @@ function probeStdout(overrides: {
   codec?: string;
   duration?: number;
   noVideoStream?: boolean;
+  /** Display-matrix rotation in degrees, as ffprobe reports it. */
+  rotation?: number;
+  /** Legacy `rotate` stream tag. */
+  rotateTag?: string;
 }): string {
   return JSON.stringify({
     format: {
@@ -51,6 +55,19 @@ function probeStdout(overrides: {
             width: 1920,
             height: 1080,
             avg_frame_rate: '60/1',
+            ...(overrides.rotation !== undefined
+              ? {
+                  side_data_list: [
+                    {
+                      side_data_type: 'Display Matrix',
+                      rotation: overrides.rotation,
+                    },
+                  ],
+                }
+              : {}),
+            ...(overrides.rotateTag !== undefined
+              ? { tags: { rotate: overrides.rotateTag } }
+              : {}),
           },
         ],
   });
@@ -172,6 +189,40 @@ describe('VideoProcessingService', () => {
     const metadataUpdate = prisma.video.update.mock.calls[0][0];
     expect(metadataUpdate.data.fps).toBe(60);
     expect(metadataUpdate.data.codec).toBe('h264');
+    expect(metadataUpdate.data.width).toBe(1920);
+    expect(metadataUpdate.data.height).toBe(1080);
+  });
+
+  it.each([
+    ['display matrix -90°', { rotation: -90 }],
+    ['display matrix 90°', { rotation: 90 }],
+    ['display matrix 270°', { rotation: 270 }],
+    ['legacy rotate tag', { rotateTag: '90' }],
+  ])(
+    'stores the displayed (rotated) frame size for %s',
+    async (_label, overrides) => {
+      prisma.video.findUnique.mockResolvedValue(processingVideo);
+      mockExecFile.mockResolvedValue({ stdout: probeStdout(overrides) });
+
+      await process('video-1');
+
+      const metadataUpdate = prisma.video.update.mock.calls[0][0];
+      expect(metadataUpdate.data.width).toBe(1080);
+      expect(metadataUpdate.data.height).toBe(1920);
+    },
+  );
+
+  it('keeps the frame size for a half-turn rotation', async () => {
+    prisma.video.findUnique.mockResolvedValue(processingVideo);
+    mockExecFile.mockResolvedValue({
+      stdout: probeStdout({ rotation: 180 }),
+    });
+
+    await process('video-1');
+
+    const metadataUpdate = prisma.video.update.mock.calls[0][0];
+    expect(metadataUpdate.data.width).toBe(1920);
+    expect(metadataUpdate.data.height).toBe(1080);
   });
 
   it('transcodes a non-browser-safe source and uploads the rendition', async () => {

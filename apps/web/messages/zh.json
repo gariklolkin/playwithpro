@@ -713,6 +713,13 @@
           "stopShare": "停止共享",
           "leave": "离开"
         },
+        "devices": {
+          "open": "设备",
+          "title": "摄像头、麦克风和扬声器",
+          "camera": "摄像头",
+          "microphone": "麦克风",
+          "speaker": "扬声器"
+        },
         "waiting": "正在等待 {name} 加入…",
         "connecting": "正在连接…",
         "reconnecting": "正在重新连接…",

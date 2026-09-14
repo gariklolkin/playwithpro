@@ -135,6 +135,8 @@ function drawStroke(
  * frame-normalized coordinates over the video's content box (letterbox
  * aware, DPR aware) and turns pointer input into complete strokes while a
  * tool is active; without a tool it lets every event through to the player.
+ * The parent keys it by clip: the layer observes the element it mounted
+ * with, so a replaced `<video>` needs a fresh layer.
  */
 export function AnnotationLayer({
   videoRef,
@@ -209,12 +211,15 @@ export function AnnotationLayer({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const dpr = window.devicePixelRatio || 1;
-    const width = Math.max(1, Math.round(element.width * dpr));
-    const height = Math.max(1, Math.round(element.height * dpr));
+    // No floor: an unmeasured element gets an empty canvas, never a single
+    // pixel that CSS would stretch over the whole card.
+    const width = Math.round(element.width * dpr);
+    const height = Math.round(element.height * dpr);
     if (canvas.width !== width || canvas.height !== height) {
       canvas.width = width;
       canvas.height = height;
     }
+    if (width === 0 || height === 0) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -247,10 +252,12 @@ export function AnnotationLayer({
     [box],
   );
 
-  const drawing = visible && tool !== "select";
+  // Without a measured frame a point cannot be normalized meaningfully.
+  const measured = box.width > 0 && box.height > 0;
+  const drawing = visible && tool !== "select" && measured;
 
   const onPointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!visible || tool === "select") return;
+    if (!drawing) return;
     const current = currentDraft();
     if (activePointer.current !== null && current) return;
     activePointer.current = null;

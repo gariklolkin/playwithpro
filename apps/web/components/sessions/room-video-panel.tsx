@@ -323,7 +323,8 @@ export function RoomVideoPanel({
       </div>
       <div
         ref={cardRef}
-        className={`overflow-hidden bg-black ${
+        // A container so the player bar can wrap by card width, not viewport.
+        className={`@container overflow-hidden bg-black ${
           fullscreen
             ? "flex h-full w-full flex-col"
             : "rounded-card border border-border"
@@ -391,6 +392,9 @@ export function RoomVideoPanel({
                 className="absolute inset-0 block h-full w-full object-contain"
               />
               <AnnotationLayer
+                // Remount with the clip: the layer binds to the <video>
+                // element it sees at mount, and the element is keyed too.
+                key={`layer-${activeId ?? "none"}`}
                 videoRef={videoRef}
                 strokes={shownStrokes}
                 tool={tool}

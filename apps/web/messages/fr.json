@@ -713,6 +713,13 @@
           "stopShare": "Arrêter le partage",
           "leave": "Quitter"
         },
+        "devices": {
+          "open": "Périphériques",
+          "title": "Caméra, micro et haut-parleur",
+          "camera": "Caméra",
+          "microphone": "Microphone",
+          "speaker": "Haut-parleur"
+        },
         "waiting": "En attente de {name}…",
         "connecting": "Connexion…",
         "reconnecting": "Reconnexion…",

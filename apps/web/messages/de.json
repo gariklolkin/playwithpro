@@ -713,6 +713,13 @@
           "stopShare": "Teilen beenden",
           "leave": "Verlassen"
         },
+        "devices": {
+          "open": "Geräte",
+          "title": "Kamera, Mikrofon und Lautsprecher",
+          "camera": "Kamera",
+          "microphone": "Mikrofon",
+          "speaker": "Lautsprecher"
+        },
         "waiting": "Warte auf {name}…",
         "connecting": "Verbinde…",
         "reconnecting": "Verbindung wird wiederhergestellt…",

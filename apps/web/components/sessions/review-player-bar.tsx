@@ -161,7 +161,8 @@ export function ReviewPlayerBar({
         {formatDuration(shownTime)} / {formatDuration(safeDuration)}
       </span>
 
-      <div className="relative flex min-w-[120px] flex-1 items-center max-[639px]:order-last max-[639px]:basis-full">
+      {/* Own row on phones and in narrow (portrait) cards. */}
+      <div className="relative flex min-w-[120px] flex-1 items-center max-[639px]:order-last max-[639px]:basis-full @max-[520px]:order-last @max-[520px]:basis-full">
         <input
           type="range"
           min={0}

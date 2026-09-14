@@ -41,6 +41,14 @@ const RAIL_MIN_WIDTH = 260;
 const GRID_GAP = 16;
 const THEATRE_FRAME_HEIGHT = "min(520px, 62vh)";
 const FOCUS_FRAME_HEIGHT = "min(720px, 75vh)";
+/**
+ * Portrait clips: a taller frame, a narrower card (the player bar wraps its
+ * timeline under this width), a capped rail, and the pair centred so the
+ * spare width does not inflate the tiles.
+ */
+const PORTRAIT_CARD_MIN_WIDTH = 400;
+const PORTRAIT_RAIL_MAX_WIDTH = 420;
+const PORTRAIT_FRAME_HEIGHT = "min(880px, 80vh)";
 const HIDE_SELF_KEY = "pwp.room.hideSelf";
 
 function readHideSelf(): boolean {
@@ -215,12 +223,22 @@ export function SessionRoom({
   const focused = theatre && focus;
   const callLayout: CallLayout = focused ? "focus" : theatre ? "rail" : "stage";
   const railReserve = RAIL_MIN_WIDTH + GRID_GAP;
+  const portrait = aspect < 1;
+  const frameHeight = focused
+    ? FOCUS_FRAME_HEIGHT
+    : portrait
+      ? PORTRAIT_FRAME_HEIGHT
+      : THEATRE_FRAME_HEIGHT;
+  const cardMinWidth = portrait ? PORTRAIT_CARD_MIN_WIDTH : CARD_MIN_WIDTH;
+  const railTrack = portrait
+    ? `minmax(${RAIL_MIN_WIDTH}px, ${PORTRAIT_RAIL_MAX_WIDTH}px)`
+    : `minmax(${RAIL_MIN_WIDTH}px, 1fr)`;
   const gridStyle = theatre
     ? ({
-        "--frame-h": focused ? FOCUS_FRAME_HEIGHT : THEATRE_FRAME_HEIGHT,
+        "--frame-h": frameHeight,
         "--card-cols": focused
           ? "minmax(0, 1fr)"
-          : `clamp(min(${CARD_MIN_WIDTH}px, 100% - ${railReserve}px), calc(${THEATRE_FRAME_HEIGHT} * ${aspect.toFixed(4)}), 100% - ${railReserve}px) minmax(${RAIL_MIN_WIDTH}px, 1fr)`,
+          : `clamp(min(${cardMinWidth}px, 100% - ${railReserve}px), calc(${frameHeight} * ${aspect.toFixed(4)}), 100% - ${railReserve}px) ${railTrack}`,
         "--rail-top": `${cardLayout?.top ?? 0}px`,
         "--rail-h": cardLayout ? `${cardLayout.height}px` : "auto",
       } as React.CSSProperties)
@@ -274,12 +292,20 @@ export function SessionRoom({
         <div
           data-testid="room-layout"
           data-layout={withVideo ? callLayout : "consultation"}
+          data-orientation={
+            theatre ? (portrait ? "portrait" : "landscape") : undefined
+          }
           style={gridStyle}
           className={
             !withVideo
               ? "mx-auto max-w-[860px]"
               : theatre
-                ? "grid gap-4 min-[1000px]:[grid-template-columns:var(--card-cols)]"
+                ? // Tailwind 4 emits no CSS for the arbitrary-property spelling
+                  // of this (square brackets); the variable shorthand works.
+                  // Tailwind also scans comments, so keep class-like text out.
+                  `grid gap-4 min-[1000px]:grid-cols-(--card-cols)${
+                    portrait && !focused ? " min-[1000px]:justify-center" : ""
+                  }`
                 : "grid gap-4 min-[900px]:grid-cols-2"
           }
         >

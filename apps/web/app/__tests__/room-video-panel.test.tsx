@@ -459,6 +459,26 @@ describe("RoomVideoPanel annotations", () => {
     expect(video.currentTime).toBe(11);
   });
 
+  it("rebinds the layer to the replaced <video> when switching back to a cached clip", async () => {
+    const { container } = await renderPanel(CLIPS);
+    const firstVideo = container.querySelector("video");
+    const firstLayer = screen.getByTestId("annotation-layer");
+    const tabs = screen.getAllByRole("tab");
+
+    fireEvent.click(tabs[1]);
+    await waitFor(() =>
+      expect(container.querySelector("video")).not.toBe(firstVideo),
+    );
+    // Back to the first clip: its URL is cached, so the card never shows the
+    // loading state and the <video> is replaced in place.
+    fireEvent.click(tabs[0]);
+    const video = container.querySelector("video");
+    expect(video).not.toBeNull();
+    expect(video).not.toBe(firstVideo);
+    expect(screen.getByTestId("annotation-layer")).not.toBe(firstLayer);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it("pauses the video when a drawing tool is activated and exits on Escape", async () => {
     const { video } = await renderPanel();
     Object.defineProperty(video, "paused", {

@@ -12,11 +12,21 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import messages from "../../messages/en.json";
 import { SessionRoom } from "@/components/sessions/session-room";
 
-const { roomMounts, disconnect, apiFetch } = vi.hoisted(() => ({
+const { roomMounts, disconnect, apiFetch, switchDevice } = vi.hoisted(() => ({
   roomMounts: vi.fn(),
   disconnect: vi.fn(),
   apiFetch: vi.fn(),
+  switchDevice: vi.fn(async () => undefined),
 }));
+
+const DEVICES: Record<string, { deviceId: string; label: string }[]> = {
+  videoinput: [
+    { deviceId: "cam-1", label: "FaceTime HD" },
+    { deviceId: "cam-2", label: "iPhone Camera" },
+  ],
+  audioinput: [{ deviceId: "mic-1", label: "Built-in Microphone" }],
+  audiooutput: [],
+};
 
 // The call SDK is replaced by inert hooks; LiveKitRoom counts its mounts so
 // the tests can prove layout changes never reconnect.
@@ -46,6 +56,12 @@ vi.mock("@livekit/components-react", async () => {
     }),
     useTrackToggle: () => ({ enabled: true, pending: false, toggle: vi.fn() }),
     useTracks: () => [],
+    useMediaDeviceSelect: ({ kind }: { kind: string }) => ({
+      devices: DEVICES[kind] ?? [],
+      activeDeviceId: DEVICES[kind]?.[0]?.deviceId ?? "",
+      setActiveMediaDevice: switchDevice,
+      className: "",
+    }),
   };
 });
 
@@ -106,8 +122,20 @@ vi.mock("next/dynamic", async () => {
   return { default: () => call.LiveKitCall };
 });
 
+// The clip panel stub can announce a portrait clip, like the real one does
+// from the probe or the loaded metadata.
 vi.mock("@/components/sessions/room-video-panel", () => ({
-  RoomVideoPanel: () => <div data-testid="video-panel" />,
+  RoomVideoPanel: ({
+    onAspectChange,
+  }: {
+    onAspectChange?: (aspect: number) => void;
+  }) => (
+    <div data-testid="video-panel">
+      <button type="button" onClick={() => onAspectChange?.(9 / 16)}>
+        Portrait clip (stub)
+      </button>
+    </div>
+  ),
 }));
 
 vi.mock("@/components/catalog/local-time", () => ({
@@ -205,6 +233,8 @@ describe("SessionRoom video-analysis layout", () => {
 
     await joinCall();
     expect(layout).toHaveAttribute("data-layout", "rail");
+    // The square-bracket arbitrary-property spelling is dropped by Tailwind 4.
+    expect(layout.className).toContain("min-[1000px]:grid-cols-(--card-cols)");
     expect(layout.style.getPropertyValue("--card-cols")).toContain(
       "minmax(260px, 1fr)",
     );
@@ -263,6 +293,77 @@ describe("SessionRoom video-analysis layout", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Focus on the video" }));
     fireEvent.click(screen.getByRole("button", { name: "Show the call" }));
+
+    expect(roomMounts).toHaveBeenCalledTimes(1);
+    expect(disconnect).not.toHaveBeenCalled();
+    expect(
+      apiFetch.mock.calls.filter(([url]) => String(url).endsWith("/room/join")),
+    ).toHaveLength(1);
+  });
+
+  it("gives a portrait clip a taller, narrower card with a capped, centred rail", async () => {
+    mockApi(ServiceType.VideoAnalysis);
+    renderRoom();
+    await joinCall();
+    const layout = screen.getByTestId("room-layout");
+    expect(layout).toHaveAttribute("data-orientation", "landscape");
+    expect(layout.style.getPropertyValue("--frame-h")).toBe("min(520px, 62vh)");
+    expect(layout.style.getPropertyValue("--card-cols")).toContain("560px");
+    expect(layout.className).not.toContain("justify-center");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Portrait clip (stub)" }),
+    );
+    expect(layout).toHaveAttribute("data-orientation", "portrait");
+    expect(layout.style.getPropertyValue("--frame-h")).toBe("min(880px, 80vh)");
+    const cols = layout.style.getPropertyValue("--card-cols");
+    expect(cols).toContain("min(400px,");
+    expect(cols).toContain("calc(min(880px, 80vh) * 0.5625)");
+    expect(cols).toContain("minmax(260px, 420px)");
+    expect(cols).not.toContain("1fr");
+    expect(layout.className).toContain("min-[1000px]:justify-center");
+
+    // Focus keeps the taller frame idea but takes the whole column.
+    fireEvent.click(screen.getByRole("button", { name: "Focus on the video" }));
+    expect(layout.style.getPropertyValue("--card-cols")).toBe("minmax(0, 1fr)");
+    expect(layout.className).not.toContain("justify-center");
+  });
+
+  it("switches devices from the in-call menu without reconnecting", async () => {
+    mockApi(ServiceType.VideoAnalysis);
+    renderRoom();
+    await joinCall();
+    expect(roomMounts).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Devices" }));
+    const dialog = screen.getByRole("dialog", {
+      name: "Camera, microphone and speaker",
+    });
+    const camera = within(dialog).getByLabelText("Camera");
+    expect(
+      within(camera)
+        .getAllByRole("option")
+        .map((o) => o.textContent),
+    ).toEqual(["FaceTime HD", "iPhone Camera"]);
+    expect(within(dialog).getByLabelText("Microphone")).toBeInTheDocument();
+    // No output devices listed → no speaker picker.
+    expect(within(dialog).queryByLabelText("Speaker")).not.toBeInTheDocument();
+
+    fireEvent.change(camera, { target: { value: "cam-2" } });
+    expect(switchDevice).toHaveBeenCalledWith("cam-2");
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(
+      screen.queryByRole("dialog", { name: "Camera, microphone and speaker" }),
+    ).not.toBeInTheDocument();
+
+    // Also reachable from the focus bar.
+    fireEvent.click(screen.getByRole("button", { name: "Focus on the video" }));
+    const bar = screen.getByRole("group", { name: "On call" });
+    fireEvent.click(within(bar).getByRole("button", { name: "Devices" }));
+    expect(
+      screen.getByRole("dialog", { name: "Camera, microphone and speaker" }),
+    ).toBeInTheDocument();
 
     expect(roomMounts).toHaveBeenCalledTimes(1);
     expect(disconnect).not.toHaveBeenCalled();
