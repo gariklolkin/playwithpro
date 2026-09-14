@@ -20,7 +20,7 @@
 
 ## 4. Entry points
 
-- [x] 4.1 `components/user-menu.tsx`: "Settings" becomes a `Link` to `{ pathname: usePathname(), query: { settings: "profile" } }`; "Dashboard" and "Log out" unchanged
+- [x] 4.1 `components/user-menu.tsx`: "Settings" becomes a `Link` to `{ pathname: usePathname(), query: { settings: "profile" } }`; "Dashboard" item removed (owner decision, logo covers it; `nav.dashboard` dropped from all catalogs); "Log out" unchanged
 - [x] 4.2 `components/dashboard/sidebar.tsx`: add optional `query` to `SidebarItem`; render query-only items as a `Link` to the current pathname with that query (no active highlight); `app/[locale]/dashboard/layout.tsx` passes `{ settings: "profile" }` for the amateur and professional settings items instead of `href: "/settings/account"`
 - [x] 4.3 Grep for remaining `/settings/account` links in `apps/web` (auth flows, emails, `next=` builders) and switch any in-app link to the query form; leave `next=/settings/account` handling as is (covered by the redirect)
 

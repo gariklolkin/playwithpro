@@ -13,7 +13,7 @@ Constraints: next-intl locale-prefixed routing (`@/i18n/navigation` `Link`/`useR
 - Correct keyboard/focus behavior including the nested crop dialog; full-screen presentation on phones.
 
 **Non-Goals:**
-- New settings content, changes to the API, changes to the user menu beyond how "Settings" behaves.
+- New settings content, changes to the API, changes to the user menu beyond "Settings" opening the dialog and "Dashboard" being dropped.
 - Making the dialog work for signed-out visitors (the host is not mounted without a user).
 - Next.js intercepting/parallel routes (see Decision 1).
 
@@ -41,7 +41,7 @@ Layout: desktop ≥640px — popup `max-w-[880px]`, height `min(720px, 90vh)`, t
 
 ### 5. Entry points
 
-- `user-menu.tsx`: "Settings" becomes a `Link` to `{ pathname, query: { settings: "profile" } }` for the current pathname (next-intl `Link` accepts href objects); `Dashboard` and `Log out` unchanged.
+- `user-menu.tsx`: "Settings" becomes a `Link` to `{ pathname, query: { settings: "profile" } }` for the current pathname (next-intl `Link` accepts href objects); the "Dashboard" item is removed (the logo already leads signed-in users there, and the owner wants an account-only menu); `Log out` unchanged.
 - Sidebar: `SidebarItem` gains an optional `query`; the dashboard layout passes `{ settings: "profile" }` for the settings item without an `href`, and the sidebar renders it as a `Link` to the current pathname with that query. The active highlight is pathname-based and stays on the underlying page item, which is the desired reading ("you are still on My sessions").
 - `AccountSettings` is split into `ProfileSettingsPanel` and `SecuritySettingsPanel` (same state hooks and fetch calls, just regrouped) so the dialog can render one tab at a time; both panels keep `initialUser` as the seed and the host passes the `MeResponse` from the layout.
 

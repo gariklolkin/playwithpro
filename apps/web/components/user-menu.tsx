@@ -7,7 +7,6 @@ import { useSettingsHref } from "@/lib/use-settings-href";
 import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface UserMenuLabels {
-  dashboard: string;
   settings: string;
   logout: string;
 }
@@ -61,16 +60,8 @@ export function UserMenu({
           <div className="truncate px-2.5 py-1.5 text-[13px] font-medium text-text">
             {displayName}
           </div>
-          <Link
-            href="/dashboard"
-            className={itemClass}
-            onClick={() => setOpen(false)}
-          >
-            {labels.dashboard}
-          </Link>
-          {/* Opens the settings dialog over the current page (see
-              SettingsDialogHost); the dashboard link stays because on phones
-              this menu is the only way into the app from public pages. */}
+          {/* Account-only menu: the logo is the way into the dashboard;
+              settings open as a dialog over the current page. */}
           <Link
             href={settingsHref}
             className={itemClass}
