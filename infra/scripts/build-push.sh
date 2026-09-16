@@ -37,7 +37,7 @@ for t in "${targets[@]}"; do
   case "$t" in
     api)
       docker buildx build --platform linux/amd64 --load \
-        --build-arg APP_RELEASE="$SHA" "${secret_args[@]}" \
+        --build-arg APP_RELEASE="$SHA" ${secret_args[@]+"${secret_args[@]}"} \
         -f "$REPO_ROOT/apps/api/Dockerfile.prod" -t "$image" "$REPO_ROOT"
       ;;
     web)
@@ -46,7 +46,7 @@ for t in "${targets[@]}"; do
         --build-arg APP_RELEASE="$SHA" \
         --build-arg NEXT_PUBLIC_POSTHOG_KEY="$NEXT_PUBLIC_POSTHOG_KEY" \
         --build-arg NEXT_PUBLIC_POSTHOG_REPLAY_SAMPLE="$NEXT_PUBLIC_POSTHOG_REPLAY_SAMPLE" \
-        "${secret_args[@]}" \
+        ${secret_args[@]+"${secret_args[@]}"} \
         -f "$REPO_ROOT/apps/web/Dockerfile.prod" -t "$image" "$REPO_ROOT"
       ;;
     *)
