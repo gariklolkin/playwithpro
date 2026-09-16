@@ -12,6 +12,7 @@ infra/k8s/
   postgres/      # PostgreSQL + PVC + backup CronJob
   app/           # api + web Deployments/Services/Ingress, migration Job
   livekit/       # LiveKit media server (host network) + config template
+  fider/         # feedback board (Fider) Deployment/Service/Ingress + DB init Job
   env.example    # documented production env contract (no real values)
 ```
 
@@ -25,7 +26,7 @@ infra/k8s/
   `~/.kube/playwithpro.yaml` with `127.0.0.1` → `152.53.186.65`.
 - cert-manager (latest release manifest) + ClusterIssuers `letsencrypt-staging` /
   `letsencrypt-prod` (`cluster/issuers.yaml`).
-- DNS A records: `@`, `www`, `api`, `meet` → 152.53.186.65 (Porkbun).
+- DNS A records: `@`, `www`, `api`, `meet`, `feedback` → 152.53.186.65 (Porkbun).
 
 Use `export KUBECONFIG=~/.kube/playwithpro.yaml` in any shell that operates the cluster.
 
@@ -114,3 +115,82 @@ replaced. Steps (Porkbun DNS):
    for both Brevo and PostHog, then tighten to `p=quarantine`.
 6. Verify: send a mail to `support@play-with.pro` → ticket appears; reply
    from the inbox → the reply's raw headers show `spf=pass dkim=pass dmarc=pass`.
+
+## Feedback board (Fider at feedback.play-with.pro)
+
+Self-hosted [Fider](https://fider.io) (change 25, GitHub issue #3): one English,
+votable idea board for coaches and players. Manifests in `fider/` (image pinned
+to `getfider/fider:v0.36.0` — the latest release with a versioned image tag as
+of 2026-09-16; v0.36.1 exists only as the moving `stable` tag, which we do not
+use), own `fider` database and role in the in-cluster
+Postgres, mail through the api's Brevo relay as `no-reply@play-with.pro`, no
+integration with the app beyond two links (`NEXT_PUBLIC_FEEDBACK_URL`).
+
+### First deploy
+
+1. Add `FIDER_JWT_SECRET`, `FIDER_DB_PASSWORD` and `NEXT_PUBLIC_FEEDBACK_URL`
+   to `~/.playwithpro-prod.env` (see `env.example`), run `apply-secrets.sh`
+   (renders Secret `fider-env`).
+2. Porkbun: `A feedback → 152.53.186.65`.
+3. `deploy.sh <sha>` applies the init-db Job (idempotent: role, database,
+   `REVOKE CONNECT ON DATABASE playwithpro FROM PUBLIC, fider`) and the board
+   manifests. The Ingress starts on `letsencrypt-staging`.
+4. Verify routing (`curl -kI https://feedback.play-with.pro` → 200/302), then
+   switch the annotation to `letsencrypt-prod` in `fider/fider.yaml`, apply,
+   and `kubectl -n playwithpro delete secret play-with-pro-feedback-tls` so
+   cert-manager issues the production certificate.
+5. Rebuild + deploy web with `NEXT_PUBLIC_FEEDBACK_URL` set (build-push.sh
+   reads it from the env file): "Suggest an idea" appears in the user menu and
+   the coach dashboard card.
+
+### Board setup (first run, in the Fider UI)
+
+1. Open the board: the first visitor registers the **administrator** account
+   (owner) — do this right after the pod is ready, before sharing the URL.
+2. Settings → General: site name "PlayWithPro ideas", welcome text along the
+   lines of: "Suggest and vote on improvements to PlayWithPro. Problems with a
+   session, payment or account? Use *Contact support* in the app instead."
+   Set **Private** (invite-only) until launch.
+3. Settings → Members: invite testers and coaches by email (sign-in is by
+   email code only; do not enable OAuth providers).
+4. Tags: `Coach`, `Player`, then areas `booking`, `payments`, `room`,
+   `video analysis`, `profile` (public tags).
+5. Statuses stay the defaults (open, planned, started, completed, declined).
+   Convention: when an idea becomes **planned**, the response links the
+   OpenSpec change id; **completed** links the staging deploy.
+6. Launch: switch Private off in Settings → General (the launch checklist owns
+   this step).
+
+### Upgrade
+
+Watch https://github.com/getfider/fider/releases. Before a bump: read the
+notes (schema changes, minimum Postgres), confirm last night's `fider-*.pgdump`
+exists in the bucket, then change the image tag in `fider/fider.yaml`, apply,
+and check `kubectl -n playwithpro logs deploy/fider` for the migration output.
+
+### Restore
+
+Board dumps sit next to the app dumps under `backups/` (`fider-<date>.pgdump`).
+Scale the board down, restore as the superuser into the `fider` database,
+scale up:
+
+```bash
+kubectl -n playwithpro scale deploy/fider --replicas=0
+kubectl -n playwithpro exec -i deploy/postgres -- pg_restore -U playwithpro -d fider --clean --if-exists --no-owner --role=fider < fider-<date>.pgdump
+kubectl -n playwithpro scale deploy/fider --replicas=1
+```
+
+### Verification (issue #3)
+
+- `https://feedback.play-with.pro` serves a valid production certificate and
+  plain HTTP redirects to HTTPS.
+- An uninvited visitor sees the private-board screen and cannot sign up.
+- An invited coach's sign-in code arrives from `no-reply@play-with.pro`, not in spam.
+- Post, vote, comment; setting a status emails the voters.
+- The nightly backup object list shows a `fider-<date>.pgdump`; a scratch
+  restore into a throwaway database succeeds.
+- `psql "postgres://fider:<pw>@localhost/playwithpro"` from inside the
+  postgres pod is refused (permission denied).
+- With the build arg set, the menu item and the coach card open the board in
+  a new tab in all five locales; without it, neither renders.
+- `kubectl top pod` keeps the board under 256Mi; app pods unaffected.

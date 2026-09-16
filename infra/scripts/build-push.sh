@@ -20,6 +20,8 @@ POSTHOG_CLI_TOKEN_FILE="${POSTHOG_CLI_TOKEN_FILE:-$HOME/.playwithpro-posthog-cli
 env_value() { grep -E "^$1=" "$PROD_ENV" 2>/dev/null | tail -1 | cut -d= -f2-; }
 NEXT_PUBLIC_POSTHOG_KEY="${NEXT_PUBLIC_POSTHOG_KEY:-$(env_value NEXT_PUBLIC_POSTHOG_KEY)}"
 NEXT_PUBLIC_POSTHOG_REPLAY_SAMPLE="${NEXT_PUBLIC_POSTHOG_REPLAY_SAMPLE:-$(env_value NEXT_PUBLIC_POSTHOG_REPLAY_SAMPLE)}"
+# Feedback board link (change 25); empty = links hidden.
+NEXT_PUBLIC_FEEDBACK_URL="${NEXT_PUBLIC_FEEDBACK_URL:-$(env_value NEXT_PUBLIC_FEEDBACK_URL)}"
 secret_args=()
 if [[ -s "$POSTHOG_CLI_TOKEN_FILE" ]]; then
   secret_args=(--secret "id=posthog_cli_token,src=$POSTHOG_CLI_TOKEN_FILE")
@@ -46,6 +48,7 @@ for t in "${targets[@]}"; do
         --build-arg APP_RELEASE="$SHA" \
         --build-arg NEXT_PUBLIC_POSTHOG_KEY="$NEXT_PUBLIC_POSTHOG_KEY" \
         --build-arg NEXT_PUBLIC_POSTHOG_REPLAY_SAMPLE="$NEXT_PUBLIC_POSTHOG_REPLAY_SAMPLE" \
+        --build-arg NEXT_PUBLIC_FEEDBACK_URL="$NEXT_PUBLIC_FEEDBACK_URL" \
         ${secret_args[@]+"${secret_args[@]}"} \
         -f "$REPO_ROOT/apps/web/Dockerfile.prod" -t "$image" "$REPO_ROOT"
       ;;

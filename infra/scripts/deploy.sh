@@ -16,7 +16,7 @@ K8S="$REPO_ROOT/infra/k8s"
 
 echo "==> preflight"
 kubectl get ns "$NS" >/dev/null
-for secret in playwithpro-env livekit-config; do
+for secret in playwithpro-env livekit-config fider-env; do
   kubectl -n "$NS" get secret "$secret" >/dev/null || {
     echo "secret $secret missing — run infra/scripts/apply-secrets.sh first" >&2
     exit 1
@@ -31,6 +31,12 @@ kubectl apply -f "$K8S/livekit/"
 sed "s/__TAG__/$TAG/g" "$K8S/app/api.yaml" | kubectl apply -f -
 sed "s/__TAG__/$TAG/g" "$K8S/app/web.yaml" | kubectl apply -f -
 kubectl apply -f "$K8S/app/ingress.yaml"
+# Feedback board (change 25): role/database init is idempotent, so it runs on
+# every deploy (it also re-syncs the role password with the Secret).
+kubectl -n "$NS" delete job fider-init-db --ignore-not-found
+kubectl apply -f "$K8S/fider/init-db-job.yaml"
+kubectl -n "$NS" wait --for=condition=complete job/fider-init-db --timeout=120s
+kubectl apply -f "$K8S/fider/fider.yaml"
 
 echo "==> waiting for postgres"
 kubectl -n "$NS" rollout status deploy/postgres --timeout=180s
@@ -49,6 +55,7 @@ fi
 echo "==> waiting for app rollout (tag $TAG)"
 kubectl -n "$NS" rollout status deploy/api --timeout=300s
 kubectl -n "$NS" rollout status deploy/web --timeout=300s
+kubectl -n "$NS" rollout status deploy/fider --timeout=180s
 
 # LiveKit reads its config and TURN certificate at start only: restart it
 # whenever the rendered config or the TLS secret changed since the last deploy.

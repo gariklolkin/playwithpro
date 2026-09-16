@@ -1,6 +1,7 @@
 import { Role, type ProProfileResponse } from "@playwithpro/shared";
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
+import { FeedbackCard } from "@/components/dashboard/feedback-card";
 import { redirect } from "@/i18n/navigation";
 import { VerifyEmailBanner } from "@/components/dashboard/verify-email-banner";
 import { getCurrentUser, serverApiGet } from "@/lib/server-user";
@@ -60,6 +61,7 @@ export default async function DashboardPage() {
           </div>
         </div>
       ) : null}
+      {user.role === Role.Professional ? <FeedbackCard /> : null}
       <div className="mt-8 rounded-card border border-border p-10 text-center">
         <div className="text-3xl">🏓</div>
         <div className="mt-2 font-semibold text-text">{t("emptyTitle")}</div>

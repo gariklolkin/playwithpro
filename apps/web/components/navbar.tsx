@@ -46,6 +46,7 @@ export async function Navbar({ user }: { user: MeResponse | null }) {
               settings: t("settings"),
               privacy: t("privacy"),
               support: t("support"),
+              suggestIdea: t("suggestIdea"),
               logout: t("logout"),
             }}
           />

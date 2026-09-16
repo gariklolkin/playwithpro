@@ -13,7 +13,8 @@
     "verifyResent": "验证码已发送。",
     "verifyEnterCode": "输入验证码",
     "privacy": "隐私",
-    "support": "联系客服"
+    "support": "联系客服",
+    "suggestIdea": "提出建议"
   },
   "auth": {
     "login": {
@@ -133,6 +134,11 @@
         "earnings": "收入",
         "profile": "我的主页",
         "settings": "设置"
+      },
+      "feedback": {
+        "title": "一起完善平台",
+        "body": "缺少某个功能？把它发到我们的创意板上，为其他想法投票，上线时会收到邮件通知。",
+        "cta": "打开创意板"
       }
     },
     "admin": {

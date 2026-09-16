@@ -13,7 +13,8 @@
     "verifyResent": "Code de vérification envoyé.",
     "verifyEnterCode": "Saisir le code",
     "privacy": "Confidentialité",
-    "support": "Contacter le support"
+    "support": "Contacter le support",
+    "suggestIdea": "Proposer une idée"
   },
   "auth": {
     "login": {
@@ -133,6 +134,11 @@
         "earnings": "Revenus",
         "profile": "Mon profil",
         "settings": "Paramètres"
+      },
+      "feedback": {
+        "title": "Aidez-nous à façonner la plateforme",
+        "body": "Une fonctionnalité vous manque ? Publiez-la sur notre tableau d'idées, votez pour les autres et recevez un e-mail quand elle sort.",
+        "cta": "Ouvrir le tableau d'idées"
       }
     },
     "admin": {

@@ -13,7 +13,8 @@
     "verifyResent": "Bestätigungscode gesendet.",
     "verifyEnterCode": "Code eingeben",
     "privacy": "Datenschutz",
-    "support": "Support kontaktieren"
+    "support": "Support kontaktieren",
+    "suggestIdea": "Idee vorschlagen"
   },
   "auth": {
     "login": {
@@ -133,6 +134,11 @@
         "earnings": "Einnahmen",
         "profile": "Mein Profil",
         "settings": "Einstellungen"
+      },
+      "feedback": {
+        "title": "Gestalte die Plattform mit",
+        "body": "Fehlt eine Funktion? Trag sie auf unserem Ideen-Board ein, stimme für andere ab und bekomme eine E-Mail, wenn sie erscheint.",
+        "cta": "Ideen-Board öffnen"
       }
     },
     "admin": {

@@ -3,6 +3,7 @@
 import { Link, useRouter } from "@/i18n/navigation";
 import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { feedbackUrl } from "@/lib/feedback-url";
 import { resetIdentity } from "@/lib/observability/client";
 import { useSupport } from "@/lib/observability/context";
 import { useSettingsHref } from "@/lib/use-settings-href";
@@ -12,6 +13,7 @@ interface UserMenuLabels {
   settings: string;
   privacy: string;
   support: string;
+  suggestIdea: string;
   logout: string;
 }
 
@@ -27,6 +29,8 @@ export function UserMenu({
   const router = useRouter();
   const settingsHref = useSettingsHref("profile");
   const support = useSupport();
+  // Feedback board (change 25): external origin, new tab, hidden when unset.
+  const ideaHref = feedbackUrl("user-menu");
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -93,6 +97,17 @@ export function UserMenu({
             >
               {labels.support}
             </button>
+          ) : null}
+          {ideaHref ? (
+            <a
+              href={ideaHref}
+              target="_blank"
+              rel="noopener"
+              className={itemClass}
+              onClick={() => setOpen(false)}
+            >
+              {labels.suggestIdea} ↗
+            </a>
           ) : null}
           <button onClick={() => void handleLogout()} className={itemClass}>
             {labels.logout}

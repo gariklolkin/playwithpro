@@ -1,0 +1,86 @@
+# Feedback board: self-hosted Fider (change 25). One replica, own database in
+# the existing Postgres (Secret fider-env, rendered by apply-secrets.sh), mail
+# through the same Brevo relay as the api. Version is pinned on purpose: read
+# the release notes (https://github.com/getfider/fider/releases) and take a
+# verified backup before bumping it. The site-gate middleware is NOT applied:
+# Fider's private mode gates pre-launch access with real accounts.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fider
+  namespace: playwithpro
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: fider
+  template:
+    metadata:
+      labels:
+        app: fider
+    spec:
+      containers:
+        - name: fider
+          image: getfider/fider:v0.36.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - { name: GO_ENV, value: production }
+            - { name: BASE_URL, value: https://feedback.play-with.pro }
+            - { name: PORT, value: "3000" }
+          envFrom:
+            - secretRef:
+                name: fider-env
+          readinessProbe:
+            httpGet: { path: /, port: 3000 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet: { path: /, port: 3000 }
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { memory: 256Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fider
+  namespace: playwithpro
+spec:
+  selector:
+    app: fider
+  ports:
+    - port: 3000
+      targetPort: 3000
+---
+# TLS: starts on letsencrypt-staging; switch to letsencrypt-prod (and delete
+# the staging Secret play-with-pro-feedback-tls) once routing is verified.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: feedback
+  namespace: playwithpro
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.middlewares: playwithpro-redirect-https@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts: [feedback.play-with.pro]
+      secretName: play-with-pro-feedback-tls
+  rules:
+    - host: feedback.play-with.pro
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: fider, port: { number: 3000 } }

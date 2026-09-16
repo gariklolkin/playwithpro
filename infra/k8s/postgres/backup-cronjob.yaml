@@ -1,7 +1,11 @@
-# Nightly pg_dump shipped to the Hetzner Object Storage bucket under backups/.
-# Restore: download the dump, then
+# Nightly pg_dump of the app database AND the feedback board's `fider`
+# database, shipped to the Hetzner Object Storage bucket under backups/.
+# Restore (app): download the dump, then
 #   kubectl -n playwithpro exec -i deploy/postgres -- pg_restore -U playwithpro \
-#     -d playwithpro --clean --if-exists < dump.pgdump
+#     -d playwithpro --clean --if-exists < playwithpro-<date>.pgdump
+# Restore (board): scale deploy/fider to 0, then
+#   kubectl -n playwithpro exec -i deploy/postgres -- pg_restore -U playwithpro \
+#     -d fider --clean --if-exists --no-owner --role=fider < fider-<date>.pgdump
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -24,7 +28,14 @@ spec:
               command:
                 - sh
                 - -c
-                - pg_dump -Fc -h postgres -U "$POSTGRES_USER" "$POSTGRES_DB" -f "/backup/playwithpro-$(date +%F).pgdump"
+                - |
+                  set -e
+                  pg_dump -Fc -h postgres -U "$POSTGRES_USER" "$POSTGRES_DB" -f "/backup/playwithpro-$(date +%F).pgdump"
+                  # The board's database is dumped by the superuser too; a
+                  # missing database (board not deployed yet) is not an error.
+                  if psql -h postgres -U "$POSTGRES_USER" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='fider'" | grep -q 1; then
+                    pg_dump -Fc -h postgres -U "$POSTGRES_USER" fider -f "/backup/fider-$(date +%F).pgdump"
+                  fi
               env:
                 - name: POSTGRES_USER
                   valueFrom:
