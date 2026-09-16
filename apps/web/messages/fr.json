@@ -783,6 +783,14 @@
         "hideSelf": "Masquer ma caméra",
         "showSelf": "Afficher ma caméra",
         "hideSelfHint": "Masquée uniquement sur votre écran — l'autre participant vous voit toujours."
+      },
+      "time": {
+        "before": "Début dans {time}",
+        "during": "{time} restantes",
+        "over": "+{time} de dépassement",
+        "reminderTen": "Il reste 10 minutes à cette séance.",
+        "reminderEnd": "Le temps est écoulé — la séance est terminée. Vous pouvez continuer à parler jusqu'à la fermeture de la salle à <time></time>.",
+        "dismiss": "Fermer"
       }
     },
     "actions": {

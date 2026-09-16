@@ -783,6 +783,14 @@
         "hideSelf": "Meine Kamera ausblenden",
         "showSelf": "Meine Kamera einblenden",
         "hideSelfHint": "Nur auf Ihrem Bildschirm ausgeblendet – die andere Person sieht Sie weiterhin."
+      },
+      "time": {
+        "before": "Beginn in {time}",
+        "during": "Noch {time}",
+        "over": "+{time} überzogen",
+        "reminderTen": "Noch 10 Minuten in dieser Sitzung.",
+        "reminderEnd": "Die Zeit ist um — die Sitzung ist beendet. Ihr könnt weiterreden, bis der Raum um <time></time> schließt.",
+        "dismiss": "Schließen"
       }
     },
     "actions": {

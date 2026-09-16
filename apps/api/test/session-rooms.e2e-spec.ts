@@ -251,6 +251,10 @@ describe('Session rooms & calendar (e2e)', () => {
       expect(room.opensAt).toBeTruthy();
       expect(room.closesAt).toBeTruthy();
       expect(room.counterpartName).toBe('Rooms Coach');
+      // The server clock rides along for the client-side countdown.
+      expect(
+        Math.abs(new Date(room.serverNow).getTime() - Date.now()),
+      ).toBeLessThan(5_000);
 
       await request(server())
         .get(`/sessions/${sessionId}/room`)

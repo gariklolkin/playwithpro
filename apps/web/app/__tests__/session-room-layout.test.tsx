@@ -177,6 +177,7 @@ function roomResponse(serviceType: ServiceType) {
           ]
         : [],
     counterpartName: "Smoke Coach",
+    serverNow: new Date(now).toISOString(),
   };
 }
 
@@ -271,7 +272,8 @@ describe("SessionRoom video-analysis layout", () => {
     mockApi(ServiceType.VideoAnalysis);
     renderRoom();
     await joinCall();
-    expect(roomMounts).toHaveBeenCalledTimes(1);
+    // The mount effect flushes after the commit `joinCall` waited for.
+    await waitFor(() => expect(roomMounts).toHaveBeenCalledTimes(1));
     const layout = screen.getByTestId("room-layout");
 
     fireEvent.click(screen.getByRole("button", { name: "Focus on the video" }));
@@ -397,5 +399,96 @@ describe("SessionRoom consultation layout", () => {
     expect(
       screen.queryByRole("button", { name: "Focus on the video" }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("SessionRoom call-time indicator and reminders", () => {
+  it("shows the remaining time in stage, rail and focus layouts", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      mockApi(ServiceType.VideoAnalysis);
+      renderRoom();
+      await screen.findByRole("button", { name: "Join (stub)" });
+      const indicator = await screen.findByTestId("room-time");
+      expect(indicator).toHaveAttribute("data-phase", "during");
+      expect(indicator).toHaveTextContent(/59:5\d left/);
+
+      await joinCall();
+      expect(screen.getByTestId("room-time")).toBeInTheDocument();
+      fireEvent.click(
+        screen.getByRole("button", { name: "Focus on the video" }),
+      );
+      expect(screen.getByTestId("room-layout")).toHaveAttribute(
+        "data-layout",
+        "focus",
+      );
+      expect(screen.getByTestId("room-time")).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("toasts at T-10 and T-0 only while in the call, inside a fullscreen card", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const now = Date.now();
+      apiFetch.mockImplementation(async (url: string) => ({
+        ok: true,
+        json: async () =>
+          url.endsWith("/room/join")
+            ? { attendanceId: "attendance-1", token: "token-1" }
+            : {
+                ...roomResponse(ServiceType.Consultation),
+                startsAt: new Date(now - 60_000).toISOString(),
+                endsAt: new Date(now + 11 * 60_000).toISOString(),
+                closesAt: new Date(now + 41 * 60_000).toISOString(),
+              },
+      }));
+      renderRoom();
+      await screen.findByRole("button", { name: "Join (stub)" });
+      // Flush the clock's effects (server offset, first tick) before moving
+      // the fake clock; `findByRole` resolves on the commit, not on them.
+      await act(async () => {});
+      // Pre-join: crossing T-10 must not toast.
+      await act(async () => {
+        vi.advanceTimersByTime(90_000);
+      });
+      expect(screen.queryByTestId("room-toast")).not.toBeInTheDocument();
+
+      await joinCall();
+      await act(async () => {});
+      const card = document.createElement("div");
+      document.body.appendChild(card);
+      Object.defineProperty(document, "fullscreenElement", {
+        configurable: true,
+        value: card,
+      });
+      act(() => {
+        document.dispatchEvent(new Event("fullscreenchange"));
+      });
+
+      // T-0 is reached ~9.5 minutes later.
+      await act(async () => {
+        vi.advanceTimersByTime(10 * 60_000);
+      });
+      const toast = await screen.findByTestId("room-toast");
+      expect(toast).toHaveTextContent("Time is up");
+      expect(card).toContainElement(toast);
+      expect(screen.getByTestId("room-time")).toHaveAttribute(
+        "data-phase",
+        "over",
+      );
+      expect(disconnect).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
+      expect(screen.queryByTestId("room-toast")).not.toBeInTheDocument();
+      Object.defineProperty(document, "fullscreenElement", {
+        configurable: true,
+        value: null,
+      });
+      card.remove();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

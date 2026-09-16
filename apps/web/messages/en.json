@@ -783,6 +783,14 @@
         "hideSelf": "Hide my camera tile",
         "showSelf": "Show my camera tile",
         "hideSelfHint": "Hidden only on your screen — the other party still sees you."
+      },
+      "time": {
+        "before": "Starts in {time}",
+        "during": "{time} left",
+        "over": "+{time} over",
+        "reminderTen": "10 minutes left in this session.",
+        "reminderEnd": "Time is up — the session has ended. You can keep talking until the room closes at <time></time>.",
+        "dismiss": "Dismiss"
       }
     },
     "actions": {

@@ -134,3 +134,53 @@ describe('SessionRoomsService.authorizePlaybackSync', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 });
+
+describe('SessionRoomsService.getRoom', () => {
+  const prisma = { session: { findUnique: jest.fn() } };
+  const config = {
+    getOrThrow: jest.fn((key: string) =>
+      key === 'ROOM_JOIN_WINDOW_BEFORE_MIN' ? 15 : 30,
+    ),
+  };
+  const progression = {
+    normalize: jest.fn((session: unknown) => Promise.resolve(session)),
+  };
+  const video = {
+    describeRoom: jest.fn(() => ({
+      kind: 'livekit' as const,
+      url: 'wss://meet.test',
+      roomName: 'slug',
+    })),
+    issueToken: jest.fn(),
+  };
+  const service = new SessionRoomsService(
+    prisma as unknown as PrismaService,
+    config as unknown as ConfigService,
+    progression as unknown as SessionProgressionService,
+    video,
+  );
+
+  it('carries the server clock next to the window bounds', async () => {
+    prisma.session.findUnique.mockResolvedValue({
+      id: 'sess-1',
+      playerId: 'player-1',
+      proProfile: { userId: 'coach-1', user: { displayName: 'Coach' } },
+      player: { id: 'player-1', displayName: 'Player' },
+      videos: [],
+      serviceType: ServiceType.CONSULTATION,
+      status: SessionStatus.IN_PROGRESS,
+      roomSlug: 'slug',
+      startsAt: new Date(Date.now() - 10 * MINUTE),
+      endsAt: new Date(Date.now() + 50 * MINUTE),
+    });
+    const before = Date.now();
+    const room = await service.getRoom(
+      { id: 'player-1', role: Role.Amateur },
+      'sess-1',
+    );
+    const serverNow = new Date(room.serverNow).getTime();
+    expect(serverNow).toBeGreaterThanOrEqual(before);
+    expect(serverNow).toBeLessThanOrEqual(Date.now());
+    expect(room.room).not.toBeNull();
+  });
+});

@@ -82,6 +82,9 @@ export class SessionRoomsService {
       counterpartName: viewerIsPlayer
         ? session.proProfile.user.displayName
         : session.player.displayName,
+      // Same instant as the join-window check, so the countdown the client
+      // derives from it can never disagree with the joinable decision.
+      serverNow: new Date(now).toISOString(),
     };
   }
 

@@ -25,7 +25,7 @@ export class SessionRoomsController {
   @Get()
   @ApiOkResponse({
     description:
-      'Room timing (always) and join descriptor (inside the window); parties only.',
+      'Room timing and server clock (always) and join descriptor (inside the window); parties only.',
   })
   async get(
     @CurrentUser() user: AuthenticatedUser,

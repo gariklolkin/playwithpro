@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CALL_TIME_REMINDER_BEFORE_END_MIN,
   ServiceType,
   type JoinRoomResponse,
   type Role,
@@ -10,6 +11,10 @@ import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 import { LocalTime } from "@/components/catalog/local-time";
+import {
+  RoomToasts,
+  type RoomToastItem,
+} from "@/components/sessions/room-toast";
 import type {
   CallLayout,
   CallPhaseKind,
@@ -19,6 +24,11 @@ import {
   type CardLayout,
 } from "@/components/sessions/room-video-panel";
 import { apiFetch } from "@/lib/api";
+import {
+  formatClock,
+  useSessionClock,
+  type SessionClockThreshold,
+} from "@/lib/use-session-clock";
 import { Link } from "@/i18n/navigation";
 
 // The call SDK is a sizeable client-only bundle; load it on this page only.
@@ -71,16 +81,9 @@ function writeHideSelf(hide: boolean) {
   }
 }
 
-function formatCountdown(ms: number): string {
-  const total = Math.max(0, Math.floor(ms / 1000));
-  const hours = Math.floor(total / 3600);
-  const minutes = Math.floor((total % 3600) / 60);
-  const seconds = total % 60;
-  const pad = (value: number) => String(value).padStart(2, "0");
-  return hours > 0
-    ? `${hours}:${pad(minutes)}:${pad(seconds)}`
-    : `${minutes}:${pad(seconds)}`;
-}
+/** Toast lifetimes: the end reminder names a time, so it stays a bit longer. */
+const REMINDER_TOAST_MS = 8_000;
+const END_TOAST_MS = 12_000;
 
 /**
  * The platform session room: countdown before the join window, the native
@@ -105,8 +108,7 @@ export function SessionRoom({
   const t = useTranslations("sessions.room");
   const tSessions = useTranslations("sessions");
   const [state, setState] = useState<LoadState>({ kind: "loading" });
-  const [countdown, setCountdown] = useState<string | null>(null);
-  const [windowClosed, setWindowClosed] = useState(false);
+  const [toasts, setToasts] = useState<RoomToastItem[]>([]);
   const [callPhase, setCallPhase] = useState<CallPhaseKind>("prejoin");
   const [focus, setFocus] = useState(false);
   const [hideSelf, setHideSelf] = useState(readHideSelf);
@@ -138,34 +140,59 @@ export function SessionRoom({
 
   const room = state.kind === "ready" ? state.room : null;
 
-  // Tick a countdown until the window opens, then refetch for the descriptor.
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  }, []);
+
+  // Reminders only while connected; the hook fires each crossing once.
+  const onThreshold = useCallback(
+    (threshold: SessionClockThreshold) => {
+      if (!room) return;
+      setToasts((prev) => [
+        ...prev.filter((toast) => toast.id !== threshold),
+        threshold === "end"
+          ? {
+              id: threshold,
+              text: t.rich("time.reminderEnd", {
+                time: () => <LocalTime iso={room.closesAt} />,
+              }),
+              durationMs: END_TOAST_MS,
+              tone: "danger",
+            }
+          : {
+              id: threshold,
+              text: t("time.reminderTen"),
+              durationMs: REMINDER_TOAST_MS,
+              tone: "warning",
+            },
+      ]);
+    },
+    [room, t],
+  );
+
+  // One server-corrected clock for the pre-join countdown, the header
+  // indicator and the in-call reminders, so they can never disagree.
+  const clock = useSessionClock(room, {
+    active: room?.room !== null && callPhase === "in-call",
+    onThreshold,
+  });
+
+  // Before the window opens, refetch for the descriptor once it does. The
+  // closed state is derived from the same clock below.
   useEffect(() => {
-    if (!room || room.room !== null) {
+    if (!room || room.room !== null || clock.now === null) {
       return;
     }
-    const opensAtMs = new Date(room.opensAt).getTime();
-    const closesAtMs = new Date(room.closesAt).getTime();
-    const tick = () => {
-      const now = Date.now();
-      if (now > closesAtMs) {
-        setWindowClosed(true);
-        return;
-      }
-      const left = opensAtMs - now;
-      if (left <= 0) {
-        void load();
-        return;
-      }
-      setCountdown(formatCountdown(left));
-    };
-    // Deferred first tick keeps the effect free of synchronous setState.
-    const kickoff = setTimeout(tick, 0);
-    const timer = setInterval(tick, 1000);
-    return () => {
-      clearTimeout(kickoff);
-      clearInterval(timer);
-    };
-  }, [room, load]);
+    if (
+      clock.now < new Date(room.opensAt).getTime() ||
+      clock.now > new Date(room.closesAt).getTime()
+    ) {
+      return;
+    }
+    // Deferred like the initial kickoff: the fetch settles asynchronously.
+    const kickoff = setTimeout(() => void load(), 0);
+    return () => clearTimeout(kickoff);
+  }, [room, clock.now, load]);
 
   // The explicit "Join call" click performs the join: it records attendance
   // and returns the participant token. Connection/leave evidence arrives via
@@ -218,7 +245,26 @@ export function SessionRoom({
   }
 
   const withVideo = room.serviceType === ServiceType.VideoAnalysis;
-  const closed = room.room === null && windowClosed;
+  const closed =
+    room.room === null &&
+    clock.now !== null &&
+    clock.now > new Date(room.closesAt).getTime();
+  const countdown =
+    clock.now === null
+      ? null
+      : formatClock(new Date(room.opensAt).getTime() - clock.now);
+  const indicator =
+    room.room !== null && clock.phase !== null
+      ? {
+          phase: clock.phase,
+          text: t(`time.${clock.phase}`, {
+            time: formatClock(clock.remainingMs),
+          }),
+          urgent:
+            clock.phase === "during" &&
+            clock.remainingMs <= CALL_TIME_REMINDER_BEFORE_END_MIN * 60_000,
+        }
+      : null;
   const theatre = withVideo && callPhase === "in-call";
   const focused = theatre && focus;
   const callLayout: CallLayout = focused ? "focus" : theatre ? "rail" : "stage";
@@ -256,8 +302,31 @@ export function SessionRoom({
             <span className="text-text-tertiary">{tSessions("yourTime")}</span>
           </p>
         </div>
-        <BackToSessions label={t("backToSessions")} />
+        <div className="flex items-center gap-3">
+          {indicator ? (
+            <span
+              data-testid="room-time"
+              data-phase={indicator.phase}
+              className={`rounded-md px-2.5 py-1 text-[13px] font-semibold tabular-nums ${
+                indicator.phase === "over"
+                  ? "bg-[#FBE4E4] text-[#C4554D]"
+                  : indicator.urgent
+                    ? "bg-[#FDECC8] text-[#402C1B]"
+                    : "bg-bg-secondary text-text-secondary"
+              }`}
+            >
+              ⏱ {indicator.text}
+            </span>
+          ) : null}
+          <BackToSessions label={t("backToSessions")} />
+        </div>
       </header>
+
+      <RoomToasts
+        toasts={toasts}
+        onDismiss={dismissToast}
+        dismissLabel={t("time.dismiss")}
+      />
 
       {room.room === null ? (
         <div className="rounded-card border border-border p-10 text-center">

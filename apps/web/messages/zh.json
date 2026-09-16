@@ -783,6 +783,14 @@
         "hideSelf": "隐藏我的画面",
         "showSelf": "显示我的画面",
         "hideSelfHint": "仅在您的屏幕上隐藏——对方仍能看到您。"
+      },
+      "time": {
+        "before": "{time} 后开始",
+        "during": "剩余 {time}",
+        "over": "已超时 +{time}",
+        "reminderTen": "本次课程还剩 10 分钟。",
+        "reminderEnd": "时间到——课程已结束。房间将于 <time></time> 关闭，在此之前可以继续交谈。",
+        "dismiss": "关闭"
       }
     },
     "actions": {

@@ -3,6 +3,13 @@ import type { SessionStatus } from "../enums/session-status";
 import type { SessionVideoItem } from "./booking";
 
 /**
+ * Minutes before `endsAt` at which the in-call reminder fires. A shared
+ * constant (no per-user setting in the MVP) so a future server-side push
+ * uses the same lead time as the web countdown.
+ */
+export const CALL_TIME_REMINDER_BEFORE_END_MIN = 10;
+
+/**
  * Vendor-tagged descriptor of where the call lives. Carries no capability:
  * admission needs the participant token returned by the join action.
  */
@@ -34,6 +41,12 @@ export interface SessionRoomResponse {
   videos: SessionVideoItem[];
   /** Localized display name of the other party. */
   counterpartName: string;
+  /**
+   * The API's clock when the response was built. Remaining-time displays and
+   * reminders derive from `serverNow − Date.now()` at receipt, never from the
+   * client clock alone.
+   */
+  serverNow: string;
 }
 
 export interface JoinRoomResponse {
