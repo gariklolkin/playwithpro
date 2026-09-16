@@ -9,8 +9,9 @@
     "settings": "设置",
     "logout": "退出登录",
     "verifyBanner": "请验证您的邮箱 — 查看收件箱。",
-    "verifyResend": "重新发送链接",
-    "verifyResent": "验证链接已发送。"
+    "verifyResend": "重新发送验证码",
+    "verifyResent": "验证码已发送。",
+    "verifyEnterCode": "输入验证码"
   },
   "auth": {
     "login": {
@@ -51,7 +52,7 @@
       "submitting": "正在创建账户…",
       "or": "或",
       "google": "使用 Google 注册",
-      "footer": "我们将发送验证链接 · 无需 Google 账户",
+      "footer": "我们将通过邮件发送 6 位验证码 · 无需 Google 账户",
       "failed": "注册失败。请检查信息后重试。",
       "emailTaken": "该邮箱已注册——请使用下方链接登录。",
       "haveAccount": "已有账户？",
@@ -261,7 +262,7 @@
       "schedulePrompt": "只差一步：预约一次简短的视频通话以核实身份。",
       "scheduleCta": "选择时间",
       "readyInfo": "您的资料已包含审核所需的全部信息。提交后请选择一个简短（5–15 分钟）视频通话的时间。",
-      "confirmEmailFirst": "请先确认您的邮箱——预约确认、提醒和会议邀请都会发送到该邮箱。确认链接已发送至您的收件箱。"
+      "confirmEmailFirst": "请先确认您的邮箱——预约确认、提醒和会议邀请都会发送到该邮箱。6 位确认码已发送至您的收件箱。"
     }
   },
   "availability": {

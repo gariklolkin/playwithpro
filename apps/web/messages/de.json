@@ -9,8 +9,9 @@
     "settings": "Einstellungen",
     "logout": "Abmelden",
     "verifyBanner": "Bitte bestätige deine E-Mail — sieh in deinem Posteingang nach.",
-    "verifyResend": "Link erneut senden",
-    "verifyResent": "Bestätigungslink gesendet."
+    "verifyResend": "Code erneut senden",
+    "verifyResent": "Bestätigungscode gesendet.",
+    "verifyEnterCode": "Code eingeben"
   },
   "auth": {
     "login": {
@@ -51,7 +52,7 @@
       "submitting": "Konto wird erstellt…",
       "or": "oder",
       "google": "Mit Google registrieren",
-      "footer": "Wir senden dir einen Bestätigungslink · Kein Google-Konto erforderlich",
+      "footer": "Wir senden dir einen 6-stelligen Code per E-Mail · Kein Google-Konto erforderlich",
       "failed": "Registrierung fehlgeschlagen. Prüfe die Angaben und versuche es erneut.",
       "emailTaken": "Diese E-Mail ist bereits registriert – melde dich stattdessen unten an.",
       "haveAccount": "Du hast schon ein Konto?",
@@ -261,7 +262,7 @@
       "schedulePrompt": "Noch ein Schritt: Buchen Sie einen kurzen Videoanruf zur Identitätsprüfung.",
       "scheduleCta": "Termin wählen",
       "readyInfo": "Ihr Profil enthält alles, was wir für die Prüfung brauchen. Reichen Sie es ein und wählen Sie eine Zeit für einen kurzen (5–15 Min.) Videoanruf.",
-      "confirmEmailFirst": "Bestätigen Sie zuerst Ihre E-Mail-Adresse — Buchungsbestätigung, Erinnerungen und die Meeting-Einladung gehen dorthin. Der Bestätigungslink ist in Ihrem Postfach."
+      "confirmEmailFirst": "Bestätigen Sie zuerst Ihre E-Mail-Adresse — Buchungsbestätigung, Erinnerungen und die Meeting-Einladung gehen dorthin. Der 6-stellige Bestätigungscode ist in Ihrem Postfach."
     }
   },
   "availability": {

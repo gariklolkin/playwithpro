@@ -9,8 +9,9 @@
     "settings": "Paramètres",
     "logout": "Se déconnecter",
     "verifyBanner": "Veuillez vérifier votre e-mail — consultez votre boîte de réception.",
-    "verifyResend": "Renvoyer le lien",
-    "verifyResent": "Lien de vérification envoyé."
+    "verifyResend": "Renvoyer le code",
+    "verifyResent": "Code de vérification envoyé.",
+    "verifyEnterCode": "Saisir le code"
   },
   "auth": {
     "login": {
@@ -51,7 +52,7 @@
       "submitting": "Création du compte…",
       "or": "ou",
       "google": "S'inscrire avec Google",
-      "footer": "Nous vous enverrons un lien de vérification · Compte Google non requis",
+      "footer": "Nous vous enverrons un code à 6 chiffres par e-mail · Compte Google non requis",
       "failed": "L'inscription a échoué. Vérifiez les informations et réessayez.",
       "emailTaken": "Cet e-mail est déjà enregistré — connectez-vous via le lien ci-dessous.",
       "haveAccount": "Vous avez déjà un compte ?",
@@ -261,7 +262,7 @@
       "schedulePrompt": "Une dernière étape : réservez un court appel vidéo pour confirmer votre identité.",
       "scheduleCta": "Choisir un horaire",
       "readyInfo": "Votre profil contient tout ce qu'il nous faut pour la vérification. Soumettez-le et choisissez un horaire pour un court appel vidéo (5–15 min).",
-      "confirmEmailFirst": "Confirmez d'abord votre adresse e-mail — la confirmation de réservation, les rappels et l'invitation à la réunion y seront envoyés. Le lien de confirmation est dans votre boîte de réception."
+      "confirmEmailFirst": "Confirmez d'abord votre adresse e-mail — la confirmation de réservation, les rappels et l'invitation à la réunion y seront envoyés. Le code de confirmation à 6 chiffres est dans votre boîte de réception."
     }
   },
   "availability": {

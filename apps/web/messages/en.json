@@ -9,8 +9,9 @@
     "settings": "Settings",
     "logout": "Log out",
     "verifyBanner": "Please verify your email — check your inbox.",
-    "verifyResend": "Resend link",
-    "verifyResent": "Verification link sent."
+    "verifyResend": "Resend code",
+    "verifyResent": "Verification code sent.",
+    "verifyEnterCode": "Enter the code"
   },
   "auth": {
     "login": {
@@ -51,7 +52,7 @@
       "submitting": "Creating account…",
       "or": "or",
       "google": "Sign up with Google",
-      "footer": "We'll send a verification link · No Google account required",
+      "footer": "We'll email you a 6-digit code · No Google account required",
       "failed": "Registration failed. Check the details and try again.",
       "emailTaken": "This email is already registered — log in below instead.",
       "haveAccount": "Already have an account?",
@@ -261,7 +262,7 @@
       "schedulePrompt": "One step left: book a short video call to verify your identity.",
       "scheduleCta": "Pick a time",
       "readyInfo": "Your profile has everything we need for the review. Submit it and pick a time for a short (5–15 min) video call.",
-      "confirmEmailFirst": "Confirm your email address first — the booking confirmation, reminders and the meeting invite all go there. Check your inbox for the confirmation link."
+      "confirmEmailFirst": "Confirm your email address first — the booking confirmation, reminders and the meeting invite all go there. Check your inbox for the 6-digit confirmation code."
     }
   },
   "availability": {
