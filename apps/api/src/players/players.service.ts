@@ -8,6 +8,7 @@ import { PlayerProfile, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import {
+  toPlayerCard,
   toPlayerProfileResponse,
   toPrismaGrip,
   toPrismaHandedness,
@@ -56,7 +57,7 @@ export class PlayersService {
     return toPlayerProfileResponse(updated);
   }
 
-  /** Read-only card for coaches/admins: playing details + public identity. */
+  /** Read-only card for admins: playing details + public identity. */
   async getPlayerCard(playerUserId: string): Promise<PlayerCardResponse> {
     const user = await this.prisma.user.findUnique({
       where: { id: playerUserId },
@@ -65,14 +66,8 @@ export class PlayersService {
     if (!user || user.role !== Role.AMATEUR) {
       throw new NotFoundException('Player not found.');
     }
-    const profile =
-      user.playerProfile ?? (await this.ensureProfile(playerUserId));
-    return {
-      ...toPlayerProfileResponse(profile),
-      userId: user.id,
-      displayName: user.displayName,
-      avatarUrl:
-        user.avatarKey === null ? null : this.storage.avatarUrl(user.avatarKey),
-    };
+    return toPlayerCard(user, user.playerProfile, (key) =>
+      this.storage.avatarUrl(key),
+    );
   }
 }

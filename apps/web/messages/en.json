@@ -478,7 +478,15 @@
       "error": "Could not save changes. Please try again."
     },
     "card": {
-      "years": "{years} yrs of play"
+      "years": "{years} yrs of play",
+      "unfilled": "hasn't filled in a profile yet",
+      "goalLabel": "Goal for this session",
+      "noGoal": "No goal given."
+    },
+    "visibility": {
+      "hint": "Coaches you book can see your playing details and this description after payment — nobody else.",
+      "previewTitle": "How coaches see you",
+      "previewHint": "This is the card a coach gets with a paid session, exactly as saved."
     }
   },
   "videos": {
@@ -609,6 +617,11 @@
         "minutesLeft": "{minutes, plural, one {# minute} other {# minutes}} left to pay, then the slot is released.",
         "pay": "Pay now",
         "release": "Release slot"
+      },
+      "goal": {
+        "label": "What should we focus on? (optional)",
+        "placeholder": "e.g. my backhand loop against topspin, serve variety…",
+        "hint": "The coach sees this after payment. You can edit it until the session starts."
       }
     }
   },
@@ -635,7 +648,8 @@
     "expiredTitle": "This booking has expired",
     "expiredSubtitle": "The payment window closed and the slot was released. You can pick a new time.",
     "backToCoach": "Back to the coach",
-    "releaseSlot": "Release this slot instead"
+    "releaseSlot": "Release this slot instead",
+    "goal": "Goal"
   },
   "sessions": {
     "title": "Sessions",
@@ -838,6 +852,20 @@
       "cancel": "Cancel",
       "saveFailed": "Could not save the clips. Please try again.",
       "locked": "The clips of this session can no longer be changed."
+    },
+    "goal": {
+      "label": "What should we focus on?",
+      "placeholder": "e.g. my backhand loop against topspin…",
+      "none": "No goal set",
+      "add": "Add a goal",
+      "edit": "Edit",
+      "save": "Save goal",
+      "cancel": "Cancel",
+      "saveFailed": "Could not save the goal. Please try again.",
+      "locked": "The goal can no longer be changed."
+    },
+    "aboutPlayer": {
+      "title": "About the player"
     }
   },
   "adminDisputes": {

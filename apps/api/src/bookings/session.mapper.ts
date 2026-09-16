@@ -2,6 +2,8 @@ import {
   DisputeOutcome as SharedDisputeOutcome,
   DisputeStatus as SharedDisputeStatus,
   PaymentStatus as SharedPaymentStatus,
+  PlayerCardResponse,
+  Role,
   SessionResponse,
   SessionStatus,
   SessionVideoItem,
@@ -9,6 +11,7 @@ import {
 import type {
   Dispute,
   Payment,
+  PlayerProfile,
   ProProfile,
   Review,
   Session,
@@ -16,11 +19,19 @@ import type {
   Video,
 } from '@prisma/client';
 import { PaymentStatus } from '@prisma/client';
+import type { AuthenticatedUser } from '../auth/auth-cookies';
+import { toPlayerCard } from '../players/player-profile.mapper';
 import { toSharedServiceType } from '../pros/pro-profile.mapper';
-import { ROOM_ACCESS_STATUSES, isOnlineService } from './session-access';
+import {
+  COACH_ACCESS_STATUSES,
+  ROOM_ACCESS_STATUSES,
+  isOnlineService,
+} from './session-access';
 
 export type SessionWithParties = Session & {
-  player: Pick<User, 'id' | 'displayName' | 'avatarKey'>;
+  player: Pick<User, 'id' | 'displayName' | 'avatarKey'> & {
+    playerProfile: PlayerProfile | null;
+  };
   proProfile: ProProfile & {
     user: Pick<User, 'displayName' | 'avatarKey'>;
     services: Array<{ venueLabel: string }>;
@@ -56,7 +67,16 @@ export const SESSION_VIDEO_SELECT = {
 } as const;
 
 export const SESSION_INCLUDE = {
-  player: { select: { id: true, displayName: true, avatarKey: true } },
+  // The profile rides along for the coach's "About the player" card; the
+  // mapper decides per viewer whether it leaves the API.
+  player: {
+    select: {
+      id: true,
+      displayName: true,
+      avatarKey: true,
+      playerProfile: true,
+    },
+  },
   proProfile: {
     include: {
       user: { select: { displayName: true, avatarKey: true } },
@@ -94,6 +114,37 @@ export interface SessionResponseExtras {
   roomWindow?: RoomWindow;
   /** Present when the caller wants the auto-confirm deadline exposed. */
   autoConfirmWindowHours?: number;
+  /** The reader; decides whether the player's card is embedded. Absent = player-only data. */
+  viewer?: AuthenticatedUser;
+}
+
+/**
+ * The player-profiles rule: a coach sees the player's card only through a
+ * shared session that is paid (never pending, never cancelled). Every other
+ * reader — the player, admins, callers without a viewer — gets null.
+ */
+export function toPlayerContext(
+  session: {
+    status: SessionWithParties['status'];
+    player: SessionWithParties['player'];
+    proProfile: { userId: string };
+  },
+  viewer: AuthenticatedUser | undefined,
+  avatarUrlOf: (key: string) => string,
+): PlayerCardResponse | null {
+  if (
+    !viewer ||
+    viewer.role !== Role.Professional ||
+    session.proProfile.userId !== viewer.id ||
+    !COACH_ACCESS_STATUSES.includes(session.status)
+  ) {
+    return null;
+  }
+  return toPlayerCard(
+    session.player,
+    session.player.playerProfile,
+    avatarUrlOf,
+  );
 }
 
 const ESCROW_STATUS: Record<string, SharedPaymentStatus> = {
@@ -137,6 +188,8 @@ export function toSessionResponse(
       avatarUrl: avatar(session.player.avatarKey),
     },
     videos: toSessionVideoItems(session.videos),
+    goal: session.goal ?? null,
+    playerContext: toPlayerContext(session, extras?.viewer, avatarUrlOf),
     venue: online ? null : (session.proProfile.services[0]?.venueLabel ?? null),
     room: hasRoom
       ? {

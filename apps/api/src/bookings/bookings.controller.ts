@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Put,
   UseGuards,
@@ -25,6 +26,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { PaySessionDto } from './dto/pay-session.dto';
+import { UpdateSessionGoalDto } from './dto/update-session-goal.dto';
 import { UpdateSessionVideosDto } from './dto/update-session-videos.dto';
 
 @ApiTags('bookings')
@@ -101,6 +103,20 @@ export class BookingsController {
     @Body() dto: UpdateSessionVideosDto,
   ): Promise<SessionResponse> {
     return this.bookings.updateVideos(user.id, id, dto.videos);
+  }
+
+  @Patch('sessions/:id/goal')
+  @Roles(Role.Amateur)
+  @ApiOkResponse({
+    description:
+      'Sets or clears the session goal; player only, until the session starts.',
+  })
+  async updateGoal(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateSessionGoalDto,
+  ): Promise<SessionResponse> {
+    return this.bookings.updateGoal(user, id, dto.goal);
   }
 
   @Post('sessions/:id/pay')

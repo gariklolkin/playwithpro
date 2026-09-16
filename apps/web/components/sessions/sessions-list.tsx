@@ -12,7 +12,9 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { Link } from "@/i18n/navigation";
 import { formatDuration } from "@/lib/format-duration";
 import { useNow } from "@/lib/use-now";
+import { PlayerContextDisclosure } from "./player-context-disclosure";
 import { SessionActions } from "./session-actions";
+import { SessionGoalEditor } from "./session-goal-editor";
 import { SessionReview } from "./session-review";
 import { SessionVideosEditor } from "./session-videos-editor";
 
@@ -54,19 +56,22 @@ function SessionCard({
   const t = useTranslations("sessions");
   const tCatalog = useTranslations("catalog");
   const other = isCoach ? session.player : session.coach;
-  // The clip set edited in place; the rest of the card keeps the server's
-  // session until the next refresh.
+  // The clip set and goal edited in place; the rest of the card keeps the
+  // server's session until the next refresh.
   const [edited, setEdited] = useState<SessionResponse | null>(null);
-  const clips = (edited ?? session).videos;
+  const current = edited ?? session;
+  const clips = current.videos;
   // Window check happens after mount only, so server HTML never disagrees
   // with the client clock.
   const now = useNow();
-  const clipsEditable =
+  // One rule for every player-side edit of the booking (clips, goal).
+  const editableBeforeStart =
     !isCoach &&
-    session.serviceType === ServiceType.VideoAnalysis &&
     CLIP_EDIT_STATUSES.includes(session.status) &&
     now !== null &&
     now < new Date(session.startsAt).getTime();
+  const clipsEditable =
+    editableBeforeStart && session.serviceType === ServiceType.VideoAnalysis;
   const coachCanOpen = isCoach && COACH_CLIP_ACCESS.includes(session.status);
   const roomOpen =
     now !== null &&
@@ -141,8 +146,12 @@ function SessionCard({
               )
             ) : null}
             {clipsEditable ? (
-              <SessionVideosEditor
-                session={edited ?? session}
+              <SessionVideosEditor session={current} onUpdated={setEdited} />
+            ) : null}
+            {!isCoach ? (
+              <SessionGoalEditor
+                session={current}
+                editable={editableBeforeStart}
                 onUpdated={setEdited}
               />
             ) : null}
@@ -181,6 +190,13 @@ function SessionCard({
           ) : null}
         </div>
       </div>
+      {isCoach && session.playerContext ? (
+        <PlayerContextDisclosure
+          className="mt-3"
+          player={session.playerContext}
+          goal={session.goal}
+        />
+      ) : null}
       <SessionActions session={session} isCoach={isCoach} />
       <SessionReview session={session} isCoach={isCoach} />
     </li>

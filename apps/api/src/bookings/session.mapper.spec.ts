@@ -1,3 +1,4 @@
+import { Role } from '@playwithpro/shared';
 import {
   toSessionResponse,
   toSessionVideoItems,
@@ -25,7 +26,24 @@ const base = {
   inviteSentAt: null,
   createdAt: new Date(),
   updatedAt: new Date(),
-  player: { id: 'player-1', displayName: 'Player', avatarKey: null },
+  goal: null,
+  player: {
+    id: 'player-1',
+    displayName: 'Player',
+    avatarKey: 'avatars/player-1/a.png',
+    playerProfile: {
+      id: 'pp-1',
+      userId: 'player-1',
+      level: 'ADVANCED',
+      style: 'OFFENSIVE',
+      yearsOfExperience: 7,
+      handedness: 'LEFT',
+      grip: 'SHAKEHAND',
+      about: 'Working on my loop',
+      createdAt: new Date('2026-01-01T00:00:00Z'),
+      updatedAt: new Date('2026-02-01T00:00:00Z'),
+    },
+  },
   proProfile: {
     id: 'profile-1',
     userId: 'coach-1',
@@ -46,6 +64,74 @@ const base = {
 } as unknown as SessionWithParties;
 
 const avatarUrlOf = (key: string) => `https://cdn.test/${key}`;
+
+describe('toSessionResponse player context', () => {
+  const coach = { id: 'coach-1', role: Role.Professional };
+  const player = { id: 'player-1', role: Role.Amateur };
+
+  it('embeds the card for the coach of a paid session', () => {
+    const response = toSessionResponse(base, avatarUrlOf, { viewer: coach });
+    expect(response.playerContext).toMatchObject({
+      userId: 'player-1',
+      displayName: 'Player',
+      avatarUrl: 'https://cdn.test/avatars/player-1/a.png',
+      filled: true,
+      level: 'advanced',
+      handedness: 'left',
+      grip: 'shakehand',
+      about: 'Working on my loop',
+    });
+  });
+
+  it.each(['PENDING_PAYMENT', 'CANCELLED'])(
+    'never embeds the card on a %s session',
+    (status) => {
+      const response = toSessionResponse(
+        { ...base, status } as SessionWithParties,
+        avatarUrlOf,
+        { viewer: coach },
+      );
+      expect(response.playerContext).toBeNull();
+    },
+  );
+
+  it('embeds nothing for the player, an admin, another coach, or no viewer', () => {
+    for (const viewer of [
+      player,
+      { id: 'admin-1', role: Role.Admin },
+      { id: 'coach-2', role: Role.Professional },
+      undefined,
+    ]) {
+      expect(
+        toSessionResponse(base, avatarUrlOf, { viewer }).playerContext,
+      ).toBeNull();
+    }
+  });
+
+  it('shows the unfilled state when the player never saved a profile', () => {
+    const response = toSessionResponse(
+      {
+        ...base,
+        player: { ...base.player, playerProfile: null },
+      },
+      avatarUrlOf,
+      { viewer: coach },
+    );
+    expect(response.playerContext).toMatchObject({
+      filled: false,
+      level: 'beginner',
+      displayName: 'Player',
+    });
+  });
+
+  it('maps the goal for every reader', () => {
+    const withGoal = { ...base, goal: 'Backhand loop' } as SessionWithParties;
+    expect(toSessionResponse(withGoal, avatarUrlOf).goal).toBe('Backhand loop');
+    expect(
+      toSessionResponse(base, avatarUrlOf, { viewer: player }).goal,
+    ).toBeNull();
+  });
+});
 
 describe('toSessionResponse review fields', () => {
   it('marks a completed session without a review as reviewable', () => {

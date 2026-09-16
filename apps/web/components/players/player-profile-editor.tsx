@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api";
+import { PlayerCard } from "@/components/players/player-card";
 import { AvatarUploader } from "@/components/settings/avatar-uploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,6 +85,9 @@ export function PlayerProfileEditor({
   const [user, setUser] = useState(initialUser);
 
   const [saved, setSaved] = useState<FormState>(toFormState(initialProfile));
+  // The preview mirrors what a coach receives: the last saved state, and
+  // the unfilled marker until the first save.
+  const [savedFilled, setSavedFilled] = useState(initialProfile.filled);
   const [level, setLevel] = useState<PlayerLevel>(initialProfile.level);
   const [style, setStyle] = useState<string>(initialProfile.style ?? EMPTY);
   const [years, setYears] = useState(
@@ -119,7 +123,9 @@ export function PlayerProfileEditor({
       setStatus("error");
       return;
     }
-    setSaved(toFormState((await response.json()) as PlayerProfileResponse));
+    const updated = (await response.json()) as PlayerProfileResponse;
+    setSaved(toFormState(updated));
+    setSavedFilled(updated.filled);
     setStatus("saved");
   }
 
@@ -136,6 +142,9 @@ export function PlayerProfileEditor({
       </ProfileCard>
 
       <ProfileCard title={t("details.title")}>
+        <p className="mb-4 rounded-md bg-[#EAF2FD] p-3 text-[13px] leading-snug text-[#2A5FC7]">
+          👀 {t("visibility.hint")}
+        </p>
         <form onSubmit={handleSubmit} noValidate>
           <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
@@ -245,6 +254,31 @@ export function PlayerProfileEditor({
             ) : null}
           </div>
         </form>
+      </ProfileCard>
+
+      <ProfileCard title={t("visibility.previewTitle")}>
+        <p className="mb-3 text-[13px] text-text-secondary">
+          {t("visibility.previewHint")}
+        </p>
+        <PlayerCard
+          player={{
+            id: initialProfile.id,
+            filled: savedFilled,
+            level: saved.level,
+            style: saved.style === EMPTY ? null : (saved.style as PlayingStyle),
+            yearsOfExperience:
+              saved.years === EMPTY ? null : Number(saved.years),
+            handedness:
+              saved.handedness === EMPTY
+                ? null
+                : (saved.handedness as Handedness),
+            grip: saved.grip === EMPTY ? null : (saved.grip as Grip),
+            about: saved.about,
+            userId: user.id,
+            displayName: user.displayName,
+            avatarUrl: user.avatarUrl,
+          }}
+        />
       </ProfileCard>
     </>
   );

@@ -251,15 +251,22 @@ describe('Session rooms & calendar (e2e)', () => {
       expect(room.opensAt).toBeTruthy();
       expect(room.closesAt).toBeTruthy();
       expect(room.counterpartName).toBe('Rooms Coach');
+      expect(room.goal).toBeNull();
+      expect(room.playerContext).toBeNull();
       // The server clock rides along for the client-side countdown.
       expect(
         Math.abs(new Date(room.serverNow).getTime() - Date.now()),
       ).toBeLessThan(5_000);
 
-      await request(server())
+      const coachView = await request(server())
         .get(`/sessions/${sessionId}/room`)
         .set('Cookie', coachCookie)
         .expect(200);
+      // The paid-session rule: the coach gets the player's card in the room.
+      expect(coachView.body.playerContext).toMatchObject({
+        displayName: 'Rooms Player',
+        filled: false,
+      });
 
       await request(server())
         .get(`/sessions/${sessionId}/room`)

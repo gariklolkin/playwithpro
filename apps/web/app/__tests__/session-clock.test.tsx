@@ -15,6 +15,8 @@ function timing(now: number, offsetMs = 0) {
     endsAt: new Date(now + 30 * MINUTE).toISOString(),
     // The server is `offsetMs` ahead of this client.
     serverNow: new Date(now + offsetMs).toISOString(),
+    goal: null,
+    playerContext: null,
   };
 }
 
@@ -114,6 +116,8 @@ describe("useSessionClock", () => {
       startsAt: new Date(now - 53 * MINUTE).toISOString(),
       endsAt: new Date(now + 7 * MINUTE).toISOString(),
       serverNow: new Date(now).toISOString(),
+      goal: null,
+      playerContext: null,
     };
     const { rerender } = renderHook(
       ({ active }) => useSessionClock(t, { active, onThreshold }),

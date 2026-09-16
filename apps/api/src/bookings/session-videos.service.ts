@@ -9,9 +9,10 @@ import type {
   SessionVideoInput,
   SessionVideosRejection,
 } from '@playwithpro/shared';
-import { ServiceType, SessionStatus, VideoStatus } from '@prisma/client';
+import { ServiceType, VideoStatus } from '@prisma/client';
 import type { Prisma, Video } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { assertEditableBeforeStart } from './session-access';
 import { UnattachedVideosService } from '../videos/unattached-videos.service';
 
 /** A clip set that passed validation, in the player's order. */
@@ -19,12 +20,6 @@ export interface ValidatedClip {
   video: Video;
   note: string | null;
 }
-
-/** Statuses in which the player may still change the clip set (before start). */
-const EDITABLE_STATUSES: SessionStatus[] = [
-  SessionStatus.PENDING_PAYMENT,
-  SessionStatus.PAID_ESCROW,
-];
 
 const REJECTION_MESSAGES: Record<SessionVideosRejection['reason'], string> = {
   empty: 'A video-analysis booking requires at least one clip.',
@@ -137,14 +132,10 @@ export class SessionVideosService {
           videos: { select: { videoId: true, addedAt: true } },
         },
       });
-      if (
-        !EDITABLE_STATUSES.includes(current.status) ||
-        current.startsAt.getTime() <= Date.now()
-      ) {
-        throw new ConflictException(
-          'The clips of this session can no longer be changed.',
-        );
-      }
+      assertEditableBeforeStart(
+        current,
+        'The clips of this session can no longer be changed.',
+      );
       const addedAtOf = new Map(
         current.videos.map((row) => [row.videoId, row.addedAt]),
       );

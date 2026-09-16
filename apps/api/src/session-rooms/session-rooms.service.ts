@@ -20,17 +20,26 @@ import {
 import { SessionProgressionService } from '../bookings/session-progression.service';
 import {
   SESSION_VIDEO_SELECT,
+  toPlayerContext,
   toSessionVideoItems,
 } from '../bookings/session.mapper';
 import { toSharedServiceType } from '../pros/pro-profile.mapper';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
 import type { VideoProvider } from './video-provider';
 import { VIDEO_PROVIDER } from './video-provider';
 
 const MINUTE = 60_000;
 
 const ROOM_INCLUDE = {
-  player: { select: { id: true, displayName: true } },
+  player: {
+    select: {
+      id: true,
+      displayName: true,
+      avatarKey: true,
+      playerProfile: true,
+    },
+  },
   proProfile: {
     select: { userId: true, user: { select: { displayName: true } } },
   },
@@ -53,6 +62,7 @@ export class SessionRoomsService {
     private readonly config: ConfigService,
     private readonly progression: SessionProgressionService,
     @Inject(VIDEO_PROVIDER) private readonly video: VideoProvider,
+    private readonly storage: StorageService,
   ) {}
 
   async getRoom(
@@ -82,6 +92,11 @@ export class SessionRoomsService {
       counterpartName: viewerIsPlayer
         ? session.proProfile.user.displayName
         : session.player.displayName,
+      goal: session.goal ?? null,
+      // Same rule as the session lists: the coach, paid statuses only.
+      playerContext: toPlayerContext(session, user, (key) =>
+        this.storage.avatarUrl(key),
+      ),
       // Same instant as the join-window check, so the countdown the client
       // derives from it can never disagree with the joinable decision.
       serverNow: new Date(now).toISOString(),

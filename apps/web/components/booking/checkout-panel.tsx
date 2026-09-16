@@ -201,6 +201,17 @@ export function CheckoutPanel({
               </dd>
             </div>
           ) : null}
+          {session.goal ? (
+            <div className="flex justify-between gap-3">
+              <dt className="text-text-secondary">{t("goal")}</dt>
+              <dd
+                className="max-w-[60%] whitespace-pre-wrap text-right font-medium text-text"
+                data-ph-mask
+              >
+                {session.goal}
+              </dd>
+            </div>
+          ) : null}
           <div className="flex justify-between gap-3">
             <dt className="text-text-secondary">{t("dateTime")}</dt>
             <dd className="font-medium text-text">

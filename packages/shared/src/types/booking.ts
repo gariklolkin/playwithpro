@@ -2,7 +2,11 @@ import type { DisputeOutcome, DisputeStatus } from "../enums/dispute";
 import type { PaymentStatus } from "../enums/payment";
 import type { ServiceType } from "../enums/service-type";
 import type { SessionStatus } from "../enums/session-status";
+import type { PlayerCardResponse } from "./player-profile";
 import type { ReviewResponse } from "./review";
+
+/** Player's optional "what should we focus on?" for the coach. */
+export const SESSION_GOAL_MAX_LENGTH = 500;
 
 /** Player's hint to the coach about a clip ("serve", "forehand loop"). */
 export const SESSION_VIDEO_NOTE_MAX_LENGTH = 80;
@@ -46,6 +50,13 @@ export interface CreateBookingRequest {
   slotId: string;
   /** Required (non-empty) for video_analysis, forbidden otherwise. */
   videos?: SessionVideoInput[];
+  /** Optional goal (≤ SESSION_GOAL_MAX_LENGTH chars); empty = none. */
+  goal?: string | null;
+}
+
+/** Sets or clears the goal; player only, until the session starts. */
+export interface UpdateSessionGoalRequest {
+  goal: string | null;
 }
 
 /** Replaces a session's clip set; player only, until the session starts. */
@@ -80,6 +91,13 @@ export interface SessionResponse {
   player: SessionParty;
   /** Attached clips in order (video_analysis only; empty otherwise or after deletes). */
   videos: SessionVideoItem[];
+  /** The player's goal for the session; null when none. Visible to both parties. */
+  goal: string | null;
+  /**
+   * The player's card, for the coach viewer only and only while the session
+   * is paid (never pending or cancelled); null for every other reader.
+   */
+  playerContext: PlayerCardResponse | null;
   /** Venue of the coach's game service; set for game sessions only. */
   venue: string | null;
   /** Session-room join window; set for paid online sessions, null otherwise. */

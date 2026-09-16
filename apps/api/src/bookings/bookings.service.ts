@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   Logger,
@@ -49,7 +50,7 @@ import { StorageService } from '../storage/storage.service';
 import { UnattachedVideosService } from '../videos/unattached-videos.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { PaySessionDto } from './dto/pay-session.dto';
-import { isOnlineService } from './session-access';
+import { assertEditableBeforeStart, isOnlineService } from './session-access';
 import { SessionProgressionService } from './session-progression.service';
 import { SessionVideosService, ValidatedClip } from './session-videos.service';
 import { SettlementService } from './settlement.service';
@@ -152,6 +153,7 @@ export class BookingsService {
           platformFeeMinor: computePlatformFee(service.priceMinor, feePercent),
           slotId: slot.id,
           videos: { create: this.sessionVideos.rowsFor(clips) },
+          goal: normalizeGoal(dto.goal),
           startsAt: slot.startsAt,
           endsAt: slot.endsAt,
           expiresAt: new Date(Date.now() + ttlMinutes * MINUTE),
@@ -172,6 +174,32 @@ export class BookingsService {
   ): Promise<SessionResponse> {
     await this.sessionVideos.replace(playerId, sessionId, inputs);
     return this.sessionResponse(sessionId);
+  }
+
+  /**
+   * Player-only edit of the goal under the same rule as the clip set:
+   * unpaid or paid, before the slot starts. The coach reads it through the
+   * session data (paid-session rule for the card, the goal for both).
+   */
+  async updateGoal(
+    user: AuthenticatedUser,
+    sessionId: string,
+    goal: string | null,
+  ): Promise<SessionResponse> {
+    const session = await this.requireParty(user, sessionId);
+    if (session.playerId !== user.id) {
+      throw new ForbiddenException('Only the player can change the goal.');
+    }
+    const current = await this.progression.normalize(session);
+    assertEditableBeforeStart(
+      current,
+      'The goal of this session can no longer be changed.',
+    );
+    await this.prisma.session.update({
+      where: { id: session.id },
+      data: { goal: normalizeGoal(goal) },
+    });
+    return this.sessionResponse(session.id, user);
   }
 
   async list(user: AuthenticatedUser): Promise<SessionListResponse> {
@@ -208,7 +236,7 @@ export class BookingsService {
         .filter((session) => !this.isExpired(session, now))
         .map((session) => this.progression.normalize(session)),
     );
-    const extras = this.responseExtras();
+    const extras = { ...this.responseExtras(), viewer: user };
     return {
       upcoming: alive
         .filter((session) => session.startsAt.getTime() >= now)
@@ -235,7 +263,10 @@ export class BookingsService {
       }
     }
     const current = await this.progression.normalize(session);
-    return toSessionResponse(current, this.avatarUrlOf, this.responseExtras());
+    return toSessionResponse(current, this.avatarUrlOf, {
+      ...this.responseExtras(),
+      viewer: user,
+    });
   }
 
   async pay(
@@ -398,7 +429,7 @@ export class BookingsService {
         throw new ConflictException('This session cannot be confirmed.');
       }
     }
-    return this.sessionResponse(session.id);
+    return this.sessionResponse(session.id, user);
   }
 
   /**
@@ -428,7 +459,7 @@ export class BookingsService {
         throw new ConflictException('This booking is no longer unpaid.');
       }
       this.logger.log(`Unpaid session ${session.id} released by player`);
-      return this.sessionResponse(session.id);
+      return this.sessionResponse(session.id, user);
     }
     const cancelled = await this.prisma.$transaction(async (tx) => {
       const updated = await tx.session.updateMany({
@@ -468,7 +499,7 @@ export class BookingsService {
     await this.settlement.settle(session.id);
     await this.sendCancellationIfInvited(session.id);
     await this.releaseAttachments(session.id);
-    return this.sessionResponse(session.id);
+    return this.sessionResponse(session.id, user);
   }
 
   private async hasConfirmed(
@@ -485,12 +516,18 @@ export class BookingsService {
   }
 
   /** Current session state mapped for a party-facing response. */
-  async sessionResponse(sessionId: string): Promise<SessionResponse> {
+  async sessionResponse(
+    sessionId: string,
+    viewer?: AuthenticatedUser,
+  ): Promise<SessionResponse> {
     const session = await this.prisma.session.findUniqueOrThrow({
       where: { id: sessionId },
       include: SESSION_INCLUDE,
     });
-    return toSessionResponse(session, this.avatarUrlOf, this.responseExtras());
+    return toSessionResponse(session, this.avatarUrlOf, {
+      ...this.responseExtras(),
+      viewer,
+    });
   }
 
   /**
@@ -703,4 +740,10 @@ export class BookingsService {
       await this.expireSession(session.id);
     }
   }
+}
+
+/** Trims the player's goal; whitespace-only or absent means "no goal". */
+export function normalizeGoal(value: string | null | undefined): string | null {
+  const trimmed = value?.trim() ?? '';
+  return trimmed === '' ? null : trimmed;
 }

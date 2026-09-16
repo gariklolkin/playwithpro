@@ -46,9 +46,11 @@ export class PlayersController {
     return this.players.updateProfile(user.id, dto);
   }
 
+  // Coaches get the card embedded in their paid sessions instead (the
+  // player-profiles capability's session-scoped rule); no ad-hoc lookup.
   @Get(':id')
-  @Roles(Role.Professional, Role.Admin)
-  @ApiOkResponse({ description: 'Read-only player card for coaches/admins.' })
+  @Roles(Role.Admin)
+  @ApiOkResponse({ description: 'Read-only player card for admins.' })
   async getPlayerCard(
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<PlayerCardResponse> {

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { BookingsModule } from '../bookings/bookings.module';
+import { StorageModule } from '../storage/storage.module';
 import { AttendanceEvidenceService } from './attendance-evidence.service';
 import { LiveKitVideoProvider } from './livekit-video.provider';
 import { LiveKitWebhookController } from './livekit-webhook.controller';
@@ -10,7 +11,7 @@ import { SessionRoomsService } from './session-rooms.service';
 import { VIDEO_PROVIDER } from './video-provider';
 
 @Module({
-  imports: [AuthModule, BookingsModule],
+  imports: [AuthModule, BookingsModule, StorageModule],
   controllers: [SessionRoomsController, LiveKitWebhookController],
   providers: [
     SessionRoomsService,

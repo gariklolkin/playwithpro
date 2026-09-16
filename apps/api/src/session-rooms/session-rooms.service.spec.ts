@@ -5,6 +5,7 @@ import { ServiceType, SessionStatus } from '@prisma/client';
 import type { SessionProgressionService } from '../bookings/session-progression.service';
 import type { PrismaService } from '../prisma/prisma.service';
 import { SessionRoomsService } from './session-rooms.service';
+import type { StorageService } from '../storage/storage.service';
 
 const MINUTE = 60_000;
 
@@ -24,6 +25,7 @@ describe('SessionRoomsService.authorizePlaybackSync', () => {
     config as unknown as ConfigService,
     progression as unknown as SessionProgressionService,
     video,
+    { avatarUrl: (key: string) => `https://s/${key}` } as StorageService,
   );
 
   const player = { id: 'player-1', role: Role.Amateur };
@@ -158,6 +160,7 @@ describe('SessionRoomsService.getRoom', () => {
     config as unknown as ConfigService,
     progression as unknown as SessionProgressionService,
     video,
+    { avatarUrl: (key: string) => `https://s/${key}` } as StorageService,
   );
 
   it('carries the server clock next to the window bounds', async () => {

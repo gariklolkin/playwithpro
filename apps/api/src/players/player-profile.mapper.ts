@@ -1,6 +1,7 @@
 import {
   Grip,
   Handedness,
+  PlayerCardResponse,
   PlayerLevel,
   PlayerProfileResponse,
   PlayingStyle,
@@ -60,16 +61,57 @@ export function toPrismaGrip(
   return grip === null ? null : (grip.toUpperCase() as PrismaGrip);
 }
 
+/**
+ * A profile row is created lazily on first read with default values; only a
+ * later save bumps `updatedAt` past `createdAt`. Equality means unfilled.
+ */
+export function isProfileFilled(
+  profile: Pick<PlayerProfile, 'createdAt' | 'updatedAt'>,
+): boolean {
+  return profile.updatedAt.getTime() > profile.createdAt.getTime();
+}
+
 export function toPlayerProfileResponse(
   profile: PlayerProfile,
 ): PlayerProfileResponse {
   return {
     id: profile.id,
+    filled: isProfileFilled(profile),
     level: toSharedLevel(profile.level),
     style: toSharedStyle(profile.style),
     yearsOfExperience: profile.yearsOfExperience,
     handedness: toSharedHandedness(profile.handedness),
     grip: toSharedGrip(profile.grip),
     about: profile.about,
+  };
+}
+
+/**
+ * Read-only card for coaches (via a shared paid session) and admins. A
+ * player who never opened their profile has no row yet: the card then shows
+ * the unfilled state with the defaults, exactly as a lazily created row would.
+ */
+export function toPlayerCard(
+  user: { id: string; displayName: string; avatarKey: string | null },
+  profile: PlayerProfile | null,
+  avatarUrlOf: (key: string) => string,
+): PlayerCardResponse {
+  const details: PlayerProfileResponse = profile
+    ? toPlayerProfileResponse(profile)
+    : {
+        id: '',
+        filled: false,
+        level: PlayerLevel.Beginner,
+        style: null,
+        yearsOfExperience: null,
+        handedness: null,
+        grip: null,
+        about: '',
+      };
+  return {
+    ...details,
+    userId: user.id,
+    displayName: user.displayName,
+    avatarUrl: user.avatarKey === null ? null : avatarUrlOf(user.avatarKey),
   };
 }

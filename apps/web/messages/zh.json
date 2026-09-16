@@ -478,7 +478,15 @@
       "error": "无法保存更改，请重试。"
     },
     "card": {
-      "years": "球龄 {years} 年"
+      "years": "球龄 {years} 年",
+      "unfilled": "尚未填写资料",
+      "goalLabel": "本次课程的目标",
+      "noGoal": "未填写目标。"
+    },
+    "visibility": {
+      "hint": "你预订的教练在付款后可以看到你的打球资料和这段描述，其他人看不到。",
+      "previewTitle": "教练看到的你",
+      "previewHint": "这是教练随已付款课程收到的卡片，与保存的内容完全一致。"
     }
   },
   "videos": {
@@ -609,6 +617,11 @@
         "minutesLeft": "还有 {minutes, plural, other {# 分钟}}可以支付，之后时段将被释放。",
         "pay": "立即支付",
         "release": "释放时段"
+      },
+      "goal": {
+        "label": "想重点练什么？（可选）",
+        "placeholder": "例如：反手对上旋的弧圈、发球变化…",
+        "hint": "教练在付款后可见。课程开始前可以修改。"
       }
     }
   },
@@ -635,7 +648,8 @@
     "expiredTitle": "预约已过期",
     "expiredSubtitle": "支付时限已过，该时段已重新开放。你可以另选时间。",
     "backToCoach": "返回教练主页",
-    "releaseSlot": "改为释放此时段"
+    "releaseSlot": "改为释放此时段",
+    "goal": "目标"
   },
   "sessions": {
     "title": "课程",
@@ -838,6 +852,20 @@
       "cancel": "取消",
       "saveFailed": "无法保存片段，请重试。",
       "locked": "本次课程的片段已无法更改。"
+    },
+    "goal": {
+      "label": "想重点练什么？",
+      "placeholder": "例如：反手对上旋的弧圈…",
+      "none": "未设置目标",
+      "add": "添加目标",
+      "edit": "编辑",
+      "save": "保存目标",
+      "cancel": "取消",
+      "saveFailed": "无法保存目标，请重试。",
+      "locked": "目标已不能修改。"
+    },
+    "aboutPlayer": {
+      "title": "关于球员"
     }
   },
   "adminDisputes": {

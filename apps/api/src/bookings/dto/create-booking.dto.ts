@@ -1,10 +1,12 @@
-import { ServiceType } from '@playwithpro/shared';
+import { SESSION_GOAL_MAX_LENGTH, ServiceType } from '@playwithpro/shared';
 import { Type } from 'class-transformer';
 import {
   IsArray,
   IsEnum,
   IsOptional,
+  IsString,
   IsUUID,
+  MaxLength,
   ValidateNested,
 } from 'class-validator';
 import { SessionVideoInputDto } from './session-video-input.dto';
@@ -29,4 +31,10 @@ export class CreateBookingDto {
   @ValidateNested({ each: true })
   @Type(() => SessionVideoInputDto)
   videos?: SessionVideoInputDto[];
+
+  /** Optional "what should we focus on?"; trimmed, empty = none. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(SESSION_GOAL_MAX_LENGTH)
+  goal?: string | null;
 }

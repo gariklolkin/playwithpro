@@ -178,26 +178,31 @@ function roomResponse(serviceType: ServiceType) {
         : [],
     counterpartName: "Smoke Coach",
     serverNow: new Date(now).toISOString(),
+    goal: null,
+    playerContext: null,
   };
 }
 
-function mockApi(serviceType: ServiceType) {
+function mockApi(
+  serviceType: ServiceType,
+  extra: Record<string, unknown> = {},
+) {
   apiFetch.mockImplementation(async (url: string) => ({
     ok: true,
     json: async () =>
       url.endsWith("/room/join")
         ? { attendanceId: "attendance-1", token: "token-1" }
-        : roomResponse(serviceType),
+        : { ...roomResponse(serviceType), ...extra },
   }));
 }
 
-function renderRoom() {
+function renderRoom(role: Role = Role.Amateur) {
   return render(
     <NextIntlClientProvider locale="en" messages={messages}>
       <SessionRoom
         sessionId="session-1"
-        userId="player-1"
-        role={Role.Amateur}
+        userId={role === Role.Amateur ? "player-1" : "coach-1"}
+        role={role}
         displayName="Smoke Player"
       />
     </NextIntlClientProvider>,
@@ -490,5 +495,46 @@ describe("SessionRoom call-time indicator and reminders", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe("SessionRoom player context", () => {
+  const card = {
+    id: "pp-1",
+    filled: true,
+    level: "advanced",
+    style: null,
+    yearsOfExperience: null,
+    handedness: "left",
+    grip: null,
+    about: "Working on my loop",
+    userId: "player-1",
+    displayName: "Smoke Player",
+    avatarUrl: null,
+  };
+
+  it("shows the coach a disclosure in the header; opening it never reconnects", async () => {
+    mockApi(ServiceType.Consultation, {
+      counterpartName: "Smoke Player",
+      goal: "Serve return",
+      playerContext: card,
+    });
+    renderRoom(Role.Professional);
+    fireEvent.click(await screen.findByRole("button", { name: "Join (stub)" }));
+    await waitFor(() => expect(roomMounts).toHaveBeenCalledTimes(1));
+
+    const disclosure = screen.getByTestId("player-context");
+    expect(disclosure).not.toHaveAttribute("open");
+    fireEvent.click(within(disclosure).getByText(/About the player/));
+    expect(screen.getByText("Serve return")).toBeInTheDocument();
+    expect(screen.getByText("Working on my loop")).toBeInTheDocument();
+    expect(roomMounts).toHaveBeenCalledTimes(1);
+  });
+
+  it("offers the player no disclosure", async () => {
+    mockApi(ServiceType.Consultation, { goal: "Serve return" });
+    renderRoom();
+    await screen.findByRole("button", { name: "Join (stub)" });
+    expect(screen.queryByTestId("player-context")).not.toBeInTheDocument();
   });
 });

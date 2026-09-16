@@ -50,6 +50,8 @@ const completedSession: SessionResponse = {
   dispute: null,
   review: null,
   reviewable: true,
+  goal: null,
+  playerContext: null,
   createdAt: new Date("2026-07-19T10:00:00Z").toISOString(),
 };
 
@@ -123,6 +125,8 @@ describe("SessionReview", () => {
     renderReview({
       ...completedSession,
       reviewable: false,
+      goal: null,
+      playerContext: null,
       review: {
         rating: 4,
         text: "Solid",
@@ -141,6 +145,8 @@ describe("SessionReview", () => {
       {
         ...completedSession,
         reviewable: false,
+        goal: null,
+        playerContext: null,
         review: {
           rating: 5,
           text: null,
@@ -170,6 +176,8 @@ describe("SessionReview", () => {
         outcome: DisputeOutcome.Refund,
       },
       reviewable: false,
+      goal: null,
+      playerContext: null,
     });
 
     expect(container).toBeEmptyDOMElement();

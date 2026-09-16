@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  SESSION_GOAL_MAX_LENGTH,
   ServiceType,
   SessionStatus,
   VideoStatus,
@@ -79,6 +80,7 @@ export function BookingPanel({ proId, services, initialSlots, viewer }: Props) {
   const [videos, setVideos] = useState<VideoResponse[] | null>(null);
   const [limits, setLimits] = useState<VideoLimits | null>(null);
   const [clips, setClips] = useState<SessionVideoInput[]>([]);
+  const [goal, setGoal] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -187,6 +189,7 @@ export function BookingPanel({ proId, services, initialSlots, viewer }: Props) {
           serviceType,
           slotId,
           ...(needsVideo ? { videos: clips } : {}),
+          ...(goal.trim() ? { goal: goal.trim() } : {}),
         }),
       });
       if (response.status === 409) {
@@ -364,6 +367,34 @@ export function BookingPanel({ proId, services, initialSlots, viewer }: Props) {
         </div>
       ) : null}
 
+      {/* Goal — optional, all services */}
+      {viewer === "amateur" ? (
+        <div className="mt-4">
+          <label
+            htmlFor="booking-goal"
+            className="mb-1.5 block text-[13px] font-medium text-text-secondary"
+          >
+            {t("goal.label")}
+          </label>
+          <textarea
+            id="booking-goal"
+            value={goal}
+            onChange={(event) => setGoal(event.target.value)}
+            placeholder={t("goal.placeholder")}
+            rows={2}
+            maxLength={SESSION_GOAL_MAX_LENGTH}
+            data-ph-mask
+            className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:border-border-strong focus:outline-none"
+          />
+          <div className="mt-1 flex items-baseline justify-between gap-2 text-[11px] text-text-tertiary">
+            <span>{t("goal.hint")}</span>
+            <span className="tabular-nums">
+              {goal.length}/{SESSION_GOAL_MAX_LENGTH}
+            </span>
+          </div>
+        </div>
+      ) : null}
+
       {/* Summary */}
       {service ? (
         <div className="mt-5 border-t border-border pt-4">
@@ -392,6 +423,11 @@ export function BookingPanel({ proId, services, initialSlots, viewer }: Props) {
                 );
               })}
             </ol>
+          ) : null}
+          {goal.trim() ? (
+            <p className="mt-2 text-[13px] text-text-secondary" data-ph-mask>
+              🎯 {goal.trim()}
+            </p>
           ) : null}
           <p className="mt-2 rounded-md bg-[#EAF2FD] p-2.5 text-[12px] leading-snug text-[#2A5FC7]">
             🔒 {t("escrowNotice")}

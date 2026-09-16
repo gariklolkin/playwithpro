@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -92,6 +93,7 @@ describe('BookingsService', () => {
       findMany: jest.fn(),
       findUniqueOrThrow: jest.fn(),
       updateMany: jest.fn(),
+      update: jest.fn(),
     },
     payment: { create: jest.fn(), update: jest.fn() },
     $transaction: jest.fn(),
@@ -187,6 +189,32 @@ describe('BookingsService', () => {
             platformFeeMinor: 401, // 10% of 4005, rounded half up
             startsAt: futureSlot.startsAt,
           }) as object,
+        }),
+      );
+    });
+
+    it('stores a trimmed goal and treats blank text as no goal', async () => {
+      await service.create('player-1', {
+        proId: 'profile-1',
+        serviceType: ServiceType.Consultation,
+        slotId: 'slot-1',
+        goal: '  Backhand loop  ',
+      });
+      expect(tx.session.create).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ goal: 'Backhand loop' }) as object,
+        }),
+      );
+
+      await service.create('player-1', {
+        proId: 'profile-1',
+        serviceType: ServiceType.Consultation,
+        slotId: 'slot-1',
+        goal: '   ',
+      });
+      expect(tx.session.create).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ goal: null }) as object,
         }),
       );
     });
@@ -836,6 +864,74 @@ describe('BookingsService', () => {
       await expect(
         service.cancel({ id: 'stranger', role: Role.Amateur }, 'session-1'),
       ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  describe('updateGoal', () => {
+    const paidUpcoming = {
+      ...pendingSession,
+      status: 'PAID_ESCROW',
+      expiresAt: null,
+    };
+
+    beforeEach(() => {
+      prisma.session.findUnique.mockResolvedValue(paidUpcoming);
+      prisma.session.findUniqueOrThrow.mockResolvedValue({
+        ...paidUpcoming,
+        goal: 'Serve return',
+      });
+    });
+
+    it('lets the player set a trimmed goal before start', async () => {
+      const result = await service.updateGoal(
+        { id: 'player-1', role: Role.Amateur },
+        'session-1',
+        '  Serve return  ',
+      );
+
+      expect(prisma.session.update).toHaveBeenCalledWith({
+        where: { id: 'session-1' },
+        data: { goal: 'Serve return' },
+      });
+      expect(result.goal).toBe('Serve return');
+    });
+
+    it('clears the goal with null', async () => {
+      await service.updateGoal(
+        { id: 'player-1', role: Role.Amateur },
+        'session-1',
+        null,
+      );
+      expect(prisma.session.update).toHaveBeenCalledWith({
+        where: { id: 'session-1' },
+        data: { goal: null },
+      });
+    });
+
+    it('forbids the coach', async () => {
+      await expect(
+        service.updateGoal(
+          { id: 'coach-1', role: Role.Professional },
+          'session-1',
+          'x',
+        ),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(prisma.session.update).not.toHaveBeenCalled();
+    });
+
+    it('409s once the session has started', async () => {
+      prisma.session.findUnique.mockResolvedValue({
+        ...paidUpcoming,
+        status: 'IN_PROGRESS',
+        startsAt: new Date(Date.now() - 60_000),
+      });
+      await expect(
+        service.updateGoal(
+          { id: 'player-1', role: Role.Amateur },
+          'session-1',
+          'x',
+        ),
+      ).rejects.toBeInstanceOf(ConflictException);
     });
   });
 });

@@ -34,6 +34,14 @@ describe('PlayersService', () => {
     handedness: null,
     grip: null,
     about: '',
+    // A lazily created row: never saved, so the timestamps are equal.
+    createdAt: new Date('2026-01-01T00:00:00Z'),
+    updatedAt: new Date('2026-01-01T00:00:00Z'),
+  };
+  /** Saved at least once: updatedAt moved past createdAt. */
+  const savedProfile = {
+    ...baseProfile,
+    updatedAt: new Date('2026-02-01T00:00:00Z'),
   };
 
   beforeEach(async () => {
@@ -60,6 +68,7 @@ describe('PlayersService', () => {
       });
       expect(profile.level).toBe(PlayerLevel.Beginner);
       expect(profile.about).toBe('');
+      expect(profile.filled).toBe(false);
     });
 
     it('returns the existing profile without creating', async () => {
@@ -145,19 +154,20 @@ describe('PlayersService', () => {
         role: 'AMATEUR',
         displayName: 'Anna',
         avatarKey: 'avatars/user-1/a.png',
-        playerProfile: { ...baseProfile, level: 'COMPETITIVE' },
+        playerProfile: { ...savedProfile, level: 'COMPETITIVE' },
       });
 
       const card = await service.getPlayerCard('user-1');
 
       expect(card.displayName).toBe('Anna');
+      expect(card.filled).toBe(true);
       expect(card.level).toBe(PlayerLevel.Competitive);
       expect(card.avatarUrl).toBe(
         'http://s3.local/bucket/avatars/user-1/a.png',
       );
     });
 
-    it('lazily creates the profile for a player who never opened theirs', async () => {
+    it('shows the unfilled state for a player who never opened theirs, creating nothing', async () => {
       prisma.user.findUnique.mockResolvedValue({
         id: 'user-1',
         role: 'AMATEUR',
@@ -165,11 +175,11 @@ describe('PlayersService', () => {
         avatarKey: null,
         playerProfile: null,
       });
-      prisma.playerProfile.findUnique.mockResolvedValue(null);
-      prisma.playerProfile.create.mockResolvedValue(baseProfile);
 
       const card = await service.getPlayerCard('user-1');
 
+      expect(prisma.playerProfile.create).not.toHaveBeenCalled();
+      expect(card.filled).toBe(false);
       expect(card.level).toBe(PlayerLevel.Beginner);
       expect(card.avatarUrl).toBeNull();
     });

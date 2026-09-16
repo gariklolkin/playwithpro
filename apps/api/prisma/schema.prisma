@@ -372,6 +372,8 @@ model Session {
   roomSlug         String?       @unique
   /// When the calendar invite was emailed to both parties; also the idempotency guard.
   inviteSentAt     DateTime?
+  /// Player's optional "what should we focus on?" (≤ 500 chars); editable until start.
+  goal             String?       @db.VarChar(500)
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 

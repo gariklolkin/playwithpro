@@ -70,6 +70,8 @@ const session: SessionResponse = {
   dispute: null,
   review: null,
   reviewable: false,
+  goal: null,
+  playerContext: null,
   createdAt: new Date().toISOString(),
 };
 

@@ -478,7 +478,15 @@
       "error": "Impossible d'enregistrer. Réessayez."
     },
     "card": {
-      "years": "{years} ans de jeu"
+      "years": "{years} ans de jeu",
+      "unfilled": "n'a pas encore rempli son profil",
+      "goalLabel": "Objectif de cette séance",
+      "noGoal": "Aucun objectif indiqué."
+    },
+    "visibility": {
+      "hint": "Les coachs que vous réservez voient vos détails de jeu et cette description après le paiement — personne d'autre.",
+      "previewTitle": "Comment les coachs vous voient",
+      "previewHint": "Voici la fiche qu'un coach reçoit avec une séance payée, telle qu'enregistrée."
     }
   },
   "videos": {
@@ -609,6 +617,11 @@
         "minutesLeft": "Il reste {minutes, plural, one {# minute} other {# minutes}} pour payer, ensuite le créneau sera libéré.",
         "pay": "Payer maintenant",
         "release": "Libérer le créneau"
+      },
+      "goal": {
+        "label": "Sur quoi travailler ? (facultatif)",
+        "placeholder": "ex. mon top revers contre le lift, varier mes services…",
+        "hint": "Le coach le voit après le paiement. Modifiable jusqu'au début de la séance."
       }
     }
   },
@@ -635,7 +648,8 @@
     "expiredTitle": "Cette réservation a expiré",
     "expiredSubtitle": "Le délai de paiement est écoulé et le créneau a été libéré. Vous pouvez choisir un nouvel horaire.",
     "backToCoach": "Retour au coach",
-    "releaseSlot": "Libérer ce créneau à la place"
+    "releaseSlot": "Libérer ce créneau à la place",
+    "goal": "Objectif"
   },
   "sessions": {
     "title": "Séances",
@@ -838,6 +852,20 @@
       "cancel": "Annuler",
       "saveFailed": "Impossible d'enregistrer les clips. Réessayez.",
       "locked": "Les clips de cette séance ne peuvent plus être modifiés."
+    },
+    "goal": {
+      "label": "Sur quoi travailler ?",
+      "placeholder": "ex. mon top revers contre le lift…",
+      "none": "Aucun objectif",
+      "add": "Ajouter un objectif",
+      "edit": "Modifier",
+      "save": "Enregistrer l'objectif",
+      "cancel": "Annuler",
+      "saveFailed": "Impossible d'enregistrer l'objectif. Réessayez.",
+      "locked": "L'objectif ne peut plus être modifié."
+    },
+    "aboutPlayer": {
+      "title": "À propos du joueur"
     }
   },
   "adminDisputes": {

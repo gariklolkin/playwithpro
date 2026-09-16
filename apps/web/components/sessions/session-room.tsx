@@ -11,6 +11,7 @@ import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 import { LocalTime } from "@/components/catalog/local-time";
+import { PlayerContextDisclosure } from "@/components/sessions/player-context-disclosure";
 import {
   RoomToasts,
   type RoomToastItem,
@@ -308,6 +309,16 @@ export function SessionRoom({
             <LocalTime iso={room.startsAt} />{" "}
             <span className="text-text-tertiary">{tSessions("yourTime")}</span>
           </p>
+          {/* Coach only (the API embeds the card under the paid-session rule);
+              a native disclosure outside the LiveKit tree, so opening it
+              never reconnects the call. */}
+          {room.playerContext ? (
+            <PlayerContextDisclosure
+              className="mt-2"
+              player={room.playerContext}
+              goal={room.goal}
+            />
+          ) : null}
         </div>
         <div className="flex items-center gap-3">
           {indicator ? (

@@ -9,6 +9,12 @@ export const PLAYER_ABOUT_MAX_LENGTH = 4000;
 
 export interface PlayerProfileResponse {
   id: string;
+  /**
+   * False until the player saved the profile at least once: a lazily
+   * created profile carries the default level, which is not a fact about
+   * the player. Cards render an "unfilled" state instead.
+   */
+  filled: boolean;
   level: PlayerLevel;
   style: PlayingStyle | null;
   yearsOfExperience: number | null;

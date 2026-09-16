@@ -260,6 +260,7 @@ describe('Booking & escrow (e2e)', () => {
           proId: coachProfileId,
           serviceType: 'consultation',
           slotId: slotIds[0],
+          goal: '  Work on my backhand loop  ',
         })
         .expect(200);
       const session = res.body as SessionResponse;
@@ -267,6 +268,16 @@ describe('Booking & escrow (e2e)', () => {
       expect(session.status).toBe('pending_payment');
       expect(session.priceMinor).toBe(4005);
       expect(session.expiresAt).toBeTruthy();
+      expect(session.goal).toBe('Work on my backhand loop');
+      expect(session.playerContext).toBeNull();
+
+      // Unpaid: the coach reads the goal but never the player's card.
+      const coachView = await request(server())
+        .get(`/sessions/${sessionId}`)
+        .set('Cookie', coachCookie)
+        .expect(200);
+      expect(coachView.body.goal).toBe('Work on my backhand loop');
+      expect(coachView.body.playerContext).toBeNull();
 
       const slot = await prisma.availabilitySlot.findUnique({
         where: { id: slotIds[0] },
@@ -330,6 +341,109 @@ describe('Booking & escrow (e2e)', () => {
         .get(`/sessions/${sessionId}`)
         .set('Cookie', rivalCookie)
         .expect(404);
+    });
+
+    it('embeds the player card for the coach once paid, never for the player', async () => {
+      const coachView = await request(server())
+        .get(`/sessions/${sessionId}`)
+        .set('Cookie', coachCookie)
+        .expect(200);
+      expect(coachView.body.playerContext).toMatchObject({
+        userId: playerId,
+        displayName: 'E2E Player',
+        // The e2e player never saved a profile: the card says so.
+        filled: false,
+      });
+
+      const coachList = await request(server())
+        .get('/sessions')
+        .set('Cookie', coachCookie)
+        .expect(200);
+      const entry = (coachList.body as SessionListResponse).upcoming.find(
+        (s) => s.id === sessionId,
+      );
+      expect(entry?.playerContext?.displayName).toBe('E2E Player');
+
+      const playerView = await request(server())
+        .get(`/sessions/${sessionId}`)
+        .set('Cookie', playerCookie)
+        .expect(200);
+      expect(playerView.body.playerContext).toBeNull();
+      expect(playerView.body.goal).toBe('Work on my backhand loop');
+    });
+
+    it('lets the player edit the goal until start; coach forbidden, oversize rejected', async () => {
+      const edited = await request(server())
+        .patch(`/sessions/${sessionId}/goal`)
+        .set('Cookie', playerCookie)
+        .send({ goal: 'Serve and receive' })
+        .expect(200);
+      expect(edited.body.goal).toBe('Serve and receive');
+
+      await request(server())
+        .patch(`/sessions/${sessionId}/goal`)
+        .set('Cookie', coachCookie)
+        .send({ goal: 'nope' })
+        .expect(403);
+
+      await request(server())
+        .patch(`/sessions/${sessionId}/goal`)
+        .set('Cookie', playerCookie)
+        .send({ goal: 'x'.repeat(501) })
+        .expect(400);
+
+      const cleared = await request(server())
+        .patch(`/sessions/${sessionId}/goal`)
+        .set('Cookie', playerCookie)
+        .send({ goal: null })
+        .expect(200);
+      expect(cleared.body.goal).toBeNull();
+
+      // Once the slot started the goal is frozen, whatever the status.
+      const before = await prisma.session.findUniqueOrThrow({
+        where: { id: sessionId },
+        select: { startsAt: true, endsAt: true },
+      });
+      await prisma.session.update({
+        where: { id: sessionId },
+        data: {
+          startsAt: new Date(Date.now() - 10 * 60_000),
+          endsAt: new Date(Date.now() + 50 * 60_000),
+        },
+      });
+      await request(server())
+        .patch(`/sessions/${sessionId}/goal`)
+        .set('Cookie', playerCookie)
+        .send({ goal: 'too late' })
+        .expect(409);
+      await prisma.session.update({
+        where: { id: sessionId },
+        data: { ...before, status: 'PAID_ESCROW' },
+      });
+    });
+
+    it('keeps the player lookup endpoint for admins only', async () => {
+      const admin = await prisma.user.create({
+        data: {
+          email: 'admin.players@e2e.test',
+          role: 'ADMIN',
+          displayName: 'E2E Admin',
+        },
+      });
+      const adminCookie = `access_token=${app
+        .get(TokenService)
+        .signAccessToken(admin.id, Role.Admin)}`;
+
+      await request(server())
+        .get(`/players/${playerId}`)
+        .set('Cookie', coachCookie)
+        .expect(403);
+      const card = await request(server())
+        .get(`/players/${playerId}`)
+        .set('Cookie', adminCookie)
+        .expect(200);
+      expect(card.body.displayName).toBe('E2E Player');
+      expect(card.body.filled).toBe(false);
     });
   });
 

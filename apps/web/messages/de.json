@@ -478,7 +478,15 @@
       "error": "Änderungen konnten nicht gespeichert werden. Bitte erneut versuchen."
     },
     "card": {
-      "years": "{years} Jahre Spielpraxis"
+      "years": "{years} Jahre Spielpraxis",
+      "unfilled": "hat noch kein Profil ausgefüllt",
+      "goalLabel": "Ziel dieser Sitzung",
+      "noGoal": "Kein Ziel angegeben."
+    },
+    "visibility": {
+      "hint": "Trainer, die du buchst, sehen deine Spielangaben und diese Beschreibung nach der Zahlung — sonst niemand.",
+      "previewTitle": "So sehen dich Trainer",
+      "previewHint": "Diese Karte bekommt ein Trainer mit einer bezahlten Sitzung, genau wie gespeichert."
     }
   },
   "videos": {
@@ -609,6 +617,11 @@
         "minutesLeft": "Noch {minutes, plural, one {# Minute} other {# Minuten}} zum Bezahlen, danach wird der Termin freigegeben.",
         "pay": "Jetzt bezahlen",
         "release": "Termin freigeben"
+      },
+      "goal": {
+        "label": "Woran sollen wir arbeiten? (optional)",
+        "placeholder": "z. B. mein Rückhand-Topspin gegen Schupf, Aufschlagvarianten…",
+        "hint": "Der Trainer sieht das nach der Zahlung. Bis zum Sitzungsbeginn änderbar."
       }
     }
   },
@@ -635,7 +648,8 @@
     "expiredTitle": "Diese Buchung ist abgelaufen",
     "expiredSubtitle": "Das Zahlungsfenster wurde geschlossen und der Termin freigegeben. Du kannst eine neue Zeit wählen.",
     "backToCoach": "Zurück zum Trainer",
-    "releaseSlot": "Diesen Termin stattdessen freigeben"
+    "releaseSlot": "Diesen Termin stattdessen freigeben",
+    "goal": "Ziel"
   },
   "sessions": {
     "title": "Sessions",
@@ -838,6 +852,20 @@
       "cancel": "Abbrechen",
       "saveFailed": "Die Clips konnten nicht gespeichert werden. Bitte versuche es erneut.",
       "locked": "Die Clips dieser Sitzung können nicht mehr geändert werden."
+    },
+    "goal": {
+      "label": "Woran sollen wir arbeiten?",
+      "placeholder": "z. B. mein Rückhand-Topspin gegen Schupf…",
+      "none": "Kein Ziel gesetzt",
+      "add": "Ziel hinzufügen",
+      "edit": "Bearbeiten",
+      "save": "Ziel speichern",
+      "cancel": "Abbrechen",
+      "saveFailed": "Das Ziel konnte nicht gespeichert werden. Bitte erneut versuchen.",
+      "locked": "Das Ziel kann nicht mehr geändert werden."
+    },
+    "aboutPlayer": {
+      "title": "Über den Spieler"
     }
   },
   "adminDisputes": {
