@@ -71,3 +71,46 @@ from the nightly `pg_dump` objects in the Hetzner bucket.
   only; `deploy.sh` restarts it when either changed, and after a cert-manager
   renewal outside a deploy run `kubectl -n playwithpro rollout restart deploy/livekit`.
 - Before risky operations take a netcup SCP snapshot of the VPS.
+
+## Observability (PostHog Cloud EU)
+
+Error tracking, product analytics, session replay, feature flags and the
+in-app support channel all run on one PostHog project (`add-product-observability`).
+Project setup, keys and the dashboard live in `infra/posthog/README.md`;
+the env contract is the *Observability* block of `env.example`. With every
+`POSTHOG_*` value empty both apps are silent — that is the dev/CI state.
+
+- **Keys**: `apply-secrets.sh` ships the server keys; `build-push.sh` bakes
+  `NEXT_PUBLIC_POSTHOG_KEY` (+ replay sample) into the web image and passes
+  the git SHA as `APP_RELEASE` to both images.
+- **Source maps**: put a PostHog personal API key (error tracking: write)
+  as a single line in `~/.playwithpro-posthog-cli`; `build-push.sh` mounts
+  it as a build secret and the Dockerfiles inject/upload maps tagged with
+  the SHA. Without the file the upload is skipped and builds still work.
+- **Ingestion proxy**: the web app rewrites `/ph/*` to the EU ingestion
+  hosts (`next.config.ts`); nothing else in the cluster needs to change and
+  the basic-auth gate stays in front of it.
+- **Kill switch**: the feature flag `add-product-observability-support-panel`
+  hides the support entry points without a deploy. Unsetting the keys and
+  redeploying turns the whole integration off.
+
+### Support email channel (`support@play-with.pro`)
+
+Mail to the support address must land in the PostHog inbox and replies must
+leave from our domain passing SPF, DKIM and DMARC. Brevo already sends
+transactional mail for the domain, so the SPF record is **merged**, not
+replaced. Steps (Porkbun DNS):
+
+1. In PostHog → Support → Channels → *Email*, add `support@play-with.pro`.
+   PostHog shows a forwarding address and DKIM/verification records.
+2. **Inbound**: the domain has no MX record today. Either add PostHog's MX
+   (if offered) or an MX to a mailbox/forwarder (e.g. the registrar's email
+   forwarding) that forwards `support@` to the PostHog inbox address.
+3. **SPF**: one TXT at `@` including both senders, e.g.
+   `v=spf1 include:spf.brevo.com include:<posthog spf include> ~all`
+   (keep a single SPF record; two records = SPF permerror).
+4. **DKIM**: add the CNAME/TXT records PostHog shows; verify in PostHog.
+5. **DMARC**: keep the existing `p=none` policy until a round trip passes
+   for both Brevo and PostHog, then tighten to `p=quarantine`.
+6. Verify: send a mail to `support@play-with.pro` → ticket appears; reply
+   from the inbox → the reply's raw headers show `spf=pass dkim=pass dmarc=pass`.

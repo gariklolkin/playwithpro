@@ -30,12 +30,20 @@ import type {
   CalendarSessionInput,
 } from '../calendar/calendar-provider';
 import { CALENDAR_PROVIDER } from '../calendar/calendar-provider';
+import {
+  ANALYTICS,
+  LIFECYCLE_EVENTS,
+  type Analytics,
+} from '../observability/observability';
 import type { PaymentProvider } from '../payments/payment-provider';
 import {
   PAYMENT_PROVIDER,
   computePlatformFee,
 } from '../payments/payment-provider';
-import { toPrismaServiceType } from '../pros/pro-profile.mapper';
+import {
+  toPrismaServiceType,
+  toSharedServiceType,
+} from '../pros/pro-profile.mapper';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { UnattachedVideosService } from '../videos/unattached-videos.service';
@@ -69,6 +77,7 @@ export class BookingsService {
     private readonly settlement: SettlementService,
     private readonly sessionVideos: SessionVideosService,
     private readonly unattached: UnattachedVideosService,
+    @Inject(ANALYTICS) private readonly analytics: Analytics,
   ) {}
 
   private readonly avatarUrlOf = (key: string): string =>
@@ -316,6 +325,16 @@ export class BookingsService {
       throw new ConflictException('This session is no longer payable.');
     }
 
+    this.analytics.track({
+      event: LIFECYCLE_EVENTS.sessionPaid,
+      distinctId: playerId,
+      properties: {
+        sessionId: session.id,
+        serviceType: toSharedServiceType(session.serviceType),
+        amountMinor: session.priceMinor,
+        currency: session.currency,
+      },
+    });
     await this.sendInviteOnce(session.id);
 
     const paid = await this.prisma.session.findUniqueOrThrow({
@@ -435,6 +454,17 @@ export class BookingsService {
       );
     }
     this.logger.log(`Session ${session.id} cancelled by user ${user.id}`);
+    this.analytics.track({
+      event: LIFECYCLE_EVENTS.sessionCancelled,
+      distinctId: user.id,
+      properties: {
+        sessionId: session.id,
+        serviceType: toSharedServiceType(session.serviceType),
+        amountMinor: session.priceMinor,
+        currency: session.currency,
+        cancelledBy: user.role,
+      },
+    });
     await this.settlement.settle(session.id);
     await this.sendCancellationIfInvited(session.id);
     await this.releaseAttachments(session.id);

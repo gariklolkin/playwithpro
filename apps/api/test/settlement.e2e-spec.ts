@@ -14,6 +14,7 @@ import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { TokenService } from '../src/auth/token.service';
+import { ANALYTICS, type Analytics } from '../src/observability/observability';
 import { SessionProgressionService } from '../src/bookings/session-progression.service';
 import { SettlementService } from '../src/bookings/settlement.service';
 import { PrismaService } from '../src/prisma/prisma.service';
@@ -51,6 +52,8 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
   let prisma: PrismaService;
   let progression: SessionProgressionService;
   let settlement: SettlementService;
+  /** The no-op analytics provider (no key in tests), spied to count lifecycle events. */
+  let track: jest.SpyInstance;
   let playerCookie: string;
   let rivalCookie: string;
   let coachCookie: string;
@@ -136,6 +139,7 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
     prisma = app.get(PrismaService);
     progression = app.get(SessionProgressionService);
     settlement = app.get(SettlementService);
+    track = jest.spyOn(app.get<Analytics>(ANALYTICS), 'track');
     await truncateAll(prisma);
 
     const coach = await prisma.user.create({
@@ -224,6 +228,7 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
     });
 
     it('player confirmation completes and pays out', async () => {
+      track.mockClear();
       const res = await request(server())
         .post(`/sessions/${sessionId}/confirm`)
         .set('Cookie', playerCookie)
@@ -233,6 +238,32 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
       expect(session.playerConfirmedAt).toBeTruthy();
       expect(session.escrow).toBe('released');
       expect(await paymentStatusOf(sessionId)).toBe('RELEASED');
+      // Exactly one money event per transition, keyed by the payer, no free text.
+      const completed = track.mock.calls.filter(
+        ([input]) => (input as { event: string }).event === 'session_completed',
+      );
+      expect(completed).toHaveLength(1);
+      expect(completed[0][0]).toMatchObject({
+        distinctId: expect.any(String) as string,
+        properties: {
+          sessionId,
+          serviceType: 'consultation',
+          amountMinor: 4005,
+          currency: 'EUR',
+        },
+      });
+    });
+
+    it('a settlement retry never emits the money event twice', async () => {
+      track.mockClear();
+      await settlement.settle(sessionId);
+      await settlement.sweep();
+      expect(
+        track.mock.calls.filter(
+          ([input]) =>
+            (input as { event: string }).event === 'session_completed',
+        ),
+      ).toHaveLength(0);
     });
 
     it('repeating the confirmation is a no-op', async () => {
@@ -325,6 +356,7 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
     });
 
     it('player opens the dispute and freezes the payout', async () => {
+      track.mockClear();
       const res = await request(server())
         .post(`/sessions/${sessionId}/dispute`)
         .set('Cookie', playerCookie)
@@ -337,6 +369,12 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
         reason: 'Coach never showed up',
       });
       expect(await paymentStatusOf(sessionId)).toBe('HELD');
+      // One event, and the free-text reason never leaves the platform.
+      const disputed = track.mock.calls.filter(
+        ([input]) => (input as { event: string }).event === 'session_disputed',
+      );
+      expect(disputed).toHaveLength(1);
+      expect(JSON.stringify(disputed[0][0])).not.toContain('Coach never');
     });
 
     it('a second dispute conflicts', async () => {

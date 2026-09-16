@@ -4,7 +4,13 @@ import { Suspense } from "react";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { Navbar } from "@/components/navbar";
+import { ObservabilityProvider } from "@/components/observability/observability-provider";
 import { SettingsDialogHost } from "@/components/settings/settings-dialog-host";
+import { isObservabilityEnabled } from "@/lib/observability/config";
+import {
+  observabilityForRequest,
+  toIdentifiedUser,
+} from "@/lib/observability/server";
 import { getCurrentUser } from "@/lib/server-user";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
@@ -34,21 +40,30 @@ export default async function LocaleLayout({
     notFound();
   }
   const [messages, user] = await Promise.all([getMessages(), getCurrentUser()]);
+  // Consent choice + server-evaluated flags for this request (no-op without a key).
+  const observability = await observabilityForRequest(user);
 
   return (
     <html lang={locale} className="h-full antialiased font-sans">
       <body className="min-h-full flex flex-col bg-bg text-text">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <Navbar user={user} />
-          {children}
-          {/* `useSearchParams` in a layout-level client component needs a
+          <ObservabilityProvider
+            enabled={isObservabilityEnabled()}
+            user={user ? toIdentifiedUser(user) : null}
+            initialConsent={observability.consent}
+            flags={observability.flags}
+          >
+            <Navbar user={user} />
+            {children}
+            {/* `useSearchParams` in a layout-level client component needs a
               Suspense boundary; the host renders nothing unless
               `?settings=` is present. */}
-          {user ? (
-            <Suspense fallback={null}>
-              <SettingsDialogHost user={user} />
-            </Suspense>
-          ) : null}
+            {user ? (
+              <Suspense fallback={null}>
+                <SettingsDialogHost user={user} />
+              </Suspense>
+            ) : null}
+          </ObservabilityProvider>
         </NextIntlClientProvider>
       </body>
     </html>

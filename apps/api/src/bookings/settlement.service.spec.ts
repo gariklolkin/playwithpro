@@ -13,9 +13,11 @@ describe('SettlementService', () => {
     },
   };
   const payments = { release: jest.fn(), refund: jest.fn() };
+  const analytics = { track: jest.fn() };
   const service = new SettlementService(
     prisma as unknown as PrismaService,
     payments as unknown as PaymentProvider,
+    analytics,
   );
 
   const heldPayment = {
@@ -36,6 +38,10 @@ describe('SettlementService', () => {
   ) => {
     prisma.session.findUnique.mockResolvedValue({
       status,
+      playerId: 'player-1',
+      serviceType: 'CONSULTATION',
+      priceMinor: 4005,
+      currency: 'EUR',
       dispute: outcome === null ? null : { outcome },
     });
   };
@@ -51,6 +57,26 @@ describe('SettlementService', () => {
     });
     expect(payments.release).toHaveBeenCalledWith('mock-hold-session-1');
     expect(payments.refund).not.toHaveBeenCalled();
+    expect(analytics.track).toHaveBeenCalledWith({
+      event: 'session_completed',
+      distinctId: 'player-1',
+      properties: {
+        sessionId: 'session-1',
+        serviceType: 'consultation',
+        amountMinor: 4005,
+        currency: 'EUR',
+        sessionStatus: 'completed_paid',
+      },
+    });
+  });
+
+  it('emits no money event when the provider fails', async () => {
+    sessionInState(SessionStatus.COMPLETED_PAID);
+    payments.release.mockRejectedValueOnce(new Error('provider down'));
+
+    await service.settle('session-1');
+
+    expect(analytics.track).not.toHaveBeenCalled();
   });
 
   it('refunds the held payment of a cancelled session', async () => {
@@ -60,6 +86,12 @@ describe('SettlementService', () => {
 
     expect(payments.refund).toHaveBeenCalledWith('mock-hold-session-1');
     expect(payments.release).not.toHaveBeenCalled();
+    expect(analytics.track).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'session_refunded',
+        distinctId: 'player-1',
+      }),
+    );
   });
 
   it.each([

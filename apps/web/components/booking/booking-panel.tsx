@@ -19,6 +19,7 @@ import { useMounted } from "@/components/catalog/local-time";
 import { ClipPicker } from "@/components/sessions/clip-picker";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api";
+import { FUNNEL_EVENTS, track } from "@/lib/observability/analytics";
 import { clipSetErrorMessage, clipSetStatus } from "@/lib/clip-set";
 import { formatDuration } from "@/lib/format-duration";
 import { formatMoney } from "@/lib/money";
@@ -323,7 +324,13 @@ export function BookingPanel({ proId, services, initialSlots, viewer }: Props) {
                 <button
                   key={slot.id}
                   type="button"
-                  onClick={() => setSlotId(slot.id)}
+                  onClick={() => {
+                    setSlotId(slot.id);
+                    track(FUNNEL_EVENTS.slotSelected, {
+                      coachId: proId,
+                      serviceType: serviceType ?? null,
+                    });
+                  }}
                   className={`rounded-md border px-2.5 py-1.5 text-[13px] tabular-nums transition-colors ${
                     slot.id === slotId
                       ? "border-[#2E7DE1] bg-[#EAF2FD] font-medium text-[#2A5FC7]"

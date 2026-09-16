@@ -24,6 +24,7 @@ import {
   type CardLayout,
 } from "@/components/sessions/room-video-panel";
 import { apiFetch } from "@/lib/api";
+import { FUNNEL_EVENTS, track } from "@/lib/observability/analytics";
 import {
   formatClock,
   useSessionClock,
@@ -209,10 +210,16 @@ export function SessionRoom({
     }
   }, [sessionId]);
 
-  const onPhaseChange = useCallback((phase: CallPhaseKind) => {
-    setCallPhase(phase);
-    if (phase !== "in-call") setFocus(false);
-  }, []);
+  const onPhaseChange = useCallback(
+    (phase: CallPhaseKind) => {
+      setCallPhase(phase);
+      if (phase !== "in-call") setFocus(false);
+      if (phase === "in-call") {
+        track(FUNNEL_EVENTS.roomJoined, { sessionId, role });
+      }
+    },
+    [sessionId, role],
+  );
 
   const onHideSelfChange = useCallback((hide: boolean) => {
     setHideSelf(hide);
@@ -398,6 +405,7 @@ export function SessionRoom({
                 onHideSelfChange={onHideSelfChange}
                 onFocusChange={setFocus}
                 onPhaseChange={onPhaseChange}
+                sessionId={sessionId}
               />
             ) : null}
           </div>

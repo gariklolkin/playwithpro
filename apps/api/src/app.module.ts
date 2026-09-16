@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { validate } from './config/env.validation';
 import { HealthModule } from './health/health.module';
 import { MailerModule } from './mailer/mailer.module';
+import { ObservabilityModule } from './observability/observability.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AdminModule } from './admin/admin.module';
 import { AvailabilityModule } from './availability/availability.module';
@@ -19,6 +20,7 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { SchedulingModule } from './scheduling/scheduling.module';
 import { SessionRoomsModule } from './session-rooms/session-rooms.module';
 import { StorageModule } from './storage/storage.module';
+import { SupportModule } from './support/support.module';
 import { UsersModule } from './users/users.module';
 import { VideosModule } from './videos/videos.module';
 
@@ -32,6 +34,7 @@ import { VideosModule } from './videos/videos.module';
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     ScheduleModule.forRoot(),
     PrismaModule,
+    ObservabilityModule,
     HealthModule,
     MailerModule,
     AuthModule,
@@ -47,6 +50,7 @@ import { VideosModule } from './videos/videos.module';
     SchedulingModule,
     SessionRoomsModule,
     StorageModule,
+    SupportModule,
     VideosModule,
   ],
   providers: [

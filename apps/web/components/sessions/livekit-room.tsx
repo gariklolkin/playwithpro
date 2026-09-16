@@ -41,6 +41,7 @@ import { DeviceMenu } from "./call-device-menu";
 import { CallFrame } from "./call-frame";
 import { CallPreJoin, type PreJoinChoices } from "./call-prejoin";
 import { ControlButton } from "./control-button";
+import { SupportButton } from "@/components/support/support-button";
 import { deviceNotice } from "@/lib/device-notice";
 
 type CallPhase =
@@ -76,6 +77,7 @@ export function LiveKitCall({
   onHideSelfChange,
   onFocusChange,
   onPhaseChange,
+  sessionId,
 }: {
   serverUrl: string;
   counterpartName: string;
@@ -88,6 +90,8 @@ export function LiveKitCall({
   onHideSelfChange?: (hide: boolean) => void;
   onFocusChange?: (focus: boolean) => void;
   onPhaseChange?: (phase: CallPhaseKind) => void;
+  /** For the support entry point on a failed or lost connection. */
+  sessionId?: string;
 }) {
   const t = useTranslations("sessions.room.call");
   const [phase, setPhase] = useState<CallPhase>({ kind: "prejoin" });
@@ -166,14 +170,22 @@ export function LiveKitCall({
           </div>
           <div className="font-semibold text-white">{title}</div>
           <p className="max-w-[360px] text-sm text-white/70">{hint}</p>
-          <Button
-            type="button"
-            variant="blue"
-            className="mt-3"
-            onClick={() => changePhase({ kind: "prejoin" })}
-          >
-            {t("rejoin")}
-          </Button>
+          <div className="mt-3 flex flex-wrap justify-center gap-2">
+            <Button
+              type="button"
+              variant="blue"
+              onClick={() => changePhase({ kind: "prejoin" })}
+            >
+              {t("rejoin")}
+            </Button>
+            {phase.reason !== "user" ? (
+              <SupportButton
+                variant="ghost"
+                className="border-white/30 text-white hover:bg-white/10"
+                context={{ kind: "room", sessionId }}
+              />
+            ) : null}
+          </div>
         </div>
       </CallFrame>
     );

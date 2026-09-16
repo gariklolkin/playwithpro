@@ -11,7 +11,9 @@
     "verifyBanner": "Bitte bestätige deine E-Mail — sieh in deinem Posteingang nach.",
     "verifyResend": "Code erneut senden",
     "verifyResent": "Bestätigungscode gesendet.",
-    "verifyEnterCode": "Code eingeben"
+    "verifyEnterCode": "Code eingeben",
+    "privacy": "Datenschutz",
+    "support": "Support kontaktieren"
   },
   "auth": {
     "login": {
@@ -346,7 +348,8 @@
     "adminUsersTitle": "Nutzer — PlayWithPro",
     "adminTransactionsTitle": "Transaktionen — PlayWithPro",
     "adminAnalyticsTitle": "Statistiken — PlayWithPro",
-    "adminReviewsTitle": "Bewertungsmoderation — PlayWithPro"
+    "adminReviewsTitle": "Bewertungsmoderation — PlayWithPro",
+    "privacyTitle": "Datenschutz — PlayWithPro"
   },
   "verification": {
     "title": "Verifizierung",
@@ -997,5 +1000,83 @@
       "too_many_clips": "Höchstens {max} Clips pro Sitzung (du hast {count} ausgewählt).",
       "too_long": "Die Clips dürfen zusammen höchstens {max} lang sein; deine sind {total}."
     }
+  },
+  "consent": {
+    "title": "Cookies und Analyse",
+    "body": "Wir verwenden Cookies für anonyme Nutzungsstatistiken, Fehlerberichte und Sitzungsaufzeichnungen, die uns helfen, Probleme zu beheben. Vor deiner Zustimmung wird nichts erfasst.",
+    "privacyLink": "Was wir erfassen",
+    "accept": "Akzeptieren",
+    "decline": "Ablehnen"
+  },
+  "privacy": {
+    "title": "Datenschutz",
+    "intro": "Diese Seite erklärt, was PlayWithPro während der Nutzung erfasst, wer es verarbeitet und wie du deine Wahl änderst.",
+    "sections": {
+      "collect": {
+        "title": "Was wir in deinem Browser erfassen",
+        "body": "Mit deiner Zustimmung: die geöffneten Seiten, die Schritte einer Buchung (Katalog, Trainerseite, Bezahlung, Sitzungsraum, Bestätigung), Fehler auf der Seite und die Aufzeichnung einiger Sitzungen. Deine Konto-ID, Rolle und Sprache werden zugeordnet; deine E-Mail nur, wenn du dem Support schreibst."
+      },
+      "vendor": {
+        "title": "Wer es verarbeitet",
+        "body": "PostHog Cloud (EU-Region, gehostet in der Europäischen Union). Die Daten laufen über unsere eigene Domain und werden nie direkt von der Seite an einen Drittanbieter gesendet."
+      },
+      "purpose": {
+        "title": "Warum",
+        "body": "Um zu sehen, wo Buchungen scheitern, Fehler schnell zu finden und zu beheben, Funktionen sicher ein- und auszuschalten und Support-Anfragen mit Kontext zu beantworten."
+      },
+      "replay": {
+        "title": "Sitzungsaufzeichnung",
+        "body": "Nur ein Teil der Sitzungen mit Zustimmung wird aufgezeichnet. Alle Eingaben werden maskiert, ebenso Streittexte, die Beschreibung deines Spielerprofils und die Admin-Konsole. Links mit Codes, Tokens oder Signaturen werden bereinigt, bevor etwas deinen Browser verlässt."
+      },
+      "server": {
+        "title": "Was wir auf unseren Servern zählen",
+        "body": "Buchungen, Zahlungen, Erstattungen, Streitfälle und Stornierungen werden unabhängig von deiner Cookie-Wahl auf unseren Servern gezählt: Sie spiegeln Datensätze, die wir ohnehin für den Betrieb führen. Sie enthalten keinen Freitext und erzeugen kein Browserprofil."
+      },
+      "retention": {
+        "title": "Wie lange",
+        "body": "Deine Wahl wird zwölf Monate gespeichert und erneut abgefragt, wenn sich dieser Text wesentlich ändert. Analysedaten und Fehlerberichte folgen der Aufbewahrungsfrist des Anbieters für unseren Tarif; du kannst die Zustimmung unten jederzeit widerrufen."
+      }
+    },
+    "control": {
+      "title": "Deine Wahl",
+      "body": "Ein Widerruf stoppt die Erfassung sofort und löscht die in deinem Browser gespeicherten Kennungen.",
+      "statusGranted": "Die Analyse ist für diesen Browser aktiviert.",
+      "statusDenied": "Die Analyse ist für diesen Browser deaktiviert.",
+      "statusNone": "Du hast noch keine Wahl getroffen.",
+      "accept": "Analyse erlauben",
+      "decline": "Zustimmung widerrufen",
+      "disabled": "Die Analyse ist in dieser Umgebung nicht aktiviert."
+    },
+    "contact": {
+      "title": "Fragen",
+      "body": "Schreib uns an"
+    }
+  },
+  "support": {
+    "open": "Support kontaktieren",
+    "title": "Support",
+    "intro": "Wir antworten in der Regel innerhalb eines Tages.",
+    "close": "Schließen",
+    "loading": "Verbinde…",
+    "empty": "Erzähl uns, was passiert ist. Deine Nachricht bleibt hier, Antworten erscheinen in diesem Fenster.",
+    "placeholder": "Beschreibe das Problem…",
+    "emailLabel": "Deine E-Mail",
+    "emailPlaceholder": "Deine E-Mail, damit wir antworten können",
+    "send": "Senden",
+    "sending": "Wird gesendet…",
+    "you": "Du",
+    "team": "PlayWithPro",
+    "error": "Die Nachricht konnte nicht gesendet werden. Versuch es erneut oder nutze E-Mail.",
+    "unavailable": "Der Support-Chat ist derzeit nicht verfügbar.",
+    "consentNeeded": "Der Support-Chat läuft über denselben Dienst wie unsere Analyse und braucht deine Cookie-Zustimmung.",
+    "consentAccept": "Akzeptieren und Chat öffnen",
+    "emailFallback": "Oder schreib uns an <link></link>."
+  },
+  "errors": {
+    "title": "Etwas ist schiefgelaufen",
+    "hint": "Die Seite konnte nicht angezeigt werden. Du kannst es erneut versuchen oder zur Startseite zurückkehren.",
+    "reference": "Referenz: {id}",
+    "retry": "Erneut versuchen",
+    "home": "Startseite"
   }
 }

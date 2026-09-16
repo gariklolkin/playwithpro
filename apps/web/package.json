@@ -24,6 +24,8 @@
     "lucide-react": "^1.24.0",
     "next": "16.2.10",
     "next-intl": "^4.13.2",
+    "posthog-js": "1.433.5",
+    "posthog-node": "5.52.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-easy-crop": "^6.2.2",
@@ -35,6 +37,7 @@
   },
   "devDependencies": {
     "@playwithpro/config": "workspace:*",
+    "@posthog/cli": "0.18.2",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",

@@ -3,11 +3,15 @@
 import { Link, useRouter } from "@/i18n/navigation";
 import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { resetIdentity } from "@/lib/observability/client";
+import { useSupport } from "@/lib/observability/context";
 import { useSettingsHref } from "@/lib/use-settings-href";
 import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface UserMenuLabels {
   settings: string;
+  privacy: string;
+  support: string;
   logout: string;
 }
 
@@ -22,6 +26,7 @@ export function UserMenu({
 }) {
   const router = useRouter();
   const settingsHref = useSettingsHref("profile");
+  const support = useSupport();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -37,6 +42,8 @@ export function UserMenu({
 
   async function handleLogout() {
     await apiFetch("/auth/logout", { method: "POST" });
+    // The next visitor on this device starts as a fresh anonymous person.
+    resetIdentity();
     setOpen(false);
     router.push("/");
     router.refresh();
@@ -69,6 +76,24 @@ export function UserMenu({
           >
             {labels.settings}
           </Link>
+          <Link
+            href="/privacy"
+            className={itemClass}
+            onClick={() => setOpen(false)}
+          >
+            {labels.privacy}
+          </Link>
+          {support.available ? (
+            <button
+              className={itemClass}
+              onClick={() => {
+                setOpen(false);
+                support.open({ kind: "menu" });
+              }}
+            >
+              {labels.support}
+            </button>
+          ) : null}
           <button onClick={() => void handleLogout()} className={itemClass}>
             {labels.logout}
           </button>

@@ -69,6 +69,7 @@ describe('PlaybackSyncGateway', () => {
     gateway = new PlaybackSyncGateway(
       tokens as unknown as TokenService,
       rooms as unknown as SessionRoomsService,
+      { captureException: jest.fn() },
     );
     const registered: HandshakeMiddleware[] = [];
     const namespace = {

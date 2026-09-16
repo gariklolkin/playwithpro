@@ -40,7 +40,10 @@ export function PlayerCard({ player }: { player: PlayerCardResponse }) {
         </div>
       </div>
       {player.about ? (
-        <p className="mt-3 whitespace-pre-wrap text-sm text-text-secondary">
+        <p
+          className="mt-3 whitespace-pre-wrap text-sm text-text-secondary"
+          data-ph-mask
+        >
           {player.about}
         </p>
       ) : null}

@@ -34,11 +34,13 @@ describe('DisputesService', () => {
     normalize: jest.fn(<T>(session: T) => Promise.resolve(session)),
   };
   const settlement = { settle: jest.fn() };
+  const analytics = { track: jest.fn() };
   const service = new DisputesService(
     prisma as unknown as PrismaService,
     bookings as unknown as BookingsService,
     progression as unknown as SessionProgressionService,
     settlement as unknown as SettlementService,
+    analytics,
   );
 
   const awaitingSession = {
@@ -47,6 +49,9 @@ describe('DisputesService', () => {
     status: 'AWAITING_CONFIRMATION',
     startsAt: new Date(Date.now() - 3 * HOUR),
     endsAt: new Date(Date.now() - 2 * HOUR),
+    serviceType: 'CONSULTATION',
+    priceMinor: 4005,
+    currency: 'EUR',
     proProfile: { userId: 'coach-1' },
   };
 
@@ -113,6 +118,16 @@ describe('DisputesService', () => {
         },
       });
       expect(result.status).toBe('disputed');
+      expect(analytics.track).toHaveBeenCalledWith({
+        event: 'session_disputed',
+        distinctId: 'player-1',
+        properties: {
+          sessionId: 'session-1',
+          serviceType: 'consultation',
+          amountMinor: 4005,
+          currency: 'EUR',
+        },
+      });
     });
 
     it('409s when the session is not awaiting confirmation', async () => {
@@ -187,6 +202,16 @@ describe('DisputesService', () => {
       });
       expect(settlement.settle).toHaveBeenCalledWith('session-1');
       expect(result.outcome).toBe('release');
+      expect(analytics.track).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'dispute_resolved',
+          distinctId: 'admin-1',
+          properties: expect.objectContaining({
+            sessionId: 'session-1',
+            outcome: 'release',
+          }) as object,
+        }),
+      );
     });
 
     it('maps a refund outcome to the refund settlement', async () => {

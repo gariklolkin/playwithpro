@@ -1,3 +1,4 @@
+import { Inject, UseFilters } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -28,6 +29,14 @@ import {
 import type { Namespace, Socket } from 'socket.io';
 import { ACCESS_TOKEN_COOKIE, AuthenticatedUser } from '../auth/auth-cookies';
 import { TokenService } from '../auth/token.service';
+import {
+  ERROR_REPORTER,
+  type ErrorReporter,
+} from '../observability/observability';
+import {
+  isUnexpectedWsError,
+  ObservabilityWsExceptionFilter,
+} from '../observability/observability-ws-exception.filter';
 import { SessionRoomsService } from './session-rooms.service';
 
 interface SocketData {
@@ -181,6 +190,7 @@ function toAnnotationState(store: AnnotationStore): AnnotationState {
  * any of its messages can arrive, and rejected clients get `connect_error`.
  */
 @WebSocketGateway({ namespace: PLAYBACK_SYNC_NAMESPACE })
+@UseFilters(ObservabilityWsExceptionFilter)
 export class PlaybackSyncGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
@@ -194,6 +204,7 @@ export class PlaybackSyncGateway
   constructor(
     private readonly tokens: TokenService,
     private readonly rooms: SessionRoomsService,
+    @Inject(ERROR_REPORTER) private readonly errors: ErrorReporter,
   ) {}
 
   afterInit(namespace: Namespace): void {
@@ -201,8 +212,17 @@ export class PlaybackSyncGateway
       this.authorize(socket).then(
         () => next(),
         // Any failure — bad token, non-party, wrong service type, outside
-        // the window — looks the same from outside.
-        () => next(new Error('Unauthorized')),
+        // the window — looks the same from outside; only unexpected ones
+        // (a DB blip, a bug) are worth an error report.
+        (error: unknown) => {
+          if (isUnexpectedWsError(error)) {
+            this.errors.captureException(error, {
+              route: '/playback-sync',
+              method: 'connect',
+            });
+          }
+          next(new Error('Unauthorized'));
+        },
       );
     });
   }

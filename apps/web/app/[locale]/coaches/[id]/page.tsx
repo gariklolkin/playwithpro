@@ -11,6 +11,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { BookingPanel } from "@/components/booking/booking-panel";
+import { TrackView } from "@/components/observability/track-view";
 import { CoachReviews } from "@/components/pros/coach-reviews";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { LOCALE_LABELS } from "@/i18n/locale-labels";
@@ -65,6 +66,7 @@ export default async function CoachPage({
 
   return (
     <main className="mx-auto w-full max-w-[1180px] flex-1 px-5 pb-24 sm:px-8">
+      <TrackView event="coach_viewed" properties={{ coachId: id, viewer }} />
       <nav className="pt-6 text-sm">
         <Link
           href="/coaches"

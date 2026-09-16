@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 
 export function LoginCard() {
   const t = useTranslations("auth.login");
+  const tNav = useTranslations("nav");
   const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next") ?? "/dashboard";
@@ -158,6 +159,9 @@ export function LoginCard() {
       </AuthFooter>
       <AuthFooter>
         {t("noAccount")} <Link href="/register">{t("createAccount")}</Link>
+      </AuthFooter>
+      <AuthFooter>
+        <Link href="/privacy">{tNav("privacy")}</Link>
       </AuthFooter>
     </AuthCard>
   );

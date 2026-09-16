@@ -194,6 +194,32 @@ class EnvironmentVariables {
   @IsInt()
   @Min(1)
   AUTO_CONFIRM_WINDOW_HOURS = 48;
+
+  /**
+   * Product observability (PostHog Cloud EU). All optional: without
+   * POSTHOG_API_KEY the no-op providers are used and nothing leaves the
+   * process (local dev, CI).
+   */
+  @IsOptional()
+  @IsString()
+  POSTHOG_API_KEY?: string;
+
+  @IsUrl({ require_tld: false })
+  POSTHOG_HOST = 'https://eu.i.posthog.com';
+
+  /** Personal (phx_) or project-secret (phs_) key: enables local flag evaluation. */
+  @IsOptional()
+  @IsString()
+  POSTHOG_PERSONAL_API_KEY?: string;
+
+  /** Support "Secret API key": signs the HMAC identity for the in-app support panel. */
+  @IsOptional()
+  @IsString()
+  POSTHOG_SUPPORT_SECRET?: string;
+
+  /** Deploy SHA (image tag) stamped on every event and error; baked by Dockerfile.prod. */
+  @IsString()
+  APP_RELEASE = 'unknown';
 }
 
 export function validate(

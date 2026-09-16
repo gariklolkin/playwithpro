@@ -16,5 +16,6 @@ export default async function AdminConsoleLayout({
     redirect({ href: "/dashboard", locale: await getLocale() });
     return null;
   }
-  return children;
+  // Masked as a whole in session replays: user directory, ledger, disputes.
+  return <div data-ph-mask>{children}</div>;
 }

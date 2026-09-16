@@ -9,6 +9,7 @@ import { Role, ServiceType } from '@playwithpro/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { CALENDAR_PROVIDER } from '../calendar/calendar-provider';
+import { ANALYTICS } from '../observability/observability';
 import { PAYMENT_PROVIDER } from '../payments/payment-provider';
 import { BookingsService } from './bookings.service';
 import { SessionProgressionService } from './session-progression.service';
@@ -121,6 +122,7 @@ describe('BookingsService', () => {
     replace: jest.fn(),
   };
   const unattached = { recompute: jest.fn() };
+  const analytics = { track: jest.fn() };
   const config = {
     getOrThrow: (name: string) =>
       ({
@@ -153,6 +155,7 @@ describe('BookingsService', () => {
         { provide: SettlementService, useValue: settlement },
         { provide: SessionVideosService, useValue: sessionVideos },
         { provide: UnattachedVideosService, useValue: unattached },
+        { provide: ANALYTICS, useValue: analytics },
       ],
     }).compile();
     service = moduleRef.get(BookingsService);
@@ -388,6 +391,16 @@ describe('BookingsService', () => {
       });
       expect(result.paymentStatus).toBe('held');
       expect(result.session.status).toBe('paid_escrow');
+      expect(analytics.track).toHaveBeenCalledWith({
+        event: 'session_paid',
+        distinctId: 'player-1',
+        properties: {
+          sessionId: 'session-1',
+          serviceType: 'consultation',
+          amountMinor: 4005,
+          currency: 'EUR',
+        },
+      });
     });
 
     it('mints no room slug for an in-person game session', async () => {
@@ -733,6 +746,15 @@ describe('BookingsService', () => {
       expect(settlement.settle).toHaveBeenCalledWith('session-1');
       expect(result.status).toBe('cancelled');
       expect(result.escrow).toBe('refunded');
+      expect(analytics.track).toHaveBeenCalledWith({
+        event: 'session_cancelled',
+        distinctId: 'coach-1',
+        properties: expect.objectContaining({
+          sessionId: 'session-1',
+          cancelledBy: 'professional',
+          amountMinor: 4005,
+        }) as object,
+      });
     });
 
     it('lets the player release an unpaid booking without settlement', async () => {

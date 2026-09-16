@@ -44,6 +44,8 @@ export async function Navbar({ user }: { user: MeResponse | null }) {
             avatarUrl={user.avatarUrl}
             labels={{
               settings: t("settings"),
+              privacy: t("privacy"),
+              support: t("support"),
               logout: t("logout"),
             }}
           />

@@ -226,6 +226,7 @@ export function PlayerProfileEditor({
             placeholder={t("details.aboutPlaceholder")}
             value={about}
             onChange={(event) => setAbout(event.target.value)}
+            data-ph-mask
             className="mb-3 w-full rounded-lg border border-border-strong bg-bg px-3 py-[9px] text-sm text-text"
           />
           <div className="flex items-center gap-3">

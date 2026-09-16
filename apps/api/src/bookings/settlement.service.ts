@@ -6,9 +6,15 @@ import {
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { DisputeOutcome, PaymentStatus, SessionStatus } from '@prisma/client';
+import {
+  ANALYTICS,
+  LIFECYCLE_EVENTS,
+  type Analytics,
+} from '../observability/observability';
 import type { PaymentProvider } from '../payments/payment-provider';
 import { PAYMENT_PROVIDER } from '../payments/payment-provider';
 import { PrismaService } from '../prisma/prisma.service';
+import { toSharedServiceType } from '../pros/pro-profile.mapper';
 
 /**
  * Moves escrowed money exactly once per held payment. Session status is the
@@ -25,6 +31,7 @@ export class SettlementService implements OnApplicationBootstrap {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(PAYMENT_PROVIDER) private readonly payments: PaymentProvider,
+    @Inject(ANALYTICS) private readonly analytics: Analytics,
   ) {}
 
   onApplicationBootstrap(): void {
@@ -35,7 +42,14 @@ export class SettlementService implements OnApplicationBootstrap {
   async settle(sessionId: string): Promise<void> {
     const session = await this.prisma.session.findUnique({
       where: { id: sessionId },
-      select: { status: true, dispute: { select: { outcome: true } } },
+      select: {
+        status: true,
+        playerId: true,
+        serviceType: true,
+        priceMinor: true,
+        currency: true,
+        dispute: { select: { outcome: true } },
+      },
     });
     if (!session) {
       return;
@@ -66,6 +80,22 @@ export class SettlementService implements OnApplicationBootstrap {
       this.logger.log(
         `Settled payment ${held.id} for session ${sessionId} as ${target}`,
       );
+      // Money events are emitted here, after the exactly-once movement, so
+      // the funnel counts each release/refund once — keyed by the payer.
+      this.analytics.track({
+        event:
+          target === PaymentStatus.RELEASED
+            ? LIFECYCLE_EVENTS.sessionCompleted
+            : LIFECYCLE_EVENTS.sessionRefunded,
+        distinctId: session.playerId,
+        properties: {
+          sessionId,
+          serviceType: toSharedServiceType(session.serviceType),
+          amountMinor: session.priceMinor,
+          currency: session.currency,
+          sessionStatus: session.status.toLowerCase(),
+        },
+      });
     } catch (error) {
       await this.prisma.payment.updateMany({
         where: { id: held.id, status: target },

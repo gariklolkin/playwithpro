@@ -41,6 +41,7 @@ export function middleware(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  // All pages except API routes, Next internals and static files.
-  matcher: ["/((?!api|_next|.*\\..*).*)"],
+  // All pages except API routes, the analytics ingestion proxy (/ph, see
+  // next.config.ts rewrites), Next internals and static files.
+  matcher: ["/((?!api|ph|_next|.*\\..*).*)"],
 };

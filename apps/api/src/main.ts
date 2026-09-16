@@ -13,6 +13,8 @@ async function bootstrap() {
     rawBody: true,
   });
   const config = app.get(ConfigService);
+  // Drains the observability queue (and other hooks) on SIGTERM.
+  app.enableShutdownHooks();
 
   // LiveKit posts webhooks as application/webhook+json. Registering a json
   // parser here replaces Nest's default one, so it must list both types.

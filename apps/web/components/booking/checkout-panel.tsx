@@ -9,10 +9,12 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { LocalTime } from "@/components/catalog/local-time";
+import { SupportButton } from "@/components/support/support-button";
 import { Button } from "@/components/ui/button";
 import { Link, useRouter } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api";
 import { formatMoney } from "@/lib/money";
+import { FUNNEL_EVENTS, track } from "@/lib/observability/analytics";
 
 function remainingSeconds(expiresAt: string | null): number {
   if (!expiresAt) return 0;
@@ -46,6 +48,13 @@ export function CheckoutPanel({
 
   const pending = session.status === SessionStatus.PendingPayment;
   const expired = pending && session.expiresAt !== null && secondsLeft === 0;
+
+  useEffect(() => {
+    track(FUNNEL_EVENTS.checkoutViewed, {
+      sessionId: initialSession.id,
+      serviceType: initialSession.serviceType,
+    });
+  }, [initialSession.id, initialSession.serviceType]);
 
   useEffect(() => {
     if (!pending || paid) return;
@@ -215,9 +224,15 @@ export function CheckoutPanel({
       </p>
 
       {declined ? (
-        <p className="mt-3 rounded-md bg-[#FBE4E4] p-3 text-[13px] text-[#C4554D]">
-          {declined}
-        </p>
+        <div className="mt-3 rounded-md bg-[#FBE4E4] p-3 text-[13px] text-[#C4554D]">
+          <p>{declined}</p>
+          <SupportButton
+            size="sm"
+            variant="ghost"
+            className="mt-2"
+            context={{ kind: "payment", sessionId: session.id }}
+          />
+        </div>
       ) : null}
 
       <Button

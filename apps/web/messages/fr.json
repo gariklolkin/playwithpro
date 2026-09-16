@@ -11,7 +11,9 @@
     "verifyBanner": "Veuillez vérifier votre e-mail — consultez votre boîte de réception.",
     "verifyResend": "Renvoyer le code",
     "verifyResent": "Code de vérification envoyé.",
-    "verifyEnterCode": "Saisir le code"
+    "verifyEnterCode": "Saisir le code",
+    "privacy": "Confidentialité",
+    "support": "Contacter le support"
   },
   "auth": {
     "login": {
@@ -346,7 +348,8 @@
     "adminUsersTitle": "Utilisateurs — PlayWithPro",
     "adminTransactionsTitle": "Transactions — PlayWithPro",
     "adminAnalyticsTitle": "Statistiques — PlayWithPro",
-    "adminReviewsTitle": "Modération des avis — PlayWithPro"
+    "adminReviewsTitle": "Modération des avis — PlayWithPro",
+    "privacyTitle": "Confidentialité — PlayWithPro"
   },
   "verification": {
     "title": "Vérification",
@@ -997,5 +1000,83 @@
       "too_many_clips": "Au plus {max} clips par séance (vous en avez choisi {count}).",
       "too_long": "Les clips ne peuvent pas dépasser {max} au total ; les vôtres font {total}."
     }
+  },
+  "consent": {
+    "title": "Cookies et statistiques",
+    "body": "Nous utilisons des cookies pour des statistiques d'usage anonymes, des rapports d'erreurs et des enregistrements de session qui nous aident à corriger les problèmes. Rien n'est collecté avant votre accord.",
+    "privacyLink": "Ce que nous collectons",
+    "accept": "Accepter",
+    "decline": "Refuser"
+  },
+  "privacy": {
+    "title": "Confidentialité",
+    "intro": "Cette page explique ce que PlayWithPro collecte pendant votre utilisation, qui le traite et comment changer votre choix.",
+    "sections": {
+      "collect": {
+        "title": "Ce que nous collectons dans votre navigateur",
+        "body": "Avec votre accord : les pages ouvertes, les étapes d'une réservation (catalogue, page du coach, paiement, salle de session, confirmation), les erreurs survenues sur la page et l'enregistrement de certaines sessions. Votre identifiant de compte, votre rôle et votre langue sont associés ; votre e-mail ne l'est que lorsque vous écrivez au support."
+      },
+      "vendor": {
+        "title": "Qui le traite",
+        "body": "PostHog Cloud (région UE, hébergé dans l'Union européenne). Les données transitent par notre propre domaine et ne sont jamais envoyées à un hôte tiers directement depuis la page."
+      },
+      "purpose": {
+        "title": "Pourquoi",
+        "body": "Pour voir où les réservations échouent, trouver et corriger les erreurs rapidement, activer et désactiver des fonctionnalités en toute sécurité, et répondre à vos demandes de support avec du contexte."
+      },
+      "replay": {
+        "title": "Enregistrement de session",
+        "body": "Seule une partie des sessions consenties est enregistrée. Tout ce que vous saisissez est masqué, ainsi que les textes de litige, la description de votre profil de joueur et la console d'administration. Les liens contenant des codes, jetons ou signatures sont nettoyés avant de quitter votre navigateur."
+      },
+      "server": {
+        "title": "Ce que nous comptons sur nos serveurs",
+        "body": "Réservations, paiements, remboursements, litiges et annulations sont comptés sur nos serveurs quel que soit votre choix de cookies : ce sont des copies d'enregistrements que nous conservons déjà pour fournir le service. Ils ne contiennent aucun texte libre et ne créent aucun profil de navigateur."
+      },
+      "retention": {
+        "title": "Combien de temps",
+        "body": "Votre choix est conservé douze mois et redemandé si ce texte change substantiellement. Les données d'analyse et les rapports d'erreurs suivent la durée de conservation du prestataire pour notre offre ; vous pouvez retirer votre accord à tout moment ci-dessous."
+      }
+    },
+    "control": {
+      "title": "Votre choix",
+      "body": "Le retrait de l'accord arrête la collecte immédiatement et efface les identifiants stockés dans votre navigateur.",
+      "statusGranted": "Les statistiques sont activées pour ce navigateur.",
+      "statusDenied": "Les statistiques sont désactivées pour ce navigateur.",
+      "statusNone": "Vous n'avez pas encore fait de choix.",
+      "accept": "Autoriser les statistiques",
+      "decline": "Retirer mon accord",
+      "disabled": "Les statistiques ne sont pas activées sur ce déploiement."
+    },
+    "contact": {
+      "title": "Questions",
+      "body": "Écrivez-nous à"
+    }
+  },
+  "support": {
+    "open": "Contacter le support",
+    "title": "Support",
+    "intro": "Nous répondons en général sous un jour.",
+    "close": "Fermer",
+    "loading": "Connexion…",
+    "empty": "Dites-nous ce qui s'est passé. Votre message reste ici et les réponses s'affichent dans cette fenêtre.",
+    "placeholder": "Décrivez le problème…",
+    "emailLabel": "Votre e-mail",
+    "emailPlaceholder": "Votre e-mail, pour que nous puissions répondre",
+    "send": "Envoyer",
+    "sending": "Envoi…",
+    "you": "Vous",
+    "team": "PlayWithPro",
+    "error": "Le message n'a pas pu être envoyé. Réessayez ou utilisez l'e-mail.",
+    "unavailable": "Le chat du support n'est pas disponible pour le moment.",
+    "consentNeeded": "Le chat du support utilise le même service que nos statistiques et nécessite votre accord pour les cookies.",
+    "consentAccept": "Accepter et ouvrir le chat",
+    "emailFallback": "Ou écrivez-nous à <link></link>."
+  },
+  "errors": {
+    "title": "Une erreur est survenue",
+    "hint": "La page n'a pas pu s'afficher. Vous pouvez réessayer ou revenir à l'accueil.",
+    "reference": "Référence : {id}",
+    "retry": "Réessayer",
+    "home": "Accueil"
   }
 }

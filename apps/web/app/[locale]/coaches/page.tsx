@@ -8,6 +8,7 @@ import { getTranslations } from "next-intl/server";
 import { type CatalogFilterValues } from "@/components/catalog/catalog-filters";
 import { CatalogShell } from "@/components/catalog/catalog-shell";
 import { LocalTime } from "@/components/catalog/local-time";
+import { TrackView } from "@/components/observability/track-view";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { LOCALE_LABELS } from "@/i18n/locale-labels";
 import { Link } from "@/i18n/navigation";
@@ -81,6 +82,10 @@ export default async function CoachesPage({
 
   return (
     <main className="mx-auto w-full max-w-[1180px] flex-1 px-5 pb-16 sm:px-8">
+      <TrackView
+        event="catalog_viewed"
+        properties={{ results: catalog.total, page: catalog.page }}
+      />
       <header className="pb-6 pt-10">
         <h1 className="text-[32px] font-bold text-text">🏓 {t("title")}</h1>
         <p className="mt-1 text-text-secondary">{t("subtitle")}</p>

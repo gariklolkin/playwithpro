@@ -10,8 +10,14 @@ import {
 import { useFormatter, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { SupportButton } from "@/components/support/support-button";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
+import {
+  FUNNEL_EVENTS,
+  track,
+  type FunnelEvent,
+} from "@/lib/observability/analytics";
 import { useNow } from "@/lib/use-now";
 
 /**
@@ -36,7 +42,7 @@ export function SessionActions({
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [reason, setReason] = useState("");
 
-  async function post(path: string, body?: object) {
+  async function post(path: string, body?: object, event?: FunnelEvent) {
     setBusy(true);
     setFailed(false);
     const response = await apiFetch(path, {
@@ -47,6 +53,9 @@ export function SessionActions({
     if (!response.ok) {
       setFailed(true);
       return;
+    }
+    if (event) {
+      track(event, { sessionId: session.id, serviceType: session.serviceType });
     }
     router.refresh();
   }
@@ -75,7 +84,9 @@ export function SessionActions({
     return (
       <div className="mt-3 rounded-lg border border-[#F1C7C4] bg-[#FBE4E4] p-3 text-[13px] text-[#C4554D]">
         <div className="font-medium">⚖️ {t("disputeOpenTitle")}</div>
-        <p className="mt-1">{session.dispute.reason}</p>
+        <p className="mt-1" data-ph-mask>
+          {session.dispute.reason}
+        </p>
         <p className="mt-1 text-[#9A6A66]">{t("disputeOpenHint")}</p>
       </div>
     );
@@ -119,7 +130,13 @@ export function SessionActions({
             <Button
               size="sm"
               disabled={busy}
-              onClick={() => void post(`/sessions/${session.id}/confirm`)}
+              onClick={() =>
+                void post(
+                  `/sessions/${session.id}/confirm`,
+                  undefined,
+                  FUNNEL_EVENTS.sessionConfirmed,
+                )
+              }
             >
               ✓ {t("confirmCta")}
             </Button>
@@ -143,9 +160,11 @@ export function SessionActions({
               if (reason.trim().length === 0) {
                 return;
               }
-              void post(`/sessions/${session.id}/dispute`, {
-                reason: reason.trim(),
-              });
+              void post(
+                `/sessions/${session.id}/dispute`,
+                { reason: reason.trim() },
+                FUNNEL_EVENTS.disputeSubmitted,
+              );
             }}
           >
             <textarea
@@ -154,6 +173,7 @@ export function SessionActions({
               placeholder={t("disputePlaceholder")}
               rows={3}
               maxLength={2000}
+              data-ph-mask
               className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:border-border-strong focus:outline-none"
             />
             <div className="mt-2 flex gap-2">
@@ -173,6 +193,11 @@ export function SessionActions({
               >
                 {t("disputeAbort")}
               </Button>
+              <SupportButton
+                size="sm"
+                variant="ghost"
+                context={{ kind: "dispute", sessionId: session.id }}
+              />
             </div>
           </form>
         ) : null}
@@ -193,7 +218,13 @@ export function SessionActions({
               size="sm"
               variant="ghost"
               disabled={busy}
-              onClick={() => void post(`/sessions/${session.id}/cancel`)}
+              onClick={() =>
+                void post(
+                  `/sessions/${session.id}/cancel`,
+                  undefined,
+                  FUNNEL_EVENTS.bookingCancelled,
+                )
+              }
             >
               {t("cancelConfirm")}
             </Button>

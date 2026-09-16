@@ -1,0 +1,76 @@
+{
+  "$comment": "Starter dashboard for the PlayWithPro production project. Import with infra/posthog/README.md (PostHog API: POST /api/projects/:id/dashboards/ with this body's `tiles` translated to insights, or recreate by hand — the queries below are the source of truth).",
+  "name": "PlayWithPro — launch readiness",
+  "description": "Booking funnel, sessions by service, error rate by release. Internal users (property internal=true) are excluded via the project's internal-user filter.",
+  "tiles": [
+    {
+      "name": "Booking funnel",
+      "insight": "FUNNELS",
+      "description": "Web funnel steps (consent-gated) joined with API money events on the same person.",
+      "series": [
+        { "event": "catalog_viewed" },
+        { "event": "coach_viewed" },
+        { "event": "slot_selected" },
+        { "event": "checkout_viewed" },
+        { "event": "session_paid" },
+        { "event": "room_joined" },
+        { "event": "session_confirmed" }
+      ],
+      "funnel_window_days": 14,
+      "date_from": "-30d"
+    },
+    {
+      "name": "Paid sessions by service",
+      "insight": "TRENDS",
+      "series": [{ "event": "session_paid", "math": "total" }],
+      "breakdown": "serviceType",
+      "interval": "day",
+      "date_from": "-30d"
+    },
+    {
+      "name": "Money outcomes",
+      "insight": "TRENDS",
+      "description": "API-emitted terminal events; refunds and disputes should stay a small share of completions.",
+      "series": [
+        { "event": "session_completed", "math": "total" },
+        { "event": "session_refunded", "math": "total" },
+        { "event": "session_disputed", "math": "total" },
+        { "event": "session_cancelled", "math": "total" }
+      ],
+      "interval": "week",
+      "date_from": "-90d"
+    },
+    {
+      "name": "Errors by release",
+      "insight": "TRENDS",
+      "description": "Exception events split by the deploy SHA; a step after a deploy points at that release.",
+      "series": [{ "event": "$exception", "math": "total" }],
+      "breakdown": "release",
+      "interval": "day",
+      "date_from": "-14d"
+    },
+    {
+      "name": "Error rate",
+      "insight": "TRENDS",
+      "description": "Exceptions per pageview (formula A/B).",
+      "series": [
+        { "event": "$exception", "math": "total" },
+        { "event": "$pageview", "math": "total" }
+      ],
+      "formula": "A/B",
+      "interval": "day",
+      "date_from": "-14d"
+    },
+    {
+      "name": "Consent accepted vs declined",
+      "insight": "TRENDS",
+      "description": "Only accepted visitors send events; compare $pageview persons with server-side session_paid persons to estimate the declined share.",
+      "series": [
+        { "event": "$pageview", "math": "dau" },
+        { "event": "session_paid", "math": "dau" }
+      ],
+      "interval": "day",
+      "date_from": "-30d"
+    }
+  ]
+}

@@ -11,7 +11,9 @@
     "verifyBanner": "请验证您的邮箱 — 查看收件箱。",
     "verifyResend": "重新发送验证码",
     "verifyResent": "验证码已发送。",
-    "verifyEnterCode": "输入验证码"
+    "verifyEnterCode": "输入验证码",
+    "privacy": "隐私",
+    "support": "联系客服"
   },
   "auth": {
     "login": {
@@ -346,7 +348,8 @@
     "adminUsersTitle": "用户 — PlayWithPro",
     "adminTransactionsTitle": "交易 — PlayWithPro",
     "adminAnalyticsTitle": "数据分析 — PlayWithPro",
-    "adminReviewsTitle": "评价审核 — PlayWithPro"
+    "adminReviewsTitle": "评价审核 — PlayWithPro",
+    "privacyTitle": "隐私 — PlayWithPro"
   },
   "verification": {
     "title": "认证",
@@ -997,5 +1000,83 @@
       "too_many_clips": "每次课程最多 {max} 个片段（你选择了 {count} 个）。",
       "too_long": "片段总时长不能超过 {max}；你的总时长为 {total}。"
     }
+  },
+  "consent": {
+    "title": "Cookie 与分析",
+    "body": "我们使用 Cookie 进行匿名使用统计、错误报告和会话回放，以帮助我们修复问题。在你同意之前不会收集任何数据。",
+    "privacyLink": "我们收集什么",
+    "accept": "接受",
+    "decline": "拒绝"
+  },
+  "privacy": {
+    "title": "隐私",
+    "intro": "本页说明 PlayWithPro 在你使用应用时收集哪些信息、由谁处理，以及如何更改你的选择。",
+    "sections": {
+      "collect": {
+        "title": "我们在浏览器中收集什么",
+        "body": "经你同意后：你打开的页面、预订的各个步骤（目录、教练页、结账、课程房间、确认）、页面上发生的错误，以及部分会话的回放。会关联你的账户 ID、角色和语言；只有在你联系客服时才会关联邮箱。"
+      },
+      "vendor": {
+        "title": "由谁处理",
+        "body": "PostHog Cloud（欧盟区域，托管于欧盟）。数据通过我们自己的域名发送，页面绝不会直接向第三方主机发送数据。"
+      },
+      "purpose": {
+        "title": "为什么",
+        "body": "为了了解预订在哪一步失败、快速发现并修复错误、安全地开关功能，并带着上下文回复你的客服请求。"
+      },
+      "replay": {
+        "title": "会话回放",
+        "body": "只有部分已同意的会话会被录制。你输入的所有内容都会被遮蔽，争议文本、你的球员资料描述和管理控制台也一样。包含验证码、令牌或签名的链接会在离开浏览器前被清除。"
+      },
+      "server": {
+        "title": "我们在服务器上统计什么",
+        "body": "预订、付款、退款、争议和取消无论你的 Cookie 选择如何都会在我们的服务器上统计：它们是我们为运营服务本已保存的记录的副本。它们不含自由文本，也不会创建浏览器画像。"
+      },
+      "retention": {
+        "title": "保存多久",
+        "body": "你的选择保存十二个月，本文有重大变更时会再次询问。分析数据和错误报告遵循供应商对我们套餐的保留期限；你可以随时在下方撤回同意。"
+      }
+    },
+    "control": {
+      "title": "你的选择",
+      "body": "撤回同意会立即停止收集并清除浏览器中保存的标识符。",
+      "statusGranted": "此浏览器已开启分析。",
+      "statusDenied": "此浏览器已关闭分析。",
+      "statusNone": "你尚未做出选择。",
+      "accept": "允许分析",
+      "decline": "撤回同意",
+      "disabled": "此部署未启用分析。"
+    },
+    "contact": {
+      "title": "有疑问",
+      "body": "请写信至"
+    }
+  },
+  "support": {
+    "open": "联系客服",
+    "title": "客服",
+    "intro": "我们通常在一天内回复。",
+    "close": "关闭",
+    "loading": "连接中…",
+    "empty": "告诉我们发生了什么。你的消息会保留在这里，回复会显示在此窗口中。",
+    "placeholder": "描述问题…",
+    "emailLabel": "你的邮箱",
+    "emailPlaceholder": "你的邮箱，以便我们回复",
+    "send": "发送",
+    "sending": "发送中…",
+    "you": "你",
+    "team": "PlayWithPro",
+    "error": "消息发送失败。请重试或使用邮件。",
+    "unavailable": "客服聊天目前不可用。",
+    "consentNeeded": "客服聊天与我们的分析使用同一服务，需要你的 Cookie 同意。",
+    "consentAccept": "接受并打开聊天",
+    "emailFallback": "或发送邮件至 <link></link>。"
+  },
+  "errors": {
+    "title": "出了点问题",
+    "hint": "页面无法显示。你可以重试或返回首页。",
+    "reference": "参考编号：{id}",
+    "retry": "重试",
+    "home": "首页"
   }
 }

@@ -22,3 +22,4 @@ export * from "./types/playback-sync";
 export * from "./types/dispute";
 export * from "./types/review";
 export * from "./types/admin";
+export * from "./types/support";

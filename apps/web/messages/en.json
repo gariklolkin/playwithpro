@@ -11,7 +11,9 @@
     "verifyBanner": "Please verify your email — check your inbox.",
     "verifyResend": "Resend code",
     "verifyResent": "Verification code sent.",
-    "verifyEnterCode": "Enter the code"
+    "verifyEnterCode": "Enter the code",
+    "privacy": "Privacy",
+    "support": "Contact support"
   },
   "auth": {
     "login": {
@@ -346,7 +348,8 @@
     "adminUsersTitle": "Users — PlayWithPro",
     "adminTransactionsTitle": "Transactions — PlayWithPro",
     "adminAnalyticsTitle": "Analytics — PlayWithPro",
-    "adminReviewsTitle": "Review moderation — PlayWithPro"
+    "adminReviewsTitle": "Review moderation — PlayWithPro",
+    "privacyTitle": "Privacy — PlayWithPro"
   },
   "verification": {
     "title": "Verification",
@@ -997,5 +1000,83 @@
       "too_many_clips": "At most {max} clips per session (you selected {count}).",
       "too_long": "Clips may total at most {max}; yours total {total}."
     }
+  },
+  "consent": {
+    "title": "Cookies and analytics",
+    "body": "We use cookies for anonymous usage statistics, error reports and session replays that help us fix problems. Nothing is collected until you accept.",
+    "privacyLink": "What we collect",
+    "accept": "Accept",
+    "decline": "Decline"
+  },
+  "privacy": {
+    "title": "Privacy",
+    "intro": "This page explains what PlayWithPro collects while you use the app, who processes it and how to change your choice.",
+    "sections": {
+      "collect": {
+        "title": "What we collect in your browser",
+        "body": "With your consent: the pages you open, the steps of a booking (catalog, coach page, checkout, session room, confirmation), errors that happen on the page, and a replay of some sessions. Your account id, role and language are attached; your email is attached only when you write to support."
+      },
+      "vendor": {
+        "title": "Who processes it",
+        "body": "PostHog Cloud (EU region, hosted in the European Union). The data is sent through our own domain and never to a third-party host directly from the page."
+      },
+      "purpose": {
+        "title": "Why",
+        "body": "To see where bookings fail, to find and fix errors quickly, to switch features on and off safely, and to answer your support requests with context."
+      },
+      "replay": {
+        "title": "Session replay",
+        "body": "Only a share of consenting sessions is recorded. Everything you type is masked, as are dispute texts, your player profile description and the admin console. Links containing codes, tokens or signatures are stripped before anything leaves your browser."
+      },
+      "server": {
+        "title": "What we count on our servers",
+        "body": "Bookings, payments, refunds, disputes and cancellations are counted on our servers regardless of your cookie choice: these mirror records we already keep to run the service. They carry no free text and create no browser profile."
+      },
+      "retention": {
+        "title": "How long",
+        "body": "Your consent choice is stored for twelve months and asked again when this text changes materially. Analytics data and error reports follow the vendor's retention for our plan; you can withdraw consent at any time below."
+      }
+    },
+    "control": {
+      "title": "Your choice",
+      "body": "Withdrawing consent stops capture immediately and clears the identifiers stored in your browser.",
+      "statusGranted": "Analytics are on for this browser.",
+      "statusDenied": "Analytics are off for this browser.",
+      "statusNone": "You have not made a choice yet.",
+      "accept": "Allow analytics",
+      "decline": "Withdraw consent",
+      "disabled": "Analytics are not enabled on this deployment."
+    },
+    "contact": {
+      "title": "Questions",
+      "body": "Write to us at"
+    }
+  },
+  "support": {
+    "open": "Contact support",
+    "title": "Support",
+    "intro": "We usually answer within a day.",
+    "close": "Close",
+    "loading": "Connecting…",
+    "empty": "Tell us what happened. Your message stays here, and replies show up in this window.",
+    "placeholder": "Describe the problem…",
+    "emailLabel": "Your email",
+    "emailPlaceholder": "Your email, so we can reply",
+    "send": "Send",
+    "sending": "Sending…",
+    "you": "You",
+    "team": "PlayWithPro",
+    "error": "The message could not be sent. Try again or use email.",
+    "unavailable": "Chat support is not available right now.",
+    "consentNeeded": "Chat support runs on the same service as our analytics and needs your cookie consent.",
+    "consentAccept": "Accept and open chat",
+    "emailFallback": "Or email us at <link></link>."
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "hint": "The page could not be displayed. You can try again or go back to the start.",
+    "reference": "Reference: {id}",
+    "retry": "Try again",
+    "home": "Home"
   }
 }

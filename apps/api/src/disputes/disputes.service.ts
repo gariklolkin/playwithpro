@@ -1,6 +1,7 @@
 import {
   ConflictException,
   ForbiddenException,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
@@ -23,6 +24,11 @@ import type { AuthenticatedUser } from '../auth/auth-cookies';
 import { BookingsService } from '../bookings/bookings.service';
 import { SessionProgressionService } from '../bookings/session-progression.service';
 import { SettlementService } from '../bookings/settlement.service';
+import {
+  ANALYTICS,
+  LIFECYCLE_EVENTS,
+  type Analytics,
+} from '../observability/observability';
 import { toSharedServiceType } from '../pros/pro-profile.mapper';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -84,6 +90,7 @@ export class DisputesService {
     private readonly bookings: BookingsService,
     private readonly progression: SessionProgressionService,
     private readonly settlement: SettlementService,
+    @Inject(ANALYTICS) private readonly analytics: Analytics,
   ) {}
 
   /**
@@ -106,6 +113,9 @@ export class DisputesService {
         status: true,
         startsAt: true,
         endsAt: true,
+        serviceType: true,
+        priceMinor: true,
+        currency: true,
         proProfile: { select: { userId: true } },
       },
     });
@@ -134,6 +144,16 @@ export class DisputesService {
       });
     });
     this.logger.log(`Dispute opened on session ${session.id}`);
+    this.analytics.track({
+      event: LIFECYCLE_EVENTS.sessionDisputed,
+      distinctId: user.id,
+      properties: {
+        sessionId: session.id,
+        serviceType: toSharedServiceType(session.serviceType),
+        amountMinor: session.priceMinor,
+        currency: session.currency,
+      },
+    });
     return this.bookings.sessionResponse(session.id);
   }
 
@@ -199,6 +219,17 @@ export class DisputesService {
     const fresh = await this.prisma.dispute.findUniqueOrThrow({
       where: { id: dispute.id },
       include: DISPUTE_INCLUDE,
+    });
+    this.analytics.track({
+      event: LIFECYCLE_EVENTS.disputeResolved,
+      distinctId: adminId,
+      properties: {
+        sessionId: fresh.session.id,
+        serviceType: toSharedServiceType(fresh.session.serviceType),
+        amountMinor: fresh.session.priceMinor,
+        currency: fresh.session.currency,
+        outcome,
+      },
     });
     return this.toAdminItem(fresh);
   }

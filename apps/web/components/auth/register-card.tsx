@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 
 export function RegisterCard() {
   const t = useTranslations("auth.register");
+  const tNav = useTranslations("nav");
 
   // "For pros" entry points deep-link here with ?role=professional.
   const preselected =
@@ -117,6 +118,9 @@ export function RegisterCard() {
       <AuthFooter>{t("footer")}</AuthFooter>
       <AuthFooter>
         {t("haveAccount")} <Link href="/login">{t("logIn")}</Link>
+      </AuthFooter>
+      <AuthFooter>
+        <Link href="/privacy">{tNav("privacy")}</Link>
       </AuthFooter>
     </AuthCard>
   );
