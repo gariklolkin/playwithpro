@@ -17,9 +17,11 @@ import {
   Dispute,
   DisputeOutcome,
   DisputeStatus,
+  NotificationKind,
   ServiceType,
   SessionStatus,
 } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 import type { AuthenticatedUser } from '../auth/auth-cookies';
 import { BookingsService } from '../bookings/bookings.service';
 import { SessionProgressionService } from '../bookings/session-progression.service';
@@ -91,6 +93,7 @@ export class DisputesService {
     private readonly progression: SessionProgressionService,
     private readonly settlement: SettlementService,
     @Inject(ANALYTICS) private readonly analytics: Analytics,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /**
@@ -142,6 +145,26 @@ export class DisputesService {
       await tx.dispute.create({
         data: { sessionId: session.id, openedById: user.id, reason },
       });
+      // Receipt, hold notice and admin alerts ride in the same transaction;
+      // none of them carries the reason text.
+      const admins = await this.notifications.adminIds(tx);
+      await this.notifications.enqueue(tx, [
+        {
+          kind: NotificationKind.DISPUTE_OPENED_PLAYER,
+          sessionId: session.id,
+          recipientId: user.id,
+        },
+        {
+          kind: NotificationKind.DISPUTE_OPENED_COACH,
+          sessionId: session.id,
+          recipientId: session.proProfile.userId,
+        },
+        ...admins.map((adminId) => ({
+          kind: NotificationKind.DISPUTE_OPENED_ADMIN,
+          sessionId: session.id,
+          recipientId: adminId,
+        })),
+      ]);
     });
     this.logger.log(`Dispute opened on session ${session.id}`);
     this.analytics.track({

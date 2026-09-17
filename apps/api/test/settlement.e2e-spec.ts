@@ -14,6 +14,8 @@ import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { TokenService } from '../src/auth/token.service';
+import { NotificationDispatchService } from '../src/notifications/notification-dispatch.service';
+import { signUnsubscribeToken } from '../src/notifications/unsubscribe-token';
 import { ANALYTICS, type Analytics } from '../src/observability/observability';
 import { SessionProgressionService } from '../src/bookings/session-progression.service';
 import { SettlementService } from '../src/bookings/settlement.service';
@@ -54,6 +56,7 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
   let settlement: SettlementService;
   /** The no-op analytics provider (no key in tests), spied to count lifecycle events. */
   let track: jest.SpyInstance;
+  let dispatcher: NotificationDispatchService;
   let playerCookie: string;
   let rivalCookie: string;
   let coachCookie: string;
@@ -110,6 +113,21 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
     return sessionId;
   }
 
+  /** Outbox rows of a session, oldest first. */
+  async function outboxOf(sessionId: string) {
+    const rows = await prisma.notification.findMany({
+      where: { sessionId },
+      orderBy: { createdAt: 'asc' },
+      include: { recipient: { select: { role: true } } },
+    });
+    return rows.map((row) => ({
+      kind: row.kind,
+      role: row.recipient.role,
+      status: row.status,
+      payload: row.payload,
+    }));
+  }
+
   async function paymentStatusOf(sessionId: string): Promise<string> {
     const payment = await prisma.payment.findFirstOrThrow({
       where: { sessionId, status: { not: 'FAILED' } },
@@ -140,6 +158,7 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
     progression = app.get(SessionProgressionService);
     settlement = app.get(SettlementService);
     track = jest.spyOn(app.get<Analytics>(ANALYTICS), 'track');
+    dispatcher = app.get(NotificationDispatchService);
     await truncateAll(prisma);
 
     const coach = await prisma.user.create({
@@ -243,6 +262,19 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
         ([input]) => (input as { event: string }).event === 'session_completed',
       );
       expect(completed).toHaveLength(1);
+      // Outbox: receipt + new-booking at pay, completion rows follow the
+      // release — exactly one of each.
+      const kinds = (await outboxOf(sessionId)).map(
+        (r) => `${r.kind}:${r.role}`,
+      );
+      expect(kinds.filter((k) => k.startsWith('SESSION_PAID_'))).toEqual([
+        'SESSION_PAID_PLAYER:AMATEUR',
+        'SESSION_PAID_COACH:PROFESSIONAL',
+      ]);
+      expect(kinds.filter((k) => k.startsWith('SESSION_COMPLETED_'))).toEqual([
+        'SESSION_COMPLETED_PLAYER:AMATEUR',
+        'SESSION_COMPLETED_COACH:PROFESSIONAL',
+      ]);
       expect(completed[0][0]).toMatchObject({
         distinctId: expect.any(String) as string,
         properties: {
@@ -264,6 +296,26 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
             (input as { event: string }).event === 'session_completed',
         ),
       ).toHaveLength(0);
+      expect(
+        (await outboxOf(sessionId)).filter((r) =>
+          r.kind.startsWith('SESSION_COMPLETED_'),
+        ),
+      ).toHaveLength(2);
+    });
+
+    it('dispatch with SMTP unreachable leaves rows pending with a backoff; money untouched', async () => {
+      const handled = await dispatcher.dispatchOnce();
+      expect(handled).toBeGreaterThan(0);
+      const rows = await prisma.notification.findMany({ where: { sessionId } });
+      expect(rows.length).toBeGreaterThan(0);
+      for (const row of rows) {
+        expect(['PENDING', 'SKIPPED']).toContain(row.status);
+        if (row.status === 'PENDING' && row.attempts > 0) {
+          expect(row.lastError).toBeTruthy();
+          expect(row.dueAt.getTime()).toBeGreaterThan(Date.now());
+        }
+      }
+      expect(await paymentStatusOf(sessionId)).toBe('RELEASED');
     });
 
     it('repeating the confirmation is a no-op', async () => {
@@ -375,6 +427,15 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
       );
       expect(disputed).toHaveLength(1);
       expect(JSON.stringify(disputed[0][0])).not.toContain('Coach never');
+      const opened = (await outboxOf(sessionId)).filter((r) =>
+        r.kind.startsWith('DISPUTE_OPENED_'),
+      );
+      expect(opened.map((r) => `${r.kind}:${r.role}`)).toEqual([
+        'DISPUTE_OPENED_PLAYER:AMATEUR',
+        'DISPUTE_OPENED_COACH:PROFESSIONAL',
+        'DISPUTE_OPENED_ADMIN:ADMIN',
+      ]);
+      expect(JSON.stringify(opened)).not.toContain('Coach never');
     });
 
     it('a second dispute conflicts', async () => {
@@ -492,6 +553,50 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
     });
   });
 
+  describe('email preferences', () => {
+    it('reads and updates the optional categories, and the one-click link turns one off', async () => {
+      const initial = await request(server())
+        .get('/users/me/notifications')
+        .set('Cookie', coachCookie)
+        .expect(200);
+      expect(initial.body).toEqual({
+        emailReminders: true,
+        emailClipChanges: true,
+        emailReviews: true,
+      });
+
+      const updated = await request(server())
+        .patch('/users/me/notifications')
+        .set('Cookie', coachCookie)
+        .send({ emailClipChanges: false })
+        .expect(200);
+      expect(updated.body.emailClipChanges).toBe(false);
+
+      const coach = await prisma.user.findFirstOrThrow({
+        where: { email: 'settle-coach@e2e.test' },
+      });
+      const token = signUnsubscribeToken(
+        process.env.NOTIFY_UNSUBSCRIBE_SECRET ?? 'dev-only-unsubscribe-secret',
+        { userId: coach.id, category: 'emailReminders' },
+      );
+      const off = await request(server())
+        .post('/notifications/unsubscribe')
+        .send({ token })
+        .expect(200);
+      expect(off.body).toEqual({ category: 'emailReminders' });
+      const after = await prisma.user.findUniqueOrThrow({
+        where: { id: coach.id },
+      });
+      expect(after.emailReminders).toBe(false);
+      expect(after.emailReviews).toBe(true);
+
+      await request(server())
+        .post('/notifications/unsubscribe')
+        .send({ token: `${token}x` })
+        .expect(400);
+    });
+  });
+
   describe('pre-start cancellation', () => {
     it('either party cancels a future paid session: refund + reopened slot', async () => {
       const sessionId = await bookAndPay();
@@ -513,6 +618,21 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
         where: { id: before.slotId },
       });
       expect(slot.status).toBe('OPEN');
+      // Coach cancellation: both parties plus an admin heads-up; the CANCEL
+      // .ics sequence outranks the invite.
+      const cancelled = (await outboxOf(sessionId)).filter((r) =>
+        r.kind.startsWith('SESSION_CANCELLED_'),
+      );
+      expect(cancelled.map((r) => `${r.kind}:${r.role}`)).toEqual([
+        'SESSION_CANCELLED_PLAYER:AMATEUR',
+        'SESSION_CANCELLED_COACH:PROFESSIONAL',
+        'SESSION_CANCELLED_ADMIN:ADMIN',
+      ]);
+      expect(cancelled[0].payload).toEqual({ cancelledBy: 'coach' });
+      const after = await prisma.session.findUniqueOrThrow({
+        where: { id: sessionId },
+      });
+      expect(after.calendarSequence).toBe(1);
     });
 
     it('cancellation after start conflicts and moves nothing', async () => {

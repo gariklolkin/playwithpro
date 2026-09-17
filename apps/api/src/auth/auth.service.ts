@@ -82,7 +82,7 @@ export class AuthService {
       },
     });
 
-    await this.sendVerificationEmail(user.id, user.email);
+    await this.sendVerificationEmail(user.id, user.email, user.locale);
   }
 
   async login(dto: LoginDto): Promise<AuthResult> {
@@ -161,7 +161,7 @@ export class AuthService {
   async resendVerification(email: string): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (user && user.emailVerifiedAt === null) {
-      await this.sendVerificationEmail(user.id, user.email);
+      await this.sendVerificationEmail(user.id, user.email, user.locale);
     }
   }
 
@@ -175,6 +175,7 @@ export class AuthService {
       );
       await this.mailer.sendPasswordResetEmail(
         user.email,
+        user.locale,
         `${this.webAppUrl()}/reset-password?token=${token}`,
       );
     }
@@ -216,9 +217,10 @@ export class AuthService {
   private async sendVerificationEmail(
     userId: string,
     email: string,
+    locale: string,
   ): Promise<void> {
     const code = await this.tokens.createEmailCode(userId);
-    await this.mailer.sendVerificationEmail(email, code);
+    await this.mailer.sendVerificationEmail(email, locale, code);
   }
 
   private webAppUrl(): string {

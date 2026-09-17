@@ -23,3 +23,4 @@ export * from "./types/dispute";
 export * from "./types/review";
 export * from "./types/admin";
 export * from "./types/support";
+export * from "./types/notifications";

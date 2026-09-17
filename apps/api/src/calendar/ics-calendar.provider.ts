@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EmailRenderer } from '../mailer/email-renderer';
 import { MailerService } from '../mailer/mailer.service';
+import { sessionEmailParams } from '../mailer/session-email-params';
 import type {
+  CalendarAttendee,
   CalendarProvider,
   CalendarSessionInput,
 } from './calendar-provider';
@@ -9,8 +12,10 @@ import { buildSessionIcs } from './session-ics';
 
 /**
  * Universal .ics email invites: works for every attendee regardless of
- * calendar vendor, no account connection required. Google Calendar API
- * implementation slots in behind the same port later.
+ * calendar vendor, no account connection required. One email per attendee,
+ * localized, listing only that attendee (the counterpart's address never
+ * travels in someone else's invite). Google Calendar API implementation
+ * slots in behind the same port later.
  */
 @Injectable()
 export class IcsCalendarProvider implements CalendarProvider {
@@ -19,71 +24,120 @@ export class IcsCalendarProvider implements CalendarProvider {
 
   constructor(
     private readonly mailer: MailerService,
+    private readonly renderer: EmailRenderer,
     config: ConfigService,
   ) {
     const from = config.getOrThrow<string>('SMTP_FROM');
     this.organizerEmail = from.match(/<([^>]+)>/)?.[1] ?? from;
   }
 
-  async sendInvite(input: CalendarSessionInput): Promise<void> {
-    const ics = this.ics(input, 'REQUEST');
-    await Promise.all(
-      input.attendees.map((attendee) =>
-        this.mailer.sendSessionInviteEmail({
-          to: attendee.email,
-          displayName: attendee.displayName,
-          serviceLabel: input.serviceLabel,
-          whenLine: whenLine(input),
-          roomUrl: input.roomUrl,
-          venue: input.venue,
-          ics,
-        }),
+  async sendInvite(
+    input: CalendarSessionInput,
+    attendee: CalendarAttendee,
+  ): Promise<void> {
+    await this.mailer.deliver(attendee.email, {
+      ...this.renderer.render(
+        attendee.locale,
+        `session.paid.${attendee.role}`,
+        sessionEmailParams(this.renderer, input, attendee),
       ),
+      attachments: [
+        this.attachment(input, attendee, 'REQUEST', input.sequence),
+      ],
+    });
+    this.logger.log(
+      `Sent session invite for ${input.sessionId} (${attendee.role})`,
     );
-    this.logger.log(`Sent session invite for ${input.sessionId}`);
   }
 
-  async sendCancellation(input: CalendarSessionInput): Promise<void> {
-    const ics = this.ics(input, 'CANCEL');
-    await Promise.all(
-      input.attendees.map((attendee) =>
-        this.mailer.sendSessionCancelledEmail({
-          to: attendee.email,
-          displayName: attendee.displayName,
-          serviceLabel: input.serviceLabel,
-          whenLine: whenLine(input),
-          ics,
-        }),
+  async sendUpdate(
+    input: CalendarSessionInput,
+    attendee: CalendarAttendee,
+  ): Promise<void> {
+    await this.mailer.deliver(attendee.email, {
+      ...this.renderer.render(
+        attendee.locale,
+        `session_updated.${attendee.role}`,
+        sessionEmailParams(this.renderer, input, attendee),
       ),
+      attachments: [
+        this.attachment(input, attendee, 'REQUEST', input.sequence),
+      ],
+    });
+    this.logger.log(
+      `Sent session update for ${input.sessionId} (${attendee.role})`,
     );
-    this.logger.log(`Sent session cancellation for ${input.sessionId}`);
   }
 
-  private ics(input: CalendarSessionInput, method: 'REQUEST' | 'CANCEL') {
-    const location = input.roomUrl ?? input.venue ?? '';
-    return buildSessionIcs({
+  async sendCancellation(
+    input: CalendarSessionInput,
+    attendee: CalendarAttendee,
+    cancelledBy: 'player' | 'coach',
+  ): Promise<void> {
+    await this.mailer.deliver(attendee.email, {
+      ...this.renderer.render(
+        attendee.locale,
+        `session.cancelled.${attendee.role}`,
+        {
+          ...sessionEmailParams(this.renderer, input, attendee),
+          cancelledBy,
+          url:
+            attendee.role === 'player'
+              ? this.renderer.link(
+                  attendee.locale,
+                  `/coaches/${input.coachProfileId}`,
+                )
+              : this.renderer.link(attendee.locale, '/dashboard/sessions'),
+        },
+      ),
+      attachments: [this.attachment(input, attendee, 'CANCEL', input.sequence)],
+    });
+    this.logger.log(
+      `Sent session cancellation for ${input.sessionId} (${attendee.role})`,
+    );
+  }
+
+  private attachment(
+    input: CalendarSessionInput,
+    attendee: CalendarAttendee,
+    method: 'REQUEST' | 'CANCEL',
+    sequence: number,
+  ) {
+    const locale = this.renderer.resolveLocale(attendee.locale);
+    const service = this.renderer.message(
+      locale,
+      `service.${input.serviceType}`,
+    );
+    const roomUrl = input.roomPath
+      ? this.renderer.link(locale, input.roomPath)
+      : null;
+    const location = roomUrl ?? input.venue ?? '';
+    const ics = buildSessionIcs({
       sessionId: input.sessionId,
       startsAt: input.startsAt,
       endsAt: input.endsAt,
-      summary: `PlayWithPro ${input.serviceLabel} session`,
+      summary: this.renderer.message(locale, 'calendar.summary', { service }),
       location,
-      locationIsUrl: input.roomUrl !== null,
-      description: input.roomUrl
-        ? `Join the session room: ${input.roomUrl}`
-        : `Meet at the venue: ${input.venue ?? ''}`,
+      locationIsUrl: roomUrl !== null,
+      description: roomUrl
+        ? this.renderer.message(locale, 'calendar.descriptionRoom', {
+            url: roomUrl,
+          })
+        : this.renderer.message(locale, 'calendar.descriptionVenue', {
+            venue: input.venue ?? '',
+          }),
       organizerEmail: this.organizerEmail,
-      attendeeEmails: input.attendees.map((attendee) => attendee.email),
+      attendeeEmails: [attendee.email],
       method,
-      // One cancellation ever follows one invite, so 0/1 is the whole story.
-      sequence: method === 'CANCEL' ? 1 : 0,
+      sequence,
     });
+    return {
+      filename:
+        method === 'CANCEL'
+          ? 'playwithpro-session-cancelled.ics'
+          : 'playwithpro-session.ics',
+      content: ics,
+      contentType: `text/calendar; charset=utf-8; method=${method}`,
+    };
   }
-}
-
-/** UTC line for the email body; calendar apps localize the attached event. */
-function whenLine(input: CalendarSessionInput): string {
-  const day = input.startsAt.toISOString().slice(0, 10);
-  const from = input.startsAt.toISOString().slice(11, 16);
-  const to = input.endsAt.toISOString().slice(11, 16);
-  return `${day}, ${from}–${to} UTC`;
 }

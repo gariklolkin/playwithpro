@@ -1,0 +1,165 @@
+{
+  "common": {
+    "signature": "— PlayWithPro",
+    "unsubscribe": "你收到这封邮件是因为它在你的通知设置中已开启。一键关闭：{url}",
+    "whereRoom": "进入课程房间：{url}",
+    "whereVenue": "地点：{venue}",
+    "sessions": "你的课程：{url}"
+  },
+  "session": {
+    "paid": {
+      "player": {
+        "subject": "你在 {date} 的{service}课程已预订",
+        "text": "{name}，你好！\n\n你与教练 {coach} 的{service}课程已预订：\n{when}\n\n{amount} 已托管，只有在你确认课程后（或课程结束 48 小时后自动确认）才会付给教练。\n\n{where}\n\n附件邀请可将课程加入你的日历。\n{sessionsLine}"
+      },
+      "coach": {
+        "subject": "新预订：{player} 在 {date} 的{service}课程",
+        "text": "{name}，你好！\n\n{player} 预订了你的{service}课程：\n{when}\n\n{clipsLine}\n{where}\n\n附件邀请可将课程加入你的日历。\n{sessionsLine}"
+      },
+      "clipsLine": "{count, plural, =0 {未附视频。} other {已附 # 个视频，请在通话前观看。}}"
+    },
+    "clipsChanged": {
+      "subject": "{player} 在 {date} 的课程视频已更新",
+      "text": "{name}，你好！\n\n{player} 更改了你们{service}课程的视频：\n{when}\n\n{clipsLine}\n\n打开课程查看新的视频：{url}"
+    },
+    "reminder": {
+      "subject": "提醒：你的{service}课程 {hours, plural, other {# 小时后}}开始",
+      "text": "{name}，你好！\n\n你与 {counterpart} 的{service}课程将在 {hours, plural, other {# 小时后}}开始：\n{when}\n\n{where}{clipsHint}\n{sessionsLine}",
+      "clipsHint": "\n请在通话前花几分钟看看附带的视频。"
+    },
+    "ended": {
+      "player": {
+        "subject": "你与 {coach} 的课程进行了吗？",
+        "text": "{name}，你好！\n\n你与教练 {coach} 在 {when} 的{service}课程已结束。\n\n请在 {deadline} 前确认课程已进行，或报告问题。否则课程将自动确认，款项付给教练。\n\n确认或报告：{url}"
+      },
+      "coach": {
+        "subject": "请确认你与 {player} 的课程已进行",
+        "text": "{name}，你好！\n\n你与 {player} 在 {when} 的{service}课程已结束。\n\n请确认课程已进行——如有问题报告，你的确认将作为证据。{player} 确认后或最迟在 {deadline} 会放款。\n\n确认：{url}"
+      }
+    },
+    "completed": {
+      "player": {
+        "subject": "你与 {coach} 课程的款项已放出",
+        "text": "{name}，你好！\n\n你与教练 {coach} 在 {when} 的{service}课程已完成，{amount} 已付给教练。\n\n感觉如何？简短的评价能帮助其他球员选择：{reviewUrl}"
+      },
+      "coach": {
+        "subject": "已放款：与 {player} 课程的 {net}",
+        "text": "{name}，你好！\n\n你与 {player} 在 {when} 的{service}课程已完成。已向你放款 {net}（{amount} 扣除 {fee} 平台费）。\n\n{sessionsLine}"
+      }
+    },
+    "cancelled": {
+      "player": {
+        "subject": "{cancelledBy, select, player {你取消了与 {coach} 的课程} other {{coach} 取消了你的课程}}",
+        "text": "{name}，你好！\n\n{cancelledBy, select, player {你取消了} other {{coach} 取消了}} {when} 的{service}课程。\n\n{amount} 将全额退还给你。\n\n附件更新会从你的日历中移除该课程。预订其他时间：{url}"
+      },
+      "coach": {
+        "subject": "{cancelledBy, select, coach {你取消了与 {player} 的课程} other {{player} 取消了课程}}",
+        "text": "{name}，你好！\n\n{cancelledBy, select, coach {你取消了} other {{player} 取消了}} {when} 的{service}课程。时段已重新开放，球员已获退款。\n\n附件更新会从你的日历中移除该课程。\n{sessionsLine}"
+      },
+      "admin": {
+        "subject": "教练 {coach} 取消了一节已付款课程",
+        "text": "{coach} 取消了与 {player} 的已付款{service}课程（原定 {when}）。球员已全额退款。\n\n课程：{url}"
+      }
+    }
+  },
+  "dispute": {
+    "opened": {
+      "player": {
+        "subject": "我们已收到你关于与 {coach} 课程的报告",
+        "text": "{name}，你好！\n\n我们已收到你关于与教练 {coach} 在 {when} 的{service}课程的报告。在团队审核期间款项将继续托管；结果会通过邮件告知你。\n\n{sessionsLine}"
+      },
+      "coach": {
+        "subject": "你与 {player} 的课程收到问题报告",
+        "text": "{name}，你好！\n\n{player} 报告了 {when} 的{service}课程存在问题。团队审核期间放款暂停；结果会通过邮件告知你。\n\n查看课程：{url}"
+      },
+      "admin": {
+        "subject": "新争议：{player} 与 {coach}，{date} 的{service}",
+        "text": "{player} 与 {coach} 原定 {when} 的{service}课程出现争议。\n\n在队列中处理：{url}"
+      }
+    },
+    "resolved": {
+      "player": {
+        "subject": "你的争议已处理：{outcome, select, refund {已退款} other {款项已付给教练}}",
+        "text": "{name}，你好！\n\n团队已审核你关于与教练 {coach} 在 {when} 的{service}课程的报告。\n\n{outcome, select, refund {结果：{amount} 退还给你。} other {结果：{amount} 已付给教练。}}\n\n{sessionsLine}"
+      },
+      "coach": {
+        "subject": "争议已处理：{outcome, select, refund {退款给球员} other {已向你放款}}",
+        "text": "{name}，你好！\n\n团队已审核关于你与 {player} 在 {when} 的{service}课程的报告。\n\n{outcome, select, refund {结果：{amount} 已退还给球员。} other {结果：已向你放款 {net}。}}\n\n{sessionsLine}"
+      }
+    }
+  },
+  "review": {
+    "received": {
+      "subject": "{player} 给了你 {rating} 星评价",
+      "text": "{name}，你好！\n\n{player} 为 {date} 的{service}课程留下了 {rating} 星评价。\n\n在你的教练页面查看：{url}"
+    }
+  },
+  "auth": {
+    "verificationCode": {
+      "subject": "{code} 是你的 PlayWithPro 确认码",
+      "text": "欢迎来到 PlayWithPro！🏓\n\n你的确认码（15 分钟内有效）：\n\n    {code}\n\n请在注册页面输入。\n\n如果你没有创建账户，请忽略此邮件。"
+    },
+    "passwordReset": {
+      "subject": "重置你的 PlayWithPro 密码",
+      "text": "我们收到了重置你 PlayWithPro 密码的请求。\n\n请通过下面的链接设置新密码（1 小时内有效）：\n{link}\n\n如果不是你发起的请求，请忽略此邮件，密码保持不变。"
+    }
+  },
+  "verification": {
+    "approved": {
+      "subject": "你已在 PlayWithPro 通过认证 🎉",
+      "text": "{name}，你好！\n\n你的专业资料已通过认证。开放可预约时段后，球员就能找到并预订你。\n\n球台见！"
+    },
+    "rejected": {
+      "subject": "你的 PlayWithPro 认证进展",
+      "text": "{name}，你好！\n\n这次我们无法通过你的专业资料认证。\n\n审核备注：{note}\n\n你可以随时更新资料并重新提交。"
+    },
+    "booking": {
+      "meetLink": "加入会议：{url}",
+      "meetPending": "会议链接稍后会显示在你的认证页面：{url}",
+      "confirmed": {
+        "subject": "你的 PlayWithPro 认证通话已预约",
+        "text": "{name}，你好！\n\n你的身份视频通话已安排：\n{when}\n\n{meetLine}\n\n需要换个时间？在此改期：{manageUrl}\n\n附件邀请可将通话加入任何日历应用。"
+      },
+      "reminder": {
+        "subject": "提醒：PlayWithPro 认证通话 {hours, plural, other {# 小时后}}开始",
+        "text": "{name}，你好！\n\n你的身份视频通话即将开始：\n{when}\n\n{meetLine}\n\n改期：{manageUrl}"
+      },
+      "rescheduled": {
+        "subject": "你的 PlayWithPro 认证通话已改期",
+        "text": "{name}，你好！\n\n你的身份视频通话有了新时间：\n{when}\n\n{meetLine}\n\n改期：{manageUrl}"
+      },
+      "cancelledByAdmin": {
+        "subject": "你的 PlayWithPro 认证通话已取消",
+        "text": "{name}，你好！\n\n我们不得不取消你原定于以下时间的认证通话：\n{when}\n\n抱歉——请在此选择新时间：{manageUrl}"
+      },
+      "noShow": {
+        "subject": "你错过了 PlayWithPro 认证通话",
+        "text": "{name}，你好！\n\n你没有加入预定的认证通话。\n\n{requestCancelled, select, yes {由于这是第二次错过通话，你的认证申请已取消。你可以随时从资料页重新提交。} other {没关系——请在此选择新时间：{manageUrl}}}"
+      },
+      "coachCancelledNotice": {
+        "subject": "PlayWithPro：专业人士取消了认证通话",
+        "text": "{coach}：{detail}"
+      }
+    }
+  },
+  "service": {
+    "video_analysis": "视频分析",
+    "consultation": "咨询",
+    "game": "线下比赛"
+  },
+  "calendar": {
+    "summary": "PlayWithPro {service}课程",
+    "descriptionRoom": "进入课程房间：{url}",
+    "descriptionVenue": "在场馆见面：{venue}"
+  },
+  "session_updated": {
+    "player": {
+      "subject": "你与 {coach} 的课程已改到 {date}",
+      "text": "{name}，你好！\n\n你与教练 {coach} 的{service}课程有了新时间：\n{when}\n\n{where}\n\n附件更新会替换你日历中的事件。\n{sessionsLine}"
+    },
+    "coach": {
+      "subject": "你与 {player} 的课程已改到 {date}",
+      "text": "{name}，你好！\n\n你与 {player} 的{service}课程有了新时间：\n{when}\n\n{where}\n\n附件更新会替换你日历中的事件。\n{sessionsLine}"
+    }
+  }
+}

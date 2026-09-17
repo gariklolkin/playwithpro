@@ -4,6 +4,7 @@ import type { MeResponse } from "@playwithpro/shared";
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { NotificationsSettingsPanel } from "@/components/settings/panels/notifications-settings-panel";
 import { ProfileSettingsPanel } from "@/components/settings/panels/profile-settings-panel";
 import { SecuritySettingsPanel } from "@/components/settings/panels/security-settings-panel";
 import {
@@ -19,6 +20,7 @@ import { cn } from "@/lib/utils";
 const TAB_EMOJI: Record<SettingsTab, string> = {
   profile: "🏓",
   security: "🔒",
+  notifications: "🔔",
 };
 
 /**
@@ -105,6 +107,8 @@ export function SettingsDialog({
           >
             {tab === "security" ? (
               <SecuritySettingsPanel user={user} onUserChange={setUser} />
+            ) : tab === "notifications" ? (
+              <NotificationsSettingsPanel />
             ) : (
               <ProfileSettingsPanel user={user} onUserChange={setUser} />
             )}

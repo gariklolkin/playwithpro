@@ -214,8 +214,30 @@
       "close": "关闭",
       "tabs": {
         "profile": "个人资料",
-        "security": "安全"
+        "security": "安全",
+        "notifications": "通知"
       }
+    },
+    "notifications": {
+      "title": "邮件通知",
+      "subtitle": "选择你想接收的可选邮件。更改立即生效。",
+      "categories": {
+        "emailReminders": {
+          "label": "课程提醒",
+          "hint": "每节课前 24 小时和 1 小时。"
+        },
+        "emailClipChanges": {
+          "label": "视频更改",
+          "hint": "教练：当球员更改即将进行的视频分析课程的视频时。"
+        },
+        "emailReviews": {
+          "label": "新评价",
+          "hint": "教练：当球员留下评价时。"
+        }
+      },
+      "transactionalNote": "收据、确认提示、放款、退款、争议和取消始终会发送邮件，它们是课程流程的一部分。",
+      "saved": "已保存。",
+      "error": "保存失败，请重试。"
     }
   },
   "proProfile": {
@@ -355,7 +377,8 @@
     "adminTransactionsTitle": "交易 — PlayWithPro",
     "adminAnalyticsTitle": "数据分析 — PlayWithPro",
     "adminReviewsTitle": "评价审核 — PlayWithPro",
-    "privacyTitle": "隐私 — PlayWithPro"
+    "privacyTitle": "隐私 — PlayWithPro",
+    "unsubscribeTitle": "邮件偏好 — PlayWithPro"
   },
   "verification": {
     "title": "认证",
@@ -1112,5 +1135,17 @@
     "reference": "参考编号：{id}",
     "retry": "重试",
     "home": "首页"
+  },
+  "unsubscribe": {
+    "title": "邮件偏好",
+    "working": "正在更新你的偏好…",
+    "done": "你的账户已关闭“{category}”邮件。",
+    "invalid": "此链接无效或已过期。你可以在账户设置中更改邮件偏好。",
+    "settingsLink": "打开通知设置",
+    "categories": {
+      "emailReminders": "课程提醒",
+      "emailClipChanges": "视频更改",
+      "emailReviews": "新评价"
+    }
   }
 }

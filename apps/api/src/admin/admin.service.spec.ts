@@ -27,6 +27,7 @@ const scheduledRequest = {
     user: {
       id: 'user-1',
       email: 'coach@example.com',
+      locale: 'en',
       displayName: 'Coach Ma',
     },
   },
@@ -151,6 +152,7 @@ describe('AdminService', () => {
     );
     expect(mailer.sendVerificationApprovedEmail).toHaveBeenCalledWith(
       'coach@example.com',
+      'en',
       'Coach Ma',
     );
   });
@@ -193,6 +195,7 @@ describe('AdminService', () => {
     expect(sync.cancelEvent).toHaveBeenCalledWith('evt-1');
     expect(mailer.sendVerificationRejectedEmail).toHaveBeenCalledWith(
       'coach@example.com',
+      'en',
       'Coach Ma',
       'No verifiable credentials.',
     );

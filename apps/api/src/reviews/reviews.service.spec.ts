@@ -8,6 +8,7 @@ import { Prisma } from '@prisma/client';
 import type { BookingsService } from '../bookings/bookings.service';
 import type { SessionProgressionService } from '../bookings/session-progression.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { ReviewsService } from './reviews.service';
 
 const HOUR = 3_600_000;
@@ -23,10 +24,12 @@ describe('ReviewsService', () => {
   const progression = {
     normalize: jest.fn(<T>(session: T) => Promise.resolve(session)),
   };
+  const notifications = { enqueue: jest.fn() };
   const service = new ReviewsService(
     prisma as unknown as PrismaService,
     bookings as unknown as BookingsService,
     progression as unknown as SessionProgressionService,
+    notifications as unknown as NotificationsService,
   );
 
   const player = { id: 'player-1', role: Role.Amateur };

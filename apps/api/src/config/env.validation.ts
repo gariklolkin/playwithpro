@@ -220,6 +220,16 @@ class EnvironmentVariables {
   /** Deploy SHA (image tag) stamped on every event and error; baked by Dockerfile.prod. */
   @IsString()
   APP_RELEASE = 'unknown';
+
+  /** Emails per UTC day the provider allows (Brevo free: 300); warning at 80 %, optional mail skipped at 100 %. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  EMAIL_DAILY_LIMIT = 300;
+
+  /** Signs one-click unsubscribe tokens; rotate to invalidate every link. */
+  @IsString()
+  NOTIFY_UNSUBSCRIBE_SECRET = 'dev-only-unsubscribe-secret';
 }
 
 export function validate(

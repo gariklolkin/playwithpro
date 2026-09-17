@@ -9,7 +9,7 @@ import { Test } from '@nestjs/testing';
 import { Role, ServiceType } from '@playwithpro/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
-import { CALENDAR_PROVIDER } from '../calendar/calendar-provider';
+import { NotificationsService } from '../notifications/notifications.service';
 import { ANALYTICS } from '../observability/observability';
 import { PAYMENT_PROVIDER } from '../payments/payment-provider';
 import { BookingsService } from './bookings.service';
@@ -103,9 +103,10 @@ describe('BookingsService', () => {
     release: jest.fn(),
     refund: jest.fn(),
   };
-  const calendar = {
-    sendInvite: jest.fn(),
-    sendCancellation: jest.fn(),
+  const notifications = {
+    enqueue: jest.fn(),
+    enqueueDebounced: jest.fn(),
+    adminIds: jest.fn().mockResolvedValue(['admin-1']),
   };
   const progression = {
     normalize: jest.fn(<T>(session: T) => Promise.resolve(session)),
@@ -152,7 +153,7 @@ describe('BookingsService', () => {
         { provide: ConfigService, useValue: config },
         { provide: StorageService, useValue: storage },
         { provide: PAYMENT_PROVIDER, useValue: provider },
-        { provide: CALENDAR_PROVIDER, useValue: calendar },
+        { provide: NotificationsService, useValue: notifications },
         { provide: SessionProgressionService, useValue: progression },
         { provide: SettlementService, useValue: settlement },
         { provide: SessionVideosService, useValue: sessionVideos },
@@ -415,10 +416,24 @@ describe('BookingsService', () => {
           status: 'PAID_ESCROW',
           expiresAt: null,
           roomSlug: expect.any(String) as string,
+          inviteSentAt: expect.any(Date) as Date,
         },
       });
       expect(result.paymentStatus).toBe('held');
       expect(result.session.status).toBe('paid_escrow');
+      // Receipt + new-booking rows are written inside the pay transaction.
+      expect(notifications.enqueue).toHaveBeenCalledWith(tx, [
+        {
+          kind: 'SESSION_PAID_PLAYER',
+          sessionId: 'session-1',
+          recipientId: 'player-1',
+        },
+        {
+          kind: 'SESSION_PAID_COACH',
+          sessionId: 'session-1',
+          recipientId: 'coach-1',
+        },
+      ]);
       expect(analytics.track).toHaveBeenCalledWith({
         event: 'session_paid',
         distinctId: 'player-1',
@@ -445,52 +460,6 @@ describe('BookingsService', () => {
           data: expect.objectContaining({ roomSlug: null }) as object,
         }),
       );
-    });
-
-    it('sends the invite exactly when it claims the idempotency flag', async () => {
-      provider.hold.mockResolvedValue({ ok: true, providerRef: 'ref-1' });
-      prisma.session.updateMany.mockResolvedValue({ count: 1 });
-
-      await service.pay('player-1', 'session-1', {});
-
-      expect(prisma.session.updateMany).toHaveBeenCalledWith({
-        where: {
-          id: 'session-1',
-          status: 'PAID_ESCROW',
-          inviteSentAt: null,
-        },
-        data: { inviteSentAt: expect.any(Date) as Date },
-      });
-      expect(calendar.sendInvite).toHaveBeenCalledWith(
-        expect.objectContaining({
-          sessionId: 'session-1',
-          roomUrl: 'http://localhost:3000/sessions/session-1/room',
-          venue: null,
-          attendees: [
-            expect.objectContaining({ email: 'player@example.com' }) as object,
-            expect.objectContaining({ email: 'coach@example.com' }) as object,
-          ],
-        }),
-      );
-    });
-
-    it('skips the invite when another pay already claimed it', async () => {
-      provider.hold.mockResolvedValue({ ok: true, providerRef: 'ref-1' });
-
-      await service.pay('player-1', 'session-1', {});
-
-      expect(calendar.sendInvite).not.toHaveBeenCalled();
-    });
-
-    it('keeps the session paid when the invite send fails', async () => {
-      provider.hold.mockResolvedValue({ ok: true, providerRef: 'ref-1' });
-      prisma.session.updateMany.mockResolvedValue({ count: 1 });
-      calendar.sendInvite.mockRejectedValue(new Error('smtp down'));
-
-      const result = await service.pay('player-1', 'session-1', {});
-
-      expect(result.paymentStatus).toBe('held');
-      expect(result.session.status).toBe('paid_escrow');
     });
 
     it('records a declined hold and keeps the session payable', async () => {
@@ -556,45 +525,6 @@ describe('BookingsService', () => {
       await expect(
         service.pay('stranger', 'session-1', {}),
       ).rejects.toBeInstanceOf(NotFoundException);
-    });
-  });
-
-  describe('sendCancellationIfInvited', () => {
-    it('revokes the event for a cancelled session with a delivered invite', async () => {
-      prisma.session.findUnique.mockResolvedValue({
-        status: 'CANCELLED',
-        inviteSentAt: new Date(),
-      });
-      prisma.session.findUniqueOrThrow.mockResolvedValue({
-        ...pendingSession,
-        status: 'CANCELLED',
-        player: { ...pendingSession.player, email: 'player@example.com' },
-        proProfile: {
-          ...pendingSession.proProfile,
-          user: {
-            ...pendingSession.proProfile.user,
-            email: 'coach@example.com',
-          },
-          services: [],
-        },
-      });
-
-      await service.sendCancellationIfInvited('session-1');
-
-      expect(calendar.sendCancellation).toHaveBeenCalledWith(
-        expect.objectContaining({ sessionId: 'session-1' }),
-      );
-    });
-
-    it('sends nothing when no invite ever went out', async () => {
-      prisma.session.findUnique.mockResolvedValue({
-        status: 'CANCELLED',
-        inviteSentAt: null,
-      });
-
-      await service.sendCancellationIfInvited('session-1');
-
-      expect(calendar.sendCancellation).not.toHaveBeenCalled();
     });
   });
 
@@ -765,8 +695,25 @@ describe('BookingsService', () => {
           status: 'PAID_ESCROW',
           startsAt: { gt: expect.any(Date) as Date },
         },
-        data: { status: 'CANCELLED' },
+        data: { status: 'CANCELLED', calendarSequence: { increment: 1 } },
       });
+      // Both parties are told who cancelled; a coach cancellation also
+      // alerts every admin.
+      expect(notifications.enqueue).toHaveBeenCalledWith(tx, [
+        expect.objectContaining({
+          kind: 'SESSION_CANCELLED_PLAYER',
+          recipientId: 'player-1',
+          payload: { cancelledBy: 'coach' },
+        }),
+        expect.objectContaining({
+          kind: 'SESSION_CANCELLED_COACH',
+          recipientId: 'coach-1',
+        }),
+        expect.objectContaining({
+          kind: 'SESSION_CANCELLED_ADMIN',
+          recipientId: 'admin-1',
+        }),
+      ]);
       expect(tx.availabilitySlot.updateMany).toHaveBeenCalledWith({
         where: { id: 'slot-1', status: 'BOOKED' },
         data: { status: 'OPEN' },
@@ -822,32 +769,6 @@ describe('BookingsService', () => {
         service.cancel({ id: 'coach-1', role: Role.Professional }, 'session-1'),
       ).rejects.toBeInstanceOf(ConflictException);
       expect(tx.session.updateMany).not.toHaveBeenCalled();
-    });
-
-    it('sends the calendar cancellation when an invite went out', async () => {
-      // Second findUnique call is sendCancellationIfInvited's status check.
-      prisma.session.findUnique
-        .mockResolvedValueOnce(paidUpcoming)
-        .mockResolvedValueOnce({
-          status: 'CANCELLED',
-          inviteSentAt: new Date(),
-        });
-      prisma.session.findUniqueOrThrow.mockResolvedValue({
-        ...paidUpcoming,
-        status: 'CANCELLED',
-        player: { ...paidUpcoming.player, email: 'player@example.com' },
-        proProfile: {
-          ...paidUpcoming.proProfile,
-          user: { ...paidUpcoming.proProfile.user, email: 'coach@example.com' },
-          services: [],
-        },
-      });
-
-      await service.cancel({ id: 'player-1', role: Role.Amateur }, 'session-1');
-
-      expect(calendar.sendCancellation).toHaveBeenCalledWith(
-        expect.objectContaining({ sessionId: 'session-1' }),
-      );
     });
 
     it('409s once the session has started', async () => {

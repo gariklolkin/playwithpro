@@ -214,8 +214,30 @@
       "close": "Schließen",
       "tabs": {
         "profile": "Profil",
-        "security": "Sicherheit"
+        "security": "Sicherheit",
+        "notifications": "Benachrichtigungen"
       }
+    },
+    "notifications": {
+      "title": "E-Mail-Benachrichtigungen",
+      "subtitle": "Wähle, welche optionalen E-Mails du bekommst. Änderungen gelten sofort.",
+      "categories": {
+        "emailReminders": {
+          "label": "Sitzungserinnerungen",
+          "hint": "24 Stunden und 1 Stunde vor jeder Sitzung."
+        },
+        "emailClipChanges": {
+          "label": "Clip-Änderungen",
+          "hint": "Für Trainer: wenn ein Spieler die Clips einer bevorstehenden Videoanalyse ändert."
+        },
+        "emailReviews": {
+          "label": "Neue Bewertungen",
+          "hint": "Für Trainer: wenn ein Spieler eine Bewertung hinterlässt."
+        }
+      },
+      "transactionalNote": "Quittungen, Bestätigungsaufforderungen, Auszahlungen, Erstattungen, Streitfälle und Absagen werden immer per E-Mail geschickt — sie gehören zum Ablauf deiner Sitzungen.",
+      "saved": "Gespeichert.",
+      "error": "Speichern fehlgeschlagen. Bitte erneut versuchen."
     }
   },
   "proProfile": {
@@ -355,7 +377,8 @@
     "adminTransactionsTitle": "Transaktionen — PlayWithPro",
     "adminAnalyticsTitle": "Statistiken — PlayWithPro",
     "adminReviewsTitle": "Bewertungsmoderation — PlayWithPro",
-    "privacyTitle": "Datenschutz — PlayWithPro"
+    "privacyTitle": "Datenschutz — PlayWithPro",
+    "unsubscribeTitle": "E-Mail-Einstellungen — PlayWithPro"
   },
   "verification": {
     "title": "Verifizierung",
@@ -1112,5 +1135,17 @@
     "reference": "Referenz: {id}",
     "retry": "Erneut versuchen",
     "home": "Startseite"
+  },
+  "unsubscribe": {
+    "title": "E-Mail-Einstellungen",
+    "working": "Einstellungen werden aktualisiert…",
+    "done": "E-Mails „{category}“ sind für dein Konto jetzt aus.",
+    "invalid": "Dieser Link ist ungültig oder abgelaufen. Deine E-Mail-Einstellungen kannst du in den Kontoeinstellungen ändern.",
+    "settingsLink": "Benachrichtigungseinstellungen öffnen",
+    "categories": {
+      "emailReminders": "Sitzungserinnerung",
+      "emailClipChanges": "Clip-Änderung",
+      "emailReviews": "Neue Bewertung"
+    }
   }
 }

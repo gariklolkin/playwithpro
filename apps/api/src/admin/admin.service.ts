@@ -126,6 +126,7 @@ export class AdminService {
     });
     await this.mailer.sendVerificationApprovedEmail(
       request.profile.user.email,
+      request.profile.user.locale,
       request.profile.user.displayName,
     );
   }
@@ -167,6 +168,7 @@ export class AdminService {
     }
     await this.mailer.sendVerificationRejectedEmail(
       request.profile.user.email,
+      request.profile.user.locale,
       request.profile.user.displayName,
       note.trim(),
     );

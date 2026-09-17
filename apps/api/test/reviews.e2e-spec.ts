@@ -237,6 +237,12 @@ describe('Reviews & ratings (e2e)', () => {
         text: 'Sharp, actionable advice',
       });
       expect(session.reviewable).toBe(false);
+      const rows = await prisma.notification.findMany({
+        where: { sessionId, kind: 'REVIEW_RECEIVED' },
+      });
+      expect(rows).toHaveLength(1);
+      expect(rows[0].payload).toEqual({ rating: 5 });
+      expect(JSON.stringify(rows[0].payload)).not.toContain('Sharp');
     });
 
     it('a second review conflicts', async () => {

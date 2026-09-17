@@ -12,6 +12,7 @@ import type { SessionProgressionService } from '../bookings/session-progression.
 import type { SettlementService } from '../bookings/settlement.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { DisputesService } from './disputes.service';
+import type { NotificationsService } from '../notifications/notifications.service';
 
 const HOUR = 3_600_000;
 
@@ -35,12 +36,17 @@ describe('DisputesService', () => {
   };
   const settlement = { settle: jest.fn() };
   const analytics = { track: jest.fn() };
+  const notifications = {
+    enqueue: jest.fn(),
+    adminIds: jest.fn().mockResolvedValue(['admin-1']),
+  };
   const service = new DisputesService(
     prisma as unknown as PrismaService,
     bookings as unknown as BookingsService,
     progression as unknown as SessionProgressionService,
     settlement as unknown as SettlementService,
     analytics,
+    notifications as unknown as NotificationsService,
   );
 
   const awaitingSession = {
@@ -118,6 +124,24 @@ describe('DisputesService', () => {
         },
       });
       expect(result.status).toBe('disputed');
+      // Player receipt, coach hold notice, one alert per admin — no reason text.
+      expect(notifications.enqueue).toHaveBeenCalledWith(tx, [
+        expect.objectContaining({
+          kind: 'DISPUTE_OPENED_PLAYER',
+          recipientId: 'player-1',
+        }),
+        expect.objectContaining({
+          kind: 'DISPUTE_OPENED_COACH',
+          recipientId: 'coach-1',
+        }),
+        expect.objectContaining({
+          kind: 'DISPUTE_OPENED_ADMIN',
+          recipientId: 'admin-1',
+        }),
+      ]);
+      expect(JSON.stringify(notifications.enqueue.mock.calls)).not.toContain(
+        'never joined',
+      );
       expect(analytics.track).toHaveBeenCalledWith({
         event: 'session_disputed',
         distinctId: 'player-1',

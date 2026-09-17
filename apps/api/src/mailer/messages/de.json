@@ -1,0 +1,165 @@
+{
+  "common": {
+    "signature": "— PlayWithPro",
+    "unsubscribe": "Du bekommst diese E-Mail, weil sie in deinen Benachrichtigungseinstellungen aktiviert ist. Mit einem Klick abbestellen: {url}",
+    "whereRoom": "Sitzungsraum betreten: {url}",
+    "whereVenue": "Ort: {venue}",
+    "sessions": "Deine Sitzungen: {url}"
+  },
+  "session": {
+    "paid": {
+      "player": {
+        "subject": "Deine {service}-Sitzung am {date} ist gebucht",
+        "text": "Hallo {name},\n\ndeine {service}-Sitzung mit {coach} ist gebucht:\n{when}\n\n{amount} liegt auf dem Treuhandkonto und wird erst nach deiner Bestätigung der Sitzung an den Trainer ausgezahlt (oder automatisch 48 Stunden nach ihrem Ende).\n\n{where}\n\nDie angehängte Einladung trägt die Sitzung in deinen Kalender ein.\n{sessionsLine}"
+      },
+      "coach": {
+        "subject": "Neue Buchung: {service} mit {player} am {date}",
+        "text": "Hallo {name},\n\n{player} hat eine {service}-Sitzung bei dir gebucht:\n{when}\n\n{clipsLine}\n{where}\n\nDie angehängte Einladung trägt die Sitzung in deinen Kalender ein.\n{sessionsLine}"
+      },
+      "clipsLine": "{count, plural, =0 {Keine Clips angehängt.} one {# Clip angehängt — sieh ihn dir vor dem Anruf an.} other {# Clips angehängt — sieh sie dir vor dem Anruf an.}}"
+    },
+    "clipsChanged": {
+      "subject": "Clips aktualisiert für deine Sitzung mit {player} am {date}",
+      "text": "Hallo {name},\n\n{player} hat die Clips für eure {service}-Sitzung geändert:\n{when}\n\n{clipsLine}\n\nÖffne die Sitzung, um die neue Auswahl zu sehen: {url}"
+    },
+    "reminder": {
+      "subject": "Erinnerung: deine {service}-Sitzung {hours, plural, one {in 1 Stunde} other {in # Stunden}}",
+      "text": "Hallo {name},\n\ndeine {service}-Sitzung mit {counterpart} beginnt {hours, plural, one {in etwa einer Stunde} other {in # Stunden}}:\n{when}\n\n{where}{clipsHint}\n{sessionsLine}",
+      "clipsHint": "\nNimm dir vor dem Anruf ein paar Minuten für die angehängten Clips."
+    },
+    "ended": {
+      "player": {
+        "subject": "Hat deine Sitzung mit {coach} stattgefunden?",
+        "text": "Hallo {name},\n\ndeine {service}-Sitzung mit {coach} am {when} ist vorbei.\n\nBitte bestätige bis {deadline}, dass sie stattgefunden hat, oder melde ein Problem. Sonst wird sie automatisch bestätigt und die Zahlung an den Trainer freigegeben.\n\nBestätigen oder melden: {url}"
+      },
+      "coach": {
+        "subject": "Bestätige, dass deine Sitzung mit {player} stattgefunden hat",
+        "text": "Hallo {name},\n\ndeine {service}-Sitzung mit {player} am {when} ist vorbei.\n\nBitte bestätige, dass sie stattgefunden hat — deine Bestätigung zählt als Nachweis, falls ein Problem gemeldet wird. Die Auszahlung erfolgt, sobald {player} bestätigt, spätestens am {deadline}.\n\nBestätigen: {url}"
+      }
+    },
+    "completed": {
+      "player": {
+        "subject": "Zahlung freigegeben für deine Sitzung mit {coach}",
+        "text": "Hallo {name},\n\ndeine {service}-Sitzung mit {coach} am {when} ist abgeschlossen und {amount} wurde an den Trainer freigegeben.\n\nWie war es? Eine kurze Bewertung hilft anderen Spielern bei der Wahl: {reviewUrl}"
+      },
+      "coach": {
+        "subject": "Auszahlung freigegeben: {net} für deine Sitzung mit {player}",
+        "text": "Hallo {name},\n\ndeine {service}-Sitzung mit {player} am {when} ist abgeschlossen. {net} wurde an dich freigegeben ({amount} abzüglich {fee} Plattformgebühr).\n\n{sessionsLine}"
+      }
+    },
+    "cancelled": {
+      "player": {
+        "subject": "{cancelledBy, select, player {Du hast deine Sitzung mit {coach} abgesagt} other {{coach} hat deine Sitzung abgesagt}}",
+        "text": "Hallo {name},\n\n{cancelledBy, select, player {du hast} other {{coach} hat}} die {service}-Sitzung am {when} abgesagt.\n\n{amount} wird dir vollständig erstattet.\n\nDie angehängte Aktualisierung entfernt die Sitzung aus deinem Kalender. Einen anderen Termin buchen: {url}"
+      },
+      "coach": {
+        "subject": "{cancelledBy, select, coach {Du hast deine Sitzung mit {player} abgesagt} other {{player} hat die Sitzung abgesagt}}",
+        "text": "Hallo {name},\n\n{cancelledBy, select, coach {du hast} other {{player} hat}} die {service}-Sitzung am {when} abgesagt. Der Slot ist wieder frei und der Spieler wurde erstattet.\n\nDie angehängte Aktualisierung entfernt die Sitzung aus deinem Kalender.\n{sessionsLine}"
+      },
+      "admin": {
+        "subject": "Trainer {coach} hat eine bezahlte Sitzung abgesagt",
+        "text": "{coach} hat eine bezahlte {service}-Sitzung mit {player} am {when} abgesagt. Der Spieler wurde vollständig erstattet.\n\nSitzung: {url}"
+      }
+    }
+  },
+  "dispute": {
+    "opened": {
+      "player": {
+        "subject": "Wir haben deine Meldung zur Sitzung mit {coach} erhalten",
+        "text": "Hallo {name},\n\nwir haben deine Meldung zur {service}-Sitzung mit {coach} am {when} erhalten. Die Zahlung bleibt zurückgehalten, bis unser Team sie geprüft hat; du bekommst eine E-Mail mit dem Ergebnis.\n\n{sessionsLine}"
+      },
+      "coach": {
+        "subject": "Ein Problem wurde zu deiner Sitzung mit {player} gemeldet",
+        "text": "Hallo {name},\n\n{player} hat ein Problem mit der {service}-Sitzung am {when} gemeldet. Die Auszahlung ist zurückgehalten, während unser Team die Meldung prüft; du bekommst eine E-Mail mit dem Ergebnis.\n\nZur Sitzung: {url}"
+      },
+      "admin": {
+        "subject": "Neuer Streitfall: {player} vs {coach}, {service} am {date}",
+        "text": "Zur {service}-Sitzung zwischen {player} und {coach} am {when} wurde ein Streitfall eröffnet.\n\nIn der Warteschlange prüfen: {url}"
+      }
+    },
+    "resolved": {
+      "player": {
+        "subject": "Dein Streitfall wurde entschieden: {outcome, select, refund {erstattet} other {Zahlung freigegeben}}",
+        "text": "Hallo {name},\n\nunser Team hat deine Meldung zur {service}-Sitzung mit {coach} am {when} geprüft.\n\n{outcome, select, refund {Ergebnis: {amount} wird dir erstattet.} other {Ergebnis: die Zahlung von {amount} wurde an den Trainer freigegeben.}}\n\n{sessionsLine}"
+      },
+      "coach": {
+        "subject": "Streitfall entschieden: {outcome, select, refund {an den Spieler erstattet} other {an dich ausgezahlt}}",
+        "text": "Hallo {name},\n\nunser Team hat die Meldung zu deiner {service}-Sitzung mit {player} am {when} geprüft.\n\n{outcome, select, refund {Ergebnis: {amount} wurde dem Spieler erstattet.} other {Ergebnis: {net} wurde an dich freigegeben.}}\n\n{sessionsLine}"
+      }
+    }
+  },
+  "review": {
+    "received": {
+      "subject": "Neue {rating}-Sterne-Bewertung von {player}",
+      "text": "Hallo {name},\n\n{player} hat deine {service}-Sitzung am {date} mit {rating} Sternen bewertet.\n\nAnsehen auf deiner Trainerseite: {url}"
+    }
+  },
+  "auth": {
+    "verificationCode": {
+      "subject": "{code} ist dein PlayWithPro-Bestätigungscode",
+      "text": "Willkommen bei PlayWithPro! 🏓\n\nDein Bestätigungscode (15 Minuten gültig):\n\n    {code}\n\nGib ihn auf dem Anmeldebildschirm ein.\n\nFalls du kein Konto erstellt hast, ignoriere diese E-Mail."
+    },
+    "passwordReset": {
+      "subject": "Setze dein PlayWithPro-Passwort zurück",
+      "text": "Wir haben eine Anfrage zum Zurücksetzen deines PlayWithPro-Passworts erhalten.\n\nLege über den folgenden Link ein neues Passwort fest (1 Stunde gültig):\n{link}\n\nFalls du das nicht angefordert hast, ignoriere diese E-Mail — dein Passwort bleibt unverändert."
+    }
+  },
+  "verification": {
+    "approved": {
+      "subject": "Du bist auf PlayWithPro verifiziert 🎉",
+      "text": "Hallo {name},\n\ndein Profi-Profil wurde verifiziert. Spieler können dich jetzt finden und buchen, sobald deine Verfügbarkeit freigeschaltet ist.\n\nBis bald am Tisch!"
+    },
+    "rejected": {
+      "subject": "Neuigkeiten zu deiner PlayWithPro-Verifizierung",
+      "text": "Hallo {name},\n\nwir konnten dein Profi-Profil dieses Mal nicht verifizieren.\n\nHinweis des Prüfers: {note}\n\nDu kannst dein Profil aktualisieren und jederzeit erneut einreichen."
+    },
+    "booking": {
+      "meetLink": "Zum Meeting: {url}",
+      "meetPending": "Der Meeting-Link erscheint in Kürze auf deiner Verifizierungsseite: {url}",
+      "confirmed": {
+        "subject": "Dein PlayWithPro-Verifizierungsgespräch ist gebucht",
+        "text": "Hallo {name},\n\ndein Video-Identitätsgespräch ist geplant:\n{when}\n\n{meetLine}\n\nBrauchst du einen anderen Termin? Hier umbuchen: {manageUrl}\n\nDie angehängte Einladung trägt das Gespräch in jede Kalender-App ein."
+      },
+      "reminder": {
+        "subject": "Erinnerung: PlayWithPro-Verifizierungsgespräch {hours, plural, one {in 1 Stunde} other {in # Stunden}}",
+        "text": "Hallo {name},\n\ndein Video-Identitätsgespräch steht bevor:\n{when}\n\n{meetLine}\n\nHier umbuchen: {manageUrl}"
+      },
+      "rescheduled": {
+        "subject": "Dein PlayWithPro-Verifizierungsgespräch wurde verschoben",
+        "text": "Hallo {name},\n\ndein Video-Identitätsgespräch hat einen neuen Termin:\n{when}\n\n{meetLine}\n\nHier umbuchen: {manageUrl}"
+      },
+      "cancelledByAdmin": {
+        "subject": "Dein PlayWithPro-Verifizierungsgespräch wurde abgesagt",
+        "text": "Hallo {name},\n\nwir mussten dein Verifizierungsgespräch absagen, geplant für:\n{when}\n\nEntschuldige — bitte wähle hier einen neuen Termin: {manageUrl}"
+      },
+      "noShow": {
+        "subject": "Wir haben dich bei deinem PlayWithPro-Verifizierungsgespräch vermisst",
+        "text": "Hallo {name},\n\ndu bist deinem geplanten Verifizierungsgespräch nicht beigetreten.\n\n{requestCancelled, select, yes {Da dies das zweite verpasste Gespräch war, wurde deine Verifizierungsanfrage storniert. Du kannst jederzeit eine neue Anfrage aus deinem Profil stellen.} other {Kein Problem — wähle hier einen neuen Termin: {manageUrl}}}"
+      },
+      "coachCancelledNotice": {
+        "subject": "PlayWithPro: ein Verifizierungsgespräch wurde vom Profi abgesagt",
+        "text": "{coach}: {detail}"
+      }
+    }
+  },
+  "service": {
+    "video_analysis": "Videoanalyse",
+    "consultation": "Beratung",
+    "game": "Spiel vor Ort"
+  },
+  "calendar": {
+    "summary": "PlayWithPro-Sitzung: {service}",
+    "descriptionRoom": "Sitzungsraum betreten: {url}",
+    "descriptionVenue": "Treffpunkt: {venue}"
+  },
+  "session_updated": {
+    "player": {
+      "subject": "Deine Sitzung mit {coach} wurde auf den {date} verlegt",
+      "text": "Hallo {name},\n\ndeine {service}-Sitzung mit {coach} hat einen neuen Termin:\n{when}\n\n{where}\n\nDie angehängte Aktualisierung ersetzt den Termin in deinem Kalender.\n{sessionsLine}"
+    },
+    "coach": {
+      "subject": "Deine Sitzung mit {player} wurde auf den {date} verlegt",
+      "text": "Hallo {name},\n\ndeine {service}-Sitzung mit {player} hat einen neuen Termin:\n{when}\n\n{where}\n\nDie angehängte Aktualisierung ersetzt den Termin in deinem Kalender.\n{sessionsLine}"
+    }
+  }
+}

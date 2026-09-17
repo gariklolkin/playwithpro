@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
-import { CalendarModule } from '../calendar/calendar.module';
 import { PaymentsModule } from '../payments/payments.module';
 import { StorageModule } from '../storage/storage.module';
 import { VideosModule } from '../videos/videos.module';
@@ -12,13 +11,7 @@ import { SessionVideosService } from './session-videos.service';
 import { SettlementService } from './settlement.service';
 
 @Module({
-  imports: [
-    AuthModule,
-    PaymentsModule,
-    StorageModule,
-    CalendarModule,
-    VideosModule,
-  ],
+  imports: [AuthModule, PaymentsModule, StorageModule, VideosModule],
   controllers: [BookingsController],
   providers: [
     BookingsService,

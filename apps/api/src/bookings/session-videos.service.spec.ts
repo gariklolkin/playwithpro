@@ -7,6 +7,7 @@ import type { ConfigService } from '@nestjs/config';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { UnattachedVideosService } from '../videos/unattached-videos.service';
 import { SessionVideosService } from './session-videos.service';
+import type { NotificationsService } from '../notifications/notifications.service';
 
 const HOUR = 3_600_000;
 
@@ -18,7 +19,7 @@ describe('SessionVideosService', () => {
     addedAt: Date;
   }
   const tx = {
-    session: { findUniqueOrThrow: jest.fn() },
+    session: { findUniqueOrThrow: jest.fn(), update: jest.fn() },
     sessionVideo: {
       deleteMany: jest.fn(),
       createMany: jest.fn<Promise<unknown>, [{ data: ClipRow[] }]>(),
@@ -34,10 +35,12 @@ describe('SessionVideosService', () => {
       ({ SESSION_VIDEO_MAX_COUNT: 3, SESSION_VIDEO_MAX_TOTAL_MIN: 10 })[name],
   };
   const unattached = { recompute: jest.fn() };
+  const notifications = { enqueue: jest.fn(), enqueueDebounced: jest.fn() };
   const service = new SessionVideosService(
     prisma as unknown as PrismaService,
     config as unknown as ConfigService,
     unattached as unknown as UnattachedVideosService,
+    notifications as unknown as NotificationsService,
   );
 
   const ready = (id: string, durationSeconds = 60) => ({
@@ -150,6 +153,7 @@ describe('SessionVideosService', () => {
       prisma.session.findUnique.mockResolvedValue({
         playerId: 'player-1',
         serviceType: 'VIDEO_ANALYSIS',
+        proProfile: { userId: 'coach-1' },
       });
       // Behaves like the real query: only the requested ids come back.
       prisma.video.findMany.mockImplementation(

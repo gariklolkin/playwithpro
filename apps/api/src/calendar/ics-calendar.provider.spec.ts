@@ -1,20 +1,52 @@
-import { ConfigService } from '@nestjs/config';
-import { MailerService } from '../mailer/mailer.service';
-import type { CalendarSessionInput } from './calendar-provider';
+import type { ConfigService } from '@nestjs/config';
+import { ServiceType } from '@playwithpro/shared';
+import { EmailRenderer } from '../mailer/email-renderer';
+import type { MailerService, OutgoingMail } from '../mailer/mailer.service';
+import type {
+  CalendarAttendee,
+  CalendarSessionInput,
+} from './calendar-provider';
 import { IcsCalendarProvider } from './ics-calendar.provider';
 import { buildSessionIcs, sessionUid } from './session-ics';
 
+const config = {
+  get: (name: string) => ({ WEB_APP_URL: 'http://localhost:3000' })[name],
+  getOrThrow: (name: string) =>
+    ({ SMTP_FROM: 'PlayWithPro <no-reply@playwithpro.local>' })[name],
+} as unknown as ConfigService;
+
+const ROOM_URL = 'http://localhost:3000/en/sessions/session-1/room';
+
 const input: CalendarSessionInput = {
   sessionId: 'session-1',
+  serviceType: ServiceType.Consultation,
   startsAt: new Date('2026-08-01T10:00:00Z'),
   endsAt: new Date('2026-08-01T11:00:00Z'),
-  serviceLabel: 'consultation',
-  roomUrl: 'http://localhost:3000/sessions/session-1/room',
+  roomPath: '/sessions/session-1/room',
   venue: null,
-  attendees: [
-    { email: 'player@example.com', displayName: 'Player' },
-    { email: 'coach@example.com', displayName: 'Coach' },
-  ],
+  playerName: 'Anna',
+  coachName: 'Coach Li',
+  coachProfileId: 'profile-1',
+  amountMinor: 4005,
+  feeMinor: 401,
+  currency: 'EUR',
+  clipsCount: 0,
+  sequence: 0,
+};
+
+const player: CalendarAttendee = {
+  email: 'player@example.com',
+  displayName: 'Anna',
+  locale: 'en',
+  timezone: 'Europe/Berlin',
+  role: 'player',
+};
+const coach: CalendarAttendee = {
+  email: 'coach@example.com',
+  displayName: 'Coach Li',
+  locale: 'de',
+  timezone: 'Europe/Berlin',
+  role: 'coach',
 };
 
 describe('buildSessionIcs', () => {
@@ -24,11 +56,11 @@ describe('buildSessionIcs', () => {
       startsAt: input.startsAt,
       endsAt: input.endsAt,
       summary: 'PlayWithPro consultation session',
-      location: input.roomUrl as string,
+      location: ROOM_URL,
       locationIsUrl: true,
-      description: `Join the session room: ${input.roomUrl}`,
+      description: `Join the session room: ${ROOM_URL}`,
       organizerEmail: 'no-reply@playwithpro.local',
-      attendeeEmails: ['player@example.com', 'coach@example.com'],
+      attendeeEmails: ['player@example.com'],
       method: 'REQUEST',
       sequence: 0,
     });
@@ -38,10 +70,7 @@ describe('buildSessionIcs', () => {
     expect(ics).toContain('DTSTART:20260801T100000Z');
     expect(ics).toContain('DTEND:20260801T110000Z');
     expect(ics).toContain('SEQUENCE:0');
-    expect(ics).toContain('URL:http://localhost:3000/sessions/session-1/room');
-    expect(ics).toContain(
-      'ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION:mailto:coach@example.com',
-    );
+    expect(ics).toContain(`URL:${ROOM_URL}`);
     expect(ics).toContain('STATUS:CONFIRMED');
   });
 
@@ -59,67 +88,68 @@ describe('buildSessionIcs', () => {
       method: 'REQUEST',
       sequence: 0,
     });
-
     expect(ics).toContain('LOCATION:TT Club\\; Hall 2\\, Berlin');
   });
 });
 
 describe('IcsCalendarProvider', () => {
-  const mailer = {
-    sendSessionInviteEmail: jest.fn<Promise<void>, [unknown]>(),
-    sendSessionCancelledEmail: jest.fn<Promise<void>, [unknown]>(),
-  };
-  const config = {
-    getOrThrow: () => 'PlayWithPro <no-reply@playwithpro.local>',
-  } as unknown as ConfigService;
+  const deliver = jest.fn<Promise<void>, [string, OutgoingMail]>();
   const provider = new IcsCalendarProvider(
-    mailer as unknown as MailerService,
+    { deliver } as unknown as MailerService,
+    new EmailRenderer(config),
     config,
   );
 
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => deliver.mockReset());
 
-  it('emails a REQUEST invite to every attendee', async () => {
-    await provider.sendInvite(input);
+  it('sends the player a localized receipt listing only that attendee', async () => {
+    await provider.sendInvite(input, player);
 
-    expect(mailer.sendSessionInviteEmail).toHaveBeenCalledTimes(2);
-    const call = mailer.sendSessionInviteEmail.mock.calls[0][0] as {
-      to: string;
-      ics: string;
-      roomUrl: string | null;
-    };
-    expect(call.to).toBe('player@example.com');
-    expect(call.roomUrl).toBe(input.roomUrl);
-    expect(call.ics).toContain('METHOD:REQUEST');
-    expect(call.ics).toContain(`UID:${sessionUid('session-1')}`);
+    const [to, mail] = deliver.mock.calls[0];
+    expect(to).toBe('player@example.com');
+    expect(mail.subject).toContain('is booked');
+    expect(mail.text).toContain('Coach Li');
+    expect(mail.text).toContain('€40.05');
+    expect(mail.text).toContain('(Europe/Berlin)');
+    expect(mail.text).toContain('Join the session room:');
+    const ics = mail.attachments?.[0].content ?? '';
+    expect(ics).toContain('METHOD:REQUEST');
+    expect(ics).toContain('SEQUENCE:0');
+    expect(ics).toContain('mailto:player@example.com');
+    expect(ics).not.toContain('coach@example.com');
   });
 
-  it('emails a CANCEL update with a bumped sequence and the same UID', async () => {
-    await provider.sendCancellation(input);
+  it('sends the coach a new-booking email in their own language', async () => {
+    await provider.sendInvite({ ...input, clipsCount: 2 }, coach);
 
-    expect(mailer.sendSessionCancelledEmail).toHaveBeenCalledTimes(2);
-    const call = mailer.sendSessionCancelledEmail.mock.calls[0][0] as {
-      ics: string;
-    };
-    expect(call.ics).toContain('METHOD:CANCEL');
-    expect(call.ics).toContain('SEQUENCE:1');
-    expect(call.ics).toContain('STATUS:CANCELLED');
-    expect(call.ics).toContain(`UID:${sessionUid('session-1')}`);
+    const [to, mail] = deliver.mock.calls[0];
+    expect(to).toBe('coach@example.com');
+    expect(mail.subject).toContain('Neue Buchung');
+    expect(mail.text).toContain('2 Clips angehängt');
+    expect(mail.attachments?.[0].content).toContain(
+      'SUMMARY:PlayWithPro-Sitzung: Beratung',
+    );
+    // The room link opens in the recipient's language, in the body and the invite.
+    const roomUrl = 'http://localhost:3000/de/sessions/session-1/room';
+    expect(mail.text).toContain(roomUrl);
+    expect(mail.attachments?.[0].content).toContain(`URL:${roomUrl}`);
   });
 
-  it('uses the venue as location for game sessions', async () => {
-    await provider.sendInvite({
-      ...input,
-      roomUrl: null,
-      venue: 'TT Club Berlin',
-    });
+  it('revokes with a higher sequence and names who cancelled', async () => {
+    await provider.sendCancellation({ ...input, sequence: 1 }, player, 'coach');
 
-    const call = mailer.sendSessionInviteEmail.mock.calls[0][0] as {
-      ics: string;
-      venue: string | null;
-    };
-    expect(call.venue).toBe('TT Club Berlin');
-    expect(call.ics).toContain('LOCATION:TT Club Berlin');
-    expect(call.ics).not.toContain('URL:');
+    const [, mail] = deliver.mock.calls[0];
+    expect(mail.subject).toBe('Coach Li cancelled your session');
+    expect(mail.text).toContain('refunded to you in full');
+    expect(mail.attachments?.[0].content).toContain('METHOD:CANCEL');
+    expect(mail.attachments?.[0].content).toContain('SEQUENCE:1');
+    expect(mail.attachments?.[0].contentType).toContain('method=CANCEL');
+  });
+
+  it('propagates delivery failures so the outbox can retry', async () => {
+    deliver.mockRejectedValueOnce(new Error('smtp down'));
+    await expect(provider.sendInvite(input, player)).rejects.toThrow(
+      'smtp down',
+    );
   });
 });

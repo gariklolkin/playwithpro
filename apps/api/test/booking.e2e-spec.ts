@@ -750,6 +750,16 @@ describe('Booking & escrow (e2e)', () => {
         .set('Cookie', playerCookie)
         .send({ videos: [{ videoId }, { videoId: secondVideoId }] })
         .expect(200);
+
+      // Two edits in a row → one debounced "clips changed" row for the
+      // coach, due ~15 minutes after the last edit.
+      const rows = await prisma.notification.findMany({
+        where: { sessionId, kind: 'SESSION_CLIPS_CHANGED' },
+      });
+      expect(rows).toHaveLength(1);
+      expect(rows[0].recipientId).toBe(coachId);
+      expect(rows[0].status).toBe('PENDING');
+      expect(rows[0].dueAt.getTime() - Date.now()).toBeGreaterThan(14 * 60_000);
     });
 
     it('rejects a replace once the session has started', async () => {

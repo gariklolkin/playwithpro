@@ -214,8 +214,30 @@
       "close": "Fermer",
       "tabs": {
         "profile": "Profil",
-        "security": "Sécurité"
+        "security": "Sécurité",
+        "notifications": "Notifications"
       }
+    },
+    "notifications": {
+      "title": "Notifications par e-mail",
+      "subtitle": "Choisissez les e-mails facultatifs que vous recevez. Les changements s'appliquent immédiatement.",
+      "categories": {
+        "emailReminders": {
+          "label": "Rappels de séance",
+          "hint": "24 heures et 1 heure avant chaque séance."
+        },
+        "emailClipChanges": {
+          "label": "Modifications des vidéos",
+          "hint": "Pour les coachs : quand un joueur modifie les vidéos d'une séance d'analyse vidéo à venir."
+        },
+        "emailReviews": {
+          "label": "Nouveaux avis",
+          "hint": "Pour les coachs : quand un joueur laisse un avis."
+        }
+      },
+      "transactionalNote": "Reçus, demandes de confirmation, versements, remboursements, litiges et annulations sont toujours envoyés par e-mail : ils font partie du déroulement de vos séances.",
+      "saved": "Enregistré.",
+      "error": "Impossible d'enregistrer. Réessayez."
     }
   },
   "proProfile": {
@@ -355,7 +377,8 @@
     "adminTransactionsTitle": "Transactions — PlayWithPro",
     "adminAnalyticsTitle": "Statistiques — PlayWithPro",
     "adminReviewsTitle": "Modération des avis — PlayWithPro",
-    "privacyTitle": "Confidentialité — PlayWithPro"
+    "privacyTitle": "Confidentialité — PlayWithPro",
+    "unsubscribeTitle": "Préférences e-mail — PlayWithPro"
   },
   "verification": {
     "title": "Vérification",
@@ -1112,5 +1135,17 @@
     "reference": "Référence : {id}",
     "retry": "Réessayer",
     "home": "Accueil"
+  },
+  "unsubscribe": {
+    "title": "Préférences e-mail",
+    "working": "Mise à jour de vos préférences…",
+    "done": "Les e-mails « {category} » sont désormais désactivés pour votre compte.",
+    "invalid": "Ce lien est invalide ou a expiré. Vous pouvez modifier vos préférences e-mail dans les paramètres de votre compte.",
+    "settingsLink": "Ouvrir les paramètres de notification",
+    "categories": {
+      "emailReminders": "Rappel de séance",
+      "emailClipChanges": "Modification des vidéos",
+      "emailReviews": "Nouvel avis"
+    }
   }
 }

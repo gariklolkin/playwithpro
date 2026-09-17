@@ -5,7 +5,13 @@ import {
   OnApplicationBootstrap,
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { DisputeOutcome, PaymentStatus, SessionStatus } from '@prisma/client';
+import {
+  DisputeOutcome,
+  NotificationKind,
+  PaymentStatus,
+  SessionStatus,
+} from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   ANALYTICS,
   LIFECYCLE_EVENTS,
@@ -32,6 +38,7 @@ export class SettlementService implements OnApplicationBootstrap {
     private readonly prisma: PrismaService,
     @Inject(PAYMENT_PROVIDER) private readonly payments: PaymentProvider,
     @Inject(ANALYTICS) private readonly analytics: Analytics,
+    private readonly notifications: NotificationsService,
   ) {}
 
   onApplicationBootstrap(): void {
@@ -48,6 +55,7 @@ export class SettlementService implements OnApplicationBootstrap {
         serviceType: true,
         priceMinor: true,
         currency: true,
+        proProfile: { select: { userId: true } },
         dispute: { select: { outcome: true } },
       },
     });
@@ -82,6 +90,28 @@ export class SettlementService implements OnApplicationBootstrap {
       );
       // Money events are emitted here, after the exactly-once movement, so
       // the funnel counts each release/refund once — keyed by the payer.
+      // The outcome emails follow the money: written once the movement is
+      // recorded, never before (a retry lands here again with the same key).
+      if (session.status !== SessionStatus.CANCELLED) {
+        const [playerKind, coachKind] =
+          session.status === SessionStatus.RESOLVED
+            ? [
+                NotificationKind.DISPUTE_RESOLVED_PLAYER,
+                NotificationKind.DISPUTE_RESOLVED_COACH,
+              ]
+            : [
+                NotificationKind.SESSION_COMPLETED_PLAYER,
+                NotificationKind.SESSION_COMPLETED_COACH,
+              ];
+        await this.notifications.enqueue(this.prisma, [
+          { kind: playerKind, sessionId, recipientId: session.playerId },
+          {
+            kind: coachKind,
+            sessionId,
+            recipientId: session.proProfile.userId,
+          },
+        ]);
+      }
       this.analytics.track({
         event:
           target === PaymentStatus.RELEASED

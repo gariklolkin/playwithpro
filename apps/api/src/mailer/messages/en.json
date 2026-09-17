@@ -1,0 +1,165 @@
+{
+  "common": {
+    "signature": "— PlayWithPro",
+    "unsubscribe": "You get this email because it is switched on in your notification settings. Turn it off with one click: {url}",
+    "whereRoom": "Join the session room: {url}",
+    "whereVenue": "Venue: {venue}",
+    "sessions": "Your sessions: {url}"
+  },
+  "session": {
+    "paid": {
+      "player": {
+        "subject": "Your {service} session on {date} is booked",
+        "text": "Hi {name},\n\nYour {service} session with {coach} is booked:\n{when}\n\n{amount} is held in escrow and released to the coach only after you confirm the session (or automatically 48 hours after it ends).\n\n{where}\n\nThe attached invite adds the session to your calendar.\n{sessionsLine}"
+      },
+      "coach": {
+        "subject": "New booking: {service} with {player} on {date}",
+        "text": "Hi {name},\n\n{player} booked a {service} session with you:\n{when}\n\n{clipsLine}\n{where}\n\nThe attached invite adds the session to your calendar.\n{sessionsLine}"
+      },
+      "clipsLine": "{count, plural, =0 {No clips attached.} one {# clip attached — review it before the call.} other {# clips attached — review them before the call.}}"
+    },
+    "clipsChanged": {
+      "subject": "Clips updated for your session with {player} on {date}",
+      "text": "Hi {name},\n\n{player} changed the clips for your {service} session on:\n{when}\n\n{clipsLine}\n\nOpen the session to review the new set: {url}"
+    },
+    "reminder": {
+      "subject": "Reminder: your {service} session {hours, plural, one {in 1 hour} other {in # hours}}",
+      "text": "Hi {name},\n\nYour {service} session with {counterpart} starts {hours, plural, one {in about an hour} other {in # hours}}:\n{when}\n\n{where}{clipsHint}\n{sessionsLine}",
+      "clipsHint": "\nTake a few minutes to review the attached clips before the call."
+    },
+    "ended": {
+      "player": {
+        "subject": "Did your session with {coach} take place?",
+        "text": "Hi {name},\n\nYour {service} session with {coach} on {when} has ended.\n\nPlease confirm it took place, or report a problem, by {deadline}. Otherwise it is confirmed automatically and the payment is released to the coach.\n\nConfirm or report: {url}"
+      },
+      "coach": {
+        "subject": "Confirm your session with {player} took place",
+        "text": "Hi {name},\n\nYour {service} session with {player} on {when} has ended.\n\nPlease confirm it took place — your confirmation counts as evidence if a problem is reported. The payout is released once {player} confirms or by {deadline}.\n\nConfirm: {url}"
+      }
+    },
+    "completed": {
+      "player": {
+        "subject": "Payment released for your session with {coach}",
+        "text": "Hi {name},\n\nYour {service} session with {coach} on {when} is complete and {amount} was released to the coach.\n\nHow was it? A short review helps other players choose: {reviewUrl}"
+      },
+      "coach": {
+        "subject": "Payout released: {net} for your session with {player}",
+        "text": "Hi {name},\n\nYour {service} session with {player} on {when} is complete. {net} was released to you ({amount} minus the {fee} platform fee).\n\n{sessionsLine}"
+      }
+    },
+    "cancelled": {
+      "player": {
+        "subject": "{cancelledBy, select, player {You cancelled your session with {coach}} other {{coach} cancelled your session}}",
+        "text": "Hi {name},\n\n{cancelledBy, select, player {You cancelled} other {{coach} cancelled}} the {service} session on {when}.\n\n{amount} is refunded to you in full.\n\nThe attached update removes the session from your calendar. Book another time: {url}"
+      },
+      "coach": {
+        "subject": "{cancelledBy, select, coach {You cancelled your session with {player}} other {{player} cancelled the session}}",
+        "text": "Hi {name},\n\n{cancelledBy, select, coach {You cancelled} other {{player} cancelled}} the {service} session on {when}. The slot is open again and the player was refunded.\n\nThe attached update removes the session from your calendar.\n{sessionsLine}"
+      },
+      "admin": {
+        "subject": "Coach {coach} cancelled a paid session",
+        "text": "{coach} cancelled a paid {service} session with {player} scheduled for {when}. The player was refunded in full.\n\nSession: {url}"
+      }
+    }
+  },
+  "dispute": {
+    "opened": {
+      "player": {
+        "subject": "We received your report about the session with {coach}",
+        "text": "Hi {name},\n\nWe received your report about the {service} session with {coach} on {when}. The payment stays on hold until our team reviews it; you will get an email with the outcome.\n\n{sessionsLine}"
+      },
+      "coach": {
+        "subject": "A problem was reported about your session with {player}",
+        "text": "Hi {name},\n\n{player} reported a problem with the {service} session on {when}. The payout is on hold while our team reviews the report; you will get an email with the outcome.\n\nSee the session: {url}"
+      },
+      "admin": {
+        "subject": "New dispute: {player} vs {coach}, {service} on {date}",
+        "text": "A dispute was opened on the {service} session between {player} and {coach} scheduled for {when}.\n\nReview it in the queue: {url}"
+      }
+    },
+    "resolved": {
+      "player": {
+        "subject": "Your dispute was resolved: {outcome, select, refund {refunded} other {payment released}}",
+        "text": "Hi {name},\n\nOur team reviewed your report about the {service} session with {coach} on {when}.\n\n{outcome, select, refund {Outcome: {amount} is refunded to you.} other {Outcome: the payment of {amount} was released to the coach.}}\n\n{sessionsLine}"
+      },
+      "coach": {
+        "subject": "Dispute resolved: {outcome, select, refund {refunded to the player} other {paid out to you}}",
+        "text": "Hi {name},\n\nOur team reviewed the report about your {service} session with {player} on {when}.\n\n{outcome, select, refund {Outcome: {amount} was refunded to the player.} other {Outcome: {net} was released to you.}}\n\n{sessionsLine}"
+      }
+    }
+  },
+  "review": {
+    "received": {
+      "subject": "New {rating}-star review from {player}",
+      "text": "Hi {name},\n\n{player} left a {rating}-star review for your {service} session on {date}.\n\nSee it on your coach page: {url}"
+    }
+  },
+  "auth": {
+    "verificationCode": {
+      "subject": "{code} is your PlayWithPro confirmation code",
+      "text": "Welcome to PlayWithPro! 🏓\n\nYour confirmation code (valid for 15 minutes):\n\n    {code}\n\nEnter it on the screen where you signed up.\n\nIf you didn't create an account, you can ignore this email."
+    },
+    "passwordReset": {
+      "subject": "Reset your PlayWithPro password",
+      "text": "We received a request to reset your PlayWithPro password.\n\nSet a new password by opening the link below (valid for 1 hour):\n{link}\n\nIf you didn't request this, you can ignore this email — your password stays unchanged."
+    }
+  },
+  "verification": {
+    "approved": {
+      "subject": "You're verified on PlayWithPro 🎉",
+      "text": "Hi {name},\n\nYour professional profile has been verified. Players can now find and book you once availability opens.\n\nSee you at the table!"
+    },
+    "rejected": {
+      "subject": "Update on your PlayWithPro verification",
+      "text": "Hi {name},\n\nWe could not verify your professional profile this time.\n\nReviewer note: {note}\n\nYou can update your profile and submit again at any moment."
+    },
+    "booking": {
+      "meetLink": "Join the meeting: {url}",
+      "meetPending": "The meeting link will appear on your verification page shortly: {url}",
+      "confirmed": {
+        "subject": "Your PlayWithPro verification call is booked",
+        "text": "Hi {name},\n\nYour identity video call is scheduled:\n{when}\n\n{meetLine}\n\nNeed a different time? Reschedule here: {manageUrl}\n\nThe attached invite adds the call to any calendar app."
+      },
+      "reminder": {
+        "subject": "Reminder: PlayWithPro verification call {hours, plural, one {in 1 hour} other {in # hours}}",
+        "text": "Hi {name},\n\nYour identity video call is coming up:\n{when}\n\n{meetLine}\n\nReschedule here: {manageUrl}"
+      },
+      "rescheduled": {
+        "subject": "Your PlayWithPro verification call was rescheduled",
+        "text": "Hi {name},\n\nYour identity video call has a new time:\n{when}\n\n{meetLine}\n\nReschedule here: {manageUrl}"
+      },
+      "cancelledByAdmin": {
+        "subject": "Your PlayWithPro verification call was cancelled",
+        "text": "Hi {name},\n\nWe had to cancel your verification call scheduled for:\n{when}\n\nSorry about that — please pick a new time here: {manageUrl}"
+      },
+      "noShow": {
+        "subject": "We missed you at your PlayWithPro verification call",
+        "text": "Hi {name},\n\nYou did not join your scheduled verification call.\n\n{requestCancelled, select, yes {Because this was the second missed call, your verification request was cancelled. You can submit a new request from your profile at any time.} other {No problem — please pick a new time here: {manageUrl}}}"
+      },
+      "coachCancelledNotice": {
+        "subject": "PlayWithPro: a verification call was cancelled by the pro",
+        "text": "{coach}: {detail}"
+      }
+    }
+  },
+  "service": {
+    "video_analysis": "video analysis",
+    "consultation": "consultation",
+    "game": "in-person game"
+  },
+  "calendar": {
+    "summary": "PlayWithPro {service} session",
+    "descriptionRoom": "Join the session room: {url}",
+    "descriptionVenue": "Meet at the venue: {venue}"
+  },
+  "session_updated": {
+    "player": {
+      "subject": "Your session with {coach} moved to {date}",
+      "text": "Hi {name},\n\nYour {service} session with {coach} has a new time:\n{when}\n\n{where}\n\nThe attached update replaces the event in your calendar.\n{sessionsLine}"
+    },
+    "coach": {
+      "subject": "Your session with {player} moved to {date}",
+      "text": "Hi {name},\n\nYour {service} session with {player} has a new time:\n{when}\n\n{where}\n\nThe attached update replaces the event in your calendar.\n{sessionsLine}"
+    }
+  }
+}

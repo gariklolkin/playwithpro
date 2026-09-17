@@ -214,8 +214,30 @@
       "close": "Close",
       "tabs": {
         "profile": "Profile",
-        "security": "Security"
+        "security": "Security",
+        "notifications": "Notifications"
       }
+    },
+    "notifications": {
+      "title": "Email notifications",
+      "subtitle": "Choose which optional emails you receive. Changes apply immediately.",
+      "categories": {
+        "emailReminders": {
+          "label": "Session reminders",
+          "hint": "24 hours and 1 hour before each session."
+        },
+        "emailClipChanges": {
+          "label": "Clip changes",
+          "hint": "For coaches: when a player changes the clips of an upcoming video-analysis session."
+        },
+        "emailReviews": {
+          "label": "New reviews",
+          "hint": "For coaches: when a player leaves a review."
+        }
+      },
+      "transactionalNote": "Receipts, confirmation prompts, payouts, refunds, disputes and cancellations are always emailed — they are part of running your sessions.",
+      "saved": "Saved.",
+      "error": "Could not save. Please try again."
     }
   },
   "proProfile": {
@@ -355,7 +377,8 @@
     "adminTransactionsTitle": "Transactions — PlayWithPro",
     "adminAnalyticsTitle": "Analytics — PlayWithPro",
     "adminReviewsTitle": "Review moderation — PlayWithPro",
-    "privacyTitle": "Privacy — PlayWithPro"
+    "privacyTitle": "Privacy — PlayWithPro",
+    "unsubscribeTitle": "Email preferences — PlayWithPro"
   },
   "verification": {
     "title": "Verification",
@@ -1112,5 +1135,17 @@
     "reference": "Reference: {id}",
     "retry": "Try again",
     "home": "Home"
+  },
+  "unsubscribe": {
+    "title": "Email preferences",
+    "working": "Updating your preferences…",
+    "done": "{category} emails are now off for your account.",
+    "invalid": "This link is invalid or has expired. You can change your email preferences in your account settings.",
+    "settingsLink": "Open notification settings",
+    "categories": {
+      "emailReminders": "Session reminder",
+      "emailClipChanges": "Clip change",
+      "emailReviews": "New review"
+    }
   }
 }

@@ -22,15 +22,12 @@ import {
   Prisma,
   ProProfileStatus,
   SessionStatus,
+  NotificationKind,
   SlotStatus,
 } from '@prisma/client';
 import { MIN_NOTICE_MS } from '../availability/availability.service';
 import type { AuthenticatedUser } from '../auth/auth-cookies';
-import type {
-  CalendarProvider,
-  CalendarSessionInput,
-} from '../calendar/calendar-provider';
-import { CALENDAR_PROVIDER } from '../calendar/calendar-provider';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   ANALYTICS,
   LIFECYCLE_EVENTS,
@@ -73,12 +70,12 @@ export class BookingsService {
     private readonly config: ConfigService,
     private readonly storage: StorageService,
     @Inject(PAYMENT_PROVIDER) private readonly payments: PaymentProvider,
-    @Inject(CALENDAR_PROVIDER) private readonly calendar: CalendarProvider,
     private readonly progression: SessionProgressionService,
     private readonly settlement: SettlementService,
     private readonly sessionVideos: SessionVideosService,
     private readonly unattached: UnattachedVideosService,
     @Inject(ANALYTICS) private readonly analytics: Analytics,
+    private readonly notifications: NotificationsService,
   ) {}
 
   private readonly avatarUrlOf = (key: string): string =>
@@ -335,6 +332,10 @@ export class BookingsService {
           roomSlug: isOnlineService(session.serviceType)
             ? randomBytes(16).toString('base64url')
             : null,
+          // The invite rows below are the send; the stamp keeps the
+          // cancellation rule ("only after an invite") and the reminder
+          // window rule ("booked before the window opened").
+          inviteSentAt: new Date(),
         },
       });
       if (updated.count === 0) {
@@ -344,6 +345,20 @@ export class BookingsService {
         where: { id: payment.id },
         data: { status: PaymentStatus.HELD, providerRef: result.providerRef },
       });
+      // Receipt + new-booking email, each with its own localized .ics,
+      // written with the state change so they can never be lost or doubled.
+      await this.notifications.enqueue(tx, [
+        {
+          kind: NotificationKind.SESSION_PAID_PLAYER,
+          sessionId: session.id,
+          recipientId: session.playerId,
+        },
+        {
+          kind: NotificationKind.SESSION_PAID_COACH,
+          sessionId: session.id,
+          recipientId: session.proProfile.userId,
+        },
+      ]);
       return true;
     });
     if (!transitioned) {
@@ -366,8 +381,6 @@ export class BookingsService {
         currency: session.currency,
       },
     });
-    await this.sendInviteOnce(session.id);
-
     const paid = await this.prisma.session.findUniqueOrThrow({
       where: { id: session.id },
       include: SESSION_INCLUDE,
@@ -468,7 +481,11 @@ export class BookingsService {
           status: SessionStatus.PAID_ESCROW,
           startsAt: { gt: new Date() },
         },
-        data: { status: SessionStatus.CANCELLED },
+        data: {
+          status: SessionStatus.CANCELLED,
+          // The CANCEL .ics must outrank the last invite/update.
+          calendarSequence: { increment: 1 },
+        },
       });
       if (updated.count === 0) {
         return false;
@@ -477,6 +494,32 @@ export class BookingsService {
         where: { id: session.slotId, status: SlotStatus.BOOKED },
         data: { status: SlotStatus.OPEN },
       });
+      const cancelledBy = user.id === session.playerId ? 'player' : 'coach';
+      const rows: Parameters<NotificationsService['enqueue']>[1] = [
+        {
+          kind: NotificationKind.SESSION_CANCELLED_PLAYER,
+          sessionId: session.id,
+          recipientId: session.playerId,
+          payload: { cancelledBy },
+        },
+        {
+          kind: NotificationKind.SESSION_CANCELLED_COACH,
+          sessionId: session.id,
+          recipientId: session.proProfile.userId,
+          payload: { cancelledBy },
+        },
+      ];
+      if (cancelledBy === 'coach') {
+        for (const adminId of await this.notifications.adminIds(tx)) {
+          rows.push({
+            kind: NotificationKind.SESSION_CANCELLED_ADMIN,
+            sessionId: session.id,
+            recipientId: adminId,
+            payload: { cancelledBy },
+          });
+        }
+      }
+      await this.notifications.enqueue(tx, rows);
       return true;
     });
     if (!cancelled) {
@@ -497,7 +540,6 @@ export class BookingsService {
       },
     });
     await this.settlement.settle(session.id);
-    await this.sendCancellationIfInvited(session.id);
     await this.releaseAttachments(session.id);
     return this.sessionResponse(session.id, user);
   }
@@ -528,103 +570,6 @@ export class BookingsService {
       ...this.responseExtras(),
       viewer,
     });
-  }
-
-  /**
-   * Idempotent post-payment invite: the conditional update is the claim, so
-   * concurrent or repeated pay processing emails both parties exactly once.
-   * Money state beats notification state — a failed send is logged, never
-   * surfaced to the payer.
-   */
-  private async sendInviteOnce(sessionId: string): Promise<void> {
-    const claimed = await this.prisma.session.updateMany({
-      where: {
-        id: sessionId,
-        status: SessionStatus.PAID_ESCROW,
-        inviteSentAt: null,
-      },
-      data: { inviteSentAt: new Date() },
-    });
-    if (claimed.count === 0) {
-      return;
-    }
-    try {
-      await this.calendar.sendInvite(await this.calendarInput(sessionId));
-    } catch (error) {
-      this.logger.error(
-        `Failed to send calendar invite for session ${sessionId}`,
-        error instanceof Error ? error.stack : String(error),
-      );
-    }
-  }
-
-  private async calendarInput(
-    sessionId: string,
-  ): Promise<CalendarSessionInput> {
-    const session = await this.prisma.session.findUniqueOrThrow({
-      where: { id: sessionId },
-      include: {
-        player: { select: { email: true, displayName: true } },
-        proProfile: {
-          select: {
-            user: { select: { email: true, displayName: true } },
-            services: {
-              where: { type: 'GAME' },
-              select: { venueLabel: true },
-            },
-          },
-        },
-      },
-    });
-    const online = isOnlineService(session.serviceType);
-    const webAppUrl = this.config.getOrThrow<string>('WEB_APP_URL');
-    return {
-      sessionId: session.id,
-      startsAt: session.startsAt,
-      endsAt: session.endsAt,
-      serviceLabel: session.serviceType.toLowerCase().replace('_', ' '),
-      roomUrl: online ? `${webAppUrl}/sessions/${session.id}/room` : null,
-      venue: online
-        ? null
-        : (session.proProfile.services[0]?.venueLabel ?? null),
-      attendees: [
-        {
-          email: session.player.email,
-          displayName: session.player.displayName,
-        },
-        {
-          email: session.proProfile.user.email,
-          displayName: session.proProfile.user.displayName,
-        },
-      ],
-    };
-  }
-
-  /**
-   * Calendar cleanup for sessions cancelled after their invite went out.
-   * Called by pre-start cancellation of paid sessions; unpaid expiry never
-   * triggers it because the invite is only sent on payment.
-   */
-  async sendCancellationIfInvited(sessionId: string): Promise<void> {
-    const session = await this.prisma.session.findUnique({
-      where: { id: sessionId },
-      select: { status: true, inviteSentAt: true },
-    });
-    if (
-      !session ||
-      session.status !== SessionStatus.CANCELLED ||
-      session.inviteSentAt === null
-    ) {
-      return;
-    }
-    try {
-      await this.calendar.sendCancellation(await this.calendarInput(sessionId));
-    } catch (error) {
-      this.logger.error(
-        `Failed to send calendar cancellation for session ${sessionId}`,
-        error instanceof Error ? error.stack : String(error),
-      );
-    }
   }
 
   /** Cancels an expired pending session and reopens its slot when claimable. */

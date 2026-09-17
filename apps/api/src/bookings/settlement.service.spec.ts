@@ -1,6 +1,7 @@
 import { DisputeOutcome, PaymentStatus, SessionStatus } from '@prisma/client';
 import type { PaymentProvider } from '../payments/payment-provider';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { SettlementService } from './settlement.service';
 
 describe('SettlementService', () => {
@@ -14,10 +15,12 @@ describe('SettlementService', () => {
   };
   const payments = { release: jest.fn(), refund: jest.fn() };
   const analytics = { track: jest.fn() };
+  const notifications = { enqueue: jest.fn() };
   const service = new SettlementService(
     prisma as unknown as PrismaService,
     payments as unknown as PaymentProvider,
     analytics,
+    notifications as unknown as NotificationsService,
   );
 
   const heldPayment = {
@@ -42,6 +45,7 @@ describe('SettlementService', () => {
       serviceType: 'CONSULTATION',
       priceMinor: 4005,
       currency: 'EUR',
+      proProfile: { userId: 'coach-1' },
       dispute: outcome === null ? null : { outcome },
     });
   };
@@ -68,6 +72,19 @@ describe('SettlementService', () => {
         sessionStatus: 'completed_paid',
       },
     });
+    // Completion emails follow the money, after the exactly-once movement.
+    expect(notifications.enqueue).toHaveBeenCalledWith(prisma, [
+      {
+        kind: 'SESSION_COMPLETED_PLAYER',
+        sessionId: 'session-1',
+        recipientId: 'player-1',
+      },
+      {
+        kind: 'SESSION_COMPLETED_COACH',
+        sessionId: 'session-1',
+        recipientId: 'coach-1',
+      },
+    ]);
   });
 
   it('emits no money event when the provider fails', async () => {
@@ -77,6 +94,7 @@ describe('SettlementService', () => {
     await service.settle('session-1');
 
     expect(analytics.track).not.toHaveBeenCalled();
+    expect(notifications.enqueue).not.toHaveBeenCalled();
   });
 
   it('refunds the held payment of a cancelled session', async () => {

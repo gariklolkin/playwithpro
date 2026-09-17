@@ -1,14 +1,37 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createTransport, Transporter } from 'nodemailer';
+import { EmailRenderer, type RenderedEmail } from './email-renderer';
 
+export interface MailAttachment {
+  filename: string;
+  content: string;
+  contentType: string;
+}
+
+export interface OutgoingMail extends RenderedEmail {
+  attachments?: MailAttachment[];
+  headers?: Record<string, string>;
+}
+
+/**
+ * SMTP transport plus the direct (non-outboxed) emails: sign-in codes,
+ * password resets and the verification-call flow. Everything is rendered
+ * from the localized catalogs by `EmailRenderer`; session lifecycle mail
+ * goes through the notifications outbox instead.
+ */
 @Injectable()
 export class MailerService {
   private readonly logger = new Logger(MailerService.name);
   private readonly transporter: Transporter;
   private readonly from: string;
+  /** Direct sends today (UTC), for the daily budget. */
+  private directSent = { day: '', count: 0 };
 
-  constructor(config: ConfigService) {
+  constructor(
+    config: ConfigService,
+    private readonly renderer: EmailRenderer,
+  ) {
     const user = config.get<string>('SMTP_USER');
     const pass = config.get<string>('SMTP_PASSWORD');
     this.transporter = createTransport({
@@ -22,74 +45,147 @@ export class MailerService {
     this.from = config.get<string>('SMTP_FROM') ?? 'no-reply@playwithpro.local';
   }
 
-  async sendVerificationEmail(to: string, code: string): Promise<void> {
+  /**
+   * Sends and throws on failure — the outbox relies on the error to retry.
+   * The recipient address never reaches the logs.
+   */
+  async deliver(to: string, mail: OutgoingMail): Promise<void> {
+    await this.transporter.sendMail({
+      from: this.from,
+      to,
+      subject: mail.subject,
+      text: mail.text,
+      html: mail.html,
+      attachments: mail.attachments,
+      headers: mail.headers,
+    });
+    this.countDirect();
+  }
+
+  /** Best-effort variant for flows that must not fail on SMTP; returns whether it was sent. */
+  async send(to: string, mail: OutgoingMail): Promise<boolean> {
+    try {
+      await this.deliver(to, mail);
+      return true;
+    } catch (error) {
+      this.logger.error(
+        `Failed to send "${mail.subject}"`,
+        error instanceof Error ? error.stack : String(error),
+      );
+      return false;
+    }
+  }
+
+  /** Emails sent outside the outbox today (UTC). */
+  directSentToday(now = new Date()): number {
+    return this.directSent.day === now.toISOString().slice(0, 10)
+      ? this.directSent.count
+      : 0;
+  }
+
+  private countDirect(): void {
+    const day = new Date().toISOString().slice(0, 10);
+    if (this.directSent.day !== day) this.directSent = { day, count: 0 };
+    this.directSent.count += 1;
+  }
+
+  async sendVerificationEmail(
+    to: string,
+    locale: string,
+    code: string,
+  ): Promise<void> {
     await this.send(
       to,
-      `${code} is your PlayWithPro confirmation code`,
-      [
-        'Welcome to PlayWithPro! 🏓',
-        '',
-        'Your confirmation code (valid for 15 minutes):',
-        '',
-        `    ${code}`,
-        '',
-        'Enter it on the screen where you signed up.',
-        '',
-        "If you didn't create an account, you can ignore this email.",
-      ].join('\n'),
+      this.renderer.render(locale, 'auth.verificationCode', { code }),
     );
   }
 
-  async sendPasswordResetEmail(to: string, link: string): Promise<void> {
+  async sendPasswordResetEmail(
+    to: string,
+    locale: string,
+    link: string,
+  ): Promise<void> {
     await this.send(
       to,
-      'Reset your PlayWithPro password',
-      [
-        'We received a request to reset your PlayWithPro password.',
-        '',
-        'Set a new password by opening the link below (valid for 1 hour):',
-        link,
-        '',
-        "If you didn't request this, you can ignore this email — your password stays unchanged.",
-      ].join('\n'),
+      this.renderer.render(locale, 'auth.passwordReset', { link }),
     );
+  }
+
+  async sendVerificationApprovedEmail(
+    to: string,
+    locale: string,
+    displayName: string,
+  ): Promise<void> {
+    await this.send(
+      to,
+      this.renderer.render(locale, 'verification.approved', {
+        name: displayName,
+      }),
+    );
+  }
+
+  async sendVerificationRejectedEmail(
+    to: string,
+    locale: string,
+    displayName: string,
+    note: string,
+  ): Promise<void> {
+    await this.send(
+      to,
+      this.renderer.render(locale, 'verification.rejected', {
+        name: displayName,
+        note,
+      }),
+    );
+  }
+
+  private meetLine(
+    locale: string,
+    meetUrl: string | null,
+    manageUrl: string,
+  ): string {
+    return meetUrl
+      ? this.renderer.message(locale, 'verification.booking.meetLink', {
+          url: meetUrl,
+        })
+      : this.renderer.message(locale, 'verification.booking.meetPending', {
+          url: manageUrl,
+        });
+  }
+
+  private icsAttachment(ics: string): MailAttachment[] {
+    return [
+      {
+        filename: 'verification-call.ics',
+        content: ics,
+        contentType: 'text/calendar; charset=utf-8; method=REQUEST',
+      },
+    ];
   }
 
   async sendBookingConfirmedEmail(input: {
     to: string;
+    locale: string;
     displayName: string;
     whenLine: string;
     meetUrl: string | null;
     manageUrl: string;
     ics: string;
   }): Promise<void> {
-    await this.send(
-      input.to,
-      'Your PlayWithPro verification call is booked',
-      [
-        `Hi ${input.displayName},`,
-        '',
-        'Your identity video call is scheduled:',
-        input.whenLine,
-        '',
-        ...meetLinkLines(input.meetUrl, input.manageUrl),
-        '',
-        `Need a different time? Reschedule here: ${input.manageUrl}`,
-        '',
-        'The attached invite adds the call to any calendar app.',
-      ].join('\n'),
-      [
-        {
-          filename: 'verification-call.ics',
-          content: input.ics,
-          contentType: 'text/calendar; charset=utf-8; method=REQUEST',
-        },
-      ],
-    );
+    await this.send(input.to, {
+      ...this.renderer.render(input.locale, 'verification.booking.confirmed', {
+        name: input.displayName,
+        when: input.whenLine,
+        meetLine: this.meetLine(input.locale, input.meetUrl, input.manageUrl),
+        manageUrl: input.manageUrl,
+      }),
+      attachments: this.icsAttachment(input.ics),
+    });
   }
 
   async sendBookingReminderEmail(input: {
     to: string;
+    locale: string;
     displayName: string;
     whenLine: string;
     meetUrl: string | null;
@@ -98,238 +194,98 @@ export class MailerService {
   }): Promise<void> {
     await this.send(
       input.to,
-      `Reminder: PlayWithPro verification call in ${input.hoursBefore === 1 ? '1 hour' : `${input.hoursBefore} hours`}`,
-      [
-        `Hi ${input.displayName},`,
-        '',
-        'Your identity video call is coming up:',
-        input.whenLine,
-        '',
-        ...meetLinkLines(input.meetUrl, input.manageUrl),
-        '',
-        `Reschedule here: ${input.manageUrl}`,
-      ].join('\n'),
+      this.renderer.render(input.locale, 'verification.booking.reminder', {
+        name: input.displayName,
+        when: input.whenLine,
+        meetLine: this.meetLine(input.locale, input.meetUrl, input.manageUrl),
+        manageUrl: input.manageUrl,
+        hours: input.hoursBefore,
+      }),
     );
   }
 
   async sendBookingRescheduledEmail(input: {
     to: string;
+    locale: string;
     displayName: string;
     whenLine: string;
     meetUrl: string | null;
     manageUrl: string;
     ics: string;
   }): Promise<void> {
-    await this.send(
-      input.to,
-      'Your PlayWithPro verification call was rescheduled',
-      [
-        `Hi ${input.displayName},`,
-        '',
-        'Your identity video call has a new time:',
-        input.whenLine,
-        '',
-        ...meetLinkLines(input.meetUrl, input.manageUrl),
-        '',
-        `Reschedule here: ${input.manageUrl}`,
-      ].join('\n'),
-      [
+    await this.send(input.to, {
+      ...this.renderer.render(
+        input.locale,
+        'verification.booking.rescheduled',
         {
-          filename: 'verification-call.ics',
-          content: input.ics,
-          contentType: 'text/calendar; charset=utf-8; method=REQUEST',
+          name: input.displayName,
+          when: input.whenLine,
+          meetLine: this.meetLine(input.locale, input.meetUrl, input.manageUrl),
+          manageUrl: input.manageUrl,
         },
-      ],
-    );
+      ),
+      attachments: this.icsAttachment(input.ics),
+    });
   }
 
   async sendBookingCancelledByAdminEmail(input: {
     to: string;
+    locale: string;
     displayName: string;
     whenLine: string;
     manageUrl: string;
   }): Promise<void> {
     await this.send(
       input.to,
-      'Your PlayWithPro verification call was cancelled',
-      [
-        `Hi ${input.displayName},`,
-        '',
-        `We had to cancel your verification call scheduled for:`,
-        input.whenLine,
-        '',
-        `Sorry about that — please pick a new time here: ${input.manageUrl}`,
-      ].join('\n'),
+      this.renderer.render(
+        input.locale,
+        'verification.booking.cancelledByAdmin',
+        {
+          name: input.displayName,
+          when: input.whenLine,
+          manageUrl: input.manageUrl,
+        },
+      ),
     );
   }
 
   async sendBookingNoShowEmail(input: {
     to: string;
+    locale: string;
     displayName: string;
     requestCancelled: boolean;
     manageUrl: string;
   }): Promise<void> {
     await this.send(
       input.to,
-      'We missed you at your PlayWithPro verification call',
-      [
-        `Hi ${input.displayName},`,
-        '',
-        'You did not join your scheduled verification call.',
-        '',
-        input.requestCancelled
-          ? 'Because this was the second missed call, your verification request was cancelled. You can submit a new request from your profile at any time.'
-          : `No problem — please pick a new time here: ${input.manageUrl}`,
-      ].join('\n'),
-    );
-  }
-
-  async sendSessionInviteEmail(input: {
-    to: string;
-    displayName: string;
-    serviceLabel: string;
-    whenLine: string;
-    roomUrl: string | null;
-    venue: string | null;
-    ics: string;
-  }): Promise<void> {
-    await this.send(
-      input.to,
-      `Your PlayWithPro ${input.serviceLabel} session is booked`,
-      [
-        `Hi ${input.displayName},`,
-        '',
-        `Your ${input.serviceLabel} session is confirmed:`,
-        input.whenLine,
-        '',
-        ...(input.roomUrl
-          ? [`Join the session room: ${input.roomUrl}`]
-          : [`Venue: ${input.venue ?? ''}`]),
-        '',
-        'The attached invite adds the session to any calendar app.',
-      ].join('\n'),
-      [
-        {
-          filename: 'playwithpro-session.ics',
-          content: input.ics,
-          contentType: 'text/calendar; charset=utf-8; method=REQUEST',
-        },
-      ],
-    );
-  }
-
-  async sendSessionCancelledEmail(input: {
-    to: string;
-    displayName: string;
-    serviceLabel: string;
-    whenLine: string;
-    ics: string;
-  }): Promise<void> {
-    await this.send(
-      input.to,
-      `Your PlayWithPro ${input.serviceLabel} session was cancelled`,
-      [
-        `Hi ${input.displayName},`,
-        '',
-        `Your ${input.serviceLabel} session scheduled for:`,
-        input.whenLine,
-        '',
-        'was cancelled. The attached update removes it from your calendar.',
-      ].join('\n'),
-      [
-        {
-          filename: 'playwithpro-session-cancelled.ics',
-          content: input.ics,
-          contentType: 'text/calendar; charset=utf-8; method=CANCEL',
-        },
-      ],
+      this.renderer.render(input.locale, 'verification.booking.noShow', {
+        name: input.displayName,
+        requestCancelled: input.requestCancelled ? 'yes' : 'no',
+        manageUrl: input.manageUrl,
+      }),
     );
   }
 
   /** Heads-up to admins when a pro cancels or withdraws. */
   async sendCoachCancelledNoticeEmail(
-    adminEmails: string[],
+    admins: Array<{ email: string; locale: string }>,
     coachName: string,
     detail: string,
   ): Promise<void> {
     await Promise.all(
-      adminEmails.map((to) =>
+      admins.map((admin) =>
         this.send(
-          to,
-          'PlayWithPro: a verification call was cancelled by the pro',
-          [`${coachName}: ${detail}`].join('\n'),
+          admin.email,
+          this.renderer.render(
+            admin.locale,
+            'verification.booking.coachCancelledNotice',
+            {
+              coach: coachName,
+              detail,
+            },
+          ),
         ),
       ),
     );
   }
-
-  async sendVerificationApprovedEmail(
-    to: string,
-    displayName: string,
-  ): Promise<void> {
-    await this.send(
-      to,
-      "You're verified on PlayWithPro 🎉",
-      [
-        `Hi ${displayName},`,
-        '',
-        'Your professional profile has been verified. Amateurs can now find and book you once availability opens.',
-        '',
-        'See you at the table!',
-      ].join('\n'),
-    );
-  }
-
-  async sendVerificationRejectedEmail(
-    to: string,
-    displayName: string,
-    note: string,
-  ): Promise<void> {
-    await this.send(
-      to,
-      'Update on your PlayWithPro verification',
-      [
-        `Hi ${displayName},`,
-        '',
-        'We could not verify your professional profile this time.',
-        '',
-        `Reviewer note: ${note}`,
-        '',
-        'You can update your profile and submit again at any moment.',
-      ].join('\n'),
-    );
-  }
-
-  /** Sends best-effort: a broken SMTP must not fail application flows. */
-  private async send(
-    to: string,
-    subject: string,
-    text: string,
-    attachments?: Array<{
-      filename: string;
-      content: string;
-      contentType: string;
-    }>,
-  ): Promise<void> {
-    try {
-      await this.transporter.sendMail({
-        from: this.from,
-        to,
-        subject,
-        text,
-        attachments,
-      });
-    } catch (error) {
-      this.logger.error(`Failed to send "${subject}" to ${to}`, error as Error);
-    }
-  }
-}
-
-/** The Meet link may still be syncing right after booking. */
-function meetLinkLines(meetUrl: string | null, manageUrl: string): string[] {
-  return meetUrl
-    ? [`Join the meeting: ${meetUrl}`]
-    : [
-        `The meeting link will appear on your verification page shortly: ${manageUrl}`,
-      ];
 }

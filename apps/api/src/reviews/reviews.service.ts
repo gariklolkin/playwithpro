@@ -15,11 +15,13 @@ import {
   Prisma,
   ProProfileStatus,
   SessionStatus,
+  NotificationKind,
 } from '@prisma/client';
 import type { AuthenticatedUser } from '../auth/auth-cookies';
 import { BookingsService } from '../bookings/bookings.service';
 import { SessionProgressionService } from '../bookings/session-progression.service';
 import { toSharedServiceType } from '../pros/pro-profile.mapper';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 
@@ -31,6 +33,7 @@ export class ReviewsService {
     private readonly prisma: PrismaService,
     private readonly bookings: BookingsService,
     private readonly progression: SessionProgressionService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /**
@@ -101,6 +104,15 @@ export class ReviewsService {
       throw error;
     }
     this.logger.log(`Review created for session ${session.id}`);
+    // Rating only; the text stays on the platform.
+    await this.notifications.enqueue(this.prisma, [
+      {
+        kind: NotificationKind.REVIEW_RECEIVED,
+        sessionId: session.id,
+        recipientId: session.proProfile.userId,
+        payload: { rating: dto.rating },
+      },
+    ]);
     return this.bookings.sessionResponse(session.id);
   }
 

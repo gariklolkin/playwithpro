@@ -9,13 +9,22 @@ import type {
   SessionVideoInput,
   SessionVideosRejection,
 } from '@playwithpro/shared';
-import { ServiceType, VideoStatus } from '@prisma/client';
+import {
+  NotificationKind,
+  ServiceType,
+  SessionStatus,
+  VideoStatus,
+} from '@prisma/client';
 import type { Prisma, Video } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { assertEditableBeforeStart } from './session-access';
 import { UnattachedVideosService } from '../videos/unattached-videos.service';
 
 /** A clip set that passed validation, in the player's order. */
+/** The coach gets one "clips changed" email after this much quiet time. */
+export const CLIPS_CHANGED_DEBOUNCE_MS = 15 * 60_000;
+
 export interface ValidatedClip {
   video: Video;
   note: string | null;
@@ -40,6 +49,7 @@ export class SessionVideosService {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     private readonly unattached: UnattachedVideosService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   caps(): { maxClips: number; maxTotalSeconds: number } {
@@ -112,7 +122,11 @@ export class SessionVideosService {
   ): Promise<void> {
     const session = await this.prisma.session.findUnique({
       where: { id: sessionId },
-      select: { playerId: true, serviceType: true },
+      select: {
+        playerId: true,
+        serviceType: true,
+        proProfile: { select: { userId: true } },
+      },
     });
     if (!session || session.playerId !== playerId) {
       throw new NotFoundException();
@@ -149,12 +163,30 @@ export class SessionVideosService {
           addedAt: addedAtOf.get(clip.video.id) ?? new Date(),
         })),
       });
-      return [
-        ...current.videos.map((row) => row.videoId),
-        ...clips.map((clip) => clip.video.id),
-      ];
+      if (current.status === SessionStatus.PAID_ESCROW) {
+        await tx.session.update({
+          where: { id: sessionId },
+          data: { videosChangedAt: new Date() },
+        });
+      }
+      return {
+        paid: current.status === SessionStatus.PAID_ESCROW,
+        ids: [
+          ...current.videos.map((row) => row.videoId),
+          ...clips.map((clip) => clip.video.id),
+        ],
+      };
     });
-    await this.unattached.recompute(touched);
+    await this.unattached.recompute(touched.ids);
+    if (touched.paid) {
+      // One email after 15 quiet minutes, however many edits happen.
+      await this.notifications.enqueueDebounced(this.prisma, {
+        kind: NotificationKind.SESSION_CLIPS_CHANGED,
+        sessionId,
+        recipientId: session.proProfile.userId,
+        dueAt: new Date(Date.now() + CLIPS_CHANGED_DEBOUNCE_MS),
+      });
+    }
   }
 }
 

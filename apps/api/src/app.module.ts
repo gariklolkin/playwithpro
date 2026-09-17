@@ -7,6 +7,8 @@ import { AuthModule } from './auth/auth.module';
 import { validate } from './config/env.validation';
 import { HealthModule } from './health/health.module';
 import { MailerModule } from './mailer/mailer.module';
+import { NotificationsCoreModule } from './notifications/notifications-core.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { ObservabilityModule } from './observability/observability.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AdminModule } from './admin/admin.module';
@@ -35,6 +37,7 @@ import { VideosModule } from './videos/videos.module';
     ScheduleModule.forRoot(),
     PrismaModule,
     ObservabilityModule,
+    NotificationsCoreModule,
     HealthModule,
     MailerModule,
     AuthModule,
@@ -52,6 +55,7 @@ import { VideosModule } from './videos/videos.module';
     StorageModule,
     SupportModule,
     VideosModule,
+    NotificationsModule,
   ],
   providers: [
     {

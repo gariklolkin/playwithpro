@@ -35,6 +35,7 @@ export class SchedulingNotificationsService {
   ): Promise<void> {
     return this.mailer.sendBookingConfirmedEmail({
       to: user.email,
+      locale: user.locale,
       displayName: user.displayName,
       whenLine: this.whenLine(slot.startsAt, user.timezone),
       meetUrl: booking.meetUrl,
@@ -50,6 +51,7 @@ export class SchedulingNotificationsService {
   ): Promise<void> {
     return this.mailer.sendBookingRescheduledEmail({
       to: user.email,
+      locale: user.locale,
       displayName: user.displayName,
       whenLine: this.whenLine(slot.startsAt, user.timezone),
       meetUrl: booking.meetUrl,
@@ -66,6 +68,7 @@ export class SchedulingNotificationsService {
   ): Promise<void> {
     return this.mailer.sendBookingReminderEmail({
       to: user.email,
+      locale: user.locale,
       displayName: user.displayName,
       whenLine: this.whenLine(slot.startsAt, user.timezone),
       meetUrl: booking.meetUrl,
@@ -77,6 +80,7 @@ export class SchedulingNotificationsService {
   cancelledByAdmin(user: User, slot: VerificationSlot): Promise<void> {
     return this.mailer.sendBookingCancelledByAdminEmail({
       to: user.email,
+      locale: user.locale,
       displayName: user.displayName,
       whenLine: this.whenLine(slot.startsAt, user.timezone),
       manageUrl: this.manageUrl,
@@ -86,6 +90,7 @@ export class SchedulingNotificationsService {
   noShow(user: User, requestCancelled: boolean): Promise<void> {
     return this.mailer.sendBookingNoShowEmail({
       to: user.email,
+      locale: user.locale,
       displayName: user.displayName,
       requestCancelled,
       manageUrl: this.manageUrl,
@@ -95,10 +100,10 @@ export class SchedulingNotificationsService {
   async coachCancelled(coach: User, detail: string): Promise<void> {
     const admins = await this.prisma.user.findMany({
       where: { role: Role.ADMIN },
-      select: { email: true },
+      select: { email: true, locale: true },
     });
     await this.mailer.sendCoachCancelledNoticeEmail(
-      admins.map((a) => a.email),
+      admins,
       coach.displayName,
       detail,
     );

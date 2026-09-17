@@ -27,6 +27,10 @@ model User {
   displayName     String
   locale          String    @default("en")
   timezone        String    @default("UTC")
+  /// Optional email categories (change 26); transactional mail is never switchable.
+  emailReminders    Boolean @default(true)
+  emailClipChanges  Boolean @default(true)
+  emailReviews      Boolean @default(true)
   avatarKey       String? // S3 object key; public URL is computed, never stored
   emailVerifiedAt DateTime?
   /// Set while the account is suspended by an admin; blocks sign-in and refresh.
@@ -45,6 +49,7 @@ model User {
   openedDisputes     Dispute[]           @relation("DisputeOpener")
   resolvedDisputes   Dispute[]           @relation("DisputeResolver")
   reviews            Review[]
+  notifications      Notification[]
 }
 
 enum PlayerLevel {
@@ -374,6 +379,10 @@ model Session {
   inviteSentAt     DateTime?
   /// Player's optional "what should we focus on?" (≤ 500 chars); editable until start.
   goal             String?       @db.VarChar(500)
+  /// iCalendar SEQUENCE of the session's event: 0 for the invite, bumped by updates and the cancellation.
+  calendarSequence Int           @default(0)
+  /// Last clip-set replacement; drives the debounced "clips changed" email.
+  videosChangedAt  DateTime?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
@@ -386,6 +395,7 @@ model Session {
   attendance SessionAttendance[]
   dispute    Dispute?
   review     Review?
+  notifications Notification[]
 
   @@index([playerId, startsAt])
   @@index([proProfileId, startsAt])
@@ -523,4 +533,59 @@ model VerificationBooking {
   @@index([slotId])
   @@index([requestId])
   @@index([status, syncStatus])
+}
+
+/// Kinds of outbox emails (change 26). Role-specific: one kind per recipient role.
+enum NotificationKind {
+  SESSION_PAID_PLAYER
+  SESSION_PAID_COACH
+  SESSION_CLIPS_CHANGED
+  SESSION_REMINDER_24H
+  SESSION_REMINDER_1H
+  SESSION_ENDED_PLAYER
+  SESSION_ENDED_COACH
+  SESSION_COMPLETED_PLAYER
+  SESSION_COMPLETED_COACH
+  DISPUTE_OPENED_PLAYER
+  DISPUTE_OPENED_COACH
+  DISPUTE_OPENED_ADMIN
+  DISPUTE_RESOLVED_PLAYER
+  DISPUTE_RESOLVED_COACH
+  SESSION_CANCELLED_PLAYER
+  SESSION_CANCELLED_COACH
+  SESSION_CANCELLED_ADMIN
+  REVIEW_RECEIVED
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+/// Transactional outbox for session emails: the unique dedupe key is the
+/// exactly-once guard, the dispatcher cron sends due rows and retries with
+/// backoff. Rendering happens at send time in the recipient's locale.
+model Notification {
+  id          String             @id @default(uuid())
+  kind        NotificationKind
+  sessionId   String?
+  recipientId String
+  /// `<kind>:<sessionId>:<recipientId>` — one row per event and recipient, ever.
+  dedupeKey   String             @unique
+  dueAt       DateTime
+  status      NotificationStatus @default(PENDING)
+  attempts    Int                @default(0)
+  lastError   String?
+  sentAt      DateTime?
+  /// Scalars the template needs that are not re-readable at send time.
+  payload     Json?
+  createdAt   DateTime           @default(now())
+
+  session   Session? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  recipient User     @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([status, dueAt])
+  @@index([sessionId, kind])
 }
