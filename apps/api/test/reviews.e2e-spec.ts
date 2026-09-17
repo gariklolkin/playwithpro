@@ -87,9 +87,19 @@ describe('Reviews & ratings (e2e)', () => {
     startsAt: Date,
     endsAt: Date,
   ): Promise<void> {
+    // A session moved into the past is one both parties attended: stamped as
+    // the no-show sweep would have classified it, so the background cron
+    // never turns it into a system dispute mid-test.
+    const held = endsAt.getTime() < Date.now();
     await prisma.session.update({
       where: { id: sessionId },
-      data: { startsAt, endsAt },
+      data: {
+        startsAt,
+        endsAt,
+        ...(held
+          ? { attendanceOutcome: 'HELD' as const, classifiedAt: new Date() }
+          : {}),
+      },
     });
   }
 
@@ -288,7 +298,7 @@ describe('Reviews & ratings (e2e)', () => {
       await request(server())
         .post(`/sessions/${awaiting}/dispute`)
         .set('Cookie', playerCookie)
-        .send({ reason: 'Never happened' })
+        .send({ category: 'coach_no_show', reason: 'Never happened' })
         .expect(200);
       await resolveDispute(awaiting, 'refund');
       await request(server())
@@ -303,7 +313,10 @@ describe('Reviews & ratings (e2e)', () => {
       await request(server())
         .post(`/sessions/${disputed}/dispute`)
         .set('Cookie', playerCookie)
-        .send({ reason: 'Felt too short' })
+        .send({
+          category: 'coach_late_or_left_early',
+          reason: 'Felt too short',
+        })
         .expect(200);
       await resolveDispute(disputed, 'release');
 

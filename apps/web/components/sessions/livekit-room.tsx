@@ -41,6 +41,7 @@ import { DeviceMenu } from "./call-device-menu";
 import { CallFrame } from "./call-frame";
 import { CallPreJoin, type PreJoinChoices } from "./call-prejoin";
 import { ControlButton } from "./control-button";
+import { WaitingNote } from "./waiting-note";
 import { SupportButton } from "@/components/support/support-button";
 import { deviceNotice } from "@/lib/device-notice";
 
@@ -78,6 +79,7 @@ export function LiveKitCall({
   onFocusChange,
   onPhaseChange,
   sessionId,
+  waitingNote,
 }: {
   serverUrl: string;
   counterpartName: string;
@@ -92,6 +94,8 @@ export function LiveKitCall({
   onPhaseChange?: (phase: CallPhaseKind) => void;
   /** For the support entry point on a failed or lost connection. */
   sessionId?: string;
+  /** Enables the "hasn't joined yet" reassurance while waiting alone. */
+  waitingNote?: { startsAt: string; isCoach: boolean };
 }) {
   const t = useTranslations("sessions.room.call");
   const [phase, setPhase] = useState<CallPhase>({ kind: "prejoin" });
@@ -236,6 +240,7 @@ export function LiveKitCall({
         hideSelf={hideSelf}
         onHideSelfChange={onHideSelfChange}
         onFocusChange={onFocusChange}
+        waitingNote={waitingNote}
       />
     </LiveKitRoom>
   );
@@ -253,9 +258,11 @@ function CallStage({
   hideSelf,
   onHideSelfChange,
   onFocusChange,
+  waitingNote,
 }: {
   counterpartName: string;
   displayName: string;
+  waitingNote?: { startsAt: string; isCoach: boolean };
   deviceError: boolean;
   wantsCamera: boolean;
   wantsMicrophone: boolean;
@@ -336,6 +343,13 @@ function CallStage({
             ? t("connecting")
             : t("waiting", { name: counterpartName })}
         </div>
+        {waitingNote && connectionState === ConnectionState.Connected ? (
+          <WaitingNote
+            startsAt={waitingNote.startsAt}
+            isCoach={waitingNote.isCoach}
+            counterpartName={counterpartName}
+          />
+        ) : null}
       </div>
     );
 

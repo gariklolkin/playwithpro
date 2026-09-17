@@ -65,26 +65,32 @@
   "dispute": {
     "opened": {
       "player": {
-        "subject": "We received your report about the session with {coach}",
-        "text": "Hi {name},\n\nWe received your report about the {service} session with {coach} on {when}. The payment stays on hold until our team reviews it; you will get an email with the outcome.\n\n{sessionsLine}"
+        "subject": "{disputeKind, select, player_reported {We received your report about the session with {coach}} other {Your payment for the session with {coach} is on hold}}",
+        "text": "Hi {name},\n\n{disputeKind, select, player_reported {We received your report about the {service} session with {coach} on {when}. The payment stays on hold until our team reviews it; you will get an email with the outcome.} coach_no_show {Our records show that {coach} did not join the {service} session on {when}. You have not been charged for nothing: the payment is on hold.} no_attendance {Our records show that nobody joined the {service} session with {coach} on {when}. The payment is on hold.} other {We could not tell from our records whether the {service} session with {coach} on {when} took place. The payment is on hold.}}{systemLine}\n\n{sessionsLine}"
       },
       "coach": {
-        "subject": "A problem was reported about your session with {player}",
-        "text": "Hi {name},\n\n{player} reported a problem with the {service} session on {when}. The payout is on hold while our team reviews the report; you will get an email with the outcome.\n\nSee the session: {url}"
+        "subject": "{disputeKind, select, player_reported {A problem was reported about your session with {player}} other {Action needed: your session with {player} is on hold}}",
+        "text": "Hi {name},\n\n{disputeKind, select, player_reported {{player} reported a problem with the {service} session on {when}. The payout is on hold while our team reviews the report; you will get an email with the outcome.} coach_no_show {Our records show that you did not join the {service} session with {player} on {when}. The payout is on hold.} no_attendance {Our records show that nobody joined the {service} session with {player} on {when}. The payout is on hold.} other {We could not tell from our records whether the {service} session with {player} on {when} took place. The payout is on hold.}}{systemLine}\n\nSee the session: {url}"
       },
       "admin": {
         "subject": "New dispute: {player} vs {coach}, {service} on {date}",
-        "text": "A dispute was opened on the {service} session between {player} and {coach} scheduled for {when}.\n\nReview it in the queue: {url}"
+        "text": "A dispute ({disputeKind, select, player_reported {reported by the player} coach_no_show {coach no-show} no_attendance {nobody attended} other {evidence gap}}) was opened on the {service} session between {player} and {coach} scheduled for {when}.\n\nReview it in the queue: {url}"
+      },
+      "systemLine": {
+        "playerDeadline": "\n\nUnless the coach responds, {amount} will be refunded to you automatically on {respondBy}. If the session did take place (for example on another app), confirm it in your sessions and the coach will be paid.",
+        "playerAdmin": "\n\nOur team will review it and you will get an email with the outcome. If the session did take place, confirm it in your sessions and the coach will be paid.",
+        "coachDeadline": "\n\nIf the session took place, tell us what happened before {respondBy} — open the session and press \"Respond\". Without a response the payment is refunded to the player automatically.",
+        "coachAdmin": "\n\nOur team will review it. You can add your account of what happened: open the session and press \"Respond\"."
       }
     },
     "resolved": {
       "player": {
-        "subject": "Your dispute was resolved: {outcome, select, refund {refunded} other {payment released}}",
-        "text": "Hi {name},\n\nOur team reviewed your report about the {service} session with {coach} on {when}.\n\n{outcome, select, refund {Outcome: {amount} is refunded to you.} other {Outcome: the payment of {amount} was released to the coach.}}\n\n{sessionsLine}"
+        "subject": "Session with {coach}: {outcome, select, refund {refunded} other {payment released}}",
+        "text": "Hi {name},\n\n{via, select, system {The coach did not respond about the {service} session with {coach} on {when}.} player_confirmation {You confirmed the {service} session with {coach} on {when}.} other {Our team reviewed the {service} session with {coach} on {when}.}}\n\n{outcome, select, refund {Outcome: {amount} is refunded to you.} other {Outcome: the payment of {amount} was released to the coach.}}\n\n{sessionsLine}"
       },
       "coach": {
-        "subject": "Dispute resolved: {outcome, select, refund {refunded to the player} other {paid out to you}}",
-        "text": "Hi {name},\n\nOur team reviewed the report about your {service} session with {player} on {when}.\n\n{outcome, select, refund {Outcome: {amount} was refunded to the player.} other {Outcome: {net} was released to you.}}\n\n{sessionsLine}"
+        "subject": "Session with {player}: {outcome, select, refund {refunded to the player} other {paid out to you}}",
+        "text": "Hi {name},\n\n{via, select, system {We did not receive your response about the {service} session with {player} on {when}.} player_confirmation {{player} confirmed the {service} session on {when}.} other {Our team reviewed your {service} session with {player} on {when}.}}\n\n{outcome, select, refund {Outcome: {amount} was refunded to the player.} other {Outcome: {net} was released to you.}}\n\n{sessionsLine}"
       }
     }
   },

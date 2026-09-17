@@ -4,7 +4,7 @@ import {
   CALL_TIME_REMINDER_BEFORE_END_MIN,
   ServiceType,
   type JoinRoomResponse,
-  type Role,
+  Role,
   type SessionRoomResponse,
 } from "@playwithpro/shared";
 import { useTranslations } from "next-intl";
@@ -417,6 +417,10 @@ export function SessionRoom({
                 onFocusChange={setFocus}
                 onPhaseChange={onPhaseChange}
                 sessionId={sessionId}
+                waitingNote={{
+                  startsAt: room.startsAt,
+                  isCoach: role === Role.Professional,
+                }}
               />
             ) : null}
           </div>

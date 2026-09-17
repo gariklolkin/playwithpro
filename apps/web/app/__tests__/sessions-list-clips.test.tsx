@@ -66,6 +66,8 @@ const session: SessionResponse = {
   autoConfirmAt: null,
   playerConfirmedAt: null,
   coachConfirmedAt: null,
+  coachGameAnswer: null,
+  attendance: null,
   escrow: PaymentStatus.Held,
   dispute: null,
   review: null,

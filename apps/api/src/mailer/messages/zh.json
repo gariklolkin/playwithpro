@@ -65,26 +65,32 @@
   "dispute": {
     "opened": {
       "player": {
-        "subject": "我们已收到你关于与 {coach} 课程的报告",
-        "text": "{name}，你好！\n\n我们已收到你关于与教练 {coach} 在 {when} 的{service}课程的报告。在团队审核期间款项将继续托管；结果会通过邮件告知你。\n\n{sessionsLine}"
+        "subject": "{disputeKind, select, player_reported {我们已收到您关于与{coach}课程的反馈} other {您与{coach}课程的付款已暂停}}",
+        "text": "{name}，您好！\n\n{disputeKind, select, player_reported {我们已收到您关于 {when} 与{coach}的「{service}」课程的反馈。在团队审核之前，款项将继续冻结；我们会通过邮件告知结果。} coach_no_show {记录显示，{coach}没有加入 {when} 的「{service}」课程。款项已暂停。} no_attendance {记录显示，没有人加入 {when} 与{coach}的「{service}」课程。款项已暂停。} other {我们无法从记录中判断 {when} 与{coach}的「{service}」课程是否进行。款项已暂停。}}{systemLine}\n\n{sessionsLine}"
       },
       "coach": {
-        "subject": "你与 {player} 的课程收到问题报告",
-        "text": "{name}，你好！\n\n{player} 报告了 {when} 的{service}课程存在问题。团队审核期间放款暂停；结果会通过邮件告知你。\n\n查看课程：{url}"
+        "subject": "{disputeKind, select, player_reported {您与{player}的课程被反馈存在问题} other {需要您处理：与{player}课程的付款已暂停}}",
+        "text": "{name}，您好！\n\n{disputeKind, select, player_reported {{player}反馈了 {when} 的「{service}」课程存在问题。在团队审核期间，付款将暂停；我们会通过邮件告知结果。} coach_no_show {记录显示，您没有加入 {when} 与{player}的「{service}」课程。付款已暂停。} no_attendance {记录显示，没有人加入 {when} 与{player}的「{service}」课程。付款已暂停。} other {我们无法从记录中判断 {when} 与{player}的「{service}」课程是否进行。付款已暂停。}}{systemLine}\n\n查看课程：{url}"
       },
       "admin": {
         "subject": "新争议：{player} 与 {coach}，{date} 的{service}",
-        "text": "{player} 与 {coach} 原定 {when} 的{service}课程出现争议。\n\n在队列中处理：{url}"
+        "text": "{player}与{coach}原定于 {when} 的「{service}」课程出现争议（{disputeKind, select, player_reported {学员反馈} coach_no_show {教练缺席} no_attendance {无人出席} other {记录不完整}}）。\n\n请在队列中处理：{url}"
+      },
+      "systemLine": {
+        "playerDeadline": "\n\n如果教练没有回复，{amount} 将于 {respondBy} 自动退还给您。如果课程实际已进行（例如通过其他应用），请在课程列表中确认，教练将收到付款。",
+        "playerAdmin": "\n\n我们的团队会进行审核，并通过邮件告知结果。如果课程实际已进行，请在课程列表中确认，教练将收到付款。",
+        "coachDeadline": "\n\n如果课程已进行，请在 {respondBy} 之前告诉我们发生了什么：打开课程并点击「回复」。如未回复，款项将自动退还给学员。",
+        "coachAdmin": "\n\n我们的团队会进行审核。您可以说明情况：打开课程并点击「回复」。"
       }
     },
     "resolved": {
       "player": {
-        "subject": "你的争议已处理：{outcome, select, refund {已退款} other {款项已付给教练}}",
-        "text": "{name}，你好！\n\n团队已审核你关于与教练 {coach} 在 {when} 的{service}课程的报告。\n\n{outcome, select, refund {结果：{amount} 退还给你。} other {结果：{amount} 已付给教练。}}\n\n{sessionsLine}"
+        "subject": "与{coach}的课程：{outcome, select, refund {已退款} other {款项已支付}}",
+        "text": "{name}，您好！\n\n{via, select, system {教练未就 {when} 与{coach}的「{service}」课程作出回复。} player_confirmation {您已确认 {when} 与{coach}的「{service}」课程。} other {我们的团队已审核 {when} 与{coach}的「{service}」课程。}}\n\n{outcome, select, refund {结果：{amount} 将退还给您。} other {结果：{amount} 已支付给教练。}}\n\n{sessionsLine}"
       },
       "coach": {
-        "subject": "争议已处理：{outcome, select, refund {退款给球员} other {已向你放款}}",
-        "text": "{name}，你好！\n\n团队已审核关于你与 {player} 在 {when} 的{service}课程的报告。\n\n{outcome, select, refund {结果：{amount} 已退还给球员。} other {结果：已向你放款 {net}。}}\n\n{sessionsLine}"
+        "subject": "与{player}的课程：{outcome, select, refund {已退还学员} other {已支付给您}}",
+        "text": "{name}，您好！\n\n{via, select, system {我们没有收到您关于 {when} 与{player}的「{service}」课程的回复。} player_confirmation {{player}已确认 {when} 的「{service}」课程。} other {我们的团队已审核您 {when} 与{player}的「{service}」课程。}}\n\n{outcome, select, refund {结果：{amount} 已退还给学员。} other {结果：{net} 已支付给您。}}\n\n{sessionsLine}"
       }
     }
   },

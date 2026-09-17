@@ -7,6 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import {
+  DisputeKind,
   DisputeStatus,
   NotificationKind,
   NotificationStatus,
@@ -22,6 +23,7 @@ import {
 } from '../calendar/calendar-provider';
 import {
   EmailRenderer,
+  formatMoney,
   formatWhen,
   type EmailParams,
 } from '../mailer/email-renderer';
@@ -373,12 +375,47 @@ export class NotificationDispatchService implements OnApplicationBootstrap {
         return { deadline };
       case NotificationKind.SESSION_COMPLETED_PLAYER:
         return { reviewUrl: this.renderer.link(locale, '/dashboard/sessions') };
+      case NotificationKind.DISPUTE_OPENED_PLAYER:
+      case NotificationKind.DISPUTE_OPENED_COACH: {
+        const disputeKind = (
+          session.dispute?.kind ?? DisputeKind.PLAYER_REPORTED
+        ).toLowerCase();
+        if (disputeKind === 'player_reported') {
+          return { disputeKind, systemLine: '' };
+        }
+        // A system-opened dispute: either the refund date the coach can
+        // still prevent, or the promise that an admin decides.
+        const role =
+          row.kind === NotificationKind.DISPUTE_OPENED_PLAYER
+            ? 'player'
+            : 'coach';
+        const dueAt = session.dispute?.responseDueAt ?? null;
+        return {
+          disputeKind,
+          systemLine: this.renderer.message(
+            locale,
+            `dispute.opened.systemLine.${role}${dueAt ? 'Deadline' : 'Admin'}`,
+            {
+              amount: formatMoney(session.priceMinor, session.currency, locale),
+              respondBy: dueAt
+                ? formatWhen(dueAt, locale, recipient.timezone)
+                : '',
+            },
+          ),
+        };
+      }
       case NotificationKind.DISPUTE_OPENED_ADMIN:
-        return { url: this.renderer.link(locale, '/dashboard/disputes') };
+        return {
+          url: this.renderer.link(locale, '/dashboard/disputes'),
+          disputeKind: (
+            session.dispute?.kind ?? DisputeKind.PLAYER_REPORTED
+          ).toLowerCase(),
+        };
       case NotificationKind.DISPUTE_RESOLVED_PLAYER:
       case NotificationKind.DISPUTE_RESOLVED_COACH:
         return {
           outcome: session.dispute?.outcome === 'REFUND' ? 'refund' : 'release',
+          via: (session.dispute?.resolvedVia ?? 'ADMIN').toLowerCase(),
         };
       case NotificationKind.SESSION_CANCELLED_ADMIN:
         return {

@@ -800,7 +800,11 @@
         },
         "mediaUnavailable": "Kamera oder Mikrofon sind nicht verfügbar. Du kannst die andere Person trotzdem sehen und hören.",
         "cameraUnavailable": "Deine Kamera ist nicht verfügbar. Die andere Person kann dich trotzdem hören.",
-        "micUnavailable": "Dein Mikrofon ist nicht verfügbar. Die andere Person kann dich trotzdem sehen."
+        "micUnavailable": "Dein Mikrofon ist nicht verfügbar. Die andere Person kann dich trotzdem sehen.",
+        "waitingNote": {
+          "player": "{name} ist noch nicht beigetreten. Falls niemand kommt, wird dir nichts berechnet.",
+          "coach": "{name} ist noch nicht beigetreten. Bleib im Raum: Auch wenn niemand kommt, zählt die Sitzung."
+        }
       },
       "speed": {
         "label": "Tempo",
@@ -859,7 +863,52 @@
       "cancelWarning": "Diese Session stornieren? Der volle Betrag wird erstattet und der Termin wieder freigegeben.",
       "cancelConfirm": "Ja, stornieren",
       "cancelKeep": "Session behalten",
-      "error": "Etwas ist schiefgelaufen. Versuchen Sie es erneut."
+      "error": "Etwas ist schiefgelaufen. Versuchen Sie es erneut.",
+      "evidence": {
+        "coachNever": "{coach} ist dem Anruf nie beigetreten.",
+        "coachLate": "{coach} ist {minutes, plural, one {# Minute} other {# Minuten}} zu spät beigetreten.",
+        "shortOverlap": "Ihr wart {minutes, plural, one {# Minute} other {# Minuten}} gemeinsam im Anruf.",
+        "playerNever": "{player} ist dem Anruf nie beigetreten.",
+        "nobody": "Niemand ist dem Anruf beigetreten.",
+        "youNever": "Laut unseren Daten bist du dem Anruf nicht beigetreten.",
+        "youLate": "Du bist {minutes, plural, one {# Minute} other {# Minuten}} zu spät beigetreten.",
+        "gap": "Aus unseren Daten geht nicht hervor, ob diese Sitzung stattgefunden hat."
+      },
+      "playerNoShowNote": "Du warst im Raum, daher zählt die Sitzung: Sie wird {relative} automatisch ausgezahlt.",
+      "category": {
+        "label": "Was ist schiefgelaufen?",
+        "coach_no_show": "Trainer ist nicht erschienen",
+        "coach_late_or_left_early": "Trainer kam zu spät oder ging früher",
+        "technical_problem": "Technisches Problem",
+        "other": "Sonstiges"
+      },
+      "disputeOptional": "Details hinzufügen (optional)…",
+      "disputeOtherRequired": "Bitte beschreibe, was schiefgelaufen ist.",
+      "system": {
+        "title": "Zahlung angehalten",
+        "refundIn": "Die Zahlung ist angehalten und wird dir {relative} erstattet, sofern der Trainer nicht antwortet.",
+        "adminDecides": "Die Zahlung ist angehalten. Unser Team prüft die Sitzung und entscheidet.",
+        "confirmHint": "Hat die Sitzung doch stattgefunden? Bestätige sie, dann wird der Trainer bezahlt.",
+        "coachDeadline": "Die Auszahlung ist angehalten. Ohne deine Antwort wird die Zahlung {relative} an den Spieler erstattet.",
+        "coachAdmin": "Die Auszahlung ist angehalten. Unser Team prüft die Sitzung und entscheidet.",
+        "respondCta": "Antworten",
+        "respondPlaceholder": "Schildere, was passiert ist – zum Beispiel: Der Anruf ist fehlgeschlagen und ihr habt euch über eine andere App getroffen…",
+        "respondSubmit": "Antwort senden",
+        "respondTooShort": "Bitte schreibe mindestens {min} Zeichen.",
+        "yourResponse": "Deine Antwort",
+        "coachResponse": "Antwort des Trainers",
+        "responded": "Danke – unser Team prüft deine Antwort. Es erfolgt keine automatische Erstattung."
+      },
+      "gameTitleCoach": "Hat dieses Spiel stattgefunden?",
+      "gameTookPlace": "Das Spiel hat stattgefunden",
+      "gamePlayerAbsent": "Der Spieler ist nicht gekommen",
+      "gameAnswered": {
+        "took_place": "Deine Antwort: Das Spiel hat stattgefunden",
+        "player_absent": "Deine Antwort: Der Spieler ist nicht gekommen"
+      },
+      "gameNoAutoConfirm": "Die Auszahlung wird nach deiner Antwort freigegeben.",
+      "resolvedSystemRefund": "Der Trainer hat nicht geantwortet – Zahlung automatisch erstattet",
+      "resolvedByConfirmation": "Vom Spieler bestätigt – Zahlung an den Trainer freigegeben"
     },
     "review": {
       "cta": "Bewertung abgeben",
@@ -899,7 +948,7 @@
   },
   "adminDisputes": {
     "title": "Streitfälle",
-    "subtitle": "Von Spielern gemeldete Probleme mit bezahlten Sessions. Das Treuhandgeld bleibt eingefroren, bis Sie entscheiden.",
+    "subtitle": "Probleme mit bezahlten Sitzungen – von Spielern gemeldet oder automatisch anhand der Anwesenheit eröffnet. Das Geld bleibt bis zur Entscheidung eingefroren.",
     "empty": "Keine offenen Streitfälle.",
     "resolvedTitle": "Gelöst",
     "openedAt": "Streitfall eröffnet",
@@ -912,7 +961,32 @@
     "outcomeRefund": "An Spieler erstattet",
     "error": "Entscheidung fehlgeschlagen. Versuchen Sie es erneut.",
     "connectedAt": "verbunden um {time}",
-    "neverConnected": "nie mit dem Anruf verbunden"
+    "neverConnected": "nie mit dem Anruf verbunden",
+    "kind": {
+      "player_reported": "Vom Spieler gemeldet",
+      "coach_no_show": "Trainer nicht erschienen",
+      "no_attendance": "Niemand erschienen",
+      "evidence_gap": "Datenlücke"
+    },
+    "filterAll": "Alle",
+    "filterLabel": "Nach Art filtern",
+    "summaryTitle": "Anwesenheitsübersicht",
+    "summaryPlayer": "Spieler zuerst verbunden: {time}",
+    "summaryCoach": "Trainer zuerst verbunden: {time}",
+    "summaryNever": "nie",
+    "summaryOverlap": "Gemeinsam im Anruf: {minutes} Min.",
+    "summaryPartial": "Teilweise Anwesenheit",
+    "rawTitle": "Rohdaten des Raums",
+    "coachResponse": "Antwort des Trainers ({time})",
+    "autoResolveAt": "Automatische Erstattung {relative}, falls der Trainer nicht antwortet",
+    "previousNoShows": "{count, plural, =0 {Keine früheren Ausfälle} one {# früherer Ausfall} other {# frühere Ausfälle}}",
+    "resolvedVia": {
+      "admin": "Von einem Admin entschieden",
+      "system": "Automatisch entschieden – keine Antwort des Trainers",
+      "player_confirmation": "Durch Bestätigung des Spielers entschieden"
+    },
+    "noReason": "Keine Erklärung angegeben.",
+    "loadError": "Streitfälle konnten nicht geladen werden. Versuche es erneut."
   },
   "adminConsole": {
     "roles": {

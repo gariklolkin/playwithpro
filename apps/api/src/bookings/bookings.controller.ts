@@ -24,6 +24,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { BookingsService } from './bookings.service';
+import { ConfirmSessionDto } from './dto/confirm-session.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { PaySessionDto } from './dto/pay-session.dto';
 import { UpdateSessionGoalDto } from './dto/update-session-goal.dto';
@@ -74,8 +75,9 @@ export class BookingsController {
   async confirm(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ConfirmSessionDto,
   ): Promise<SessionResponse> {
-    return this.bookings.confirm(user, id);
+    return this.bookings.confirm(user, id, dto.gameAnswer);
   }
 
   @Post('sessions/:id/cancel')

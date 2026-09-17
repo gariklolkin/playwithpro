@@ -19,6 +19,7 @@ import { signUnsubscribeToken } from '../src/notifications/unsubscribe-token';
 import { ANALYTICS, type Analytics } from '../src/observability/observability';
 import { SessionProgressionService } from '../src/bookings/session-progression.service';
 import { SettlementService } from '../src/bookings/settlement.service';
+import { NoShowService } from '../src/disputes/no-show.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 const HOUR = 3_600_000;
@@ -57,6 +58,9 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
   /** The no-op analytics provider (no key in tests), spied to count lifecycle events. */
   let track: jest.SpyInstance;
   let dispatcher: NotificationDispatchService;
+  let noShow: NoShowService;
+  let playerId: string;
+  let coachUserId: string;
   let playerCookie: string;
   let rivalCookie: string;
   let coachCookie: string;
@@ -96,9 +100,19 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
     startsAt: Date,
     endsAt: Date,
   ): Promise<void> {
+    // A session moved into the past is one both parties attended: stamped as
+    // the no-show sweep would have classified it, so the background cron
+    // never turns it into a system dispute mid-test.
+    const held = endsAt.getTime() < Date.now();
     await prisma.session.update({
       where: { id: sessionId },
-      data: { startsAt, endsAt },
+      data: {
+        startsAt,
+        endsAt,
+        ...(held
+          ? { attendanceOutcome: 'HELD' as const, classifiedAt: new Date() }
+          : {}),
+      },
     });
   }
 
@@ -159,6 +173,7 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
     settlement = app.get(SettlementService);
     track = jest.spyOn(app.get<Analytics>(ANALYTICS), 'track');
     dispatcher = app.get(NotificationDispatchService);
+    noShow = app.get(NoShowService);
     await truncateAll(prisma);
 
     const coach = await prisma.user.create({
@@ -174,6 +189,12 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
             services: {
               create: [
                 { type: 'CONSULTATION', priceMinor: 4005, currency: 'EUR' },
+                {
+                  type: 'GAME',
+                  priceMinor: 6000,
+                  currency: 'EUR',
+                  venueLabel: 'TT Club, Berlin',
+                },
               ],
             },
           },
@@ -183,7 +204,7 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
     });
     coachProfileId = coach.proProfile!.id;
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 30; i++) {
       const slot = await prisma.availabilitySlot.create({
         data: {
           profileId: coachProfileId,
@@ -215,6 +236,9 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
         displayName: 'Settle Admin',
       },
     });
+
+    playerId = player.id;
+    coachUserId = coach.id;
 
     const tokens = app.get(TokenService);
     playerCookie = `access_token=${tokens.signAccessToken(player.id, Role.Amateur)}`;
@@ -393,17 +417,17 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
       await request(server())
         .post(`/sessions/${sessionId}/dispute`)
         .set('Cookie', playerCookie)
-        .send({ reason: '' })
+        .send({ category: 'other', reason: '' })
         .expect(400);
       await request(server())
         .post(`/sessions/${sessionId}/dispute`)
         .set('Cookie', rivalCookie)
-        .send({ reason: 'not my session' })
+        .send({ category: 'other', reason: 'not my session' })
         .expect(404);
       await request(server())
         .post(`/sessions/${sessionId}/dispute`)
         .set('Cookie', coachCookie)
-        .send({ reason: 'coaches cannot dispute' })
+        .send({ category: 'other', reason: 'coaches cannot dispute' })
         .expect(403);
     });
 
@@ -412,12 +436,14 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
       const res = await request(server())
         .post(`/sessions/${sessionId}/dispute`)
         .set('Cookie', playerCookie)
-        .send({ reason: 'Coach never showed up' })
+        .send({ category: 'coach_no_show', reason: 'Coach never showed up' })
         .expect(200);
       const session = res.body as SessionResponse;
       expect(session.status).toBe('disputed');
       expect(session.dispute).toMatchObject({
         status: 'open',
+        kind: 'player_reported',
+        reasonCategory: 'coach_no_show',
         reason: 'Coach never showed up',
       });
       expect(await paymentStatusOf(sessionId)).toBe('HELD');
@@ -442,7 +468,7 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
       await request(server())
         .post(`/sessions/${sessionId}/dispute`)
         .set('Cookie', playerCookie)
-        .send({ reason: 'again' })
+        .send({ category: 'other', reason: 'again' })
         .expect(409);
     });
 
@@ -525,7 +551,7 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
       await request(server())
         .post(`/sessions/${disputed}/dispute`)
         .set('Cookie', playerCookie)
-        .send({ reason: 'Call dropped halfway' })
+        .send({ category: 'technical_problem' })
         .expect(200);
       const list = await request(server())
         .get('/admin/disputes')
@@ -549,6 +575,453 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
       expect((detail.body as SessionResponse).dispute).toMatchObject({
         status: 'resolved',
         outcome: 'refund',
+      });
+    });
+  });
+
+  describe('no-show protection', () => {
+    const DAY = 24 * HOUR;
+
+    /**
+     * An online session that ended an hour ago (join window closed), not yet
+     * classified, with the given evidence. `connected` = joined and reported
+     * connected for the first half hour; `joined` = pressed join only.
+     */
+    async function endedSession(evidence: {
+      player?: 'connected' | 'joined';
+      coach?: 'connected' | 'joined';
+    }): Promise<string> {
+      const sessionId = await bookAndPay();
+      const startsAt = new Date(Date.now() - 2 * HOUR);
+      await prisma.session.update({
+        where: { id: sessionId },
+        data: {
+          startsAt,
+          endsAt: new Date(Date.now() - HOUR),
+          status: 'AWAITING_CONFIRMATION',
+        },
+      });
+      const rows = [
+        { userId: playerId, how: evidence.player },
+        { userId: coachUserId, how: evidence.coach },
+      ].filter((row) => row.how !== undefined);
+      for (const row of rows) {
+        await prisma.sessionAttendance.create({
+          data: {
+            sessionId,
+            userId: row.userId,
+            joinedAt: startsAt,
+            connectedAt: row.how === 'connected' ? startsAt : null,
+            leftAt:
+              row.how === 'connected'
+                ? new Date(startsAt.getTime() + 30 * MINUTE)
+                : null,
+          },
+        });
+      }
+      return sessionId;
+    }
+
+    const stateOf = async (sessionId: string) => {
+      const session = await prisma.session.findUniqueOrThrow({
+        where: { id: sessionId },
+        include: { dispute: true },
+      });
+      return {
+        status: session.status,
+        outcome: session.attendanceOutcome,
+        dispute: session.dispute,
+        payment: await paymentStatusOf(sessionId),
+      };
+    };
+
+    /** The sweep as it would run once the coach's response window is over. */
+    const afterResponseWindow = () =>
+      noShow.sweepOnce(new Date(Date.now() + 49 * HOUR));
+
+    it('coach no-show: system dispute, then an automatic refund exactly once', async () => {
+      const sessionId = await endedSession({ player: 'connected' });
+      await noShow.sweepOnce();
+
+      let state = await stateOf(sessionId);
+      expect(state).toMatchObject({
+        status: 'DISPUTED',
+        outcome: 'COACH_NO_SHOW',
+        payment: 'HELD',
+      });
+      expect(state.dispute).toMatchObject({
+        kind: 'COACH_NO_SHOW',
+        openedById: null,
+        status: 'OPEN',
+      });
+      const dueIn = state.dispute!.responseDueAt!.getTime() - Date.now();
+      expect(dueIn).toBeGreaterThan(47 * HOUR);
+      expect(dueIn).toBeLessThanOrEqual(48 * HOUR);
+      // Both parties and the admin hear about it — through the existing kinds.
+      expect(
+        (await outboxOf(sessionId))
+          .filter((r) => r.kind.startsWith('DISPUTE_OPENED_'))
+          .map((r) => `${r.kind}:${r.role}`),
+      ).toEqual([
+        'DISPUTE_OPENED_PLAYER:AMATEUR',
+        'DISPUTE_OPENED_COACH:PROFESSIONAL',
+        'DISPUTE_OPENED_ADMIN:ADMIN',
+      ]);
+
+      // The player sees what happened and when the refund lands.
+      const seen = (
+        await request(server())
+          .get(`/sessions/${sessionId}`)
+          .set('Cookie', playerCookie)
+          .expect(200)
+      ).body as SessionResponse;
+      expect(seen.attendance).toMatchObject({
+        outcome: 'coach_no_show',
+        coachFirstConnectedAt: null,
+        overlapMinutes: 0,
+      });
+      expect(seen.attendance!.playerFirstConnectedAt).not.toBeNull();
+      expect(seen.dispute).toMatchObject({
+        kind: 'coach_no_show',
+        reason: null,
+      });
+      expect(seen.dispute!.responseDueAt).not.toBeNull();
+
+      // Before the deadline nothing moves.
+      await noShow.sweepOnce();
+      expect((await stateOf(sessionId)).payment).toBe('HELD');
+
+      await afterResponseWindow();
+      await afterResponseWindow();
+      state = await stateOf(sessionId);
+      expect(state).toMatchObject({ status: 'RESOLVED', payment: 'REFUNDED' });
+      expect(state.dispute).toMatchObject({
+        status: 'RESOLVED',
+        outcome: 'REFUND',
+        resolvedById: null,
+        resolvedVia: 'SYSTEM',
+        systemNoteCode: 'NO_COACH_RESPONSE',
+      });
+      expect(
+        (await outboxOf(sessionId)).filter((r) =>
+          r.kind.startsWith('DISPUTE_RESOLVED_'),
+        ),
+      ).toHaveLength(2);
+    });
+
+    it('a coach response keeps the dispute open for an admin; no money moves', async () => {
+      const sessionId = await endedSession({ player: 'connected' });
+      await noShow.sweepOnce();
+
+      await request(server())
+        .post(`/sessions/${sessionId}/dispute/response`)
+        .set('Cookie', playerCookie)
+        .send({ statement: 'I am the player, this is not mine to send.' })
+        .expect(403);
+      await request(server())
+        .post(`/sessions/${sessionId}/dispute/response`)
+        .set('Cookie', coachCookie)
+        .send({ statement: 'too short' })
+        .expect(400);
+      const res = await request(server())
+        .post(`/sessions/${sessionId}/dispute/response`)
+        .set('Cookie', coachCookie)
+        .send({ statement: 'The call failed, we met on another app instead.' })
+        .expect(200);
+      expect((res.body as SessionResponse).dispute).toMatchObject({
+        coachResponse: 'The call failed, we met on another app instead.',
+        responseDueAt: null,
+      });
+      await request(server())
+        .post(`/sessions/${sessionId}/dispute/response`)
+        .set('Cookie', coachCookie)
+        .send({ statement: 'A second statement is not accepted at all.' })
+        .expect(409);
+
+      await afterResponseWindow();
+      expect(await stateOf(sessionId)).toMatchObject({
+        status: 'DISPUTED',
+        payment: 'HELD',
+      });
+
+      // The admin sees the contested case, filtered by kind, and decides.
+      const list = (
+        await request(server())
+          .get('/admin/disputes?kind=coach_no_show')
+          .set('Cookie', adminCookie)
+          .expect(200)
+      ).body as AdminDisputeListResponse;
+      expect(new Set(list.open.map((d) => String(d.kind)))).toEqual(
+        new Set(['coach_no_show']),
+      );
+      const item = list.open.find((d) => d.sessionId === sessionId)!;
+      expect(item).toMatchObject({
+        coachResponse: 'The call failed, we met on another app instead.',
+        responseDueAt: null,
+        // The refunded no-show of the previous test counts against the coach.
+        coachPreviousNoShows: 1,
+      });
+      expect(item.attendanceSummary).toMatchObject({
+        outcome: 'coach_no_show',
+      });
+      await request(server())
+        .get('/admin/disputes?kind=nonsense')
+        .set('Cookie', adminCookie)
+        .expect(400);
+
+      await request(server())
+        .post(`/admin/disputes/${item.id}/resolve`)
+        .set('Cookie', adminCookie)
+        .send({ outcome: 'release' })
+        .expect(200);
+      expect(await stateOf(sessionId)).toMatchObject({
+        status: 'RESOLVED',
+        payment: 'RELEASED',
+      });
+    });
+
+    it('player no-show: no dispute, the coach is paid at auto-confirm', async () => {
+      const sessionId = await endedSession({ coach: 'connected' });
+      await noShow.sweepOnce();
+      expect(await stateOf(sessionId)).toMatchObject({
+        status: 'AWAITING_CONFIRMATION',
+        outcome: 'PLAYER_NO_SHOW',
+        dispute: null,
+      });
+
+      await prisma.session.update({
+        where: { id: sessionId },
+        data: {
+          startsAt: new Date(Date.now() - 50 * HOUR),
+          endsAt: new Date(Date.now() - 49 * HOUR),
+        },
+      });
+      await progression.sweep();
+      expect(await stateOf(sessionId)).toMatchObject({
+        status: 'COMPLETED_PAID',
+        payment: 'RELEASED',
+      });
+    });
+
+    it("both connected: held, today's flow unchanged", async () => {
+      const sessionId = await endedSession({
+        player: 'connected',
+        coach: 'connected',
+      });
+      await noShow.sweepOnce();
+      expect(await stateOf(sessionId)).toMatchObject({
+        status: 'AWAITING_CONFIRMATION',
+        outcome: 'HELD',
+        dispute: null,
+        payment: 'HELD',
+      });
+    });
+
+    it('nobody came: NO_ATTENDANCE dispute, refunded without a response', async () => {
+      const sessionId = await endedSession({});
+      await noShow.sweepOnce();
+      expect((await stateOf(sessionId)).dispute).toMatchObject({
+        kind: 'NO_ATTENDANCE',
+      });
+
+      await afterResponseWindow();
+      expect(await stateOf(sessionId)).toMatchObject({
+        status: 'RESOLVED',
+        payment: 'REFUNDED',
+      });
+    });
+
+    it('evidence gap: the coach pressed join, no connection reported — waits for an admin', async () => {
+      const sessionId = await endedSession({
+        player: 'connected',
+        coach: 'joined',
+      });
+      await noShow.sweepOnce();
+      const state = await stateOf(sessionId);
+      expect(state.dispute).toMatchObject({
+        kind: 'EVIDENCE_GAP',
+        responseDueAt: null,
+      });
+
+      await afterResponseWindow();
+      expect(await stateOf(sessionId)).toMatchObject({
+        status: 'DISPUTED',
+        payment: 'HELD',
+      });
+    });
+
+    it('player confirmation wins: it withdraws a system dispute and releases', async () => {
+      const sessionId = await endedSession({ player: 'connected' });
+      await noShow.sweepOnce();
+
+      // The player cannot stack their own dispute on top of the system's.
+      await request(server())
+        .post(`/sessions/${sessionId}/dispute`)
+        .set('Cookie', playerCookie)
+        .send({ category: 'coach_no_show' })
+        .expect(409);
+
+      const res = await request(server())
+        .post(`/sessions/${sessionId}/confirm`)
+        .set('Cookie', playerCookie)
+        .expect(200);
+      expect((res.body as SessionResponse).status).toBe('resolved');
+      const state = await stateOf(sessionId);
+      expect(state).toMatchObject({ status: 'RESOLVED', payment: 'RELEASED' });
+      expect(state.dispute).toMatchObject({
+        outcome: 'RELEASE',
+        resolvedVia: 'PLAYER_CONFIRMATION',
+      });
+
+      // The deadline that would have refunded finds nothing to do.
+      await afterResponseWindow();
+      expect((await stateOf(sessionId)).payment).toBe('RELEASED');
+    });
+
+    it('player confirmation wins over a player no-show classification too', async () => {
+      const sessionId = await endedSession({ coach: 'connected' });
+      await noShow.sweepOnce();
+      await request(server())
+        .post(`/sessions/${sessionId}/confirm`)
+        .set('Cookie', playerCookie)
+        .expect(200);
+      expect(await stateOf(sessionId)).toMatchObject({
+        status: 'COMPLETED_PAID',
+        payment: 'RELEASED',
+      });
+    });
+
+    it('a player-reported dispute is never withdrawn by confirming', async () => {
+      const sessionId = await paidEndedSession();
+      await request(server())
+        .post(`/sessions/${sessionId}/dispute`)
+        .set('Cookie', playerCookie)
+        .send({ category: 'technical_problem' })
+        .expect(200);
+      await request(server())
+        .post(`/sessions/${sessionId}/confirm`)
+        .set('Cookie', playerCookie)
+        .expect(409);
+      expect((await stateOf(sessionId)).payment).toBe('HELD');
+    });
+
+    it('classification runs once: late evidence changes nothing', async () => {
+      const sessionId = await endedSession({ player: 'connected' });
+      await noShow.sweepOnce();
+      const before = await stateOf(sessionId);
+
+      // A connection report for the coach arrives after the decision.
+      await prisma.sessionAttendance.create({
+        data: {
+          sessionId,
+          userId: coachUserId,
+          joinedAt: new Date(Date.now() - 2 * HOUR),
+          connectedAt: new Date(Date.now() - 2 * HOUR),
+        },
+      });
+      await noShow.sweepOnce();
+
+      const after = await stateOf(sessionId);
+      expect(after.outcome).toBe('COACH_NO_SHOW');
+      expect(after.dispute!.id).toBe(before.dispute!.id);
+      expect(await prisma.dispute.count({ where: { sessionId } })).toBe(1);
+    });
+
+    it('an unclassified online session never auto-confirms on its own', async () => {
+      const sessionId = await endedSession({ player: 'connected' });
+      await prisma.session.update({
+        where: { id: sessionId },
+        data: {
+          startsAt: new Date(Date.now() - 50 * HOUR),
+          endsAt: new Date(Date.now() - 49 * HOUR),
+        },
+      });
+      await progression.sweep();
+      expect(await stateOf(sessionId)).toMatchObject({
+        status: 'AWAITING_CONFIRMATION',
+        payment: 'HELD',
+      });
+    });
+
+    describe('in-person games', () => {
+      async function endedGame(hoursAgo: number): Promise<string> {
+        const sessionId = await bookAndPay('game');
+        await prisma.session.update({
+          where: { id: sessionId },
+          data: {
+            startsAt: new Date(Date.now() - (hoursAgo + 1) * HOUR),
+            endsAt: new Date(Date.now() - hoursAgo * HOUR),
+            status: 'AWAITING_CONFIRMATION',
+          },
+        });
+        return sessionId;
+      }
+
+      it('the coach must answer; an answered game pays out at auto-confirm', async () => {
+        const sessionId = await endedGame(49);
+        await request(server())
+          .post(`/sessions/${sessionId}/confirm`)
+          .set('Cookie', coachCookie)
+          .send({})
+          .expect(400);
+
+        // Silent coach: the deadline passes and nothing is paid.
+        await progression.sweep();
+        await noShow.sweepOnce();
+        expect(await stateOf(sessionId)).toMatchObject({
+          status: 'AWAITING_CONFIRMATION',
+          outcome: null,
+          dispute: null,
+          payment: 'HELD',
+        });
+        const silent = (
+          await request(server())
+            .get(`/sessions/${sessionId}`)
+            .set('Cookie', coachCookie)
+            .expect(200)
+        ).body as SessionResponse;
+        expect(silent.autoConfirmAt).toBeNull();
+        expect(silent.attendance).toBeNull();
+
+        const res = await request(server())
+          .post(`/sessions/${sessionId}/confirm`)
+          .set('Cookie', coachCookie)
+          .send({ gameAnswer: 'player_absent' })
+          .expect(200);
+        expect((res.body as SessionResponse).coachGameAnswer).toBe(
+          'player_absent',
+        );
+        await progression.sweep();
+        expect(await stateOf(sessionId)).toMatchObject({
+          status: 'COMPLETED_PAID',
+          payment: 'RELEASED',
+        });
+      });
+
+      it('an online coach cannot send a game answer', async () => {
+        const sessionId = await paidEndedSession();
+        await request(server())
+          .post(`/sessions/${sessionId}/confirm`)
+          .set('Cookie', coachCookie)
+          .send({ gameAnswer: 'took_place' })
+          .expect(400);
+      });
+
+      it('seven days of silence: an admin dispute that never resolves itself', async () => {
+        const sessionId = await endedGame(7 * 24 + 1);
+        await noShow.sweepOnce();
+        const state = await stateOf(sessionId);
+        expect(state).toMatchObject({ status: 'DISPUTED', payment: 'HELD' });
+        expect(state.dispute).toMatchObject({
+          kind: 'NO_ATTENDANCE',
+          responseDueAt: null,
+        });
+
+        await noShow.sweepOnce(new Date(Date.now() + 30 * DAY));
+        expect(await stateOf(sessionId)).toMatchObject({
+          status: 'DISPUTED',
+          payment: 'HELD',
+        });
       });
     });
   });

@@ -1,9 +1,16 @@
 "use client";
 
 import {
+  AttendanceOutcome,
+  CoachGameAnswer,
+  DISPUTE_REASON_MAX_LENGTH,
+  DisputeKind,
   DisputeOutcome,
+  DisputeReasonCategory,
+  DisputeResolvedVia,
   DisputeStatus,
   PaymentStatus,
+  ServiceType,
   SessionStatus,
   type SessionResponse,
 } from "@playwithpro/shared";
@@ -19,10 +26,21 @@ import {
   type FunnelEvent,
 } from "@/lib/observability/analytics";
 import { useNow } from "@/lib/use-now";
+import { EvidenceLine } from "./attendance-evidence";
+import { SystemDisputePanel } from "./system-dispute-panel";
+
+const CATEGORIES = [
+  DisputeReasonCategory.CoachNoShow,
+  DisputeReasonCategory.CoachLateOrLeftEarly,
+  DisputeReasonCategory.TechnicalProblem,
+  DisputeReasonCategory.Other,
+] as const;
 
 /**
- * Post-payment lifecycle controls of one session card: confirm /
- * report-a-problem while awaiting confirmation, pre-start cancellation of a
+ * Post-payment lifecycle controls of one session card: what the attendance
+ * evidence says, confirm / report-a-problem while awaiting confirmation (the
+ * coach of an in-person game answers instead), a system-opened dispute with
+ * its refund deadline and the coach's response, pre-start cancellation of a
  * paid session, and the dispute/payout state once the money has moved.
  */
 export function SessionActions({
@@ -41,6 +59,7 @@ export function SessionActions({
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [reason, setReason] = useState("");
+  const [category, setCategory] = useState<DisputeReasonCategory | "">("");
 
   async function post(path: string, body?: object, event?: FunnelEvent) {
     setBusy(true);
@@ -80,13 +99,47 @@ export function SessionActions({
       </span>
     ) : null;
 
+  if (
+    session.dispute &&
+    session.dispute.status === DisputeStatus.Open &&
+    session.dispute.kind !== DisputeKind.PlayerReported
+  ) {
+    return (
+      <SystemDisputePanel
+        session={session}
+        dispute={session.dispute}
+        isCoach={isCoach}
+        now={now}
+        busy={busy}
+        failed={failed}
+        onConfirm={() =>
+          void post(
+            `/sessions/${session.id}/confirm`,
+            undefined,
+            FUNNEL_EVENTS.sessionConfirmed,
+          )
+        }
+        onRespond={(statement) =>
+          void post(`/sessions/${session.id}/dispute/response`, { statement })
+        }
+      />
+    );
+  }
+
   if (session.dispute && session.dispute.status === DisputeStatus.Open) {
     return (
       <div className="mt-3 rounded-lg border border-[#F1C7C4] bg-[#FBE4E4] p-3 text-[13px] text-[#C4554D]">
         <div className="font-medium">⚖️ {t("disputeOpenTitle")}</div>
-        <p className="mt-1" data-ph-mask>
-          {session.dispute.reason}
-        </p>
+        {session.dispute.reasonCategory ? (
+          <p className="mt-1 font-medium">
+            {t(`category.${session.dispute.reasonCategory}`)}
+          </p>
+        ) : null}
+        {session.dispute.reason ? (
+          <p className="mt-1" data-ph-mask>
+            {session.dispute.reason}
+          </p>
+        ) : null}
         <p className="mt-1 text-[#9A6A66]">{t("disputeOpenHint")}</p>
       </div>
     );
@@ -97,9 +150,14 @@ export function SessionActions({
       <div className="mt-3 flex flex-wrap items-center gap-2 text-[13px] text-text-secondary">
         <span>
           ⚖️{" "}
-          {session.dispute.outcome === DisputeOutcome.Refund
-            ? t("resolvedRefund")
-            : t("resolvedRelease")}
+          {session.dispute.resolvedVia === DisputeResolvedVia.System
+            ? t("resolvedSystemRefund")
+            : session.dispute.resolvedVia ===
+                DisputeResolvedVia.PlayerConfirmation
+              ? t("resolvedByConfirmation")
+              : session.dispute.outcome === DisputeOutcome.Refund
+                ? t("resolvedRefund")
+                : t("resolvedRelease")}
         </span>
         {settledChip}
       </div>
@@ -111,21 +169,78 @@ export function SessionActions({
       session.autoConfirmAt !== null && now !== null
         ? format.relativeTime(new Date(session.autoConfirmAt), new Date(now))
         : null;
+    const gameCoach = isCoach && session.serviceType === ServiceType.Game;
+    const reasonRequired = category === DisputeReasonCategory.Other;
+    const disputeReady =
+      category !== "" && (!reasonRequired || reason.trim().length > 0);
     return (
       <div className="mt-3 rounded-lg border border-[#EAD8A3] bg-[#FDF7E7] p-3">
+        {/* What actually happened comes before the question. */}
+        <EvidenceLine
+          session={session}
+          isCoach={isCoach}
+          className="mb-1 text-[13px] font-medium text-[#C4554D]"
+        />
         <div className="text-[13px] font-medium text-[#8A6C1B]">
-          {isCoach ? t("bannerTitleCoach") : t("bannerTitlePlayer")}
+          {gameCoach
+            ? t("gameTitleCoach")
+            : isCoach
+              ? t("bannerTitleCoach")
+              : t("bannerTitlePlayer")}
         </div>
-        {autoConfirmIn ? (
+        {isCoach &&
+        autoConfirmIn &&
+        session.attendance?.outcome === AttendanceOutcome.PlayerNoShow ? (
+          <p className="mt-0.5 text-[13px] text-[#8A6C1B]/80">
+            {t("playerNoShowNote", { relative: autoConfirmIn })}
+          </p>
+        ) : autoConfirmIn ? (
           <p className="mt-0.5 text-[13px] text-[#8A6C1B]/80">
             {t("autoConfirm", { relative: autoConfirmIn })}
+          </p>
+        ) : gameCoach && !ownConfirmedAt ? (
+          <p className="mt-0.5 text-[13px] text-[#8A6C1B]/80">
+            {t("gameNoAutoConfirm")}
           </p>
         ) : null}
         <div className="mt-2 flex flex-wrap items-center gap-2">
           {ownConfirmedAt ? (
             <span className="text-[13px] font-medium text-[#1C7A46]">
-              ✓ {t("youConfirmed")}
+              ✓{" "}
+              {gameCoach && session.coachGameAnswer
+                ? t(`gameAnswered.${session.coachGameAnswer}`)
+                : t("youConfirmed")}
             </span>
+          ) : gameCoach ? (
+            <>
+              <Button
+                size="sm"
+                disabled={busy}
+                onClick={() =>
+                  void post(
+                    `/sessions/${session.id}/confirm`,
+                    { gameAnswer: CoachGameAnswer.TookPlace },
+                    FUNNEL_EVENTS.sessionConfirmed,
+                  )
+                }
+              >
+                ✓ {t("gameTookPlace")}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={busy}
+                onClick={() =>
+                  void post(
+                    `/sessions/${session.id}/confirm`,
+                    { gameAnswer: CoachGameAnswer.PlayerAbsent },
+                    FUNNEL_EVENTS.sessionConfirmed,
+                  )
+                }
+              >
+                {t("gamePlayerAbsent")}
+              </Button>
+            </>
           ) : (
             <Button
               size="sm"
@@ -157,31 +272,58 @@ export function SessionActions({
             className="mt-3"
             onSubmit={(event) => {
               event.preventDefault();
-              if (reason.trim().length === 0) {
+              if (!disputeReady) {
                 return;
               }
               void post(
                 `/sessions/${session.id}/dispute`,
-                { reason: reason.trim() },
+                {
+                  category,
+                  reason: reason.trim() === "" ? undefined : reason.trim(),
+                },
                 FUNNEL_EVENTS.disputeSubmitted,
               );
             }}
           >
+            <fieldset className="mb-2">
+              <legend className="mb-1 text-[13px] font-medium text-text">
+                {t("category.label")}
+              </legend>
+              {CATEGORIES.map((value) => (
+                <label
+                  key={value}
+                  className="mr-3 inline-flex cursor-pointer items-center gap-1.5 text-[13px] text-text"
+                >
+                  <input
+                    type="radio"
+                    name={`dispute-category-${session.id}`}
+                    value={value}
+                    checked={category === value}
+                    onChange={() => setCategory(value)}
+                  />
+                  {t(`category.${value}`)}
+                </label>
+              ))}
+            </fieldset>
             <textarea
               value={reason}
               onChange={(event) => setReason(event.target.value)}
-              placeholder={t("disputePlaceholder")}
+              placeholder={
+                reasonRequired ? t("disputePlaceholder") : t("disputeOptional")
+              }
+              aria-required={reasonRequired}
               rows={3}
-              maxLength={2000}
+              maxLength={DISPUTE_REASON_MAX_LENGTH}
               data-ph-mask
               className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:border-border-strong focus:outline-none"
             />
+            {reasonRequired && reason.trim().length === 0 ? (
+              <p className="mt-1 text-[12px] text-[#C4554D]">
+                {t("disputeOtherRequired")}
+              </p>
+            ) : null}
             <div className="mt-2 flex gap-2">
-              <Button
-                size="sm"
-                type="submit"
-                disabled={busy || reason.trim().length === 0}
-              >
+              <Button size="sm" type="submit" disabled={busy || !disputeReady}>
                 {t("disputeSubmit")}
               </Button>
               <Button

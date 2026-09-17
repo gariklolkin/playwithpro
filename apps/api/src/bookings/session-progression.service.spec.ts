@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { SessionStatus } from '@prisma/client';
+import { AttendanceOutcome, ServiceType, SessionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { SessionProgressionService } from './session-progression.service';
 import { SettlementService } from './settlement.service';
@@ -36,14 +36,27 @@ describe('SessionProgressionService', () => {
       status: SessionStatus;
       startsAt: Date;
       endsAt: Date;
+      serviceType: ServiceType;
+      attendanceOutcome: AttendanceOutcome | null;
+      coachConfirmedAt: Date | null;
     }> = {},
   ) => ({
     id: 'session-1',
     status: SessionStatus.PAID_ESCROW,
     startsAt: new Date(Date.now() + HOUR),
     endsAt: new Date(Date.now() + 2 * HOUR),
+    serviceType: ServiceType.CONSULTATION as ServiceType,
+    // Classified long before the auto-confirm deadline in real life.
+    attendanceOutcome: AttendanceOutcome.HELD as AttendanceOutcome | null,
+    coachConfirmedAt: null as Date | null,
     ...overrides,
   });
+
+  const pastDeadline = {
+    status: SessionStatus.AWAITING_CONFIRMATION,
+    startsAt: new Date(Date.now() - (WINDOW_HOURS + 2) * HOUR),
+    endsAt: new Date(Date.now() - (WINDOW_HOURS + 1) * HOUR),
+  };
 
   describe('progressedStatus', () => {
     it('keeps a future paid session in escrow', () => {
@@ -99,6 +112,47 @@ describe('SessionProgressionService', () => {
       expect(service.progressedStatus(session, Date.now())).toBe(
         SessionStatus.COMPLETED_PAID,
       );
+    });
+
+    it('pays a player no-show by default, like a held session', () => {
+      const session = paidSession({
+        ...pastDeadline,
+        attendanceOutcome: AttendanceOutcome.PLAYER_NO_SHOW,
+      });
+      expect(service.progressedStatus(session, Date.now())).toBe(
+        SessionStatus.COMPLETED_PAID,
+      );
+    });
+
+    it('never auto-confirms an online session that is not classified as payable', () => {
+      for (const attendanceOutcome of [
+        null,
+        AttendanceOutcome.COACH_NO_SHOW,
+        AttendanceOutcome.NO_ATTENDANCE,
+        AttendanceOutcome.EVIDENCE_GAP,
+      ]) {
+        const session = paidSession({ ...pastDeadline, attendanceOutcome });
+        expect(service.progressedStatus(session, Date.now())).toBe(
+          SessionStatus.AWAITING_CONFIRMATION,
+        );
+      }
+    });
+
+    it('auto-confirms a game only once its coach has answered', () => {
+      const game = {
+        ...pastDeadline,
+        serviceType: ServiceType.GAME,
+        attendanceOutcome: null,
+      };
+      expect(service.progressedStatus(paidSession(game), Date.now())).toBe(
+        SessionStatus.AWAITING_CONFIRMATION,
+      );
+      expect(
+        service.progressedStatus(
+          paidSession({ ...game, coachConfirmedAt: new Date() }),
+          Date.now(),
+        ),
+      ).toBe(SessionStatus.COMPLETED_PAID);
     });
 
     it('never touches unpaid, disputed, or terminal statuses', () => {

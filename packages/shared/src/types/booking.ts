@@ -1,7 +1,8 @@
-import type { DisputeOutcome, DisputeStatus } from "../enums/dispute";
+import type { CoachGameAnswer } from "../enums/dispute";
 import type { PaymentStatus } from "../enums/payment";
 import type { ServiceType } from "../enums/service-type";
 import type { SessionStatus } from "../enums/session-status";
+import type { AttendanceSummary, DisputeSummary } from "./dispute";
 import type { PlayerCardResponse } from "./player-profile";
 import type { ReviewResponse } from "./review";
 
@@ -64,6 +65,11 @@ export interface UpdateSessionVideosRequest {
   videos: SessionVideoInput[];
 }
 
+/** Body of the confirm action; the coach of a game must answer. */
+export interface ConfirmSessionRequest {
+  gameAnswer?: CoachGameAnswer;
+}
+
 export interface PaySessionRequest {
   /** Opaque payment-instrument token; omitted = mock success. */
   instrument?: string;
@@ -104,19 +110,20 @@ export interface SessionResponse {
   room: { opensAt: string; closesAt: string } | null;
   /**
    * Deadline after which an unconfirmed, undisputed session auto-completes
-   * and pays out; set while awaiting_confirmation, null otherwise.
+   * and pays out; set while awaiting_confirmation, null otherwise — and null
+   * for a game whose coach has not answered yet (no automatic payout).
    */
   autoConfirmAt: string | null;
   playerConfirmedAt: string | null;
   coachConfirmedAt: string | null;
+  /** The coach's answer for a game; null for online services or until given. */
+  coachGameAnswer: CoachGameAnswer | null;
+  /** Attendance summary of a past online session; null otherwise. */
+  attendance: AttendanceSummary | null;
   /** State of the escrowed payment (held/released/refunded); null before a successful hold. */
   escrow: PaymentStatus | null;
   /** The session's dispute, visible to its parties; null when none. */
-  dispute: {
-    status: DisputeStatus;
-    reason: string;
-    outcome: DisputeOutcome | null;
-  } | null;
+  dispute: DisputeSummary | null;
   /** The player's review of this session; null when none yet. */
   review: ReviewResponse | null;
   /** True when the viewer-independent eligibility holds: paid-out terminal status and no review yet. */

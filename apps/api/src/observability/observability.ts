@@ -70,6 +70,9 @@ export const LIFECYCLE_EVENTS = {
   sessionCancelled: 'session_cancelled',
   sessionDisputed: 'session_disputed',
   disputeResolved: 'dispute_resolved',
+  sessionClassified: 'session_classified',
+  disputeAutoResolved: 'dispute_auto_resolved',
+  disputeCoachResponded: 'dispute_coach_responded',
 } as const;
 
 /** Feature flags are named after the OpenSpec change they guard. */

@@ -65,26 +65,32 @@
   "dispute": {
     "opened": {
       "player": {
-        "subject": "Мы получили ваше сообщение о сессии с {coach}",
-        "text": "Здравствуйте, {name}!\n\nМы получили ваше сообщение о проблеме с сессией «{service}» с тренером {coach} ({when}). Оплата удерживается, пока наша команда разбирается; результат придёт письмом.\n\n{sessionsLine}"
+        "subject": "{disputeKind, select, player_reported {Мы получили ваше обращение по сессии с {coach}} other {Оплата сессии с {coach} приостановлена}}",
+        "text": "Здравствуйте, {name}!\n\n{disputeKind, select, player_reported {Мы получили ваше обращение по сессии «{service}» с {coach} ({when}). Оплата остаётся замороженной, пока наша команда не рассмотрит его; мы пришлём письмо с решением.} coach_no_show {По нашим данным, {coach} не подключился(-ась) к сессии «{service}» ({when}). Оплата приостановлена.} no_attendance {По нашим данным, к сессии «{service}» с {coach} ({when}) никто не подключился. Оплата приостановлена.} other {По нашим данным нельзя понять, состоялась ли сессия «{service}» с {coach} ({when}). Оплата приостановлена.}}{systemLine}\n\n{sessionsLine}"
       },
       "coach": {
-        "subject": "По вашей сессии с {player} поступила жалоба",
-        "text": "Здравствуйте, {name}!\n\n{player} сообщил(а) о проблеме с сессией «{service}» ({when}). Выплата приостановлена, пока наша команда рассматривает обращение; результат придёт письмом.\n\nОткрыть сессию: {url}"
+        "subject": "{disputeKind, select, player_reported {По вашей сессии с {player} сообщили о проблеме} other {Нужен ваш ответ: выплата за сессию с {player} приостановлена}}",
+        "text": "Здравствуйте, {name}!\n\n{disputeKind, select, player_reported {{player} сообщил(а) о проблеме с сессией «{service}» ({when}). Выплата приостановлена, пока наша команда рассматривает обращение; мы пришлём письмо с решением.} coach_no_show {По нашим данным, вы не подключились к сессии «{service}» с {player} ({when}). Выплата приостановлена.} no_attendance {По нашим данным, к сессии «{service}» с {player} ({when}) никто не подключился. Выплата приостановлена.} other {По нашим данным нельзя понять, состоялась ли сессия «{service}» с {player} ({when}). Выплата приостановлена.}}{systemLine}\n\nОткрыть сессию: {url}"
       },
       "admin": {
         "subject": "Новый спор: {player} vs {coach}, «{service}» {date}",
-        "text": "Открыт спор по сессии «{service}» между {player} и {coach}, назначенной на {when}.\n\nРассмотреть в очереди: {url}"
+        "text": "Открыт спор ({disputeKind, select, player_reported {обращение игрока} coach_no_show {неявка тренера} no_attendance {никто не пришёл} other {пробел в данных}}) по сессии «{service}» между {player} и {coach}, назначенной на {when}.\n\nРассмотреть в очереди: {url}"
+      },
+      "systemLine": {
+        "playerDeadline": "\n\nЕсли тренер не ответит, {amount} автоматически вернутся вам {respondBy}. Если сессия всё же состоялась (например, в другом приложении), подтвердите её в списке сессий — и тренер получит оплату.",
+        "playerAdmin": "\n\nНаша команда рассмотрит случай и пришлёт письмо с решением. Если сессия состоялась, подтвердите её в списке сессий — и тренер получит оплату.",
+        "coachDeadline": "\n\nЕсли сессия состоялась, расскажите, что произошло, до {respondBy}: откройте сессию и нажмите «Ответить». Без ответа оплата автоматически вернётся игроку.",
+        "coachAdmin": "\n\nНаша команда рассмотрит случай. Вы можете описать, что произошло: откройте сессию и нажмите «Ответить»."
       }
     },
     "resolved": {
       "player": {
-        "subject": "Ваш спор решён: {outcome, select, refund {возврат средств} other {оплата переведена тренеру}}",
-        "text": "Здравствуйте, {name}!\n\nНаша команда рассмотрела ваше обращение по сессии «{service}» с тренером {coach} ({when}).\n\n{outcome, select, refund {Решение: {amount} возвращается вам.} other {Решение: оплата {amount} переведена тренеру.}}\n\n{sessionsLine}"
+        "subject": "Сессия с {coach}: {outcome, select, refund {возврат} other {оплата переведена тренеру}}",
+        "text": "Здравствуйте, {name}!\n\n{via, select, system {Тренер не ответил по сессии «{service}» с {coach} ({when}).} player_confirmation {Вы подтвердили сессию «{service}» с {coach} ({when}).} other {Наша команда рассмотрела сессию «{service}» с {coach} ({when}).}}\n\n{outcome, select, refund {Решение: {amount} возвращаются вам.} other {Решение: оплата {amount} переведена тренеру.}}\n\n{sessionsLine}"
       },
       "coach": {
-        "subject": "Спор решён: {outcome, select, refund {возврат игроку} other {выплата вам}}",
-        "text": "Здравствуйте, {name}!\n\nНаша команда рассмотрела обращение по вашей сессии «{service}» с {player} ({when}).\n\n{outcome, select, refund {Решение: {amount} возвращено игроку.} other {Решение: вам переведено {net}.}}\n\n{sessionsLine}"
+        "subject": "Сессия с {player}: {outcome, select, refund {возврат игроку} other {выплата вам}}",
+        "text": "Здравствуйте, {name}!\n\n{via, select, system {Мы не получили вашего ответа по сессии «{service}» с {player} ({when}).} player_confirmation {{player} подтвердил(а) сессию «{service}» ({when}).} other {Наша команда рассмотрела вашу сессию «{service}» с {player} ({when}).}}\n\n{outcome, select, refund {Решение: {amount} возвращены игроку.} other {Решение: {net} переведены вам.}}\n\n{sessionsLine}"
       }
     }
   },

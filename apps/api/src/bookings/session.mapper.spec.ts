@@ -22,6 +22,10 @@ const base = {
   expiresAt: null,
   playerConfirmedAt: new Date(),
   coachConfirmedAt: null,
+  coachGameAnswer: null,
+  attendanceOutcome: null,
+  attendancePartial: false,
+  classifiedAt: null,
   roomSlug: null,
   inviteSentAt: null,
   createdAt: new Date(),
@@ -60,8 +64,23 @@ const base = {
   videos: [],
   payments: [{ status: 'RELEASED' }],
   dispute: null,
+  attendance: [],
   review: null,
 } as unknown as SessionWithParties;
+
+const resolvedDispute = (outcome: 'RELEASE' | 'REFUND') =>
+  ({
+    status: 'RESOLVED',
+    kind: 'PLAYER_REPORTED',
+    reasonCategory: 'OTHER',
+    reason: 'r',
+    outcome,
+    responseDueAt: null,
+    coachResponse: null,
+    coachRespondedAt: null,
+    resolvedVia: 'ADMIN',
+    systemNoteCode: null,
+  }) as SessionWithParties['dispute'];
 
 const avatarUrlOf = (key: string) => `https://cdn.test/${key}`;
 
@@ -173,7 +192,7 @@ describe('toSessionResponse review fields', () => {
       {
         ...base,
         status: 'RESOLVED',
-        dispute: { status: 'RESOLVED', reason: 'r', outcome: 'RELEASE' },
+        dispute: resolvedDispute('RELEASE'),
       },
       avatarUrlOf,
     );
@@ -186,7 +205,7 @@ describe('toSessionResponse review fields', () => {
       {
         ...base,
         status: 'RESOLVED',
-        dispute: { status: 'RESOLVED', reason: 'r', outcome: 'REFUND' },
+        dispute: resolvedDispute('REFUND'),
         payments: [{ status: 'REFUNDED' }],
       },
       avatarUrlOf,
@@ -206,6 +225,83 @@ describe('toSessionResponse review fields', () => {
     );
 
     expect(response.reviewable).toBe(false);
+  });
+});
+
+describe('no-show protection fields', () => {
+  const extras = {
+    roomWindow: { beforeMin: 15, afterMin: 30 },
+    autoConfirmWindowHours: 48,
+  };
+
+  it('summarizes attendance of a past online session without raw rows', () => {
+    const response = toSessionResponse(
+      {
+        ...base,
+        status: 'DISPUTED',
+        attendanceOutcome: 'COACH_NO_SHOW',
+        classifiedAt: new Date(),
+        attendance: [
+          {
+            userId: 'player-1',
+            joinedAt: base.startsAt,
+            connectedAt: base.startsAt,
+            leftAt: new Date(base.startsAt.getTime() + HOUR / 2),
+          },
+        ],
+        dispute: {
+          ...resolvedDispute('REFUND'),
+          status: 'OPEN',
+          kind: 'COACH_NO_SHOW',
+          outcome: null,
+          reasonCategory: null,
+          reason: null,
+          resolvedVia: null,
+          responseDueAt: new Date('2026-09-22T10:00:00Z'),
+        },
+      } as SessionWithParties,
+      avatarUrlOf,
+      extras,
+    );
+
+    expect(response.attendance).toEqual({
+      playerFirstConnectedAt: base.startsAt.toISOString(),
+      coachFirstConnectedAt: null,
+      overlapMinutes: 0,
+      coachLateMinutes: 0,
+      partial: false,
+      outcome: 'coach_no_show',
+    });
+    expect(response.dispute).toMatchObject({
+      kind: 'coach_no_show',
+      reason: null,
+      responseDueAt: '2026-09-22T10:00:00.000Z',
+    });
+    expect(JSON.stringify(response)).not.toContain('joinedAt');
+  });
+
+  it('carries no summary for a game and hides the countdown until the coach answers', () => {
+    const game = {
+      ...base,
+      serviceType: 'GAME',
+      status: 'AWAITING_CONFIRMATION',
+      payments: [{ status: 'HELD' }],
+    } as SessionWithParties;
+    const silent = toSessionResponse(game, avatarUrlOf, extras);
+    expect(silent.attendance).toBeNull();
+    expect(silent.autoConfirmAt).toBeNull();
+
+    const answered = toSessionResponse(
+      {
+        ...game,
+        coachConfirmedAt: new Date(),
+        coachGameAnswer: 'PLAYER_ABSENT',
+      },
+      avatarUrlOf,
+      extras,
+    );
+    expect(answered.coachGameAnswer).toBe('player_absent');
+    expect(answered.autoConfirmAt).not.toBeNull();
   });
 });
 

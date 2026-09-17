@@ -373,6 +373,13 @@ model Session {
   /// dispute evidence only. Each recorded at most once.
   playerConfirmedAt DateTime?
   coachConfirmedAt  DateTime?
+  /// GAME only: the coach's required answer, written with coachConfirmedAt.
+  coachGameAnswer   CoachGameAnswer?
+  /// Online services: the attendance decision, frozen once at join-window
+  /// close (null = not classified). Times and overlap are recomputed on read.
+  attendanceOutcome AttendanceOutcome?
+  attendancePartial Boolean       @default(false)
+  classifiedAt      DateTime?
   /// Random capability slug for the video room; set on payment, online services only.
   roomSlug         String?       @unique
   /// When the calendar invite was emailed to both parties; also the idempotency guard.
@@ -400,6 +407,7 @@ model Session {
   @@index([playerId, startsAt])
   @@index([proProfileId, startsAt])
   @@index([status, expiresAt])
+  @@index([status, classifiedAt, endsAt])
   @@index([slotId])
 }
 
@@ -470,25 +478,75 @@ enum DisputeOutcome {
   REFUND
 }
 
-/// Player-opened dispute over an awaiting_confirmation session; at most one
-/// per session. Resolution (admin-only) settles the escrowed payment.
+/// Who opened the dispute: the player, or the system from attendance evidence.
+enum DisputeKind {
+  PLAYER_REPORTED
+  COACH_NO_SHOW
+  NO_ATTENDANCE
+  EVIDENCE_GAP
+}
+
+enum DisputeReasonCategory {
+  COACH_NO_SHOW
+  COACH_LATE_OR_LEFT_EARLY
+  TECHNICAL_PROBLEM
+  OTHER
+}
+
+enum DisputeResolvedVia {
+  ADMIN
+  SYSTEM
+  PLAYER_CONFIRMATION
+}
+
+/// Attendance decision for an online session (see attendance-classifier.ts).
+enum AttendanceOutcome {
+  HELD
+  PLAYER_NO_SHOW
+  COACH_NO_SHOW
+  NO_ATTENDANCE
+  EVIDENCE_GAP
+}
+
+enum CoachGameAnswer {
+  TOOK_PLACE
+  PLAYER_ABSENT
+}
+
+/// Dispute over an awaiting_confirmation session, opened by the player or by
+/// the system from attendance evidence; at most one per session. Resolution
+/// (admin, system deadline, or the player's confirmation) settles the payment.
 model Dispute {
   id           String         @id @default(uuid())
   sessionId    String         @unique
-  openedById   String
-  reason       String
+  kind         DisputeKind    @default(PLAYER_REPORTED)
+  /// Null for system-opened disputes.
+  openedById   String?
+  /// Player disputes only; null for system-opened ones.
+  reasonCategory DisputeReasonCategory?
+  reason       String?
   status       DisputeStatus  @default(OPEN)
   outcome      DisputeOutcome?
+  /// The admin, or the player whose confirmation withdrew a system dispute; null for the system.
   resolvedById String?
+  resolvedVia  DisputeResolvedVia?
+  /// Fixed reason of a system resolution, rendered from the catalogs.
+  systemNoteCode String?
   adminNote    String?
+  /// The coach's single statement on a system-opened dispute.
+  coachResponse    String?
+  coachRespondedAt DateTime?
+  /// Automatic refund deadline; null when none is pending.
+  responseDueAt    DateTime?
   createdAt    DateTime       @default(now())
   resolvedAt   DateTime?
 
   session    Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  openedBy   User    @relation("DisputeOpener", fields: [openedById], references: [id])
+  openedBy   User?   @relation("DisputeOpener", fields: [openedById], references: [id], onDelete: Restrict)
   resolvedBy User?   @relation("DisputeResolver", fields: [resolvedById], references: [id])
 
   @@index([status, createdAt])
+  @@index([status, responseDueAt])
 }
 
 /// Player review of a paid-out session; at most one per session (the unique

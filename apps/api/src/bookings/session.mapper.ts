@@ -1,6 +1,4 @@
 import {
-  DisputeOutcome as SharedDisputeOutcome,
-  DisputeStatus as SharedDisputeStatus,
   PaymentStatus as SharedPaymentStatus,
   PlayerCardResponse,
   Role,
@@ -9,7 +7,6 @@ import {
   SessionVideoItem,
 } from '@playwithpro/shared';
 import type {
-  Dispute,
   Payment,
   PlayerProfile,
   ProProfile,
@@ -22,6 +19,14 @@ import { PaymentStatus } from '@prisma/client';
 import type { AuthenticatedUser } from '../auth/auth-cookies';
 import { toPlayerCard } from '../players/player-profile.mapper';
 import { toSharedServiceType } from '../pros/pro-profile.mapper';
+import type { AttendanceRow } from '../session-rooms/attendance-classifier';
+import {
+  DISPUTE_SUMMARY_SELECT,
+  DisputeSummaryRow,
+  toAttendanceSummary,
+  toDisputeSummary,
+  toSharedGameAnswer,
+} from './dispute.mapper';
 import {
   COACH_ACCESS_STATUSES,
   ROOM_ACCESS_STATUSES,
@@ -45,7 +50,8 @@ export type SessionWithParties = Session & {
     >;
   }>;
   payments: Array<Pick<Payment, 'status'>>;
-  dispute: Pick<Dispute, 'status' | 'reason' | 'outcome'> | null;
+  dispute: DisputeSummaryRow | null;
+  attendance: AttendanceRow[];
   review: Pick<Review, 'rating' | 'text' | 'createdAt'> | null;
 };
 
@@ -99,7 +105,12 @@ export const SESSION_INCLUDE = {
     select: { status: true },
     take: 1,
   },
-  dispute: { select: { status: true, reason: true, outcome: true } },
+  dispute: { select: DISPUTE_SUMMARY_SELECT },
+  // Evidence rows feed the attendance summary; they never leave the API raw.
+  attendance: {
+    select: { userId: true, joinedAt: true, connectedAt: true, leftAt: true },
+    orderBy: { joinedAt: 'asc' },
+  },
   review: { select: { rating: true, text: true, createdAt: true } },
 } as const;
 
@@ -146,6 +157,14 @@ export function toPlayerContext(
     avatarUrlOf,
   );
 }
+
+/** Statuses in which what happened in the room is worth telling the parties. */
+const ATTENDANCE_SUMMARY_STATUSES: string[] = [
+  'AWAITING_CONFIRMATION',
+  'COMPLETED_PAID',
+  'DISPUTED',
+  'RESOLVED',
+];
 
 const ESCROW_STATUS: Record<string, SharedPaymentStatus> = {
   [PaymentStatus.HELD]: SharedPaymentStatus.Held,
@@ -201,9 +220,11 @@ export function toSessionResponse(
           ).toISOString(),
         }
       : null,
+    // A game pays out automatically only once the coach has answered.
     autoConfirmAt:
       session.status === 'AWAITING_CONFIRMATION' &&
-      extras?.autoConfirmWindowHours !== undefined
+      extras?.autoConfirmWindowHours !== undefined &&
+      (online || session.coachConfirmedAt !== null)
         ? new Date(
             session.endsAt.getTime() +
               extras.autoConfirmWindowHours * 3_600_000,
@@ -211,22 +232,20 @@ export function toSessionResponse(
         : null,
     playerConfirmedAt: session.playerConfirmedAt?.toISOString() ?? null,
     coachConfirmedAt: session.coachConfirmedAt?.toISOString() ?? null,
+    coachGameAnswer: toSharedGameAnswer(session.coachGameAnswer),
+    attendance:
+      online &&
+      roomWindow !== undefined &&
+      ATTENDANCE_SUMMARY_STATUSES.includes(session.status)
+        ? toAttendanceSummary(
+            session,
+            session.proProfile.userId,
+            session.attendance,
+            roomWindow,
+          )
+        : null,
     escrow: escrow !== undefined ? ESCROW_STATUS[escrow] : null,
-    dispute: session.dispute
-      ? {
-          status:
-            session.dispute.status === 'OPEN'
-              ? SharedDisputeStatus.Open
-              : SharedDisputeStatus.Resolved,
-          reason: session.dispute.reason,
-          outcome:
-            session.dispute.outcome === 'RELEASE'
-              ? SharedDisputeOutcome.Release
-              : session.dispute.outcome === 'REFUND'
-                ? SharedDisputeOutcome.Refund
-                : null,
-        }
-      : null,
+    dispute: session.dispute ? toDisputeSummary(session.dispute) : null,
     review: session.review
       ? {
           rating: session.review.rating,

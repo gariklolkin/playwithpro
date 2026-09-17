@@ -800,7 +800,11 @@
         },
         "mediaUnavailable": "Votre caméra ou votre micro n'est pas disponible. Vous pouvez tout de même voir et entendre l'autre participant.",
         "cameraUnavailable": "Votre caméra n'est pas disponible. L'autre participant peut tout de même vous entendre.",
-        "micUnavailable": "Votre micro n'est pas disponible. L'autre participant peut tout de même vous voir."
+        "micUnavailable": "Votre micro n'est pas disponible. L'autre participant peut tout de même vous voir.",
+        "waitingNote": {
+          "player": "{name} n'a pas encore rejoint l'appel. S'il ne vient pas, vous ne serez pas débité.",
+          "coach": "{name} n'a pas encore rejoint l'appel. Restez dans la salle : s'il ne vient pas, la séance compte quand même."
+        }
       },
       "speed": {
         "label": "Vitesse",
@@ -859,7 +863,52 @@
       "cancelWarning": "Annuler cette session ? Le montant total est remboursé et le créneau redevient disponible.",
       "cancelConfirm": "Oui, annuler",
       "cancelKeep": "Garder la session",
-      "error": "Une erreur est survenue. Réessayez."
+      "error": "Une erreur est survenue. Réessayez.",
+      "evidence": {
+        "coachNever": "{coach} n'a jamais rejoint l'appel.",
+        "coachLate": "{coach} a rejoint l'appel avec {minutes, plural, one {# minute} other {# minutes}} de retard.",
+        "shortOverlap": "Vous avez été ensemble dans l'appel pendant {minutes, plural, one {# minute} other {# minutes}}.",
+        "playerNever": "{player} n'a jamais rejoint l'appel.",
+        "nobody": "Personne n'a rejoint l'appel.",
+        "youNever": "D'après nos données, vous n'avez pas rejoint l'appel.",
+        "youLate": "Vous avez rejoint l'appel avec {minutes, plural, one {# minute} other {# minutes}} de retard.",
+        "gap": "Nos données ne permettent pas de savoir si cette séance a eu lieu."
+      },
+      "playerNoShowNote": "Vous êtes resté dans la salle, la séance compte donc : elle est payée automatiquement {relative}.",
+      "category": {
+        "label": "Que s'est-il passé ?",
+        "coach_no_show": "Le coach n'est pas venu",
+        "coach_late_or_left_early": "Le coach était en retard ou est parti plus tôt",
+        "technical_problem": "Problème technique",
+        "other": "Autre"
+      },
+      "disputeOptional": "Ajoutez des détails (facultatif)…",
+      "disputeOtherRequired": "Décrivez ce qui s'est passé.",
+      "system": {
+        "title": "Paiement suspendu",
+        "refundIn": "Le paiement est suspendu et vous sera remboursé {relative}, sauf si le coach répond.",
+        "adminDecides": "Le paiement est suspendu. Notre équipe examinera la séance et décidera.",
+        "confirmHint": "La séance a finalement eu lieu ? Confirmez-la et le coach sera payé.",
+        "coachDeadline": "Le versement est suspendu. Sans réponse de votre part, le paiement sera remboursé au joueur {relative}.",
+        "coachAdmin": "Le versement est suspendu. Notre équipe examinera la séance et décidera.",
+        "respondCta": "Répondre",
+        "respondPlaceholder": "Expliquez ce qui s'est passé — par exemple, l'appel a échoué et vous vous êtes retrouvés sur une autre application…",
+        "respondSubmit": "Envoyer la réponse",
+        "respondTooShort": "Écrivez au moins {min} caractères.",
+        "yourResponse": "Votre réponse",
+        "coachResponse": "Réponse du coach",
+        "responded": "Merci — notre équipe examinera votre réponse. Aucun remboursement automatique n'aura lieu."
+      },
+      "gameTitleCoach": "Ce match a-t-il eu lieu ?",
+      "gameTookPlace": "Le match a eu lieu",
+      "gamePlayerAbsent": "Le joueur n'est pas venu",
+      "gameAnswered": {
+        "took_place": "Votre réponse : le match a eu lieu",
+        "player_absent": "Votre réponse : le joueur n'est pas venu"
+      },
+      "gameNoAutoConfirm": "Le versement est débloqué après votre réponse.",
+      "resolvedSystemRefund": "Le coach n'a pas répondu — paiement remboursé automatiquement",
+      "resolvedByConfirmation": "Confirmée par le joueur — paiement versé au coach"
     },
     "review": {
       "cta": "Laisser un avis",
@@ -899,7 +948,7 @@
   },
   "adminDisputes": {
     "title": "Litiges",
-    "subtitle": "Problèmes signalés par les joueurs sur des sessions payées. Le séquestre reste gelé jusqu'à votre décision.",
+    "subtitle": "Problèmes sur des séances payées — signalés par les joueurs ou ouverts automatiquement d'après les présences. Les fonds restent bloqués jusqu'à la décision.",
     "empty": "Aucun litige ouvert.",
     "resolvedTitle": "Résolus",
     "openedAt": "litige ouvert le",
@@ -912,7 +961,32 @@
     "outcomeRefund": "Remboursé au joueur",
     "error": "La résolution a échoué. Réessayez.",
     "connectedAt": "connecté à {time}",
-    "neverConnected": "jamais connecté à l'appel"
+    "neverConnected": "jamais connecté à l'appel",
+    "kind": {
+      "player_reported": "Signalé par le joueur",
+      "coach_no_show": "Absence du coach",
+      "no_attendance": "Personne n'est venu",
+      "evidence_gap": "Données insuffisantes"
+    },
+    "filterAll": "Tous",
+    "filterLabel": "Filtrer par type",
+    "summaryTitle": "Résumé des présences",
+    "summaryPlayer": "Première connexion du joueur : {time}",
+    "summaryCoach": "Première connexion du coach : {time}",
+    "summaryNever": "jamais",
+    "summaryOverlap": "Ensemble dans l'appel : {minutes} min",
+    "summaryPartial": "Présence partielle",
+    "rawTitle": "Entrées brutes de la salle",
+    "coachResponse": "Réponse du coach ({time})",
+    "autoResolveAt": "Remboursement automatique {relative} sans réponse du coach",
+    "previousNoShows": "{count, plural, =0 {Aucune absence précédente} one {# absence précédente} other {# absences précédentes}}",
+    "resolvedVia": {
+      "admin": "Résolu par un administrateur",
+      "system": "Résolu automatiquement — pas de réponse du coach",
+      "player_confirmation": "Résolu par la confirmation du joueur"
+    },
+    "noReason": "Aucune explication fournie.",
+    "loadError": "Impossible de charger les litiges. Réessayez."
   },
   "adminConsole": {
     "roles": {

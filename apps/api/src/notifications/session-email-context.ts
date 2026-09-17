@@ -35,7 +35,15 @@ export const SESSION_EMAIL_INCLUDE = {
     },
   },
   _count: { select: { videos: true } },
-  dispute: { select: { status: true, outcome: true } },
+  dispute: {
+    select: {
+      status: true,
+      outcome: true,
+      kind: true,
+      responseDueAt: true,
+      resolvedVia: true,
+    },
+  },
   review: { select: { rating: true } },
   payments: {
     where: { status: { in: ['HELD', 'RELEASED', 'REFUNDED'] } },

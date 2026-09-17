@@ -6,13 +6,14 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { Role, ServiceType } from '@playwithpro/shared';
+import { CoachGameAnswer, Role, ServiceType } from '@playwithpro/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { ANALYTICS } from '../observability/observability';
 import { PAYMENT_PROVIDER } from '../payments/payment-provider';
 import { BookingsService } from './bookings.service';
+import { DisputeResolutionService } from './dispute-resolution.service';
 import { SessionProgressionService } from './session-progression.service';
 import { SessionVideosService } from './session-videos.service';
 import { SettlementService } from './settlement.service';
@@ -66,9 +67,14 @@ const pendingSession = {
     ...verifiedProfile,
     user: { displayName: 'Coach', avatarKey: null },
   },
+  coachGameAnswer: null,
+  attendanceOutcome: null,
+  attendancePartial: false,
+  classifiedAt: null,
   videos: [],
   payments: [],
   dispute: null,
+  attendance: [],
   review: null,
 };
 
@@ -96,8 +102,10 @@ describe('BookingsService', () => {
       update: jest.fn(),
     },
     payment: { create: jest.fn(), update: jest.fn() },
+    dispute: { findUnique: jest.fn() },
     $transaction: jest.fn(),
   };
+  const resolution = { resolve: jest.fn() };
   const provider = {
     hold: jest.fn(),
     release: jest.fn(),
@@ -156,6 +164,7 @@ describe('BookingsService', () => {
         { provide: NotificationsService, useValue: notifications },
         { provide: SessionProgressionService, useValue: progression },
         { provide: SettlementService, useValue: settlement },
+        { provide: DisputeResolutionService, useValue: resolution },
         { provide: SessionVideosService, useValue: sessionVideos },
         { provide: UnattachedVideosService, useValue: unattached },
         { provide: ANALYTICS, useValue: analytics },
@@ -588,6 +597,7 @@ describe('BookingsService', () => {
 
     beforeEach(() => {
       prisma.session.findUnique.mockResolvedValue(awaitingSession);
+      prisma.dispute.findUnique.mockResolvedValue(null);
       prisma.session.updateMany.mockResolvedValue({ count: 1 });
       prisma.session.findUniqueOrThrow.mockResolvedValue({
         ...awaitingSession,
@@ -628,6 +638,82 @@ describe('BookingsService', () => {
           coachConfirmedAt: null,
         },
         data: { coachConfirmedAt: expect.any(Date) as Date },
+      });
+      expect(settlement.settle).not.toHaveBeenCalled();
+    });
+
+    it('withdraws an open system dispute in the coach favor when the player confirms', async () => {
+      prisma.session.updateMany.mockResolvedValue({ count: 0 });
+      const dispute = {
+        id: 'dispute-1',
+        sessionId: 'session-1',
+        kind: 'COACH_NO_SHOW',
+        status: 'OPEN',
+      };
+      prisma.dispute.findUnique.mockResolvedValue(dispute);
+
+      await service.confirm(
+        { id: 'player-1', role: Role.Amateur },
+        'session-1',
+      );
+
+      expect(resolution.resolve).toHaveBeenCalledWith(dispute, 'RELEASE', {
+        type: 'player',
+        userId: 'player-1',
+      });
+    });
+
+    it('never withdraws a dispute the player reported themselves', async () => {
+      prisma.session.updateMany.mockResolvedValue({ count: 0 });
+      prisma.dispute.findUnique.mockResolvedValue({
+        id: 'dispute-1',
+        sessionId: 'session-1',
+        kind: 'PLAYER_REPORTED',
+        status: 'OPEN',
+      });
+      prisma.session.findUniqueOrThrow.mockResolvedValue({
+        playerConfirmedAt: null,
+        coachConfirmedAt: null,
+      });
+
+      await expect(
+        service.confirm({ id: 'player-1', role: Role.Amateur }, 'session-1'),
+      ).rejects.toBeInstanceOf(ConflictException);
+      expect(resolution.resolve).not.toHaveBeenCalled();
+    });
+
+    it('requires the game answer from the coach of a game, and only from them', async () => {
+      const coach = { id: 'coach-1', role: Role.Professional };
+      await expect(
+        service.confirm(coach, 'session-1', CoachGameAnswer.TookPlace),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      prisma.session.findUnique.mockResolvedValue({
+        ...awaitingSession,
+        serviceType: 'GAME',
+      });
+      await expect(service.confirm(coach, 'session-1')).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      await expect(
+        service.confirm(
+          { id: 'player-1', role: Role.Amateur },
+          'session-1',
+          CoachGameAnswer.TookPlace,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      await service.confirm(coach, 'session-1', CoachGameAnswer.PlayerAbsent);
+      expect(prisma.session.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: 'session-1',
+          status: 'AWAITING_CONFIRMATION',
+          coachConfirmedAt: null,
+        },
+        data: {
+          coachConfirmedAt: expect.any(Date) as Date,
+          coachGameAnswer: 'PLAYER_ABSENT',
+        },
       });
       expect(settlement.settle).not.toHaveBeenCalled();
     });

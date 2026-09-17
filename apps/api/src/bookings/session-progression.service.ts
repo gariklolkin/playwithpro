@@ -1,19 +1,50 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { SessionStatus } from '@prisma/client';
+import { AttendanceOutcome, ServiceType, SessionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { isOnlineService } from './session-access';
 import { SettlementService } from './settlement.service';
 
 const HOUR = 3_600_000;
+
+/** What the clock needs to know about a session. */
+export interface ProgressableSession {
+  status: SessionStatus;
+  startsAt: Date;
+  endsAt: Date;
+  serviceType: ServiceType;
+  attendanceOutcome: AttendanceOutcome | null;
+  coachConfirmedAt: Date | null;
+}
+
+/** The Prisma select matching {@link ProgressableSession}. */
+export const PROGRESSION_SELECT = {
+  id: true,
+  status: true,
+  startsAt: true,
+  endsAt: true,
+  serviceType: true,
+  attendanceOutcome: true,
+  coachConfirmedAt: true,
+} as const;
+
+/** Classifications that leave an online session on the normal payout path. */
+const PAYABLE_OUTCOMES: AttendanceOutcome[] = [
+  AttendanceOutcome.HELD,
+  AttendanceOutcome.PLAYER_NO_SHOW,
+];
 
 /**
  * Clock-driven progression of paid sessions:
  * PAID_ESCROW → IN_PROGRESS at startsAt, IN_PROGRESS → AWAITING_CONFIRMATION
  * at endsAt, and AWAITING_CONFIRMATION → COMPLETED_PAID once the auto-confirm
  * window elapses with no player confirmation or dispute (a disputed session
- * is DISPUTED, so the clock never touches it). Attendance never drives these
- * transitions — a no-show session still auto-completes unless disputed.
+ * is DISPUTED, so the clock never touches it). Auto-confirm follows the
+ * evidence: an online session completes only once its attendance was
+ * classified as held or a player no-show (every other outcome became a system
+ * dispute — see NoShowService), and an in-person game only once its coach has
+ * answered.
  * Read paths normalize inline, so behavior never depends on sweep timing;
  * inline normalization only moves status — money is settled by the sweeps,
  * never from a read path.
@@ -41,17 +72,18 @@ export class SessionProgressionService implements OnApplicationBootstrap {
   }
 
   /** Pure: the status a paid session should have at `now`. */
-  progressedStatus(
-    session: { status: SessionStatus; startsAt: Date; endsAt: Date },
-    now: number,
-  ): SessionStatus {
+  progressedStatus(session: ProgressableSession, now: number): SessionStatus {
     const started =
       session.status === SessionStatus.PAID_ESCROW ||
       session.status === SessionStatus.IN_PROGRESS;
     const ended =
       (started || session.status === SessionStatus.AWAITING_CONFIRMATION) &&
       session.endsAt.getTime() <= now;
-    if (ended && this.autoConfirmAt(session).getTime() <= now) {
+    if (
+      ended &&
+      this.autoConfirmAt(session).getTime() <= now &&
+      this.payableByDefault(session)
+    ) {
       return SessionStatus.COMPLETED_PAID;
     }
     if (started && session.endsAt.getTime() <= now) {
@@ -66,19 +98,22 @@ export class SessionProgressionService implements OnApplicationBootstrap {
     return session.status;
   }
 
+  /** Whether the auto-confirm deadline may pay the coach without anyone acting. */
+  private payableByDefault(session: ProgressableSession): boolean {
+    return isOnlineService(session.serviceType)
+      ? session.attendanceOutcome !== null &&
+          PAYABLE_OUTCOMES.includes(session.attendanceOutcome)
+      : session.coachConfirmedAt !== null;
+  }
+
   /**
    * Persists the clock-derived status (race-safe: conditional on the current
    * one) and returns it; used inline by session read paths. Never settles
    * money — an inline auto-confirm leaves the payment HELD for the sweep.
    */
-  async normalize<
-    T extends {
-      id: string;
-      status: SessionStatus;
-      startsAt: Date;
-      endsAt: Date;
-    },
-  >(session: T): Promise<T> {
+  async normalize<T extends ProgressableSession & { id: string }>(
+    session: T,
+  ): Promise<T> {
     const target = this.progressedStatus(session, Date.now());
     if (target === session.status) {
       return session;
@@ -132,7 +167,7 @@ export class SessionProgressionService implements OnApplicationBootstrap {
           },
         ],
       },
-      select: { id: true, status: true, startsAt: true, endsAt: true },
+      select: PROGRESSION_SELECT,
     });
     for (const session of due) {
       try {

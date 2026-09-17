@@ -65,26 +65,32 @@
   "dispute": {
     "opened": {
       "player": {
-        "subject": "Nous avons reçu votre signalement concernant la séance avec {coach}",
-        "text": "Bonjour {name},\n\nNous avons reçu votre signalement concernant la séance {service} avec {coach} du {when}. Le paiement reste bloqué le temps que notre équipe l'examine ; vous recevrez un e-mail avec la décision.\n\n{sessionsLine}"
+        "subject": "{disputeKind, select, player_reported {Nous avons reçu votre signalement concernant la séance avec {coach}} other {Votre paiement pour la séance avec {coach} est suspendu}}",
+        "text": "Bonjour {name},\n\n{disputeKind, select, player_reported {Nous avons reçu votre signalement concernant la séance « {service} » avec {coach} du {when}. Le paiement reste bloqué jusqu'à l'examen par notre équipe ; vous recevrez un e-mail avec la décision.} coach_no_show {D'après nos données, {coach} n'a pas rejoint la séance « {service} » du {when}. Le paiement est suspendu.} no_attendance {D'après nos données, personne n'a rejoint la séance « {service} » avec {coach} du {when}. Le paiement est suspendu.} other {Nos données ne permettent pas de savoir si la séance « {service} » avec {coach} du {when} a eu lieu. Le paiement est suspendu.}}{systemLine}\n\n{sessionsLine}"
       },
       "coach": {
-        "subject": "Un problème a été signalé sur votre séance avec {player}",
-        "text": "Bonjour {name},\n\n{player} a signalé un problème sur la séance {service} du {when}. Le versement est suspendu le temps que notre équipe examine le signalement ; vous recevrez un e-mail avec la décision.\n\nVoir la séance : {url}"
+        "subject": "{disputeKind, select, player_reported {Un problème a été signalé pour votre séance avec {player}} other {Action requise : votre séance avec {player} est suspendue}}",
+        "text": "Bonjour {name},\n\n{disputeKind, select, player_reported {{player} a signalé un problème concernant la séance « {service} » du {when}. Le versement est suspendu pendant l'examen par notre équipe ; vous recevrez un e-mail avec la décision.} coach_no_show {D'après nos données, vous n'avez pas rejoint la séance « {service} » avec {player} du {when}. Le versement est suspendu.} no_attendance {D'après nos données, personne n'a rejoint la séance « {service} » avec {player} du {when}. Le versement est suspendu.} other {Nos données ne permettent pas de savoir si la séance « {service} » avec {player} du {when} a eu lieu. Le versement est suspendu.}}{systemLine}\n\nVoir la séance : {url}"
       },
       "admin": {
         "subject": "Nouveau litige : {player} vs {coach}, {service} du {date}",
-        "text": "Un litige a été ouvert sur la séance {service} entre {player} et {coach} prévue le {when}.\n\nTraitez-le dans la file : {url}"
+        "text": "Un litige ({disputeKind, select, player_reported {signalé par le joueur} coach_no_show {absence du coach} no_attendance {personne n'est venu} other {données insuffisantes}}) a été ouvert pour la séance « {service} » entre {player} et {coach} prévue le {when}.\n\nÀ examiner dans la file : {url}"
+      },
+      "systemLine": {
+        "playerDeadline": "\n\nSans réponse du coach, {amount} vous seront remboursés automatiquement le {respondBy}. Si la séance a bien eu lieu (par exemple sur une autre application), confirmez-la dans vos séances et le coach sera payé.",
+        "playerAdmin": "\n\nNotre équipe va l'examiner et vous recevrez un e-mail avec la décision. Si la séance a bien eu lieu, confirmez-la dans vos séances et le coach sera payé.",
+        "coachDeadline": "\n\nSi la séance a eu lieu, expliquez-nous ce qui s'est passé avant le {respondBy} : ouvrez la séance et cliquez sur « Répondre ». Sans réponse, le paiement est remboursé automatiquement au joueur.",
+        "coachAdmin": "\n\nNotre équipe va l'examiner. Vous pouvez ajouter votre version des faits : ouvrez la séance et cliquez sur « Répondre »."
       }
     },
     "resolved": {
       "player": {
-        "subject": "Votre litige est résolu : {outcome, select, refund {remboursé} other {paiement versé}}",
-        "text": "Bonjour {name},\n\nNotre équipe a examiné votre signalement concernant la séance {service} avec {coach} du {when}.\n\n{outcome, select, refund {Décision : {amount} vous est remboursé.} other {Décision : le paiement de {amount} a été versé au coach.}}\n\n{sessionsLine}"
+        "subject": "Séance avec {coach} : {outcome, select, refund {remboursée} other {paiement versé}}",
+        "text": "Bonjour {name},\n\n{via, select, system {Le coach n'a pas répondu au sujet de la séance « {service} » avec {coach} du {when}.} player_confirmation {Vous avez confirmé la séance « {service} » avec {coach} du {when}.} other {Notre équipe a examiné la séance « {service} » avec {coach} du {when}.}}\n\n{outcome, select, refund {Décision : {amount} vous sont remboursés.} other {Décision : le paiement de {amount} a été versé au coach.}}\n\n{sessionsLine}"
       },
       "coach": {
-        "subject": "Litige résolu : {outcome, select, refund {remboursé au joueur} other {versé à vous}}",
-        "text": "Bonjour {name},\n\nNotre équipe a examiné le signalement concernant votre séance {service} avec {player} du {when}.\n\n{outcome, select, refund {Décision : {amount} a été remboursé au joueur.} other {Décision : {net} vous a été versé.}}\n\n{sessionsLine}"
+        "subject": "Séance avec {player} : {outcome, select, refund {remboursée au joueur} other {versée sur votre compte}}",
+        "text": "Bonjour {name},\n\n{via, select, system {Nous n'avons pas reçu votre réponse au sujet de la séance « {service} » avec {player} du {when}.} player_confirmation {{player} a confirmé la séance « {service} » du {when}.} other {Notre équipe a examiné votre séance « {service} » avec {player} du {when}.}}\n\n{outcome, select, refund {Décision : {amount} ont été remboursés au joueur.} other {Décision : {net} vous ont été versés.}}\n\n{sessionsLine}"
       }
     }
   },

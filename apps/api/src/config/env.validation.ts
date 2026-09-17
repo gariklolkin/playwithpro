@@ -1,6 +1,7 @@
 import { Type, plainToInstance } from 'class-transformer';
 import {
   IsEnum,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -194,6 +195,32 @@ class EnvironmentVariables {
   @IsInt()
   @Min(1)
   AUTO_CONFIRM_WINDOW_HOURS = 48;
+
+  /** Minutes after the join window closes before attendance is classified (late provider reports). */
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  NO_SHOW_CLASSIFY_BUFFER_MIN = 5;
+
+  /** Hours a coach has to respond to a system-opened no-show dispute before the automatic refund. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  NO_SHOW_RESPONSE_WINDOW_HOURS = 48;
+
+  /**
+   * Kill switch: 'false' keeps classification and system disputes but never
+   * refunds automatically — every case waits for an admin. A string, so that
+   * "false" can never be coerced to true.
+   */
+  @IsIn(['true', 'false'])
+  NO_SHOW_AUTO_RESOLVE: 'true' | 'false' = 'true';
+
+  /** Days a game may stay without the coach's answer before an admin dispute is opened. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  GAME_UNANSWERED_DISPUTE_DAYS = 7;
 
   /**
    * Product observability (PostHog Cloud EU). All optional: without

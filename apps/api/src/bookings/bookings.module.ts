@@ -6,6 +6,7 @@ import { VideosModule } from '../videos/videos.module';
 import { BookingExpiryService } from './booking-expiry.service';
 import { BookingsController } from './bookings.controller';
 import { BookingsService } from './bookings.service';
+import { DisputeResolutionService } from './dispute-resolution.service';
 import { SessionProgressionService } from './session-progression.service';
 import { SessionVideosService } from './session-videos.service';
 import { SettlementService } from './settlement.service';
@@ -16,10 +17,16 @@ import { SettlementService } from './settlement.service';
   providers: [
     BookingsService,
     BookingExpiryService,
+    DisputeResolutionService,
     SessionProgressionService,
     SessionVideosService,
     SettlementService,
   ],
-  exports: [BookingsService, SessionProgressionService, SettlementService],
+  exports: [
+    BookingsService,
+    DisputeResolutionService,
+    SessionProgressionService,
+    SettlementService,
+  ],
 })
 export class BookingsModule {}

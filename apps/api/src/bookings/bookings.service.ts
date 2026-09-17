@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
+  CoachGameAnswer as SharedCoachGameAnswer,
   PaySessionResponse,
   PaymentStatus as SharedPaymentStatus,
   Role,
@@ -18,6 +19,9 @@ import {
   ServiceType as SharedServiceType,
 } from '@playwithpro/shared';
 import {
+  DisputeKind,
+  DisputeOutcome,
+  DisputeStatus,
   PaymentStatus,
   Prisma,
   ProProfileStatus,
@@ -45,6 +49,8 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { UnattachedVideosService } from '../videos/unattached-videos.service';
+import { DisputeResolutionService } from './dispute-resolution.service';
+import { toPrismaGameAnswer } from './dispute.mapper';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { PaySessionDto } from './dto/pay-session.dto';
 import { assertEditableBeforeStart, isOnlineService } from './session-access';
@@ -72,6 +78,7 @@ export class BookingsService {
     @Inject(PAYMENT_PROVIDER) private readonly payments: PaymentProvider,
     private readonly progression: SessionProgressionService,
     private readonly settlement: SettlementService,
+    private readonly resolution: DisputeResolutionService,
     private readonly sessionVideos: SessionVideosService,
     private readonly unattached: UnattachedVideosService,
     @Inject(ANALYTICS) private readonly analytics: Analytics,
@@ -394,19 +401,34 @@ export class BookingsService {
 
   /**
    * Records a party's confirmation of an awaiting_confirmation session.
-   * The player's confirmation completes the session and releases escrow;
-   * the coach's is dispute evidence only. Confirmation belongs to the two
-   * parties — admins read sessions but never confirm them.
+   * The player's confirmation completes the session and releases escrow —
+   * whatever the attendance classification says — and, on a session held by
+   * an open system-opened dispute, withdraws that dispute in the coach's
+   * favor. The coach's confirmation is dispute evidence only; for an
+   * in-person game it is a required answer that unlocks auto-confirm.
+   * Confirmation belongs to the two parties — admins never confirm.
    */
   async confirm(
     user: AuthenticatedUser,
     sessionId: string,
+    gameAnswer?: SharedCoachGameAnswer,
   ): Promise<SessionResponse> {
     const session = await this.requireParty(user, sessionId);
     const isPlayer = session.playerId === user.id;
     const isCoach = session.proProfile.userId === user.id;
     if (!isPlayer && !isCoach) {
       throw new NotFoundException();
+    }
+    const gameCoach = isCoach && !isOnlineService(session.serviceType);
+    if (gameCoach && gameAnswer === undefined) {
+      throw new BadRequestException(
+        'Answer whether the game took place or the player did not come.',
+      );
+    }
+    if (!gameCoach && gameAnswer !== undefined) {
+      throw new BadRequestException(
+        'Only the coach of an in-person game answers.',
+      );
     }
     // Persist the clock-derived status first so a session whose end time
     // just passed is confirmable without waiting for the sweep.
@@ -419,13 +441,14 @@ export class BookingsService {
           playerConfirmedAt: new Date(),
         },
       });
-      if (
-        confirmed.count === 0 &&
-        !(await this.hasConfirmed(session.id, 'player'))
-      ) {
-        throw new ConflictException('This session cannot be confirmed.');
+      if (confirmed.count === 1) {
+        await this.settlement.settle(session.id);
+      } else if (!(await this.confirmSystemDispute(session.id, user.id))) {
+        if (!(await this.hasConfirmed(session.id, 'player'))) {
+          throw new ConflictException('This session cannot be confirmed.');
+        }
+        await this.settlement.settle(session.id);
       }
-      await this.settlement.settle(session.id);
     } else {
       const confirmed = await this.prisma.session.updateMany({
         where: {
@@ -433,7 +456,12 @@ export class BookingsService {
           status: SessionStatus.AWAITING_CONFIRMATION,
           coachConfirmedAt: null,
         },
-        data: { coachConfirmedAt: new Date() },
+        data: {
+          coachConfirmedAt: new Date(),
+          ...(gameAnswer !== undefined
+            ? { coachGameAnswer: toPrismaGameAnswer(gameAnswer) }
+            : {}),
+        },
       });
       if (
         confirmed.count === 0 &&
@@ -443,6 +471,33 @@ export class BookingsService {
       }
     }
     return this.sessionResponse(session.id, user);
+  }
+
+  /**
+   * "Player confirmation always wins": on a session held by an open
+   * system-opened dispute the confirmation resolves it as a release. A
+   * dispute the player reported themselves is never withdrawn this way.
+   */
+  private async confirmSystemDispute(
+    sessionId: string,
+    playerId: string,
+  ): Promise<boolean> {
+    const dispute = await this.prisma.dispute.findUnique({
+      where: { sessionId },
+      select: { id: true, sessionId: true, kind: true, status: true },
+    });
+    if (
+      !dispute ||
+      dispute.kind === DisputeKind.PLAYER_REPORTED ||
+      dispute.status !== DisputeStatus.OPEN
+    ) {
+      return false;
+    }
+    await this.resolution.resolve(dispute, DisputeOutcome.RELEASE, {
+      type: 'player',
+      userId: playerId,
+    });
+    return true;
   }
 
   /**

@@ -800,7 +800,11 @@
         },
         "mediaUnavailable": "Your camera or microphone is unavailable. You can still see and hear the other party.",
         "cameraUnavailable": "Your camera is unavailable. The other party can still hear you.",
-        "micUnavailable": "Your microphone is unavailable. The other party can still see you."
+        "micUnavailable": "Your microphone is unavailable. The other party can still see you.",
+        "waitingNote": {
+          "player": "{name} hasn't joined yet. If they don't join, you won't be charged.",
+          "coach": "{name} hasn't joined yet. Stay in the room: if they don't come, the session still counts."
+        }
       },
       "speed": {
         "label": "Speed",
@@ -859,7 +863,52 @@
       "cancelWarning": "Cancel this session? The full amount is refunded and the slot reopens.",
       "cancelConfirm": "Yes, cancel",
       "cancelKeep": "Keep session",
-      "error": "Something went wrong. Try again."
+      "error": "Something went wrong. Try again.",
+      "evidence": {
+        "coachNever": "{coach} never joined the call.",
+        "coachLate": "{coach} joined {minutes, plural, one {# minute} other {# minutes}} late.",
+        "shortOverlap": "You were in the call together for {minutes, plural, one {# minute} other {# minutes}}.",
+        "playerNever": "{player} never joined the call.",
+        "nobody": "Nobody joined the call.",
+        "youNever": "Our records don't show you joining the call.",
+        "youLate": "You joined {minutes, plural, one {# minute} other {# minutes}} late.",
+        "gap": "We couldn't tell from our records whether this session took place."
+      },
+      "playerNoShowNote": "You stayed in the room, so the session counts: it is paid out automatically {relative}.",
+      "category": {
+        "label": "What went wrong?",
+        "coach_no_show": "Coach didn't show",
+        "coach_late_or_left_early": "Coach was late or left early",
+        "technical_problem": "Technical problem",
+        "other": "Other"
+      },
+      "disputeOptional": "Add details (optional)…",
+      "disputeOtherRequired": "Please describe what went wrong.",
+      "system": {
+        "title": "Payment on hold",
+        "refundIn": "The payment is on hold and will be refunded to you {relative} unless the coach responds.",
+        "adminDecides": "The payment is on hold. Our team will review the session and decide.",
+        "confirmHint": "Did the session take place after all? Confirm it and the coach is paid.",
+        "coachDeadline": "The payout is on hold. Unless you respond, the payment is refunded to the player {relative}.",
+        "coachAdmin": "The payout is on hold. Our team will review the session and decide.",
+        "respondCta": "Respond",
+        "respondPlaceholder": "Tell us what happened — for example, the call failed and you met on another app…",
+        "respondSubmit": "Send response",
+        "respondTooShort": "Please write at least {min} characters.",
+        "yourResponse": "Your response",
+        "coachResponse": "The coach's response",
+        "responded": "Thanks — our team will review your response. No automatic refund will happen."
+      },
+      "gameTitleCoach": "Did this game take place?",
+      "gameTookPlace": "The game took place",
+      "gamePlayerAbsent": "The player didn't come",
+      "gameAnswered": {
+        "took_place": "You answered: the game took place",
+        "player_absent": "You answered: the player didn't come"
+      },
+      "gameNoAutoConfirm": "The payout is released after your answer.",
+      "resolvedSystemRefund": "The coach didn't respond — payment refunded automatically",
+      "resolvedByConfirmation": "Confirmed by the player — payment released to the coach"
     },
     "review": {
       "cta": "Leave a review",
@@ -899,7 +948,7 @@
   },
   "adminDisputes": {
     "title": "Disputes",
-    "subtitle": "Player-reported problems with paid sessions. Escrow stays frozen until you decide.",
+    "subtitle": "Problems with paid sessions — reported by players or opened automatically from attendance. Escrow stays frozen until a decision.",
     "empty": "No open disputes.",
     "resolvedTitle": "Resolved",
     "openedAt": "dispute opened",
@@ -912,7 +961,32 @@
     "outcomeRefund": "Refunded to player",
     "error": "Resolution failed. Try again.",
     "connectedAt": "connected {time}",
-    "neverConnected": "never connected to the call"
+    "neverConnected": "never connected to the call",
+    "kind": {
+      "player_reported": "Reported by the player",
+      "coach_no_show": "Coach no-show",
+      "no_attendance": "Nobody attended",
+      "evidence_gap": "Evidence gap"
+    },
+    "filterAll": "All",
+    "filterLabel": "Filter by kind",
+    "summaryTitle": "Attendance summary",
+    "summaryPlayer": "Player first connected: {time}",
+    "summaryCoach": "Coach first connected: {time}",
+    "summaryNever": "never",
+    "summaryOverlap": "Together in the call: {minutes} min",
+    "summaryPartial": "Partial attendance",
+    "rawTitle": "Raw room entries",
+    "coachResponse": "Coach's response ({time})",
+    "autoResolveAt": "Refunds automatically {relative} unless the coach responds",
+    "previousNoShows": "{count, plural, =0 {No previous no-shows} one {# previous no-show} other {# previous no-shows}}",
+    "resolvedVia": {
+      "admin": "Resolved by an admin",
+      "system": "Resolved automatically — no coach response",
+      "player_confirmation": "Resolved by the player's confirmation"
+    },
+    "noReason": "No explanation given.",
+    "loadError": "Could not load disputes. Try again."
   },
   "adminConsole": {
     "roles": {
