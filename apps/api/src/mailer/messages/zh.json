@@ -49,16 +49,16 @@
     },
     "cancelled": {
       "player": {
-        "subject": "{cancelledBy, select, player {你取消了与 {coach} 的课程} other {{coach} 取消了你的课程}}",
-        "text": "{name}，你好！\n\n{cancelledBy, select, player {你取消了} other {{coach} 取消了}} {when} 的{service}课程。\n\n{amount} 将全额退还给你。\n\n附件更新会从你的日历中移除该课程。预订其他时间：{url}"
+        "subject": "{cancelledBy, select, player {您已取消与{coach}的课程} admin {您与{coach}的课程已被取消} other {{coach}取消了您的课程}}",
+        "text": "{name}，您好！\n\n{cancelledBy, select, player {您已取消} admin {我们的团队不得不取消} other {{coach}已取消}} {when} 的「{service}」课程。\n\n{tier, select, free {{amount} 将全额退还给您。} partial {取消时已超过免费取消期限，因此将退还您 {refund}，其余部分支付给教练。退款将在课程原定开始时间处理。} other {取消时已超过退款期限，因此款项将支付给教练。}}\n\n附件中的更新会将课程从您的日历中移除。预约其他时间：{url}"
       },
       "coach": {
-        "subject": "{cancelledBy, select, coach {你取消了与 {player} 的课程} other {{player} 取消了课程}}",
-        "text": "{name}，你好！\n\n{cancelledBy, select, coach {你取消了} other {{player} 取消了}} {when} 的{service}课程。时段已重新开放，球员已获退款。\n\n附件更新会从你的日历中移除该课程。\n{sessionsLine}"
+        "subject": "{cancelledBy, select, coach {您已取消与{player}的课程} admin {您与{player}的课程已被取消} other {{player}取消了课程}}",
+        "text": "{name}，您好！\n\n{cancelledBy, select, coach {您已取消} admin {我们的团队不得不取消} other {{player}已取消}} {when} 的「{service}」课程。该时段已重新开放。\n\n{tier, select, free {款项已全额退还给学员。} other {由于取消较晚，课程原定开始时间过后您将收到 {coachNet}。在此之前，您可以在课程列表中为学员全额退款。}}\n\n附件中的更新会将课程从您的日历中移除。\n{sessionsLine}"
       },
       "admin": {
         "subject": "教练 {coach} 取消了一节已付款课程",
-        "text": "{coach} 取消了与 {player} 的已付款{service}课程（原定 {when}）。球员已全额退款。\n\n课程：{url}"
+        "text": "{coach}取消了与{player}原定于 {when} 的已付费「{service}」课程。款项已全额退还给学员。{late, select, yes {这是一次临近取消（在免费取消期限之内）。} other {}}\n\n课程：{url}"
       }
     }
   },
@@ -166,6 +166,24 @@
     "coach": {
       "subject": "你与 {player} 的课程已改到 {date}",
       "text": "{name}，你好！\n\n你与 {player} 的{service}课程有了新时间：\n{when}\n\n{where}\n\n附件更新会替换你日历中的事件。\n{sessionsLine}"
+    }
+  },
+  "cancellation": {
+    "feeWaived": {
+      "player": {
+        "subject": "您与{coach}已取消的课程将全额退款",
+        "text": "{name}，您好！\n\n{when} 的「{service}」课程的临近取消费用已免除。{amount} 将全额退还给您。\n\n{sessionsLine}"
+      },
+      "coach": {
+        "subject": "与{player}课程的临近取消费用已免除",
+        "text": "{name}，您好！\n\n{when} 与{player}的「{service}」课程的临近取消费用已免除：学员将获得全额退款，本节课不会向您支付款项。\n\n{sessionsLine}"
+      }
+    },
+    "coachLate": {
+      "admin": {
+        "subject": "教练{coach}的临近取消已达 {count} 次",
+        "text": "{coach}在过去 90 天内临近取消了 {count} 节已付费课程——最近一次是 {when} 与{player}的「{service}」课程。\n\n查看该教练：{url}"
+      }
     }
   }
 }

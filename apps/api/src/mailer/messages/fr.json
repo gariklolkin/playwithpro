@@ -49,16 +49,16 @@
     },
     "cancelled": {
       "player": {
-        "subject": "{cancelledBy, select, player {Vous avez annulé votre séance avec {coach}} other {{coach} a annulé votre séance}}",
-        "text": "Bonjour {name},\n\n{cancelledBy, select, player {Vous avez annulé} other {{coach} a annulé}} la séance {service} du {when}.\n\n{amount} vous est intégralement remboursé.\n\nLa mise à jour jointe retire la séance de votre calendrier. Réserver un autre créneau : {url}"
+        "subject": "{cancelledBy, select, player {Vous avez annulé votre séance avec {coach}} admin {Votre séance avec {coach} a été annulée} other {{coach} a annulé votre séance}}",
+        "text": "Bonjour {name},\n\n{cancelledBy, select, player {Vous avez annulé} admin {Notre équipe a dû annuler} other {{coach} a annulé}} la séance « {service} » du {when}.\n\n{tier, select, free {{amount} vous sont remboursés intégralement.} partial {L'annulation est intervenue après la date limite d'annulation gratuite : {refund} vous sont remboursés et le reste revient au coach. Le remboursement est effectué à l'heure de début initiale de la séance.} other {L'annulation est intervenue après la date limite de remboursement : le paiement revient au coach.}}\n\nLa mise à jour ci-jointe retire la séance de votre calendrier. Réserver un autre créneau : {url}"
       },
       "coach": {
-        "subject": "{cancelledBy, select, coach {Vous avez annulé votre séance avec {player}} other {{player} a annulé la séance}}",
-        "text": "Bonjour {name},\n\n{cancelledBy, select, coach {Vous avez annulé} other {{player} a annulé}} la séance {service} du {when}. Le créneau est de nouveau libre et le joueur a été remboursé.\n\nLa mise à jour jointe retire la séance de votre calendrier.\n{sessionsLine}"
+        "subject": "{cancelledBy, select, coach {Vous avez annulé votre séance avec {player}} admin {Votre séance avec {player} a été annulée} other {{player} a annulé la séance}}",
+        "text": "Bonjour {name},\n\n{cancelledBy, select, coach {Vous avez annulé} admin {Notre équipe a dû annuler} other {{player} a annulé}} la séance « {service} » du {when}. Le créneau est de nouveau disponible.\n\n{tier, select, free {Le joueur a été remboursé intégralement.} other {L'annulation étant tardive, vous recevrez {coachNet} une fois l'heure de début initiale passée. D'ici là, vous pouvez rembourser intégralement le joueur depuis vos séances.}}\n\nLa mise à jour ci-jointe retire la séance de votre calendrier.\n{sessionsLine}"
       },
       "admin": {
         "subject": "Le coach {coach} a annulé une séance payée",
-        "text": "{coach} a annulé une séance {service} payée avec {player} prévue le {when}. Le joueur a été intégralement remboursé.\n\nSéance : {url}"
+        "text": "{coach} a annulé une séance payée « {service} » avec {player} prévue le {when}. Le joueur a été remboursé intégralement.{late, select, yes { Il s'agit d'une annulation tardive (dans la fenêtre d'annulation gratuite).} other {}}\n\nSéance : {url}"
       }
     }
   },
@@ -166,6 +166,24 @@
     "coach": {
       "subject": "Votre séance avec {player} est déplacée au {date}",
       "text": "Bonjour {name},\n\nVotre séance {service} avec {player} a un nouvel horaire :\n{when}\n\n{where}\n\nLa mise à jour jointe remplace l'événement dans votre calendrier.\n{sessionsLine}"
+    }
+  },
+  "cancellation": {
+    "feeWaived": {
+      "player": {
+        "subject": "Votre séance annulée avec {coach} est remboursée intégralement",
+        "text": "Bonjour {name},\n\nLes frais d'annulation tardive de la séance « {service} » du {when} ont été annulés. {amount} vous sont remboursés intégralement.\n\n{sessionsLine}"
+      },
+      "coach": {
+        "subject": "Les frais d'annulation tardive de la séance avec {player} ont été annulés",
+        "text": "Bonjour {name},\n\nLes frais d'annulation tardive de la séance « {service} » avec {player} du {when} ont été annulés : le joueur est remboursé intégralement et rien n'est versé pour cette séance.\n\n{sessionsLine}"
+      }
+    },
+    "coachLate": {
+      "admin": {
+        "subject": "Le coach {coach} atteint {count} annulations tardives",
+        "text": "{coach} a annulé tardivement {count} séances payées au cours des 90 derniers jours — la dernière étant la séance « {service} » avec {player} du {when}.\n\nExaminer le coach : {url}"
+      }
     }
   }
 }

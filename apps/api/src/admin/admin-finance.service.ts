@@ -13,6 +13,7 @@ import {
   SessionStatus as SharedSessionStatus,
 } from '@playwithpro/shared';
 import { DisputeStatus, PaymentStatus, Prisma } from '@prisma/client';
+import { toCancellationRecord } from '../bookings/session.mapper';
 import { toSharedServiceType } from '../pros/pro-profile.mapper';
 import { PrismaService } from '../prisma/prisma.service';
 import { toSharedRole } from '../users/user.mapper';
@@ -47,9 +48,29 @@ export class AdminFinanceService {
           session: {
             select: {
               serviceType: true,
+              status: true,
+              startsAt: true,
+              paidAt: true,
+              priceMinor: true,
+              platformFeeMinor: true,
+              playerId: true,
+              cancelFreeHours: true,
+              cancelLateRefundPercent: true,
+              cancelNoRefundHours: true,
+              cancelGraceMin: true,
+              cancelledAt: true,
+              cancelledBy: true,
+              cancellationTier: true,
+              cancellationRefundMinor: true,
+              cancellationLate: true,
+              cancellationReason: true,
+              feeWaivedAt: true,
               player: { select: { displayName: true } },
               proProfile: {
-                select: { user: { select: { displayName: true } } },
+                select: {
+                  userId: true,
+                  user: { select: { displayName: true } },
+                },
               },
             },
           },
@@ -57,21 +78,35 @@ export class AdminFinanceService {
       }),
     ]);
     return {
-      items: payments.map((payment) => ({
-        id: payment.id,
-        sessionId: payment.sessionId,
-        serviceType: toSharedServiceType(payment.session.serviceType),
-        playerDisplayName: payment.session.player.displayName,
-        coachDisplayName: payment.session.proProfile.user.displayName,
-        provider: payment.provider,
-        providerRef: payment.providerRef,
-        amountMinor: payment.amountMinor,
-        currency: payment.currency,
-        feeMinor: payment.feeMinor,
-        status: payment.status.toLowerCase() as SharedPaymentStatus,
-        createdAt: payment.createdAt.toISOString(),
-        updatedAt: payment.updatedAt.toISOString(),
-      })),
+      items: payments.map((payment) => {
+        // The record's "settled" is about *this* payment row.
+        const record = toCancellationRecord({
+          ...payment.session,
+          payments: [{ status: payment.status }],
+        });
+        return {
+          id: payment.id,
+          sessionId: payment.sessionId,
+          serviceType: toSharedServiceType(payment.session.serviceType),
+          playerDisplayName: payment.session.player.displayName,
+          coachDisplayName: payment.session.proProfile.user.displayName,
+          provider: payment.provider,
+          providerRef: payment.providerRef,
+          amountMinor: payment.amountMinor,
+          currency: payment.currency,
+          feeMinor: payment.feeMinor,
+          status: payment.status.toLowerCase() as SharedPaymentStatus,
+          refundedMinor: payment.refundedMinor,
+          sessionStatus:
+            payment.session.status.toLowerCase() as SharedSessionStatus,
+          sessionStartsAt: payment.session.startsAt.toISOString(),
+          cancellation: record
+            ? { ...record, reason: payment.session.cancellationReason }
+            : null,
+          createdAt: payment.createdAt.toISOString(),
+          updatedAt: payment.updatedAt.toISOString(),
+        };
+      }),
       total,
       page,
       pageSize: ADMIN_PAYMENTS_PAGE_SIZE,
@@ -91,6 +126,7 @@ export class AdminFinanceService {
       openDisputes,
       resolvedByOutcome,
       moneyGroups,
+      partialReleases,
       trendSessions,
       trendReleases,
     ] = await Promise.all([
@@ -107,6 +143,17 @@ export class AdminFinanceService {
         by: ['currency', 'status'],
         _sum: { amountMinor: true, feeMinor: true },
       }),
+      // Late cancellations: part of a released payment went back to the
+      // player, and the platform fee shrank with the retained part.
+      this.prisma.payment.findMany({
+        where: { status: PaymentStatus.RELEASED, refundedMinor: { gt: 0 } },
+        select: {
+          currency: true,
+          amountMinor: true,
+          feeMinor: true,
+          refundedMinor: true,
+        },
+      }),
       this.prisma.session.findMany({
         where: { createdAt: { gte: trendStart } },
         select: { createdAt: true },
@@ -118,7 +165,12 @@ export class AdminFinanceService {
           status: PaymentStatus.RELEASED,
           updatedAt: { gte: trendStart },
         },
-        select: { updatedAt: true, amountMinor: true, currency: true },
+        select: {
+          updatedAt: true,
+          amountMinor: true,
+          refundedMinor: true,
+          currency: true,
+        },
       }),
     ]);
 
@@ -179,6 +231,18 @@ export class AdminFinanceService {
         totals.refundedMinor += amount;
       }
     }
+    for (const partial of partialReleases) {
+      const refunded = partial.refundedMinor ?? 0;
+      const totals = totalsOf(partial.currency);
+      totals.releasedMinor -= refunded;
+      totals.refundedMinor += refunded;
+      totals.feeRevenueMinor -=
+        partial.feeMinor -
+        Math.round(
+          (partial.feeMinor * (partial.amountMinor - refunded)) /
+            partial.amountMinor,
+        );
+    }
 
     const trend: AdminTrendPoint[] = [];
     const trendIndex = new Map<string, AdminTrendPoint>();
@@ -202,12 +266,13 @@ export class AdminFinanceService {
       const entry = point.released.find(
         (item) => item.currency === release.currency,
       );
+      const releasedMinor = release.amountMinor - (release.refundedMinor ?? 0);
       if (entry) {
-        entry.amountMinor += release.amountMinor;
+        entry.amountMinor += releasedMinor;
       } else {
         point.released.push({
           currency: release.currency,
-          amountMinor: release.amountMinor,
+          amountMinor: releasedMinor,
         });
       }
     }

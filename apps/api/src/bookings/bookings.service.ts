@@ -19,6 +19,8 @@ import {
   ServiceType as SharedServiceType,
 } from '@playwithpro/shared';
 import {
+  CancellationTier,
+  CancelledBy,
   DisputeKind,
   DisputeOutcome,
   DisputeStatus,
@@ -49,6 +51,13 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { UnattachedVideosService } from '../videos/unattached-videos.service';
+import {
+  cancellationTerms,
+  policyOf,
+  toPolicyColumns,
+  type CancellationActor,
+  type CancellationPolicySnapshot,
+} from './cancellation-policy';
 import { DisputeResolutionService } from './dispute-resolution.service';
 import { toPrismaGameAnswer } from './dispute.mapper';
 import { CreateBookingDto } from './dto/create-booking.dto';
@@ -65,7 +74,25 @@ import {
 } from './session.mapper';
 
 const MINUTE = 60_000;
+const DAY = 24 * 60 * MINUTE;
 const PAYMENT_PROVIDER_NAME = 'mock';
+
+/** A coach's late cancellations inside the rolling window ending at `now`. */
+export function lateCancellationsWhere(
+  proProfileId: string | { in: string[] },
+  now: Date,
+): Prisma.SessionWhereInput {
+  return {
+    proProfileId,
+    cancelledBy: CancelledBy.COACH,
+    cancellationLate: true,
+    cancelledAt: {
+      gte: new Date(
+        now.getTime() - BookingsService.LATE_CANCELLATION_WINDOW_DAYS * DAY,
+      ),
+    },
+  };
+}
 
 @Injectable()
 export class BookingsService {
@@ -87,6 +114,20 @@ export class BookingsService {
 
   private readonly avatarUrlOf = (key: string): string =>
     this.storage.avatarUrl(key);
+
+  /** The platform's cancellation policy as configured right now. */
+  currentPolicy(): CancellationPolicySnapshot {
+    return {
+      freeHours: this.config.getOrThrow<number>('CANCELLATION_FREE_HOURS'),
+      lateRefundPercent: this.config.getOrThrow<number>(
+        'CANCELLATION_LATE_REFUND_PERCENT',
+      ),
+      noRefundHours: this.config.getOrThrow<number>(
+        'CANCELLATION_NO_REFUND_HOURS',
+      ),
+      graceMin: this.config.getOrThrow<number>('CANCELLATION_GRACE_MIN'),
+    };
+  }
 
   private responseExtras(): SessionResponseExtras {
     return {
@@ -161,6 +202,9 @@ export class BookingsService {
           startsAt: slot.startsAt,
           endsAt: slot.endsAt,
           expiresAt: new Date(Date.now() + ttlMinutes * MINUTE),
+          // The cancellation terms in force now travel with the booking,
+          // like the price: a later config change never reaches it.
+          ...toPolicyColumns(this.currentPolicy()),
         },
         include: SESSION_INCLUDE,
       });
@@ -334,6 +378,8 @@ export class BookingsService {
         data: {
           status: SessionStatus.PAID_ESCROW,
           expiresAt: null,
+          // Anchors the late-booking cancellation grace.
+          paidAt: new Date(),
           // The room slug is a capability: random enough to be unguessable,
           // minted atomically with the payment so invites can embed the URL.
           roomSlug: isOnlineService(session.serviceType)
@@ -501,10 +547,9 @@ export class BookingsService {
   }
 
   /**
-   * Pre-start cancellation of a paid session by either party: full refund,
-   * slot back on the market, calendar event revoked. The conditional update
-   * is the race guard against the progression sweep flipping the session
-   * in_progress at the same moment.
+   * Pre-start cancellation by either party: slot back on the market, calendar
+   * event revoked, money per the session's cancellation policy (see
+   * cancelPaid). Releasing an unpaid booking stays free and silent.
    */
   async cancel(
     user: AuthenticatedUser,
@@ -529,17 +574,76 @@ export class BookingsService {
       this.logger.log(`Unpaid session ${session.id} released by player`);
       return this.sessionResponse(session.id, user);
     }
+    await this.cancelPaid(
+      session,
+      user.id === session.playerId ? 'player' : 'coach',
+      user.id,
+    );
+    return this.sessionResponse(session.id, user);
+  }
+
+  /**
+   * Force majeure (injury, venue closed, platform outage): an admin cancels a
+   * paid session before its start with a full refund and a stored reason. It
+   * never counts as a late cancellation for either party.
+   */
+  async cancelByAdmin(
+    admin: AuthenticatedUser,
+    sessionId: string,
+    reason: string,
+  ): Promise<void> {
+    const session = await this.prisma.session.findUnique({
+      where: { id: sessionId },
+      include: SESSION_INCLUDE,
+    });
+    if (!session) {
+      throw new NotFoundException();
+    }
+    await this.cancelPaid(session, 'admin', admin.id, reason.trim());
+  }
+
+  /**
+   * The one pre-start cancellation of a paid session, whoever asks. The
+   * conditional update is the race guard against the progression sweep
+   * flipping the session in_progress at the same moment; it also writes the
+   * cancellation record — who, when, the tier and the refund — computed from
+   * the session's snapshotted policy. A full refund settles right away; a
+   * late player cancellation leaves the payment held until the original
+   * start time (the waiver window), see SettlementService.
+   */
+  private async cancelPaid(
+    session: SessionWithParties,
+    by: CancellationActor,
+    actorId: string,
+    reason?: string,
+  ): Promise<void> {
+    const now = new Date();
+    const terms = cancellationTerms({
+      policy: policyOf(session),
+      priceMinor: session.priceMinor,
+      feeMinor: session.platformFeeMinor,
+      startsAt: session.startsAt,
+      paidAt: session.paidAt,
+      by,
+      now,
+    });
     const cancelled = await this.prisma.$transaction(async (tx) => {
       const updated = await tx.session.updateMany({
         where: {
           id: session.id,
           status: SessionStatus.PAID_ESCROW,
-          startsAt: { gt: new Date() },
+          startsAt: { gt: now },
         },
         data: {
           status: SessionStatus.CANCELLED,
           // The CANCEL .ics must outrank the last invite/update.
           calendarSequence: { increment: 1 },
+          cancelledAt: now,
+          cancelledBy: by.toUpperCase() as CancelledBy,
+          cancellationTier: terms.tier,
+          cancellationRefundMinor: terms.refundMinor,
+          cancellationLate: terms.late,
+          cancellationReason: reason ?? null,
         },
       });
       if (updated.count === 0) {
@@ -549,28 +653,32 @@ export class BookingsService {
         where: { id: session.slotId, status: SlotStatus.BOOKED },
         data: { status: SlotStatus.OPEN },
       });
-      const cancelledBy = user.id === session.playerId ? 'player' : 'coach';
+      const payload = {
+        cancelledBy: by,
+        tier: terms.tier.toLowerCase(),
+        refundMinor: terms.refundMinor,
+      };
       const rows: Parameters<NotificationsService['enqueue']>[1] = [
         {
           kind: NotificationKind.SESSION_CANCELLED_PLAYER,
           sessionId: session.id,
           recipientId: session.playerId,
-          payload: { cancelledBy },
+          payload,
         },
         {
           kind: NotificationKind.SESSION_CANCELLED_COACH,
           sessionId: session.id,
           recipientId: session.proProfile.userId,
-          payload: { cancelledBy },
+          payload,
         },
       ];
-      if (cancelledBy === 'coach') {
+      if (by === 'coach') {
         for (const adminId of await this.notifications.adminIds(tx)) {
           rows.push({
             kind: NotificationKind.SESSION_CANCELLED_ADMIN,
             sessionId: session.id,
             recipientId: adminId,
-            payload: { cancelledBy },
+            payload,
           });
         }
       }
@@ -582,20 +690,133 @@ export class BookingsService {
         'Only paid sessions can be cancelled before they start.',
       );
     }
-    this.logger.log(`Session ${session.id} cancelled by user ${user.id}`);
+    this.logger.log(
+      `Session ${session.id} cancelled by ${by} ${actorId} (${terms.tier}, refund ${terms.refundMinor})`,
+    );
     this.analytics.track({
       event: LIFECYCLE_EVENTS.sessionCancelled,
-      distinctId: user.id,
+      distinctId: actorId,
       properties: {
         sessionId: session.id,
         serviceType: toSharedServiceType(session.serviceType),
         amountMinor: session.priceMinor,
         currency: session.currency,
-        cancelledBy: user.role,
+        cancelledBy: by,
+        tier: terms.tier.toLowerCase(),
+        refundMinor: terms.refundMinor,
+        late: terms.late,
       },
     });
+    if (terms.late) {
+      await this.flagUnreliableCoach(session.proProfileId, now);
+    }
     await this.settlement.settle(session.id);
     await this.releaseAttachments(session.id);
+  }
+
+  /** Late coach cancellations in the rolling window admins look at. */
+  static readonly LATE_CANCELLATION_WINDOW_DAYS = 90;
+
+  /**
+   * Tells the admins once, at the moment a coach's late cancellations reach
+   * the threshold — not again on every later one (the count is in the key).
+   */
+  private async flagUnreliableCoach(
+    proProfileId: string,
+    now: Date,
+  ): Promise<void> {
+    const threshold = this.config.getOrThrow<number>(
+      'COACH_LATE_CANCEL_THRESHOLD',
+    );
+    const count = await this.prisma.session.count({
+      where: lateCancellationsWhere(proProfileId, now),
+    });
+    if (count !== threshold) {
+      return;
+    }
+    const latest = await this.prisma.session.findFirst({
+      where: lateCancellationsWhere(proProfileId, now),
+      orderBy: { cancelledAt: 'desc' },
+      select: { id: true },
+    });
+    if (!latest) return;
+    const admins = await this.notifications.adminIds(this.prisma);
+    await this.notifications.enqueue(
+      this.prisma,
+      admins.map((adminId) => ({
+        kind: NotificationKind.COACH_LATE_CANCELLATIONS_ADMIN,
+        sessionId: latest.id,
+        recipientId: adminId,
+        payload: { count },
+      })),
+    );
+  }
+
+  /**
+   * Turns a late cancellation into a full refund while the payment has not
+   * settled: the coach's "Refund in full", or an admin's override. The
+   * session record and the payment row are touched in one transaction — the
+   * touch invalidates a settlement that read the row before the waiver (its
+   * claim is conditional on the row's version), and finding no held payment
+   * means the release already happened: nothing changes, 409.
+   */
+  async waiveCancellationFee(
+    user: AuthenticatedUser,
+    sessionId: string,
+  ): Promise<SessionResponse> {
+    const session = await this.requireParty(user, sessionId);
+    const isCoach = session.proProfile.userId === user.id;
+    if (!isCoach && user.role !== Role.Admin) {
+      throw new ForbiddenException('Only the coach can waive the late fee.');
+    }
+    const now = new Date();
+    await this.prisma.$transaction(async (tx) => {
+      const waived = await tx.session.updateMany({
+        where: {
+          id: session.id,
+          status: SessionStatus.CANCELLED,
+          cancellationTier: {
+            in: [CancellationTier.PARTIAL, CancellationTier.NONE],
+          },
+          feeWaivedAt: null,
+        },
+        data: {
+          feeWaivedAt: now,
+          feeWaivedById: user.id,
+          cancellationRefundMinor: session.priceMinor,
+        },
+      });
+      const held = await tx.payment.updateMany({
+        where: { sessionId: session.id, status: PaymentStatus.HELD },
+        data: { updatedAt: now },
+      });
+      if (waived.count === 0 || held.count === 0) {
+        throw new ConflictException(
+          'There is no late fee left to waive on this session.',
+        );
+      }
+      await this.notifications.enqueue(tx, [
+        {
+          kind: NotificationKind.CANCELLATION_FEE_WAIVED_PLAYER,
+          sessionId: session.id,
+          recipientId: session.playerId,
+        },
+        {
+          kind: NotificationKind.CANCELLATION_FEE_WAIVED_COACH,
+          sessionId: session.id,
+          recipientId: session.proProfile.userId,
+        },
+      ]);
+    });
+    this.logger.log(
+      `Late fee of session ${session.id} waived by ${user.role} ${user.id}`,
+    );
+    this.analytics.track({
+      event: LIFECYCLE_EVENTS.cancellationFeeWaived,
+      distinctId: user.id,
+      properties: { sessionId: session.id, waivedBy: user.role },
+    });
+    await this.settlement.settle(session.id);
     return this.sessionResponse(session.id, user);
   }
 

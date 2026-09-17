@@ -2,6 +2,11 @@ import type { CoachGameAnswer } from "../enums/dispute";
 import type { PaymentStatus } from "../enums/payment";
 import type { ServiceType } from "../enums/service-type";
 import type { SessionStatus } from "../enums/session-status";
+import type {
+  CancellationPolicyMoments,
+  CancellationRecord,
+  CancellationTerms,
+} from "./cancellation";
 import type { AttendanceSummary, DisputeSummary } from "./dispute";
 import type { PlayerCardResponse } from "./player-profile";
 import type { ReviewResponse } from "./review";
@@ -122,6 +127,15 @@ export interface SessionResponse {
   attendance: AttendanceSummary | null;
   /** State of the escrowed payment (held/released/refunded); null before a successful hold. */
   escrow: PaymentStatus | null;
+  /**
+   * The session's snapshotted cancellation terms as moments; set while the
+   * session is unpaid (as if paid now) or paid and not yet started.
+   */
+  cancellationPolicy: CancellationPolicyMoments | null;
+  /** What cancelling now means for the viewer; paid sessions before start, parties only. */
+  cancellationTerms: CancellationTerms | null;
+  /** How a paid session was cancelled; null otherwise. */
+  cancellation: CancellationRecord | null;
   /** The session's dispute, visible to its parties; null when none. */
   dispute: DisputeSummary | null;
   /** The player's review of this session; null when none yet. */

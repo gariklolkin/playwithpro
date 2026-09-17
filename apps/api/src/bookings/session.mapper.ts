@@ -1,4 +1,9 @@
 import {
+  CancellationPolicyMoments,
+  CancellationRecord,
+  CancellationTerms,
+  CancellationTier as SharedCancellationTier,
+  CancelledBy as SharedCancelledBy,
   PaymentStatus as SharedPaymentStatus,
   PlayerCardResponse,
   Role,
@@ -20,6 +25,11 @@ import type { AuthenticatedUser } from '../auth/auth-cookies';
 import { toPlayerCard } from '../players/player-profile.mapper';
 import { toSharedServiceType } from '../pros/pro-profile.mapper';
 import type { AttendanceRow } from '../session-rooms/attendance-classifier';
+import {
+  cancellationMoments,
+  cancellationTerms,
+  policyOf,
+} from './cancellation-policy';
 import {
   DISPUTE_SUMMARY_SELECT,
   DisputeSummaryRow,
@@ -245,6 +255,9 @@ export function toSessionResponse(
           )
         : null,
     escrow: escrow !== undefined ? ESCROW_STATUS[escrow] : null,
+    cancellationPolicy: toCancellationPolicy(session),
+    cancellationTerms: toCancellationTerms(session, extras?.viewer),
+    cancellation: toCancellationRecord(session),
     dispute: session.dispute ? toDisputeSummary(session.dispute) : null,
     review: session.review
       ? {
@@ -255,6 +268,125 @@ export function toSessionResponse(
       : null,
     reviewable: session.review === null && isPaidOut(session),
     createdAt: session.createdAt.toISOString(),
+  };
+}
+
+type CancellableSession = Pick<
+  SessionWithParties,
+  | 'status'
+  | 'startsAt'
+  | 'paidAt'
+  | 'priceMinor'
+  | 'platformFeeMinor'
+  | 'playerId'
+  | 'cancelFreeHours'
+  | 'cancelLateRefundPercent'
+  | 'cancelNoRefundHours'
+  | 'cancelGraceMin'
+  | 'cancelledAt'
+  | 'cancelledBy'
+  | 'cancellationTier'
+  | 'cancellationRefundMinor'
+  | 'cancellationLate'
+  | 'feeWaivedAt'
+  | 'payments'
+> & { proProfile: { userId: string } };
+
+/**
+ * The snapshotted terms as moments, while they can still matter: an unpaid
+ * booking (previewed as if paid now — the checkout block) and a paid session
+ * that has not started.
+ */
+export function toCancellationPolicy(
+  session: CancellableSession,
+  now = new Date(),
+): CancellationPolicyMoments | null {
+  const upcoming =
+    (session.status === 'PENDING_PAYMENT' ||
+      session.status === 'PAID_ESCROW') &&
+    session.startsAt.getTime() > now.getTime();
+  if (!upcoming) return null;
+  const policy = policyOf(session);
+  const moments = cancellationMoments(
+    policy,
+    session.startsAt,
+    session.paidAt ?? now,
+  );
+  return {
+    freeUntil: moments.freeUntil.toISOString(),
+    partialUntil: moments.partialUntil.toISOString(),
+    graceUntil: moments.graceUntil?.toISOString() ?? null,
+    lateRefundPercent: policy.lateRefundPercent,
+    graceMinutes: policy.graceMin,
+  };
+}
+
+/** What cancelling now means for the party who is looking. */
+export function toCancellationTerms(
+  session: CancellableSession,
+  viewer: AuthenticatedUser | undefined,
+  now = new Date(),
+): CancellationTerms | null {
+  if (
+    !viewer ||
+    session.status !== 'PAID_ESCROW' ||
+    session.startsAt.getTime() <= now.getTime()
+  ) {
+    return null;
+  }
+  const by =
+    viewer.id === session.playerId
+      ? 'player'
+      : viewer.id === session.proProfile.userId
+        ? 'coach'
+        : null;
+  if (by === null) return null;
+  const terms = cancellationTerms({
+    policy: policyOf(session),
+    priceMinor: session.priceMinor,
+    feeMinor: session.platformFeeMinor,
+    startsAt: session.startsAt,
+    paidAt: session.paidAt,
+    by,
+    now,
+  });
+  return {
+    tier: terms.tier.toLowerCase() as SharedCancellationTier,
+    refundMinor: terms.refundMinor,
+    coachNetMinor: terms.coachNetMinor,
+    late: terms.late,
+  };
+}
+
+/** The cancellation record of a paid session; unpaid releases have none. */
+export function toCancellationRecord(
+  session: CancellableSession,
+): CancellationRecord | null {
+  if (
+    session.status !== 'CANCELLED' ||
+    session.cancelledAt === null ||
+    session.cancelledBy === null ||
+    session.cancellationTier === null
+  ) {
+    return null;
+  }
+  const refundMinor = session.cancellationRefundMinor ?? session.priceMinor;
+  const retained = session.priceMinor - refundMinor;
+  const coachFee =
+    session.priceMinor === 0
+      ? 0
+      : Math.round((session.platformFeeMinor * retained) / session.priceMinor);
+  const settled = session.payments[0]?.status !== PaymentStatus.HELD;
+  return {
+    by: session.cancelledBy.toLowerCase() as SharedCancelledBy,
+    at: session.cancelledAt.toISOString(),
+    tier: session.cancellationTier.toLowerCase() as SharedCancellationTier,
+    refundMinor,
+    coachNetMinor: retained - coachFee,
+    late: session.cancellationLate,
+    waived: session.feeWaivedAt !== null,
+    settled,
+    settlesAt: settled ? null : session.startsAt.toISOString(),
   };
 }
 

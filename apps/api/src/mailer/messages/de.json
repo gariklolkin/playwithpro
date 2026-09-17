@@ -49,16 +49,16 @@
     },
     "cancelled": {
       "player": {
-        "subject": "{cancelledBy, select, player {Du hast deine Sitzung mit {coach} abgesagt} other {{coach} hat deine Sitzung abgesagt}}",
-        "text": "Hallo {name},\n\n{cancelledBy, select, player {du hast} other {{coach} hat}} die {service}-Sitzung am {when} abgesagt.\n\n{amount} wird dir vollständig erstattet.\n\nDie angehängte Aktualisierung entfernt die Sitzung aus deinem Kalender. Einen anderen Termin buchen: {url}"
+        "subject": "{cancelledBy, select, player {Du hast deine Sitzung mit {coach} storniert} admin {Deine Sitzung mit {coach} wurde storniert} other {{coach} hat deine Sitzung storniert}}",
+        "text": "Hallo {name},\n\n{cancelledBy, select, player {du hast} admin {unser Team musste} other {{coach} hat}} die {service}-Sitzung am {when} {cancelledBy, select, admin {stornieren} other {storniert}}.\n\n{tier, select, free {{amount} werden dir vollständig erstattet.} partial {Die Stornierung kam nach Ablauf der kostenlosen Stornofrist: {refund} werden dir erstattet, der Rest geht an den Trainer. Die Erstattung erfolgt zur ursprünglichen Startzeit der Sitzung.} other {Die Stornierung kam nach Ablauf der Erstattungsfrist: Die Zahlung geht an den Trainer.}}\n\nDas angehängte Update entfernt die Sitzung aus deinem Kalender. Neuen Termin buchen: {url}"
       },
       "coach": {
-        "subject": "{cancelledBy, select, coach {Du hast deine Sitzung mit {player} abgesagt} other {{player} hat die Sitzung abgesagt}}",
-        "text": "Hallo {name},\n\n{cancelledBy, select, coach {du hast} other {{player} hat}} die {service}-Sitzung am {when} abgesagt. Der Slot ist wieder frei und der Spieler wurde erstattet.\n\nDie angehängte Aktualisierung entfernt die Sitzung aus deinem Kalender.\n{sessionsLine}"
+        "subject": "{cancelledBy, select, coach {Du hast deine Sitzung mit {player} storniert} admin {Deine Sitzung mit {player} wurde storniert} other {{player} hat die Sitzung storniert}}",
+        "text": "Hallo {name},\n\n{cancelledBy, select, coach {du hast} admin {unser Team musste} other {{player} hat}} die {service}-Sitzung am {when} {cancelledBy, select, admin {stornieren} other {storniert}}. Der Termin ist wieder frei.\n\n{tier, select, free {Der Spieler hat den vollen Betrag zurückerhalten.} other {Da die Stornierung spät kam, erhältst du {coachNet}, sobald die ursprüngliche Startzeit verstrichen ist. Bis dahin kannst du dem Spieler unter deinen Sitzungen den vollen Betrag erstatten.}}\n\nDas angehängte Update entfernt die Sitzung aus deinem Kalender.\n{sessionsLine}"
       },
       "admin": {
         "subject": "Trainer {coach} hat eine bezahlte Sitzung abgesagt",
-        "text": "{coach} hat eine bezahlte {service}-Sitzung mit {player} am {when} abgesagt. Der Spieler wurde vollständig erstattet.\n\nSitzung: {url}"
+        "text": "{coach} hat eine bezahlte {service}-Sitzung mit {player} am {when} storniert. Der Spieler hat den vollen Betrag zurückerhalten.{late, select, yes { Dies war eine späte Stornierung (innerhalb der kostenlosen Stornofrist).} other {}}\n\nSitzung: {url}"
       }
     }
   },
@@ -166,6 +166,24 @@
     "coach": {
       "subject": "Deine Sitzung mit {player} wurde auf den {date} verlegt",
       "text": "Hallo {name},\n\ndeine {service}-Sitzung mit {player} hat einen neuen Termin:\n{when}\n\n{where}\n\nDie angehängte Aktualisierung ersetzt den Termin in deinem Kalender.\n{sessionsLine}"
+    }
+  },
+  "cancellation": {
+    "feeWaived": {
+      "player": {
+        "subject": "Deine stornierte Sitzung mit {coach} wird vollständig erstattet",
+        "text": "Hallo {name},\n\nauf die Gebühr für die späte Stornierung der {service}-Sitzung am {when} wurde verzichtet. {amount} werden dir vollständig erstattet.\n\n{sessionsLine}"
+      },
+      "coach": {
+        "subject": "Auf die Stornogebühr der Sitzung mit {player} wurde verzichtet",
+        "text": "Hallo {name},\n\nauf die Gebühr für die späte Stornierung der {service}-Sitzung mit {player} am {when} wurde verzichtet: Der Spieler erhält den vollen Betrag zurück, für diese Sitzung wird nichts ausgezahlt.\n\n{sessionsLine}"
+      }
+    },
+    "coachLate": {
+      "admin": {
+        "subject": "Trainer {coach} hat {count} späte Stornierungen erreicht",
+        "text": "{coach} hat in den letzten 90 Tagen {count} bezahlte Sitzungen spät storniert – zuletzt die {service}-Sitzung mit {player} am {when}.\n\nTrainer prüfen: {url}"
+      }
     }
   }
 }

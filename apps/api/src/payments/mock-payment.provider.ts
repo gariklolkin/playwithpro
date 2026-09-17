@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { MOCK_DECLINE_INSTRUMENT } from '@playwithpro/shared';
-import { HoldInput, HoldResult, PaymentProvider } from './payment-provider';
+import {
+  HoldInput,
+  HoldResult,
+  PaymentProvider,
+  ReleaseOptions,
+} from './payment-provider';
 
 /**
  * MVP stand-in: holds succeed instantly with a minted reference, no money
@@ -25,8 +30,12 @@ export class MockPaymentProvider implements PaymentProvider {
     });
   }
 
-  release(providerRef: string): Promise<void> {
-    this.logger.log(`Mock release of ${providerRef}`);
+  release(providerRef: string, options?: ReleaseOptions): Promise<void> {
+    this.logger.log(
+      options?.refundMinor
+        ? `Mock release of ${providerRef}, refunding ${options.refundMinor} of it`
+        : `Mock release of ${providerRef}`,
+    );
     return Promise.resolve();
   }
 

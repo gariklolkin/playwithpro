@@ -22,6 +22,19 @@ const base = {
   expiresAt: null,
   playerConfirmedAt: new Date(),
   coachConfirmedAt: null,
+  paidAt: new Date(Date.now() - 100 * HOUR),
+  cancelFreeHours: 24,
+  cancelLateRefundPercent: 50,
+  cancelNoRefundHours: 2,
+  cancelGraceMin: 30,
+  cancelledAt: null,
+  cancelledBy: null,
+  cancellationTier: null,
+  cancellationRefundMinor: null,
+  cancellationLate: false,
+  cancellationReason: null,
+  feeWaivedAt: null,
+  feeWaivedById: null,
   coachGameAnswer: null,
   attendanceOutcome: null,
   attendancePartial: false,
@@ -302,6 +315,141 @@ describe('no-show protection fields', () => {
     );
     expect(answered.coachGameAnswer).toBe('player_absent');
     expect(answered.autoConfirmAt).not.toBeNull();
+  });
+});
+
+describe('cancellation fields', () => {
+  const upcoming = {
+    ...base,
+    status: 'PAID_ESCROW',
+    startsAt: new Date(Date.now() + 10 * HOUR),
+    endsAt: new Date(Date.now() + 11 * HOUR),
+    payments: [{ status: 'HELD' }],
+  } as SessionWithParties;
+  const player = { id: 'player-1', role: Role.Amateur };
+  const coach = { id: 'coach-1', role: Role.Professional };
+
+  it('tells each party what cancelling now means for them', () => {
+    const forPlayer = toSessionResponse(upcoming, avatarUrlOf, {
+      viewer: player,
+    });
+    expect(forPlayer.cancellationTerms).toEqual({
+      tier: 'partial',
+      refundMinor: 2003,
+      coachNetMinor: 1802,
+      late: false,
+    });
+    expect(forPlayer.cancellationPolicy).toEqual({
+      freeUntil: new Date(
+        upcoming.startsAt.getTime() - 24 * HOUR,
+      ).toISOString(),
+      partialUntil: new Date(
+        upcoming.startsAt.getTime() - 2 * HOUR,
+      ).toISOString(),
+      graceUntil: null,
+      lateRefundPercent: 50,
+      graceMinutes: 30,
+    });
+
+    const forCoach = toSessionResponse(upcoming, avatarUrlOf, {
+      viewer: coach,
+    });
+    expect(forCoach.cancellationTerms).toEqual({
+      tier: 'free',
+      refundMinor: 4005,
+      coachNetMinor: 0,
+      late: true,
+    });
+  });
+
+  it('previews the grace on an unpaid late booking and offers no terms yet', () => {
+    const response = toSessionResponse(
+      {
+        ...upcoming,
+        status: 'PENDING_PAYMENT',
+        paidAt: null,
+        payments: [],
+      } as SessionWithParties,
+      avatarUrlOf,
+      { viewer: player },
+    );
+    expect(response.cancellationPolicy?.graceUntil).not.toBeNull();
+    expect(response.cancellationTerms).toBeNull();
+    expect(response.cancellation).toBeNull();
+  });
+
+  it('exposes nothing to a reader who is not a party, or once started', () => {
+    expect(
+      toSessionResponse(upcoming, avatarUrlOf, {
+        viewer: { id: 'admin-1', role: Role.Admin },
+      }).cancellationTerms,
+    ).toBeNull();
+    const started = toSessionResponse(
+      { ...upcoming, status: 'IN_PROGRESS' } as SessionWithParties,
+      avatarUrlOf,
+      { viewer: player },
+    );
+    expect(started.cancellationTerms).toBeNull();
+    expect(started.cancellationPolicy).toBeNull();
+  });
+
+  it('describes a late cancellation that still waits for the start time', () => {
+    const response = toSessionResponse(
+      {
+        ...upcoming,
+        status: 'CANCELLED',
+        cancelledAt: new Date('2026-09-18T08:00:00Z'),
+        cancelledBy: 'PLAYER',
+        cancellationTier: 'PARTIAL',
+        cancellationRefundMinor: 2003,
+      } as SessionWithParties,
+      avatarUrlOf,
+      { viewer: coach },
+    );
+    expect(response.cancellation).toEqual({
+      by: 'player',
+      at: '2026-09-18T08:00:00.000Z',
+      tier: 'partial',
+      refundMinor: 2003,
+      coachNetMinor: 1802,
+      late: false,
+      waived: false,
+      settled: false,
+      settlesAt: upcoming.startsAt.toISOString(),
+    });
+  });
+
+  it('describes a waived cancellation as a settled full refund', () => {
+    const response = toSessionResponse(
+      {
+        ...upcoming,
+        status: 'CANCELLED',
+        cancelledAt: new Date(),
+        cancelledBy: 'PLAYER',
+        cancellationTier: 'NONE',
+        cancellationRefundMinor: 4005,
+        feeWaivedAt: new Date(),
+        payments: [{ status: 'REFUNDED' }],
+      } as SessionWithParties,
+      avatarUrlOf,
+    );
+    expect(response.cancellation).toMatchObject({
+      tier: 'none',
+      refundMinor: 4005,
+      coachNetMinor: 0,
+      waived: true,
+      settled: true,
+      settlesAt: null,
+    });
+  });
+
+  it('has no record for an unpaid release', () => {
+    expect(
+      toSessionResponse(
+        { ...base, status: 'CANCELLED', payments: [] } as SessionWithParties,
+        avatarUrlOf,
+      ).cancellation,
+    ).toBeNull();
   });
 });
 

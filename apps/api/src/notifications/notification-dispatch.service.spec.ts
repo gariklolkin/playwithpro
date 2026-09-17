@@ -261,8 +261,14 @@ describe('NotificationDispatchService', () => {
       }),
       row('SESSION_CANCELLED_PLAYER', {
         id: 'n2',
-        session: sessionRow({ status: 'CANCELLED', calendarSequence: 1 }),
-        payload: { cancelledBy: 'coach' },
+        session: sessionRow({
+          status: 'CANCELLED',
+          calendarSequence: 1,
+          cancelledBy: 'PLAYER',
+          cancellationTier: 'PARTIAL',
+          cancellationRefundMinor: 2003,
+        }),
+        payload: { cancelledBy: 'player', tier: 'partial', refundMinor: 2003 },
       }),
     ]);
     await service.dispatchOnce();
@@ -277,7 +283,13 @@ describe('NotificationDispatchService', () => {
     expect(calendar.sendCancellation).toHaveBeenCalledWith(
       expect.objectContaining({ sequence: 1 }),
       expect.objectContaining({ role: 'player' }),
-      'coach',
+      // From the session's record: 20.02 retained minus the 2.00 fee on it.
+      {
+        cancelledBy: 'player',
+        tier: 'partial',
+        refundMinor: 2003,
+        coachNetMinor: 1802,
+      },
     );
     expect(mailer.deliver).not.toHaveBeenCalled();
   });

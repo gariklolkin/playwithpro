@@ -1,4 +1,9 @@
-import { DisputeOutcome, PaymentStatus, SessionStatus } from '@prisma/client';
+import {
+  CancellationTier,
+  DisputeOutcome,
+  PaymentStatus,
+  SessionStatus,
+} from '@prisma/client';
 import type { PaymentProvider } from '../payments/payment-provider';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -23,10 +28,18 @@ describe('SettlementService', () => {
     notifications as unknown as NotificationsService,
   );
 
+  const readAt = new Date('2026-09-20T10:00:00Z');
   const heldPayment = {
     id: 'payment-1',
     providerRef: 'mock-hold-session-1',
     status: PaymentStatus.HELD,
+    updatedAt: readAt,
+  };
+  /** The claim: still held AND unchanged since it was read (see the waiver). */
+  const claimWhere = {
+    id: 'payment-1',
+    status: PaymentStatus.HELD,
+    updatedAt: readAt,
   };
 
   beforeEach(() => {
@@ -38,6 +51,12 @@ describe('SettlementService', () => {
   const sessionInState = (
     status: SessionStatus,
     outcome: DisputeOutcome | null = null,
+    cancellation: Partial<{
+      startsAt: Date;
+      cancellationTier: CancellationTier | null;
+      cancellationRefundMinor: number | null;
+      feeWaivedAt: Date | null;
+    }> = {},
   ) => {
     prisma.session.findUnique.mockResolvedValue({
       status,
@@ -45,8 +64,13 @@ describe('SettlementService', () => {
       serviceType: 'CONSULTATION',
       priceMinor: 4005,
       currency: 'EUR',
+      startsAt: new Date(Date.now() - 60_000),
+      cancellationTier: null,
+      cancellationRefundMinor: null,
+      feeWaivedAt: null,
       proProfile: { userId: 'coach-1' },
       dispute: outcome === null ? null : { outcome },
+      ...cancellation,
     });
   };
 
@@ -56,10 +80,13 @@ describe('SettlementService', () => {
     await service.settle('session-1');
 
     expect(prisma.payment.updateMany).toHaveBeenCalledWith({
-      where: { id: 'payment-1', status: PaymentStatus.HELD },
-      data: { status: PaymentStatus.RELEASED },
+      where: claimWhere,
+      data: { status: PaymentStatus.RELEASED, refundedMinor: null },
     });
-    expect(payments.release).toHaveBeenCalledWith('mock-hold-session-1');
+    expect(payments.release).toHaveBeenCalledWith(
+      'mock-hold-session-1',
+      undefined,
+    );
     expect(payments.refund).not.toHaveBeenCalled();
     expect(analytics.track).toHaveBeenCalledWith({
       event: 'session_completed',
@@ -70,6 +97,7 @@ describe('SettlementService', () => {
         amountMinor: 4005,
         currency: 'EUR',
         sessionStatus: 'completed_paid',
+        refundedMinor: 0,
       },
     });
     // Completion emails follow the money, after the exactly-once movement.
@@ -112,6 +140,118 @@ describe('SettlementService', () => {
     );
   });
 
+  describe('late cancellations', () => {
+    const late = (
+      overrides: Parameters<typeof sessionInState>[2] = {},
+    ) =>
+      sessionInState(SessionStatus.CANCELLED, null, {
+        cancellationTier: CancellationTier.PARTIAL,
+        cancellationRefundMinor: 2003,
+        ...overrides,
+      });
+
+    it('refunds a free-tier cancellation right away', async () => {
+      late({
+        cancellationTier: CancellationTier.FREE,
+        cancellationRefundMinor: 4005,
+        startsAt: new Date(Date.now() + 3_600_000),
+      });
+
+      await service.settle('session-1');
+
+      expect(payments.refund).toHaveBeenCalledWith('mock-hold-session-1');
+    });
+
+    it('owes nothing before the original start time (the waiver window)', async () => {
+      late({ startsAt: new Date(Date.now() + 3_600_000) });
+
+      await service.settle('session-1');
+
+      expect(prisma.payment.updateMany).not.toHaveBeenCalled();
+      expect(payments.release).not.toHaveBeenCalled();
+      expect(payments.refund).not.toHaveBeenCalled();
+    });
+
+    it('settles at the start with one release carrying the refunded part', async () => {
+      late();
+
+      await service.settle('session-1');
+
+      expect(prisma.payment.updateMany).toHaveBeenCalledWith({
+        where: claimWhere,
+        data: { status: PaymentStatus.RELEASED, refundedMinor: 2003 },
+      });
+      expect(payments.release).toHaveBeenCalledWith('mock-hold-session-1', {
+        refundMinor: 2003,
+      });
+      expect(payments.refund).not.toHaveBeenCalled();
+      // Not a completed session, and no completion emails.
+      expect(analytics.track).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'cancellation_settled',
+          properties: expect.objectContaining({
+            refundedMinor: 2003,
+          }) as object,
+        }),
+      );
+      expect(notifications.enqueue).not.toHaveBeenCalled();
+    });
+
+    it('releases everything in the no-refund tier', async () => {
+      late({
+        cancellationTier: CancellationTier.NONE,
+        cancellationRefundMinor: 0,
+      });
+
+      await service.settle('session-1');
+
+      expect(prisma.payment.updateMany).toHaveBeenCalledWith({
+        where: claimWhere,
+        data: { status: PaymentStatus.RELEASED, refundedMinor: null },
+      });
+      expect(payments.release).toHaveBeenCalledWith(
+        'mock-hold-session-1',
+        undefined,
+      );
+    });
+
+    it('refunds in full once the fee was waived — even before the start', async () => {
+      late({
+        feeWaivedAt: new Date(),
+        cancellationRefundMinor: 4005,
+        startsAt: new Date(Date.now() + 3_600_000),
+      });
+
+      await service.settle('session-1');
+
+      expect(payments.refund).toHaveBeenCalledWith('mock-hold-session-1');
+      expect(payments.release).not.toHaveBeenCalled();
+    });
+
+    it('loses its claim to a waiver that touched the payment row meanwhile', async () => {
+      late();
+      // The waiver's transaction bumped updatedAt after this settle read it.
+      prisma.payment.updateMany.mockResolvedValue({ count: 0 });
+
+      await service.settle('session-1');
+
+      expect(payments.release).not.toHaveBeenCalled();
+      expect(payments.refund).not.toHaveBeenCalled();
+    });
+
+    it('reverts the refunded part with the claim when the provider fails', async () => {
+      late();
+      payments.release.mockRejectedValueOnce(new Error('provider down'));
+
+      await service.settle('session-1');
+
+      expect(prisma.payment.updateMany).toHaveBeenLastCalledWith({
+        where: { id: 'payment-1', status: PaymentStatus.RELEASED },
+        data: { status: PaymentStatus.HELD, refundedMinor: null },
+      });
+    });
+  });
+
   it.each([
     [DisputeOutcome.RELEASE, PaymentStatus.RELEASED],
     [DisputeOutcome.REFUND, PaymentStatus.REFUNDED],
@@ -123,8 +263,8 @@ describe('SettlementService', () => {
       await service.settle('session-1');
 
       expect(prisma.payment.updateMany).toHaveBeenCalledWith({
-        where: { id: 'payment-1', status: PaymentStatus.HELD },
-        data: { status: target },
+        where: claimWhere,
+        data: { status: target, refundedMinor: null },
       });
     },
   );
@@ -163,7 +303,7 @@ describe('SettlementService', () => {
 
     expect(prisma.payment.updateMany).toHaveBeenLastCalledWith({
       where: { id: 'payment-1', status: PaymentStatus.RELEASED },
-      data: { status: PaymentStatus.HELD },
+      data: { status: PaymentStatus.HELD, refundedMinor: null },
     });
   });
 

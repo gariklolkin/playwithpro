@@ -136,7 +136,12 @@ describe('IcsCalendarProvider', () => {
   });
 
   it('revokes with a higher sequence and names who cancelled', async () => {
-    await provider.sendCancellation({ ...input, sequence: 1 }, player, 'coach');
+    await provider.sendCancellation({ ...input, sequence: 1 }, player, {
+      cancelledBy: 'coach',
+      tier: 'free',
+      refundMinor: 4005,
+      coachNetMinor: 0,
+    });
 
     const [, mail] = deliver.mock.calls[0];
     expect(mail.subject).toBe('Coach Li cancelled your session');
@@ -144,6 +149,39 @@ describe('IcsCalendarProvider', () => {
     expect(mail.attachments?.[0].content).toContain('METHOD:CANCEL');
     expect(mail.attachments?.[0].content).toContain('SEQUENCE:1');
     expect(mail.attachments?.[0].contentType).toContain('method=CANCEL');
+  });
+
+  it('tells both sides what a late cancellation means in money', async () => {
+    const details = {
+      cancelledBy: 'player',
+      tier: 'partial',
+      refundMinor: 2003,
+      coachNetMinor: 1802,
+    } as const;
+    await provider.sendCancellation({ ...input, sequence: 1 }, player, details);
+    await provider.sendCancellation({ ...input, sequence: 1 }, coach, details);
+
+    const [[, toPlayer], [, toCoach]] = deliver.mock.calls;
+    expect(toPlayer.subject).toBe('You cancelled your session with Coach Li');
+    expect(toPlayer.text).toContain('€20.03 is refunded to you');
+    expect(toPlayer.text).toContain('original start time');
+    // The coach reads German.
+    expect(toCoach.text).toContain('18,02');
+    expect(toCoach.text).toContain('vollen Betrag erstatten');
+  });
+
+  it('names the platform when an admin cancels as force majeure', async () => {
+    await provider.sendCancellation({ ...input, sequence: 1 }, player, {
+      cancelledBy: 'admin',
+      tier: 'free',
+      refundMinor: 4005,
+      coachNetMinor: 0,
+    });
+
+    const [, mail] = deliver.mock.calls[0];
+    expect(mail.subject).toBe('Your session with Coach Li was cancelled');
+    expect(mail.text).toContain('Our team had to cancel');
+    expect(mail.text).toContain('refunded to you in full');
   });
 
   it('propagates delivery failures so the outbox can retry', async () => {

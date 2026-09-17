@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import {
+  CancellationTier,
   DisputeOutcome,
   NotificationKind,
   PaymentStatus,
@@ -29,6 +30,13 @@ import { toSharedServiceType } from '../pros/pro-profile.mapper';
  * A provider failure reverts the claim and the sweep retries — a session can
  * therefore be completed/resolved/cancelled while its payment briefly stays
  * HELD, never the other way around.
+ *
+ * A late player cancellation (partial or no refund) is the one case that
+ * waits: the payment stays HELD until the session's original start time so
+ * the coach or an admin can still waive the fee, then settles with a single
+ * partial release. The claim is also conditional on the payment row's
+ * version: a waiver touches the row in its own transaction, so a settlement
+ * that read it before the waiver loses its claim and the next pass refunds.
  */
 @Injectable()
 export class SettlementService implements OnApplicationBootstrap {
@@ -55,6 +63,10 @@ export class SettlementService implements OnApplicationBootstrap {
         serviceType: true,
         priceMinor: true,
         currency: true,
+        startsAt: true,
+        cancellationTier: true,
+        cancellationRefundMinor: true,
+        feeWaivedAt: true,
         proProfile: { select: { userId: true } },
         dispute: { select: { outcome: true } },
       },
@@ -62,10 +74,11 @@ export class SettlementService implements OnApplicationBootstrap {
     if (!session) {
       return;
     }
-    const target = this.terminalStatusFor(session);
-    if (target === null) {
+    const owed = this.movementFor(session, new Date());
+    if (owed === null) {
       return;
     }
+    const { target, refundMinor } = owed;
     const held = await this.prisma.payment.findFirst({
       where: { sessionId, status: PaymentStatus.HELD },
     });
@@ -73,20 +86,29 @@ export class SettlementService implements OnApplicationBootstrap {
       return;
     }
     const claimed = await this.prisma.payment.updateMany({
-      where: { id: held.id, status: PaymentStatus.HELD },
-      data: { status: target },
+      where: {
+        id: held.id,
+        status: PaymentStatus.HELD,
+        updatedAt: held.updatedAt,
+      },
+      data: { status: target, refundedMinor: refundMinor },
     });
     if (claimed.count === 0) {
       return;
     }
     try {
       if (target === PaymentStatus.RELEASED) {
-        await this.payments.release(held.providerRef);
+        await this.payments.release(
+          held.providerRef,
+          refundMinor ? { refundMinor } : undefined,
+        );
       } else {
         await this.payments.refund(held.providerRef);
       }
       this.logger.log(
-        `Settled payment ${held.id} for session ${sessionId} as ${target}`,
+        `Settled payment ${held.id} for session ${sessionId} as ${target}${
+          refundMinor ? ` (refunded part ${refundMinor})` : ''
+        }`,
       );
       // Money events are emitted here, after the exactly-once movement, so
       // the funnel counts each release/refund once — keyed by the payer.
@@ -113,10 +135,13 @@ export class SettlementService implements OnApplicationBootstrap {
         ]);
       }
       this.analytics.track({
+        // A late cancellation paying the coach is not a completed session.
         event:
-          target === PaymentStatus.RELEASED
-            ? LIFECYCLE_EVENTS.sessionCompleted
-            : LIFECYCLE_EVENTS.sessionRefunded,
+          target === PaymentStatus.REFUNDED
+            ? LIFECYCLE_EVENTS.sessionRefunded
+            : session.status === SessionStatus.CANCELLED
+              ? LIFECYCLE_EVENTS.cancellationSettled
+              : LIFECYCLE_EVENTS.sessionCompleted,
         distinctId: session.playerId,
         properties: {
           sessionId,
@@ -124,12 +149,13 @@ export class SettlementService implements OnApplicationBootstrap {
           amountMinor: session.priceMinor,
           currency: session.currency,
           sessionStatus: session.status.toLowerCase(),
+          refundedMinor: refundMinor ?? 0,
         },
       });
     } catch (error) {
       await this.prisma.payment.updateMany({
         where: { id: held.id, status: target },
-        data: { status: PaymentStatus.HELD },
+        data: { status: PaymentStatus.HELD, refundedMinor: null },
       });
       this.logger.error(
         `Provider ${target === PaymentStatus.RELEASED ? 'release' : 'refund'} failed for session ${sessionId}; will retry`,
@@ -184,24 +210,48 @@ export class SettlementService implements OnApplicationBootstrap {
   }
 
   /**
-   * The payment status the session's state owes: completion pays the coach,
-   * a refund-resolved dispute or a paid cancellation returns the money, a
-   * release-resolved dispute pays the coach. Anything else moves nothing.
+   * The money movement the session's state owes right now, or null. A
+   * completion pays the coach; a release-resolved dispute pays the coach, a
+   * refund-resolved one returns the money. A cancellation refunds in full
+   * when it was free, waived, or predates the policy (no record); a late one
+   * owes nothing until the original start time, then a release carrying the
+   * part that goes back to the player.
    */
-  private terminalStatusFor(session: {
-    status: SessionStatus;
-    dispute: { outcome: DisputeOutcome | null } | null;
-  }): PaymentStatus | null {
+  private movementFor(
+    session: {
+      status: SessionStatus;
+      startsAt: Date;
+      cancellationTier: CancellationTier | null;
+      cancellationRefundMinor: number | null;
+      feeWaivedAt: Date | null;
+      dispute: { outcome: DisputeOutcome | null } | null;
+    },
+    now: Date,
+  ): { target: PaymentStatus; refundMinor: number | null } | null {
     switch (session.status) {
       case SessionStatus.COMPLETED_PAID:
-        return PaymentStatus.RELEASED;
-      case SessionStatus.CANCELLED:
-        return PaymentStatus.REFUNDED;
+        return { target: PaymentStatus.RELEASED, refundMinor: null };
+      case SessionStatus.CANCELLED: {
+        const late =
+          session.feeWaivedAt === null &&
+          (session.cancellationTier === CancellationTier.PARTIAL ||
+            session.cancellationTier === CancellationTier.NONE);
+        if (!late) {
+          return { target: PaymentStatus.REFUNDED, refundMinor: null };
+        }
+        if (now.getTime() < session.startsAt.getTime()) {
+          return null;
+        }
+        return {
+          target: PaymentStatus.RELEASED,
+          refundMinor: session.cancellationRefundMinor || null,
+        };
+      }
       case SessionStatus.RESOLVED:
         return session.dispute?.outcome === DisputeOutcome.RELEASE
-          ? PaymentStatus.RELEASED
+          ? { target: PaymentStatus.RELEASED, refundMinor: null }
           : session.dispute?.outcome === DisputeOutcome.REFUND
-            ? PaymentStatus.REFUNDED
+            ? { target: PaymentStatus.REFUNDED, refundMinor: null }
             : null;
       default:
         return null;

@@ -3,6 +3,7 @@ import {
   REVIEWS_PAGE_SIZE,
   Role,
   ServiceType,
+  type CancellationPolicy,
   type PublicAvailabilitySlot,
   type PublicProProfileResponse,
   type ReviewListResponse,
@@ -49,10 +50,11 @@ export default async function CoachPage({
   params: Promise<{ locale: string; id: string }>;
 }) {
   const { locale, id } = await params;
-  const [profile, slots, reviews, user] = await Promise.all([
+  const [profile, slots, reviews, policy, user] = await Promise.all([
     fetchPublic<PublicProProfileResponse>(`/pros/${id}/profile`),
     fetchPublic<PublicAvailabilitySlot[]>(`/pros/${id}/slots`),
     fetchPublic<ReviewListResponse>(`/pros/${id}/reviews`),
+    fetchPublic<CancellationPolicy>("/cancellation-policy"),
     getCurrentUser(),
   ]);
   if (!profile) {
@@ -178,6 +180,7 @@ export default async function CoachPage({
           services={profile.services}
           initialSlots={slots ?? []}
           viewer={viewer}
+          cancellationPolicy={policy}
         />
       </div>
     </main>

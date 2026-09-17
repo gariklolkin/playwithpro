@@ -44,6 +44,15 @@ export const KIND_META: Record<NotificationKind, KindMeta> = {
   SESSION_CANCELLED_PLAYER: { messageKey: 'session.cancelled.player' },
   SESSION_CANCELLED_COACH: { messageKey: 'session.cancelled.coach' },
   SESSION_CANCELLED_ADMIN: { messageKey: 'session.cancelled.admin' },
+  CANCELLATION_FEE_WAIVED_PLAYER: {
+    messageKey: 'cancellation.feeWaived.player',
+  },
+  CANCELLATION_FEE_WAIVED_COACH: {
+    messageKey: 'cancellation.feeWaived.coach',
+  },
+  COACH_LATE_CANCELLATIONS_ADMIN: {
+    messageKey: 'cancellation.coachLate.admin',
+  },
   REVIEW_RECEIVED: {
     messageKey: 'review.received',
     preference: 'emailReviews',

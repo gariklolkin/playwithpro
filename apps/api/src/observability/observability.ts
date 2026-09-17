@@ -70,6 +70,8 @@ export const LIFECYCLE_EVENTS = {
   sessionCancelled: 'session_cancelled',
   sessionDisputed: 'session_disputed',
   disputeResolved: 'dispute_resolved',
+  cancellationFeeWaived: 'cancellation_fee_waived',
+  cancellationSettled: 'cancellation_settled',
   sessionClassified: 'session_classified',
   disputeAutoResolved: 'dispute_auto_resolved',
   disputeCoachResponded: 'dispute_coach_responded',

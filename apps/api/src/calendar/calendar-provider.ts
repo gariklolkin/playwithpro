@@ -28,6 +28,16 @@ export interface CalendarSessionInput extends SessionEmailFacts {
  * attendee in their own locale and timezone and THROWS on failure — the
  * notification outbox owns retries.
  */
+/** What the cancellation email tells each party, from the cancellation record. */
+export interface CancellationDetails {
+  cancelledBy: 'player' | 'coach' | 'admin';
+  tier: 'free' | 'partial' | 'none';
+  /** Returned to the player, minor units. */
+  refundMinor: number;
+  /** What the coach receives after the proportional fee, minor units. */
+  coachNetMinor: number;
+}
+
 export interface CalendarProvider {
   /** The invite (method REQUEST) with the role-specific email. */
   sendInvite(
@@ -39,11 +49,11 @@ export interface CalendarProvider {
     input: CalendarSessionInput,
     attendee: CalendarAttendee,
   ): Promise<void>;
-  /** Revokes the event (method CANCEL, higher sequence) and says who cancelled. */
+  /** Revokes the event (method CANCEL, higher sequence) and says who cancelled and what happens to the money. */
   sendCancellation(
     input: CalendarSessionInput,
     attendee: CalendarAttendee,
-    cancelledBy: 'player' | 'coach',
+    details: CancellationDetails,
   ): Promise<void>;
 }
 

@@ -908,7 +908,28 @@
       },
       "gameNoAutoConfirm": "您回答后款项才会发放。",
       "resolvedSystemRefund": "教练未回复——款项已自动退还",
-      "resolvedByConfirmation": "学员已确认——款项已支付给教练"
+      "resolvedByConfirmation": "学员已确认——款项已支付给教练",
+      "cancelTerms": {
+        "free": "取消这节课？{amount} 将全额退还给您，该时段将重新开放。",
+        "partial": "取消这节课？免费取消期限已过：将退还您 {refund}，{kept} 支付给教练。",
+        "none": "取消这节课？退款期限已过：不予退款，{amount} 支付给教练。",
+        "coach": "取消这节课？{amount} 将全额退还给学员，该时段将重新开放。",
+        "coachLate": "取消这节课？{amount} 将全额退还给学员。距离开始时间太近，将记录为临近取消。"
+      },
+      "cancelled": {
+        "byYou": "您已取消",
+        "byCoach": "教练已取消",
+        "byPlayer": "学员已取消",
+        "byAdmin": "由 PlayWithPro 取消",
+        "refunded": "已退款",
+        "partlyRefunded": "部分退款（{amount}）",
+        "paidToCoach": "已支付给教练",
+        "late": "临近取消",
+        "waived": "已免除取消费用",
+        "pendingPlayer": "{amount} 将于{relative}退还给您。",
+        "pendingCoach": "您将于{relative}收到 {amount}。在此之前，您可以为学员全额退款。",
+        "waiveCta": "全额退款"
+      }
     },
     "review": {
       "cta": "写评价",
@@ -1053,7 +1074,9 @@
         "prev": "上一页",
         "next": "下一页",
         "pageOf": "第 {page} 页，共 {total} 页"
-      }
+      },
+      "lateCancellations": "{count, plural, other {临近取消 # 次}}（90 天）",
+      "lateCancellationsLabel": "临近取消"
     },
     "transactions": {
       "title": "交易",
@@ -1110,6 +1133,32 @@
         "next": "下一页",
         "pageOf": "第 {page} 页，共 {total} 页"
       }
+    },
+    "sessionActions": {
+      "cancelCta": "取消课程（不可抗力）",
+      "reasonLabel": "原因",
+      "reasonPlaceholder": "受伤、场馆关闭、平台故障…",
+      "cancelHint": "学员将获得全额退款。此操作不计入临近取消。",
+      "cancelConfirm": "取消并退款",
+      "back": "返回",
+      "waiveCta": "免除取消费用",
+      "error": "操作失败，请重试。"
+    },
+    "cancellation": {
+      "partlyRefunded": "部分退款：{amount}",
+      "by": {
+        "player": "学员取消",
+        "coach": "教练取消",
+        "admin": "管理员取消"
+      },
+      "tier": {
+        "free": "全额退款",
+        "partial": "部分退款",
+        "none": "不退款"
+      },
+      "late": "临近取消",
+      "waived": "已免除费用",
+      "settlesAt": "{when} 结算"
     }
   },
   "clips": {
@@ -1221,5 +1270,15 @@
       "emailClipChanges": "视频更改",
       "emailReviews": "新评价"
     }
+  },
+  "cancellationPolicy": {
+    "title": "取消政策",
+    "yourTime": "（您的时间）",
+    "summary": "开始前 {freeHours} 小时可免费取消，开始前 {noRefundHours} 小时前取消退还 {percent}%，之后不予退款。教练取消时全额退款。",
+    "freeUntil": "{when} 前可免费取消。",
+    "grace": "付款后 {minutes} 分钟内可免费取消。",
+    "partialUntil": "{when} 前取消退还 {percent}%。",
+    "noRefundAfter": "之后不予退款。",
+    "coachCancels": "教练取消时全额退款。"
   }
 }

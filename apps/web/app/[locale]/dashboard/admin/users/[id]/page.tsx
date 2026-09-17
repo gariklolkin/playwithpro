@@ -128,6 +128,15 @@ export default async function AdminUserDetailPage({
                       : t("noReviews")
                   }
                 />
+                {user.lateCancellations ? (
+                  <Fact
+                    label={t("lateCancellationsLabel")}
+                    value={`${user.lateCancellations.flagged ? "⚠️ " : ""}${t(
+                      "lateCancellations",
+                      { count: user.lateCancellations.count },
+                    )}`}
+                  />
+                ) : null}
               </>
             ) : null}
           </dl>

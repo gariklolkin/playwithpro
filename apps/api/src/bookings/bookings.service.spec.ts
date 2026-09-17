@@ -67,6 +67,19 @@ const pendingSession = {
     ...verifiedProfile,
     user: { displayName: 'Coach', avatarKey: null },
   },
+  paidAt: null,
+  cancelFreeHours: 24,
+  cancelLateRefundPercent: 50,
+  cancelNoRefundHours: 2,
+  cancelGraceMin: 30,
+  cancelledAt: null,
+  cancelledBy: null,
+  cancellationTier: null,
+  cancellationRefundMinor: null,
+  cancellationLate: false,
+  cancellationReason: null,
+  feeWaivedAt: null,
+  feeWaivedById: null,
   coachGameAnswer: null,
   attendanceOutcome: null,
   attendancePartial: false,
@@ -88,7 +101,7 @@ describe('BookingsService', () => {
       updateMany: jest.fn(),
       findUniqueOrThrow: jest.fn(),
     },
-    payment: { update: jest.fn() },
+    payment: { update: jest.fn(), updateMany: jest.fn() },
   };
   const prisma = {
     proProfile: { findUnique: jest.fn() },
@@ -100,9 +113,12 @@ describe('BookingsService', () => {
       findUniqueOrThrow: jest.fn(),
       updateMany: jest.fn(),
       update: jest.fn(),
+      count: jest.fn(),
+      findFirst: jest.fn(),
     },
     payment: { create: jest.fn(), update: jest.fn() },
     dispute: { findUnique: jest.fn() },
+    user: { findMany: jest.fn() },
     $transaction: jest.fn(),
   };
   const resolution = { resolve: jest.fn() };
@@ -142,6 +158,11 @@ describe('BookingsService', () => {
         ROOM_JOIN_WINDOW_BEFORE_MIN: 15,
         ROOM_JOIN_WINDOW_AFTER_MIN: 30,
         AUTO_CONFIRM_WINDOW_HOURS: 48,
+        CANCELLATION_FREE_HOURS: 24,
+        CANCELLATION_LATE_REFUND_PERCENT: 50,
+        CANCELLATION_NO_REFUND_HOURS: 2,
+        CANCELLATION_GRACE_MIN: 30,
+        COACH_LATE_CANCEL_THRESHOLD: 3,
         WEB_APP_URL: 'http://localhost:3000',
       })[name],
   };
@@ -426,6 +447,7 @@ describe('BookingsService', () => {
           expiresAt: null,
           roomSlug: expect.any(String) as string,
           inviteSentAt: expect.any(Date) as Date,
+          paidAt: expect.any(Date) as Date,
         },
       });
       expect(result.paymentStatus).toBe('held');
@@ -750,18 +772,28 @@ describe('BookingsService', () => {
   });
 
   describe('cancel', () => {
+    // The fixture slot starts 24 h from module load: by the time a test
+    // runs, a fraction of a second has passed — inside the free window for a
+    // coach (late), and the player's tests set their own distance.
     const paidUpcoming = {
       ...pendingSession,
       status: 'PAID_ESCROW',
       expiresAt: null,
       inviteSentAt: null,
+      paidAt: new Date(Date.now() - 72 * HOUR),
       payments: [{ status: 'HELD' }],
     };
+    const startingIn = (hours: number) => ({
+      ...paidUpcoming,
+      startsAt: new Date(Date.now() + hours * HOUR),
+      endsAt: new Date(Date.now() + (hours + 1) * HOUR),
+    });
 
     beforeEach(() => {
       prisma.session.findUnique.mockResolvedValue(paidUpcoming);
       tx.session.updateMany.mockResolvedValue({ count: 1 });
       tx.availabilitySlot.updateMany.mockResolvedValue({ count: 1 });
+      prisma.session.count.mockResolvedValue(1);
       prisma.session.findUniqueOrThrow.mockResolvedValue({
         ...paidUpcoming,
         status: 'CANCELLED',
@@ -781,7 +813,18 @@ describe('BookingsService', () => {
           status: 'PAID_ESCROW',
           startsAt: { gt: expect.any(Date) as Date },
         },
-        data: { status: 'CANCELLED', calendarSequence: { increment: 1 } },
+        data: {
+          status: 'CANCELLED',
+          calendarSequence: { increment: 1 },
+          cancelledAt: expect.any(Date) as Date,
+          cancelledBy: 'COACH',
+          // A coach cancellation always refunds the player in full…
+          cancellationTier: 'FREE',
+          cancellationRefundMinor: 4005,
+          // …and inside the free-cancellation window it is recorded as late.
+          cancellationLate: true,
+          cancellationReason: null,
+        },
       });
       // Both parties are told who cancelled; a coach cancellation also
       // alerts every admin.
@@ -789,7 +832,7 @@ describe('BookingsService', () => {
         expect.objectContaining({
           kind: 'SESSION_CANCELLED_PLAYER',
           recipientId: 'player-1',
-          payload: { cancelledBy: 'coach' },
+          payload: { cancelledBy: 'coach', tier: 'free', refundMinor: 4005 },
         }),
         expect.objectContaining({
           kind: 'SESSION_CANCELLED_COACH',
@@ -812,10 +855,143 @@ describe('BookingsService', () => {
         distinctId: 'coach-1',
         properties: expect.objectContaining({
           sessionId: 'session-1',
-          cancelledBy: 'professional',
+          cancelledBy: 'coach',
           amountMinor: 4005,
+          tier: 'free',
+          late: true,
         }) as object,
       });
+    });
+
+    it.each([
+      [30, 'FREE', 4005],
+      [10, 'PARTIAL', 2003],
+      [1, 'NONE', 0],
+    ])(
+      'records the player tier %s h before start as %s (refund %s)',
+      async (hours, tier, refundMinor) => {
+        prisma.session.findUnique.mockResolvedValue(startingIn(hours));
+
+        await service.cancel(
+          { id: 'player-1', role: Role.Amateur },
+          'session-1',
+        );
+
+        expect(tx.session.updateMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              cancelledBy: 'PLAYER',
+              cancellationTier: tier,
+              cancellationRefundMinor: refundMinor,
+              cancellationLate: false,
+            }) as object,
+          }),
+        );
+        // The slot reopens in every tier; settlement decides about the money
+        // (now for a full refund, at the original start otherwise).
+        expect(tx.availabilitySlot.updateMany).toHaveBeenCalled();
+        expect(settlement.settle).toHaveBeenCalledWith('session-1');
+        // A player cancellation never alerts the admins.
+        const rows = notifications.enqueue.mock.calls[0][1] as unknown[];
+        expect(rows).toHaveLength(2);
+      },
+    );
+
+    it('honours the late-booking grace', async () => {
+      prisma.session.findUnique.mockResolvedValue({
+        ...startingIn(5),
+        paidAt: new Date(Date.now() - 20 * 60_000),
+      });
+
+      await service.cancel({ id: 'player-1', role: Role.Amateur }, 'session-1');
+
+      expect(tx.session.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            cancellationTier: 'FREE',
+            cancellationRefundMinor: 4005,
+          }) as object,
+        }),
+      );
+    });
+
+    it('uses the terms snapshotted on the session, not the current config', async () => {
+      prisma.session.findUnique.mockResolvedValue({
+        ...startingIn(10),
+        // Booked when the platform still offered 8 hours of free cancellation.
+        cancelFreeHours: 8,
+      });
+
+      await service.cancel({ id: 'player-1', role: Role.Amateur }, 'session-1');
+
+      expect(tx.session.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            cancellationTier: 'FREE',
+          }) as object,
+        }),
+      );
+    });
+
+    it('alerts the admins exactly when a coach reaches the late-cancellation threshold', async () => {
+      prisma.session.count.mockResolvedValue(3);
+      prisma.session.findFirst.mockResolvedValue({ id: 'session-1' });
+
+      await service.cancel(
+        { id: 'coach-1', role: Role.Professional },
+        'session-1',
+      );
+
+      expect(prisma.session.count).toHaveBeenCalledWith({
+        where: expect.objectContaining({
+          proProfileId: 'profile-1',
+          cancelledBy: 'COACH',
+          cancellationLate: true,
+        }) as object,
+      });
+      expect(notifications.enqueue).toHaveBeenLastCalledWith(prisma, [
+        {
+          kind: 'COACH_LATE_CANCELLATIONS_ADMIN',
+          sessionId: 'session-1',
+          recipientId: 'admin-1',
+          payload: { count: 3 },
+        },
+      ]);
+    });
+
+    it('stays quiet below and above the threshold', async () => {
+      for (const count of [2, 4]) {
+        notifications.enqueue.mockClear();
+        prisma.session.count.mockResolvedValue(count);
+        await service.cancel(
+          { id: 'coach-1', role: Role.Professional },
+          'session-1',
+        );
+        expect(notifications.enqueue).toHaveBeenCalledTimes(1);
+      }
+    });
+
+    it('force majeure: an admin cancels with a reason, in full, never late', async () => {
+      prisma.session.findUnique.mockResolvedValue(startingIn(1));
+
+      await service.cancelByAdmin(
+        { id: 'admin-1', role: Role.Admin },
+        'session-1',
+        '  Venue closed  ',
+      );
+
+      expect(tx.session.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            cancelledBy: 'ADMIN',
+            cancellationTier: 'FREE',
+            cancellationRefundMinor: 4005,
+            cancellationLate: false,
+            cancellationReason: 'Venue closed',
+          }) as object,
+        }),
+      );
+      expect(settlement.settle).toHaveBeenCalledWith('session-1');
     });
 
     it('lets the player release an unpaid booking without settlement', async () => {
@@ -870,6 +1046,108 @@ describe('BookingsService', () => {
     it('yields not-found for a third party', async () => {
       await expect(
         service.cancel({ id: 'stranger', role: Role.Amateur }, 'session-1'),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  describe('waiveCancellationFee', () => {
+    const cancelledLate = {
+      ...pendingSession,
+      status: 'CANCELLED',
+      expiresAt: null,
+      cancelledAt: new Date(),
+      cancelledBy: 'PLAYER',
+      cancellationTier: 'PARTIAL',
+      cancellationRefundMinor: 2003,
+      payments: [{ status: 'HELD' }],
+    };
+
+    beforeEach(() => {
+      prisma.session.findUnique.mockResolvedValue(cancelledLate);
+      prisma.session.findUniqueOrThrow.mockResolvedValue(cancelledLate);
+      tx.session.updateMany.mockResolvedValue({ count: 1 });
+      tx.payment.updateMany.mockResolvedValue({ count: 1 });
+    });
+
+    it('records the waiver, touches the held payment and settles a full refund', async () => {
+      await service.waiveCancellationFee(
+        { id: 'coach-1', role: Role.Professional },
+        'session-1',
+      );
+
+      expect(tx.session.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: 'session-1',
+          status: 'CANCELLED',
+          cancellationTier: { in: ['PARTIAL', 'NONE'] },
+          feeWaivedAt: null,
+        },
+        data: {
+          feeWaivedAt: expect.any(Date) as Date,
+          feeWaivedById: 'coach-1',
+          cancellationRefundMinor: 4005,
+        },
+      });
+      // The touch invalidates a settlement that read the row before us.
+      expect(tx.payment.updateMany).toHaveBeenCalledWith({
+        where: { sessionId: 'session-1', status: 'HELD' },
+        data: { updatedAt: expect.any(Date) as Date },
+      });
+      expect(notifications.enqueue).toHaveBeenCalledWith(tx, [
+        expect.objectContaining({
+          kind: 'CANCELLATION_FEE_WAIVED_PLAYER',
+          recipientId: 'player-1',
+        }),
+        expect.objectContaining({
+          kind: 'CANCELLATION_FEE_WAIVED_COACH',
+          recipientId: 'coach-1',
+        }),
+      ]);
+      expect(settlement.settle).toHaveBeenCalledWith('session-1');
+    });
+
+    it('409s once the payment has settled — nothing changes', async () => {
+      tx.payment.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(
+        service.waiveCancellationFee(
+          { id: 'coach-1', role: Role.Professional },
+          'session-1',
+        ),
+      ).rejects.toBeInstanceOf(ConflictException);
+      expect(notifications.enqueue).not.toHaveBeenCalled();
+      expect(settlement.settle).not.toHaveBeenCalled();
+    });
+
+    it('409s a second waiver and a free cancellation', async () => {
+      tx.session.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(
+        service.waiveCancellationFee(
+          { id: 'coach-1', role: Role.Professional },
+          'session-1',
+        ),
+      ).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('lets an admin waive, but never the player or a stranger', async () => {
+      await service.waiveCancellationFee(
+        { id: 'admin-1', role: Role.Admin },
+        'session-1',
+      );
+      expect(settlement.settle).toHaveBeenCalledTimes(1);
+
+      await expect(
+        service.waiveCancellationFee(
+          { id: 'player-1', role: Role.Amateur },
+          'session-1',
+        ),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(
+        service.waiveCancellationFee(
+          { id: 'stranger', role: Role.Professional },
+          'session-1',
+        ),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
   });

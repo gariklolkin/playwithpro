@@ -908,7 +908,28 @@
       },
       "gameNoAutoConfirm": "Die Auszahlung wird nach deiner Antwort freigegeben.",
       "resolvedSystemRefund": "Der Trainer hat nicht geantwortet – Zahlung automatisch erstattet",
-      "resolvedByConfirmation": "Vom Spieler bestätigt – Zahlung an den Trainer freigegeben"
+      "resolvedByConfirmation": "Vom Spieler bestätigt – Zahlung an den Trainer freigegeben",
+      "cancelTerms": {
+        "free": "Diese Sitzung stornieren? {amount} werden dir vollständig erstattet und der Termin wird wieder frei.",
+        "partial": "Diese Sitzung stornieren? Die kostenlose Stornofrist ist abgelaufen: {refund} werden dir erstattet, {kept} gehen an den Trainer.",
+        "none": "Diese Sitzung stornieren? Die Erstattungsfrist ist abgelaufen: Es wird nichts erstattet, {amount} gehen an den Trainer.",
+        "coach": "Diese Sitzung stornieren? Der Spieler erhält {amount} vollständig zurück und der Termin wird wieder frei.",
+        "coachLate": "Diese Sitzung stornieren? Der Spieler erhält {amount} vollständig zurück. So kurz vor dem Start wird dies als späte Stornierung vermerkt."
+      },
+      "cancelled": {
+        "byYou": "Du hast storniert",
+        "byCoach": "Der Trainer hat storniert",
+        "byPlayer": "Der Spieler hat storniert",
+        "byAdmin": "Von PlayWithPro storniert",
+        "refunded": "Erstattet",
+        "partlyRefunded": "Teilweise erstattet ({amount})",
+        "paidToCoach": "An den Trainer ausgezahlt",
+        "late": "Späte Stornierung",
+        "waived": "Auf Stornogebühr verzichtet",
+        "pendingPlayer": "{amount} werden dir {relative} erstattet.",
+        "pendingCoach": "Du erhältst {amount} {relative}. Bis dahin kannst du dem Spieler den vollen Betrag erstatten.",
+        "waiveCta": "Vollständig erstatten"
+      }
     },
     "review": {
       "cta": "Bewertung abgeben",
@@ -1053,7 +1074,9 @@
         "prev": "Zurück",
         "next": "Weiter",
         "pageOf": "Seite {page} von {total}"
-      }
+      },
+      "lateCancellations": "{count, plural, one {# späte Stornierung} other {# späte Stornierungen}} (90 T.)",
+      "lateCancellationsLabel": "Späte Stornierungen"
     },
     "transactions": {
       "title": "Transaktionen",
@@ -1110,6 +1133,32 @@
         "next": "Weiter",
         "pageOf": "Seite {page} von {total}"
       }
+    },
+    "sessionActions": {
+      "cancelCta": "Sitzung stornieren (höhere Gewalt)",
+      "reasonLabel": "Grund",
+      "reasonPlaceholder": "Verletzung, Halle geschlossen, Plattformausfall…",
+      "cancelHint": "Der Spieler erhält den vollen Betrag zurück. Dies zählt nie als späte Stornierung.",
+      "cancelConfirm": "Stornieren und erstatten",
+      "back": "Zurück",
+      "waiveCta": "Auf Stornogebühr verzichten",
+      "error": "Die Aktion ist fehlgeschlagen. Versuche es erneut."
+    },
+    "cancellation": {
+      "partlyRefunded": "Teilweise erstattet: {amount}",
+      "by": {
+        "player": "Vom Spieler storniert",
+        "coach": "Vom Trainer storniert",
+        "admin": "Von einem Admin storniert"
+      },
+      "tier": {
+        "free": "volle Erstattung",
+        "partial": "teilweise Erstattung",
+        "none": "keine Erstattung"
+      },
+      "late": "spät",
+      "waived": "Gebühr erlassen",
+      "settlesAt": "Abrechnung {when}"
     }
   },
   "clips": {
@@ -1221,5 +1270,15 @@
       "emailClipChanges": "Clip-Änderung",
       "emailReviews": "Neue Bewertung"
     }
+  },
+  "cancellationPolicy": {
+    "title": "Stornobedingungen",
+    "yourTime": "(deine Zeit)",
+    "summary": "Kostenlose Stornierung bis {freeHours} Std. vor Beginn, {percent} % Erstattung bis {noRefundHours} Std. vorher, danach keine Erstattung. Volle Erstattung, wenn der Trainer storniert.",
+    "freeUntil": "Kostenlose Stornierung bis {when}.",
+    "grace": "Kostenlose Stornierung für {minutes} Minuten nach der Zahlung.",
+    "partialUntil": "{percent} % Erstattung bis {when}.",
+    "noRefundAfter": "Danach keine Erstattung.",
+    "coachCancels": "Volle Erstattung, wenn der Trainer storniert."
   }
 }

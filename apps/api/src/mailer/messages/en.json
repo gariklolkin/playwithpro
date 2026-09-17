@@ -49,16 +49,16 @@
     },
     "cancelled": {
       "player": {
-        "subject": "{cancelledBy, select, player {You cancelled your session with {coach}} other {{coach} cancelled your session}}",
-        "text": "Hi {name},\n\n{cancelledBy, select, player {You cancelled} other {{coach} cancelled}} the {service} session on {when}.\n\n{amount} is refunded to you in full.\n\nThe attached update removes the session from your calendar. Book another time: {url}"
+        "subject": "{cancelledBy, select, player {You cancelled your session with {coach}} admin {Your session with {coach} was cancelled} other {{coach} cancelled your session}}",
+        "text": "Hi {name},\n\n{cancelledBy, select, player {You cancelled} admin {Our team had to cancel} other {{coach} cancelled}} the {service} session on {when}.\n\n{tier, select, free {{amount} is refunded to you in full.} partial {The cancellation came after the free-cancellation deadline, so {refund} is refunded to you and the rest goes to the coach. The refund is processed at the session's original start time.} other {The cancellation came after the refund deadline, so the payment goes to the coach.}}\n\nThe attached update removes the session from your calendar. Book another time: {url}"
       },
       "coach": {
-        "subject": "{cancelledBy, select, coach {You cancelled your session with {player}} other {{player} cancelled the session}}",
-        "text": "Hi {name},\n\n{cancelledBy, select, coach {You cancelled} other {{player} cancelled}} the {service} session on {when}. The slot is open again and the player was refunded.\n\nThe attached update removes the session from your calendar.\n{sessionsLine}"
+        "subject": "{cancelledBy, select, coach {You cancelled your session with {player}} admin {Your session with {player} was cancelled} other {{player} cancelled the session}}",
+        "text": "Hi {name},\n\n{cancelledBy, select, coach {You cancelled} admin {Our team had to cancel} other {{player} cancelled}} the {service} session on {when}. The slot is open again.\n\n{tier, select, free {The player was refunded in full.} other {Because the cancellation came late, you receive {coachNet} once the session's original start time has passed. Until then you can refund the player in full from your sessions.}}\n\nThe attached update removes the session from your calendar.\n{sessionsLine}"
       },
       "admin": {
         "subject": "Coach {coach} cancelled a paid session",
-        "text": "{coach} cancelled a paid {service} session with {player} scheduled for {when}. The player was refunded in full.\n\nSession: {url}"
+        "text": "{coach} cancelled a paid {service} session with {player} scheduled for {when}. The player was refunded in full.{late, select, yes { This was a late cancellation (inside the free-cancellation window).} other {}}\n\nSession: {url}"
       }
     }
   },
@@ -166,6 +166,24 @@
     "coach": {
       "subject": "Your session with {player} moved to {date}",
       "text": "Hi {name},\n\nYour {service} session with {player} has a new time:\n{when}\n\n{where}\n\nThe attached update replaces the event in your calendar.\n{sessionsLine}"
+    }
+  },
+  "cancellation": {
+    "feeWaived": {
+      "player": {
+        "subject": "Your cancelled session with {coach} is refunded in full",
+        "text": "Hi {name},\n\nThe late-cancellation fee for the {service} session on {when} was waived. {amount} is refunded to you in full.\n\n{sessionsLine}"
+      },
+      "coach": {
+        "subject": "The late fee for the session with {player} was waived",
+        "text": "Hi {name},\n\nThe late-cancellation fee for the {service} session with {player} on {when} was waived: the player is refunded in full and nothing is paid out for this session.\n\n{sessionsLine}"
+      }
+    },
+    "coachLate": {
+      "admin": {
+        "subject": "Coach {coach} reached {count} late cancellations",
+        "text": "{coach} has cancelled {count} paid sessions late within the last 90 days — the latest was the {service} session with {player} on {when}.\n\nReview the coach: {url}"
+      }
     }
   }
 }

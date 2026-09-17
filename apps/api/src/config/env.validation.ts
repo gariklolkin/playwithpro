@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
   IsUrl,
+  Max,
   Min,
   validateSync,
 } from 'class-validator';
@@ -196,6 +197,40 @@ class EnvironmentVariables {
   @Min(1)
   AUTO_CONFIRM_WINDOW_HOURS = 48;
 
+  /**
+   * Cancellation policy, snapshotted on each session at booking. A player
+   * cancelling at least FREE hours before start is refunded in full; later,
+   * but at least NO_REFUND hours before, the LATE_REFUND percentage; after
+   * that nothing. A session paid inside the FREE window stays free to cancel
+   * for GRACE minutes after payment.
+   */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  CANCELLATION_FREE_HOURS = 24;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  CANCELLATION_LATE_REFUND_PERCENT = 50;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  CANCELLATION_NO_REFUND_HOURS = 2;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  CANCELLATION_GRACE_MIN = 30;
+
+  /** Late coach cancellations within 90 days that flag the coach for admins. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  COACH_LATE_CANCEL_THRESHOLD = 3;
+
   /** Minutes after the join window closes before attendance is classified (late provider reports). */
   @Type(() => Number)
   @IsInt()
@@ -274,6 +309,15 @@ export function validate(
       `Invalid environment configuration:\n${errors
         .map((error) => Object.values(error.constraints ?? {}).join(', '))
         .join('\n')}`,
+    );
+  }
+
+  if (
+    validatedConfig.CANCELLATION_NO_REFUND_HOURS >=
+    validatedConfig.CANCELLATION_FREE_HOURS
+  ) {
+    throw new Error(
+      'Invalid environment configuration:\nCANCELLATION_NO_REFUND_HOURS must be less than CANCELLATION_FREE_HOURS',
     );
   }
 

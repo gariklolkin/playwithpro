@@ -20,11 +20,21 @@ export interface HoldInput {
 export type HoldResult =
   { ok: true; providerRef: string } | { ok: false; reason: string };
 
+/** A partial release: the part of the hold that goes back to the player. */
+export interface ReleaseOptions {
+  /** Integer minor units, 0 < refundMinor < held amount. */
+  refundMinor?: number;
+}
+
 export interface PaymentProvider {
   /** Place funds on hold (escrow); must not transfer them. */
   hold(input: HoldInput): Promise<HoldResult>;
-  /** Release held funds to the coach (payout change); not exposed via API yet. */
-  release(providerRef: string): Promise<void>;
+  /**
+   * Release held funds to the coach. With `refundMinor` the provider returns
+   * that part to the player and releases the rest — one movement (a late
+   * cancellation); never exposed via API.
+   */
+  release(providerRef: string, options?: ReleaseOptions): Promise<void>;
   /** Return held funds to the player (dispute change); not exposed via API yet. */
   refund(providerRef: string): Promise<void>;
 }

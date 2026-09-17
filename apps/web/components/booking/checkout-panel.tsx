@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Link, useRouter } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api";
 import { formatMoney } from "@/lib/money";
+import { CancellationPolicyBlock } from "./cancellation-policy";
 import { FUNNEL_EVENTS, track } from "@/lib/observability/analytics";
 
 function remainingSeconds(expiresAt: string | null): number {
@@ -233,6 +234,10 @@ export function CheckoutPanel({
       <p className="mt-4 rounded-md bg-[#EAF2FD] p-3 text-[13px] leading-snug text-[#2A5FC7]">
         🔒 {t("escrowNotice")}
       </p>
+
+      {session.cancellationPolicy ? (
+        <CancellationPolicyBlock policy={session.cancellationPolicy} />
+      ) : null}
 
       {declined ? (
         <div className="mt-3 rounded-md bg-[#FBE4E4] p-3 text-[13px] text-[#C4554D]">

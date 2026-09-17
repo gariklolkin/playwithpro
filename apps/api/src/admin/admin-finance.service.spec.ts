@@ -43,10 +43,28 @@ describe('AdminFinanceService', () => {
         status: 'REFUNDED',
         createdAt: new Date('2026-07-01T10:00:00Z'),
         updatedAt: new Date('2026-07-02T10:00:00Z'),
+        refundedMinor: null,
         session: {
           serviceType: 'VIDEO_ANALYSIS',
+          status: 'CANCELLED',
+          startsAt: new Date('2026-07-03T10:00:00Z'),
+          paidAt: new Date('2026-07-01T10:00:00Z'),
+          priceMinor: 5000,
+          platformFeeMinor: 500,
+          playerId: 'player-1',
+          cancelFreeHours: 24,
+          cancelLateRefundPercent: 50,
+          cancelNoRefundHours: 2,
+          cancelGraceMin: 30,
+          cancelledAt: new Date('2026-07-02T10:00:00Z'),
+          cancelledBy: 'ADMIN',
+          cancellationTier: 'FREE',
+          cancellationRefundMinor: 5000,
+          cancellationLate: false,
+          cancellationReason: 'Venue closed',
+          feeWaivedAt: null,
           player: { displayName: 'Player' },
-          proProfile: { user: { displayName: 'Coach' } },
+          proProfile: { userId: 'coach-1', user: { displayName: 'Coach' } },
         },
       },
     ]);
@@ -70,6 +88,17 @@ describe('AdminFinanceService', () => {
       playerDisplayName: 'Player',
       coachDisplayName: 'Coach',
       serviceType: 'video_analysis',
+      refundedMinor: null,
+      sessionStatus: 'cancelled',
+      // The cancellation record, with the reason only admins see.
+      cancellation: {
+        by: 'admin',
+        tier: 'free',
+        refundMinor: 5000,
+        late: false,
+        settled: true,
+        reason: 'Venue closed',
+      },
     });
   });
 
@@ -114,9 +143,25 @@ describe('AdminFinanceService', () => {
       { createdAt: new Date() },
       { createdAt: new Date() },
     ]);
-    prisma.payment.findMany.mockResolvedValue([
-      { updatedAt: new Date(), amountMinor: 10_000, currency: 'EUR' },
-    ]);
+    prisma.payment.findMany
+      // A late cancellation inside the EUR releases: 20.03 of 40.05 went
+      // back to the player, and the fee shrank to the retained part.
+      .mockResolvedValueOnce([
+        {
+          currency: 'EUR',
+          amountMinor: 4_005,
+          feeMinor: 401,
+          refundedMinor: 2_003,
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          updatedAt: new Date(),
+          amountMinor: 4_005,
+          refundedMinor: 2_003,
+          currency: 'EUR',
+        },
+      ]);
 
     const analytics = await service.analytics();
 
@@ -135,9 +180,9 @@ describe('AdminFinanceService', () => {
       {
         currency: 'EUR',
         heldMinor: 4_000,
-        releasedMinor: 10_000,
-        refundedMinor: 0,
-        feeRevenueMinor: 1_000,
+        releasedMinor: 7_997,
+        refundedMinor: 2_003,
+        feeRevenueMinor: 799,
       },
       {
         currency: 'USD',
@@ -154,7 +199,8 @@ describe('AdminFinanceService', () => {
     expect(todayPoint).toEqual({
       date: today,
       sessionsCreated: 2,
-      released: [{ currency: 'EUR', amountMinor: 10_000 }],
+      // What actually reached the coach side: the refunded part is not a release.
+      released: [{ currency: 'EUR', amountMinor: 2_002 }],
     });
   });
 });

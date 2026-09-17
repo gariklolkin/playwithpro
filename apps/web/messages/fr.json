@@ -908,7 +908,28 @@
       },
       "gameNoAutoConfirm": "Le versement est débloqué après votre réponse.",
       "resolvedSystemRefund": "Le coach n'a pas répondu — paiement remboursé automatiquement",
-      "resolvedByConfirmation": "Confirmée par le joueur — paiement versé au coach"
+      "resolvedByConfirmation": "Confirmée par le joueur — paiement versé au coach",
+      "cancelTerms": {
+        "free": "Annuler cette séance ? {amount} vous sont remboursés intégralement et le créneau est libéré.",
+        "partial": "Annuler cette séance ? La date limite d'annulation gratuite est dépassée : {refund} vous sont remboursés et {kept} reviennent au coach.",
+        "none": "Annuler cette séance ? La date limite de remboursement est dépassée : rien n'est remboursé et {amount} reviennent au coach.",
+        "coach": "Annuler cette séance ? Le joueur est remboursé intégralement ({amount}) et le créneau est libéré.",
+        "coachLate": "Annuler cette séance ? Le joueur est remboursé intégralement ({amount}). Si près du début, l'annulation est enregistrée comme tardive."
+      },
+      "cancelled": {
+        "byYou": "Vous avez annulé",
+        "byCoach": "Le coach a annulé",
+        "byPlayer": "Le joueur a annulé",
+        "byAdmin": "Annulée par PlayWithPro",
+        "refunded": "Remboursée",
+        "partlyRefunded": "Partiellement remboursée ({amount})",
+        "paidToCoach": "Versée au coach",
+        "late": "Annulation tardive",
+        "waived": "Frais d'annulation annulés",
+        "pendingPlayer": "{amount} vous seront remboursés {relative}.",
+        "pendingCoach": "Vous recevrez {amount} {relative}. D'ici là, vous pouvez rembourser intégralement le joueur.",
+        "waiveCta": "Rembourser intégralement"
+      }
     },
     "review": {
       "cta": "Laisser un avis",
@@ -1053,7 +1074,9 @@
         "prev": "Précédent",
         "next": "Suivant",
         "pageOf": "Page {page} sur {total}"
-      }
+      },
+      "lateCancellations": "{count, plural, one {# annulation tardive} other {# annulations tardives}} (90 j)",
+      "lateCancellationsLabel": "Annulations tardives"
     },
     "transactions": {
       "title": "Transactions",
@@ -1110,6 +1133,32 @@
         "next": "Suivant",
         "pageOf": "Page {page} sur {total}"
       }
+    },
+    "sessionActions": {
+      "cancelCta": "Annuler la séance (force majeure)",
+      "reasonLabel": "Motif",
+      "reasonPlaceholder": "Blessure, salle fermée, panne de la plateforme…",
+      "cancelHint": "Le joueur est remboursé intégralement. Cela ne compte jamais comme une annulation tardive.",
+      "cancelConfirm": "Annuler et rembourser",
+      "back": "Retour",
+      "waiveCta": "Annuler les frais tardifs",
+      "error": "L'action a échoué. Réessayez."
+    },
+    "cancellation": {
+      "partlyRefunded": "Partiellement remboursé : {amount}",
+      "by": {
+        "player": "Annulée par le joueur",
+        "coach": "Annulée par le coach",
+        "admin": "Annulée par un administrateur"
+      },
+      "tier": {
+        "free": "remboursement intégral",
+        "partial": "remboursement partiel",
+        "none": "sans remboursement"
+      },
+      "late": "tardive",
+      "waived": "frais annulés",
+      "settlesAt": "règlement le {when}"
     }
   },
   "clips": {
@@ -1221,5 +1270,15 @@
       "emailClipChanges": "Modification des vidéos",
       "emailReviews": "Nouvel avis"
     }
+  },
+  "cancellationPolicy": {
+    "title": "Conditions d'annulation",
+    "yourTime": "(votre heure)",
+    "summary": "Annulation gratuite jusqu'à {freeHours} h avant le début, remboursement de {percent} % jusqu'à {noRefundHours} h avant, aucun remboursement ensuite. Remboursement intégral si le coach annule.",
+    "freeUntil": "Annulation gratuite jusqu'au {when}.",
+    "grace": "Annulation gratuite pendant {minutes} minutes après le paiement.",
+    "partialUntil": "Remboursement de {percent} % jusqu'au {when}.",
+    "noRefundAfter": "Aucun remboursement ensuite.",
+    "coachCancels": "Remboursement intégral si le coach annule."
   }
 }

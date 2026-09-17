@@ -5,6 +5,7 @@ import {
   ServiceType,
   SessionStatus,
   VideoStatus,
+  type CancellationPolicy,
   type ProServiceResponse,
   type PublicAvailabilitySlot,
   type SessionListResponse,
@@ -18,6 +19,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { useMounted } from "@/components/catalog/local-time";
 import { ClipPicker } from "@/components/sessions/clip-picker";
+import { CancellationPolicySummary } from "./cancellation-policy";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api";
 import { FUNNEL_EVENTS, track } from "@/lib/observability/analytics";
@@ -33,6 +35,8 @@ interface Props {
   services: ProServiceResponse[];
   initialSlots: PublicAvailabilitySlot[];
   viewer: Viewer;
+  /** The platform's current terms; null when they could not be loaded. */
+  cancellationPolicy?: CancellationPolicy | null;
 }
 
 /** Slots grouped by the viewer's local calendar day. */
@@ -64,7 +68,13 @@ function groupByDay(
   return [...groups.entries()].map(([dayKey, group]) => ({ dayKey, ...group }));
 }
 
-export function BookingPanel({ proId, services, initialSlots, viewer }: Props) {
+export function BookingPanel({
+  proId,
+  services,
+  initialSlots,
+  viewer,
+  cancellationPolicy = null,
+}: Props) {
   const t = useTranslations("coach.booking");
   const tClips = useTranslations("clips");
   const locale = useLocale();
@@ -346,6 +356,9 @@ export function BookingPanel({ proId, services, initialSlots, viewer }: Props) {
             </div>
           </>
         )}
+        {cancellationPolicy ? (
+          <CancellationPolicySummary policy={cancellationPolicy} />
+        ) : null}
       </div>
 
       {/* Step 3 — clips (video analysis only) */}

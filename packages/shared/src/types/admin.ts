@@ -5,6 +5,7 @@ import type { ProProfileStatus } from "../enums/pro-profile";
 import type { Role } from "../enums/role";
 import type { ServiceType } from "../enums/service-type";
 import type { SessionStatus } from "../enums/session-status";
+import type { CancellationRecord } from "./cancellation";
 import type { RatingAggregate } from "./review";
 
 export const ADMIN_USERS_PAGE_SIZE = 20;
@@ -24,6 +25,12 @@ export interface AdminUserListItem {
   createdAt: string;
   /** Null while the account is active. */
   suspendedAt: string | null;
+  /**
+   * Professionals only: paid sessions this coach cancelled late in the last
+   * 90 days, and whether that reaches the platform's threshold. Null for
+   * every other role. Never shown publicly.
+   */
+  lateCancellations: { count: number; flagged: boolean } | null;
 }
 
 export interface AdminUserListResponse {
@@ -63,6 +70,12 @@ export interface AdminPaymentItem {
   currency: string;
   feeMinor: number;
   status: PaymentStatus;
+  /** Part returned to the player by a partial release; null otherwise. */
+  refundedMinor: number | null;
+  sessionStatus: SessionStatus;
+  sessionStartsAt: string;
+  /** The session's cancellation record, with the admin-only reason. */
+  cancellation: (CancellationRecord & { reason: string | null }) | null;
   createdAt: string;
   updatedAt: string;
 }

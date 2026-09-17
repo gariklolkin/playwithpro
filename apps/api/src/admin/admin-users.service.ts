@@ -4,6 +4,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   ADMIN_USERS_PAGE_SIZE,
   AdminSessionCounts,
@@ -15,6 +16,7 @@ import {
   SessionStatus as SharedSessionStatus,
 } from '@playwithpro/shared';
 import { Prisma, Role, User } from '@prisma/client';
+import { lateCancellationsWhere } from '../bookings/bookings.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { toPrismaRole, toSharedRole } from '../users/user.mapper';
 import { AdminUsersQueryDto } from './dto/admin-users-query.dto';
@@ -23,7 +25,46 @@ import { AdminUsersQueryDto } from './dto/admin-users-query.dto';
 export class AdminUsersService {
   private readonly logger = new Logger(AdminUsersService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+  ) {}
+
+  /**
+   * Late cancellations (rolling 90 days) per coach user id — one grouped
+   * query for a whole directory page. Force-majeure cancellations by an
+   * admin are not the coach's and never count.
+   */
+  private async lateCancellationsOf(
+    users: Array<{ id: string; role: Role }>,
+  ): Promise<Map<string, number>> {
+    const coachIds = users
+      .filter((user) => user.role === Role.PROFESSIONAL)
+      .map((user) => user.id);
+    const counts = new Map<string, number>();
+    if (coachIds.length === 0) return counts;
+    const profiles = await this.prisma.proProfile.findMany({
+      where: { userId: { in: coachIds } },
+      select: { id: true, userId: true },
+    });
+    if (profiles.length === 0) return counts;
+    const groups = await this.prisma.session.groupBy({
+      by: ['proProfileId'],
+      where: lateCancellationsWhere(
+        { in: profiles.map((profile) => profile.id) },
+        new Date(),
+      ),
+      _count: { _all: true },
+    });
+    for (const profile of profiles) {
+      counts.set(
+        profile.userId,
+        groups.find((group) => group.proProfileId === profile.id)?._count
+          ._all ?? 0,
+      );
+    }
+    return counts;
+  }
 
   async list(query: AdminUsersQueryDto): Promise<AdminUserListResponse> {
     const page = query.page ?? 1;
@@ -48,8 +89,9 @@ export class AdminUsersService {
         take: ADMIN_USERS_PAGE_SIZE,
       }),
     ]);
+    const late = await this.lateCancellationsOf(users);
     return {
-      items: users.map((user) => this.toListItem(user)),
+      items: users.map((user) => this.toListItem(user, late)),
       total,
       page,
       pageSize: ADMIN_USERS_PAGE_SIZE,
@@ -87,7 +129,7 @@ export class AdminUsersService {
         group._count._all;
     }
     return {
-      ...this.toListItem(user),
+      ...this.toListItem(user, await this.lateCancellationsOf([user])),
       locale: user.locale,
       timezone: user.timezone,
       playerProfile: user.playerProfile
@@ -162,7 +204,11 @@ export class AdminUsersService {
     return { ok: true };
   }
 
-  private toListItem(user: User): AdminUserListItem {
+  private toListItem(
+    user: User,
+    late: Map<string, number>,
+  ): AdminUserListItem {
+    const lateCount = late.get(user.id) ?? 0;
     return {
       id: user.id,
       email: user.email,
@@ -171,6 +217,15 @@ export class AdminUsersService {
       emailVerified: user.emailVerifiedAt !== null,
       createdAt: user.createdAt.toISOString(),
       suspendedAt: user.suspendedAt?.toISOString() ?? null,
+      lateCancellations:
+        user.role === Role.PROFESSIONAL
+          ? {
+              count: lateCount,
+              flagged:
+                lateCount >=
+                this.config.getOrThrow<number>('COACH_LATE_CANCEL_THRESHOLD'),
+            }
+          : null,
     };
   }
 }

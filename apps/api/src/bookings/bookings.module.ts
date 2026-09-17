@@ -6,6 +6,7 @@ import { VideosModule } from '../videos/videos.module';
 import { BookingExpiryService } from './booking-expiry.service';
 import { BookingsController } from './bookings.controller';
 import { BookingsService } from './bookings.service';
+import { CancellationPolicyController } from './cancellation-policy.controller';
 import { DisputeResolutionService } from './dispute-resolution.service';
 import { SessionProgressionService } from './session-progression.service';
 import { SessionVideosService } from './session-videos.service';
@@ -13,7 +14,7 @@ import { SettlementService } from './settlement.service';
 
 @Module({
   imports: [AuthModule, PaymentsModule, StorageModule, VideosModule],
-  controllers: [BookingsController],
+  controllers: [BookingsController, CancellationPolicyController],
   providers: [
     BookingsService,
     BookingExpiryService,

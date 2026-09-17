@@ -1,4 +1,5 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { Role } from '@playwithpro/shared';
 import { PrismaService } from '../prisma/prisma.service';
@@ -19,6 +20,7 @@ describe('AdminUsersService', () => {
       update: jest.fn(),
     },
     session: { groupBy: jest.fn() },
+    proProfile: { findMany: jest.fn() },
     payment: { count: jest.fn() },
     $transaction: jest.fn((arg: unknown): Promise<unknown> =>
       Array.isArray(arg)
@@ -45,6 +47,7 @@ describe('AdminUsersService', () => {
       providers: [
         AdminUsersService,
         { provide: PrismaService, useValue: prisma },
+        { provide: ConfigService, useValue: { getOrThrow: () => 3 } },
       ],
     }).compile();
     service = moduleRef.get(AdminUsersService);
@@ -80,7 +83,48 @@ describe('AdminUsersService', () => {
       role: Role.Amateur,
       suspendedAt: null,
       emailVerified: true,
+      // Not a coach: no reliability signal, and no query for one.
+      lateCancellations: null,
     });
+    expect(prisma.proProfile.findMany).not.toHaveBeenCalled();
+  });
+
+  it('list counts late cancellations per coach with one grouped query and flags the threshold', async () => {
+    prisma.user.count.mockResolvedValue(3);
+    prisma.user.findMany.mockResolvedValue([
+      { ...dbUser, id: 'c1', role: 'PROFESSIONAL' },
+      { ...dbUser, id: 'c2', role: 'PROFESSIONAL' },
+      dbUser,
+    ]);
+    prisma.proProfile.findMany.mockResolvedValue([
+      { id: 'profile-1', userId: 'c1' },
+      { id: 'profile-2', userId: 'c2' },
+    ]);
+    prisma.session.groupBy.mockResolvedValue([
+      { proProfileId: 'profile-1', _count: { _all: 3 } },
+    ]);
+
+    const result = await service.list({});
+
+    expect(prisma.session.groupBy).toHaveBeenCalledTimes(1);
+    expect(prisma.session.groupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        by: ['proProfileId'],
+        where: expect.objectContaining({
+          proProfileId: { in: ['profile-1', 'profile-2'] },
+          // Only the coach's own late cancellations — never an admin's
+          // force majeure — inside the rolling window.
+          cancelledBy: 'COACH',
+          cancellationLate: true,
+          cancelledAt: { gte: expect.any(Date) as Date },
+        }) as object,
+      }),
+    );
+    expect(result.items.map((item) => item.lateCancellations)).toEqual([
+      { count: 3, flagged: true },
+      { count: 0, flagged: false },
+      null,
+    ]);
   });
 
   it('detail returns profile summaries and per-status session counters', async () => {

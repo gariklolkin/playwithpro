@@ -80,6 +80,19 @@ export class BookingsController {
     return this.bookings.confirm(user, id, dto.gameAnswer);
   }
 
+  @Post('sessions/:id/cancellation/waive')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    description:
+      "The coach's \"Refund in full\": waives the late fee of a cancelled session while its payment has not settled.",
+  })
+  async waiveCancellationFee(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<SessionResponse> {
+    return this.bookings.waiveCancellationFee(user, id);
+  }
+
   @Post('sessions/:id/cancel')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({

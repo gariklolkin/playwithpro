@@ -20,6 +20,7 @@ import { SessionProgressionService } from '../bookings/session-progression.servi
 import {
   CALENDAR_PROVIDER,
   type CalendarProvider,
+  type CancellationDetails,
 } from '../calendar/calendar-provider';
 import {
   EmailRenderer,
@@ -264,6 +265,9 @@ export class NotificationDispatchService implements OnApplicationBootstrap {
         return session.status === SessionStatus.CANCELLED
           ? null
           : 'not-cancelled';
+      case NotificationKind.CANCELLATION_FEE_WAIVED_PLAYER:
+      case NotificationKind.CANCELLATION_FEE_WAIVED_COACH:
+        return session.feeWaivedAt ? null : 'not-waived';
       case NotificationKind.REVIEW_RECEIVED:
         return session.review ? null : 'no-review';
       default:
@@ -313,7 +317,7 @@ export class NotificationDispatchService implements OnApplicationBootstrap {
             ? 'player'
             : 'coach',
         ),
-        payload.cancelledBy === 'coach' ? 'coach' : 'player',
+        cancellationDetails(session, payload),
       );
       return;
     }
@@ -420,6 +424,12 @@ export class NotificationDispatchService implements OnApplicationBootstrap {
       case NotificationKind.SESSION_CANCELLED_ADMIN:
         return {
           url: this.renderer.link(locale, '/dashboard/admin/transactions'),
+          late: session.cancellationLate ? 'yes' : 'no',
+        };
+      case NotificationKind.COACH_LATE_CANCELLATIONS_ADMIN:
+        return {
+          count: Number(payload.count ?? 0),
+          url: this.renderer.link(locale, '/dashboard/admin/users'),
         };
       case NotificationKind.REVIEW_RECEIVED:
         return {
@@ -430,4 +440,32 @@ export class NotificationDispatchService implements OnApplicationBootstrap {
         return {};
     }
   }
+}
+
+/**
+ * The money part of a cancellation email, from the session's record (the
+ * payload's copy is only a fallback for rows written before the record).
+ */
+function cancellationDetails(
+  session: SessionEmailRow,
+  payload: Payload,
+): CancellationDetails {
+  const by = (session.cancelledBy ?? String(payload.cancelledBy ?? 'player'))
+    .toString()
+    .toLowerCase();
+  const refundMinor = session.cancellationRefundMinor ?? session.priceMinor;
+  const retained = session.priceMinor - refundMinor;
+  const fee =
+    session.priceMinor === 0
+      ? 0
+      : Math.round((session.platformFeeMinor * retained) / session.priceMinor);
+  return {
+    cancelledBy: by === 'coach' ? 'coach' : by === 'admin' ? 'admin' : 'player',
+    tier: (session.cancellationTier ?? 'FREE').toLowerCase() as
+      | 'free'
+      | 'partial'
+      | 'none',
+    refundMinor,
+    coachNetMinor: retained - fee,
+  };
 }

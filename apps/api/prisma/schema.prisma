@@ -369,6 +369,26 @@ model Session {
   endsAt           DateTime
   /// Payment deadline while PENDING_PAYMENT; cleared once paid.
   expiresAt        DateTime?
+  /// When the escrow hold succeeded; anchors the late-booking cancellation grace.
+  paidAt           DateTime?
+  /// Cancellation policy in force at booking, snapshotted like the price.
+  cancelFreeHours         Int @default(24)
+  cancelLateRefundPercent Int @default(50)
+  cancelNoRefundHours     Int @default(2)
+  cancelGraceMin          Int @default(30)
+  /// Cancellation record of a paid session (null for unpaid releases/expiry).
+  cancelledAt             DateTime?
+  cancelledBy             CancelledBy?
+  cancellationTier        CancellationTier?
+  /// What the player gets back; the waiver raises it to the full price.
+  cancellationRefundMinor Int?
+  /// A coach cancelling inside the free-cancellation window.
+  cancellationLate        Boolean @default(false)
+  /// Required for an admin's force-majeure cancellation.
+  cancellationReason      String?
+  /// Late fee waived (coach or admin) before the payment settled.
+  feeWaivedAt             DateTime?
+  feeWaivedById           String?
   /// Player confirmation completes the session; coach confirmation is
   /// dispute evidence only. Each recorded at most once.
   playerConfirmedAt DateTime?
@@ -408,6 +428,7 @@ model Session {
   @@index([proProfileId, startsAt])
   @@index([status, expiresAt])
   @@index([status, classifiedAt, endsAt])
+  @@index([proProfileId, cancelledBy, cancelledAt])
   @@index([slotId])
 }
 
@@ -460,12 +481,27 @@ model Payment {
   currency    String        @db.Char(3)
   /// Fee snapshot at attempt time, mirrors Session.platformFeeMinor.
   feeMinor    Int
+  /// Part returned to the player by a partial release (late cancellation).
+  refundedMinor Int?
   status      PaymentStatus @default(REQUIRES_HOLD)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   session     Session       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
+}
+
+enum CancelledBy {
+  PLAYER
+  COACH
+  ADMIN
+}
+
+/// FREE = full refund, PARTIAL = the late-refund percentage, NONE = no refund.
+enum CancellationTier {
+  FREE
+  PARTIAL
+  NONE
 }
 
 enum DisputeStatus {
@@ -613,6 +649,9 @@ enum NotificationKind {
   SESSION_CANCELLED_COACH
   SESSION_CANCELLED_ADMIN
   REVIEW_RECEIVED
+  CANCELLATION_FEE_WAIVED_PLAYER
+  CANCELLATION_FEE_WAIVED_COACH
+  COACH_LATE_CANCELLATIONS_ADMIN
 }
 
 enum NotificationStatus {

@@ -5,6 +5,7 @@ import {
 } from "@playwithpro/shared";
 import type { Metadata } from "next";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
+import { AdminSessionActions } from "@/components/admin/admin-session-actions";
 import { Link } from "@/i18n/navigation";
 import { formatMoney } from "@/lib/money";
 import { serverApiGet } from "@/lib/server-user";
@@ -46,6 +47,7 @@ export default async function AdminTransactionsPage({
   )) ?? { items: [], total: 0, page: 1, pageSize: ADMIN_PAYMENTS_PAGE_SIZE };
   const t = await getTranslations("adminConsole.transactions");
   const tStatus = await getTranslations("adminConsole.paymentStatus");
+  const tCancel = await getTranslations("adminConsole.cancellation");
   const format = await getFormatter();
   const locale = await getLocale();
   const totalPages = Math.max(1, Math.ceil(ledger.total / ledger.pageSize));
@@ -139,6 +141,44 @@ export default async function AdminTransactionsPage({
                     >
                       {tStatus(payment.status)}
                     </span>
+                    {payment.refundedMinor ? (
+                      <div className="mt-1 text-[12px] text-text-secondary">
+                        {tCancel("partlyRefunded", {
+                          amount: formatMoney(
+                            payment.refundedMinor,
+                            payment.currency,
+                            locale,
+                          ),
+                        })}
+                      </div>
+                    ) : null}
+                    {payment.cancellation ? (
+                      <div className="mt-1 text-[12px] text-text-secondary">
+                        {tCancel(`by.${payment.cancellation.by}`)} ·{" "}
+                        {tCancel(`tier.${payment.cancellation.tier}`)}
+                        {payment.cancellation.late
+                          ? ` · ${tCancel("late")}`
+                          : ""}
+                        {payment.cancellation.waived
+                          ? ` · ${tCancel("waived")}`
+                          : ""}
+                        {!payment.cancellation.settled &&
+                        payment.cancellation.settlesAt
+                          ? ` · ${tCancel("settlesAt", {
+                              when: format.dateTime(
+                                new Date(payment.cancellation.settlesAt),
+                                { dateStyle: "short", timeStyle: "short" },
+                              ),
+                            })}`
+                          : ""}
+                        {payment.cancellation.reason ? (
+                          <div className="italic">
+                            “{payment.cancellation.reason}”
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+                    <AdminSessionActions payment={payment} />
                   </td>
                   <td className="px-4 py-2.5 font-mono text-[12px] text-text-tertiary">
                     {payment.providerRef ?? "—"}

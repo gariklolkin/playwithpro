@@ -1,11 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { EmailRenderer } from '../mailer/email-renderer';
+import { EmailRenderer, formatMoney } from '../mailer/email-renderer';
 import { MailerService } from '../mailer/mailer.service';
 import { sessionEmailParams } from '../mailer/session-email-params';
 import type {
   CalendarAttendee,
   CalendarProvider,
+  CancellationDetails,
   CalendarSessionInput,
 } from './calendar-provider';
 import { buildSessionIcs } from './session-ics';
@@ -72,7 +73,7 @@ export class IcsCalendarProvider implements CalendarProvider {
   async sendCancellation(
     input: CalendarSessionInput,
     attendee: CalendarAttendee,
-    cancelledBy: 'player' | 'coach',
+    details: CancellationDetails,
   ): Promise<void> {
     await this.mailer.deliver(attendee.email, {
       ...this.renderer.render(
@@ -80,7 +81,18 @@ export class IcsCalendarProvider implements CalendarProvider {
         `session.cancelled.${attendee.role}`,
         {
           ...sessionEmailParams(this.renderer, input, attendee),
-          cancelledBy,
+          cancelledBy: details.cancelledBy,
+          tier: details.tier,
+          refund: formatMoney(
+            details.refundMinor,
+            input.currency,
+            this.renderer.resolveLocale(attendee.locale),
+          ),
+          coachNet: formatMoney(
+            details.coachNetMinor,
+            input.currency,
+            this.renderer.resolveLocale(attendee.locale),
+          ),
           url:
             attendee.role === 'player'
               ? this.renderer.link(

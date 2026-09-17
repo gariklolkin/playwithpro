@@ -908,7 +908,28 @@
       },
       "gameNoAutoConfirm": "The payout is released after your answer.",
       "resolvedSystemRefund": "The coach didn't respond — payment refunded automatically",
-      "resolvedByConfirmation": "Confirmed by the player — payment released to the coach"
+      "resolvedByConfirmation": "Confirmed by the player — payment released to the coach",
+      "cancelTerms": {
+        "free": "Cancel this session? {amount} is refunded to you in full and the slot reopens.",
+        "partial": "Cancel this session? The free-cancellation deadline has passed: {refund} is refunded to you and {kept} goes to the coach.",
+        "none": "Cancel this session? The refund deadline has passed: nothing is refunded and {amount} goes to the coach.",
+        "coach": "Cancel this session? The player is refunded {amount} in full and the slot reopens.",
+        "coachLate": "Cancel this session? The player is refunded {amount} in full. This close to the start it is recorded as a late cancellation."
+      },
+      "cancelled": {
+        "byYou": "You cancelled",
+        "byCoach": "The coach cancelled",
+        "byPlayer": "The player cancelled",
+        "byAdmin": "Cancelled by PlayWithPro",
+        "refunded": "Refunded",
+        "partlyRefunded": "Partly refunded ({amount})",
+        "paidToCoach": "Paid to coach",
+        "late": "Late cancellation",
+        "waived": "Late fee waived",
+        "pendingPlayer": "{amount} is refunded to you {relative}.",
+        "pendingCoach": "You receive {amount} {relative}. Until then you can refund the player in full.",
+        "waiveCta": "Refund in full"
+      }
     },
     "review": {
       "cta": "Leave a review",
@@ -1053,7 +1074,9 @@
         "prev": "Previous",
         "next": "Next",
         "pageOf": "Page {page} of {total}"
-      }
+      },
+      "lateCancellations": "{count, plural, one {# late cancellation} other {# late cancellations}} (90 d)",
+      "lateCancellationsLabel": "Late cancellations"
     },
     "transactions": {
       "title": "Transactions",
@@ -1110,6 +1133,32 @@
         "next": "Next",
         "pageOf": "Page {page} of {total}"
       }
+    },
+    "sessionActions": {
+      "cancelCta": "Cancel session (force majeure)",
+      "reasonLabel": "Reason",
+      "reasonPlaceholder": "Injury, venue closed, platform outage…",
+      "cancelHint": "The player is refunded in full. This never counts as a late cancellation.",
+      "cancelConfirm": "Cancel and refund",
+      "back": "Back",
+      "waiveCta": "Waive late fee",
+      "error": "The action failed. Try again."
+    },
+    "cancellation": {
+      "partlyRefunded": "Partly refunded: {amount}",
+      "by": {
+        "player": "Cancelled by the player",
+        "coach": "Cancelled by the coach",
+        "admin": "Cancelled by an admin"
+      },
+      "tier": {
+        "free": "full refund",
+        "partial": "partial refund",
+        "none": "no refund"
+      },
+      "late": "late",
+      "waived": "fee waived",
+      "settlesAt": "settles {when}"
     }
   },
   "clips": {
@@ -1221,5 +1270,15 @@
       "emailClipChanges": "Clip change",
       "emailReviews": "New review"
     }
+  },
+  "cancellationPolicy": {
+    "title": "Cancellation policy",
+    "yourTime": "(your time)",
+    "summary": "Free cancellation until {freeHours} h before the start, {percent}% refund until {noRefundHours} h before, no refund after that. Full refund whenever the coach cancels.",
+    "freeUntil": "Free cancellation until {when}.",
+    "grace": "Free cancellation for {minutes} minutes after payment.",
+    "partialUntil": "{percent}% refund until {when}.",
+    "noRefundAfter": "No refund after that.",
+    "coachCancels": "Full refund whenever the coach cancels."
   }
 }

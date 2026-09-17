@@ -2,6 +2,8 @@
 
 import {
   AttendanceOutcome,
+  CancellationTier,
+  CancelledBy,
   CoachGameAnswer,
   DISPUTE_REASON_MAX_LENGTH,
   DisputeKind,
@@ -14,12 +16,13 @@ import {
   SessionStatus,
   type SessionResponse,
 } from "@playwithpro/shared";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SupportButton } from "@/components/support/support-button";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
+import { formatMoney } from "@/lib/money";
 import {
   FUNNEL_EVENTS,
   track,
@@ -52,8 +55,10 @@ export function SessionActions({
 }) {
   const t = useTranslations("sessions.actions");
   const format = useFormatter();
+  const locale = useLocale();
   const router = useRouter();
   const now = useNow();
+  const money = (minor: number) => formatMoney(minor, session.currency, locale);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const [confirmingCancel, setConfirmingCancel] = useState(false);
@@ -160,6 +165,81 @@ export function SessionActions({
                 : t("resolvedRelease")}
         </span>
         {settledChip}
+      </div>
+    );
+  }
+
+  const cancellation = session.cancellation;
+  if (cancellation) {
+    const who =
+      cancellation.by === CancelledBy.Admin
+        ? t("cancelled.byAdmin")
+        : (cancellation.by === CancelledBy.Coach) === isCoach
+          ? t("cancelled.byYou")
+          : cancellation.by === CancelledBy.Coach
+            ? t("cancelled.byCoach")
+            : t("cancelled.byPlayer");
+    const fullRefund =
+      cancellation.tier === CancellationTier.Free || cancellation.waived;
+    const outcome = fullRefund
+      ? t("cancelled.refunded")
+      : cancellation.refundMinor > 0
+        ? t("cancelled.partlyRefunded", {
+            amount: money(cancellation.refundMinor),
+          })
+        : t("cancelled.paidToCoach");
+    const settlesIn =
+      !cancellation.settled && cancellation.settlesAt && now !== null
+        ? format.relativeTime(new Date(cancellation.settlesAt), new Date(now))
+        : null;
+    return (
+      <div className="mt-3 text-[13px] text-text-secondary">
+        <div className="flex flex-wrap items-center gap-2">
+          <span>
+            {who} · {outcome}
+          </span>
+          {cancellation.late ? (
+            <span className="rounded bg-[#FDF7E7] px-2 py-0.5 text-xs font-medium text-[#8A6C1B]">
+              {t("cancelled.late")}
+            </span>
+          ) : null}
+          {cancellation.waived ? (
+            <span className="rounded bg-[#DBEDDB] px-2 py-0.5 text-xs font-medium text-[#1C7A46]">
+              {t("cancelled.waived")}
+            </span>
+          ) : null}
+        </div>
+        {settlesIn ? (
+          <p className="mt-1">
+            {isCoach
+              ? t("cancelled.pendingCoach", {
+                  amount: money(cancellation.coachNetMinor),
+                  relative: settlesIn,
+                })
+              : cancellation.refundMinor > 0
+                ? t("cancelled.pendingPlayer", {
+                    amount: money(cancellation.refundMinor),
+                    relative: settlesIn,
+                  })
+                : null}
+          </p>
+        ) : null}
+        {isCoach && !fullRefund && !cancellation.settled ? (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="mt-2"
+            disabled={busy}
+            onClick={() =>
+              void post(`/sessions/${session.id}/cancellation/waive`)
+            }
+          >
+            ↩️ {t("cancelled.waiveCta")}
+          </Button>
+        ) : null}
+        {failed ? (
+          <p className="mt-2 text-[13px] text-[#C4554D]">{t("error")}</p>
+        ) : null}
       </div>
     );
   }
@@ -350,12 +430,38 @@ export function SessionActions({
     );
   }
 
+  /** What cancelling now means in money — the API's numbers, never ours. */
+  function cancelTermsText(): string {
+    const terms = session.cancellationTerms;
+    if (!terms) {
+      return t("cancelWarning");
+    }
+    if (isCoach) {
+      return terms.late
+        ? t("cancelTerms.coachLate", { amount: money(terms.refundMinor) })
+        : t("cancelTerms.coach", { amount: money(terms.refundMinor) });
+    }
+    switch (terms.tier) {
+      case CancellationTier.Free:
+        return t("cancelTerms.free", { amount: money(terms.refundMinor) });
+      case CancellationTier.Partial:
+        return t("cancelTerms.partial", {
+          refund: money(terms.refundMinor),
+          kept: money(session.priceMinor - terms.refundMinor),
+        });
+      default:
+        return t("cancelTerms.none", { amount: money(session.priceMinor) });
+    }
+  }
+
   if (cancellable) {
     return (
       <div className="mt-3">
         {confirmingCancel ? (
           <div className="flex flex-wrap items-center gap-2 text-[13px]">
-            <span className="text-text-secondary">{t("cancelWarning")}</span>
+            <span className="text-text-secondary" data-testid="cancel-terms">
+              {cancelTermsText()}
+            </span>
             <Button
               size="sm"
               variant="ghost"

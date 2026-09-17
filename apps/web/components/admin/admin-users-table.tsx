@@ -132,6 +132,21 @@ export function AdminUsersTable({
                         {t("active")}
                       </span>
                     )}
+                    {user.lateCancellations &&
+                    user.lateCancellations.count > 0 ? (
+                      <span
+                        className={`ml-1.5 rounded px-2 py-0.5 text-xs font-medium ${
+                          user.lateCancellations.flagged
+                            ? "bg-[#FFE2DD] text-[#5D1715]"
+                            : "bg-[#FDECC8] text-[#402C1B]"
+                        }`}
+                      >
+                        {user.lateCancellations.flagged ? "⚠️ " : ""}
+                        {t("lateCancellations", {
+                          count: user.lateCancellations.count,
+                        })}
+                      </span>
+                    ) : null}
                   </td>
                 </tr>
               ))}

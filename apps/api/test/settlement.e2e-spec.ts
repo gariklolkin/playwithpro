@@ -7,6 +7,9 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import {
   AdminDisputeListResponse,
+  AdminPaymentListResponse,
+  AdminUserDetail,
+  AdminUserListResponse,
   Role,
   SessionResponse,
 } from '@playwithpro/shared';
@@ -204,7 +207,7 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
     });
     coachProfileId = coach.proProfile!.id;
 
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 70; i++) {
       const slot = await prisma.availabilitySlot.create({
         data: {
           profileId: coachProfileId,
@@ -1070,6 +1073,424 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
     });
   });
 
+  describe('cancellation policy', () => {
+    /**
+     * A paid session starting `hours` from now, paid `paidMinutesAgo` ago
+     * (long enough by default that the late-booking grace is over).
+     */
+    async function paidSessionStarting(
+      hours: number,
+      paidMinutesAgo = 120,
+    ): Promise<string> {
+      const sessionId = await bookAndPay();
+      await prisma.session.update({
+        where: { id: sessionId },
+        data: {
+          startsAt: new Date(Date.now() + hours * HOUR),
+          endsAt: new Date(Date.now() + (hours + 1) * HOUR),
+          paidAt: new Date(Date.now() - paidMinutesAgo * MINUTE),
+        },
+      });
+      return sessionId;
+    }
+
+    const cancelAs = (cookie: string, sessionId: string) =>
+      request(server())
+        .post(`/sessions/${sessionId}/cancel`)
+        .set('Cookie', cookie);
+
+    /** The original start time has come: what the sweep does then. */
+    async function reachStart(sessionId: string): Promise<void> {
+      await prisma.session.update({
+        where: { id: sessionId },
+        data: {
+          startsAt: new Date(Date.now() - MINUTE),
+          endsAt: new Date(Date.now() + 59 * MINUTE),
+        },
+      });
+      await settlement.sweep();
+    }
+
+    const paymentOf = (sessionId: string) =>
+      prisma.payment.findFirstOrThrow({
+        where: { sessionId, status: { not: 'FAILED' } },
+      });
+
+    it('snapshots the platform policy at booking and shows it before payment', async () => {
+      const slotId = slotIds[nextSlot++];
+      const booked = (
+        await request(server())
+          .post('/bookings')
+          .set('Cookie', playerCookie)
+          .send({ proId: coachProfileId, serviceType: 'consultation', slotId })
+          .expect(200)
+      ).body as SessionResponse;
+
+      const row = await prisma.session.findUniqueOrThrow({
+        where: { id: booked.id },
+      });
+      expect(row).toMatchObject({
+        cancelFreeHours: 24,
+        cancelLateRefundPercent: 50,
+        cancelNoRefundHours: 2,
+        cancelGraceMin: 30,
+        paidAt: null,
+      });
+      const unpaid = (
+        await request(server())
+          .get(`/sessions/${booked.id}`)
+          .set('Cookie', playerCookie)
+          .expect(200)
+      ).body as SessionResponse;
+      expect(unpaid.cancellationPolicy).toMatchObject({
+        freeUntil: new Date(row.startsAt.getTime() - 24 * HOUR).toISOString(),
+        partialUntil: new Date(row.startsAt.getTime() - 2 * HOUR).toISOString(),
+        lateRefundPercent: 50,
+      });
+      expect(unpaid.cancellationTerms).toBeNull();
+
+      const policy = await request(server())
+        .get('/cancellation-policy')
+        .expect(200);
+      expect(policy.body).toEqual({
+        freeHours: 24,
+        lateRefundPercent: 50,
+        noRefundHours: 2,
+        graceMinutes: 30,
+      });
+
+      // Releasing the unpaid booking stays free and silent.
+      await cancelAs(playerCookie, booked.id).expect(200);
+      const released = await prisma.session.findUniqueOrThrow({
+        where: { id: booked.id },
+      });
+      expect(released).toMatchObject({
+        status: 'CANCELLED',
+        cancelledAt: null,
+        cancelledBy: null,
+        cancellationTier: null,
+      });
+      expect(await outboxOf(booked.id)).toEqual([]);
+    });
+
+    it('25 h before start: full refund right away, recorded as the player\'s free cancellation', async () => {
+      const sessionId = await paidSessionStarting(25);
+      const terms = (
+        await request(server())
+          .get(`/sessions/${sessionId}`)
+          .set('Cookie', playerCookie)
+          .expect(200)
+      ).body as SessionResponse;
+      expect(terms.cancellationTerms).toMatchObject({
+        tier: 'free',
+        refundMinor: 4005,
+      });
+
+      const res = await cancelAs(playerCookie, sessionId).expect(200);
+      const session = res.body as SessionResponse;
+      expect(session.cancellation).toMatchObject({
+        by: 'player',
+        tier: 'free',
+        refundMinor: 4005,
+        coachNetMinor: 0,
+        late: false,
+        settled: true,
+      });
+      expect(session.escrow).toBe('refunded');
+      const row = await prisma.session.findUniqueOrThrow({
+        where: { id: sessionId },
+        include: { slot: true },
+      });
+      expect(row.slot.status).toBe('OPEN');
+      expect(row.cancelledBy).toBe('PLAYER');
+    });
+
+    it('10 h before start: held until the start, then one release with half refunded', async () => {
+      const sessionId = await paidSessionStarting(10);
+      const before = (
+        await request(server())
+          .get(`/sessions/${sessionId}`)
+          .set('Cookie', playerCookie)
+          .expect(200)
+      ).body as SessionResponse;
+      expect(before.cancellationTerms).toEqual({
+        tier: 'partial',
+        refundMinor: 2003,
+        coachNetMinor: 1802,
+        late: false,
+      });
+
+      const res = await cancelAs(playerCookie, sessionId).expect(200);
+      expect((res.body as SessionResponse).cancellation).toMatchObject({
+        tier: 'partial',
+        refundMinor: 2003,
+        coachNetMinor: 1802,
+        settled: false,
+      });
+      expect((res.body as SessionResponse).escrow).toBe('held');
+
+      // The sweep leaves it alone until the original start time…
+      await settlement.sweep();
+      expect(await paymentOf(sessionId)).toMatchObject({
+        status: 'HELD',
+        refundedMinor: null,
+      });
+
+      // …then moves the money once, and only once.
+      await reachStart(sessionId);
+      await settlement.sweep();
+      expect(await paymentOf(sessionId)).toMatchObject({
+        status: 'RELEASED',
+        refundedMinor: 2003,
+      });
+
+      const ledger = (
+        await request(server())
+          .get('/admin/payments?status=released')
+          .set('Cookie', adminCookie)
+          .expect(200)
+      ).body as AdminPaymentListResponse;
+      expect(ledger.items.find((i) => i.sessionId === sessionId)).toMatchObject({
+        amountMinor: 4005,
+        feeMinor: 401,
+        refundedMinor: 2003,
+        sessionStatus: 'cancelled',
+        cancellation: {
+          by: 'player',
+          tier: 'partial',
+          coachNetMinor: 1802,
+          settled: true,
+          reason: null,
+        },
+      });
+    });
+
+    it('1 h before start: nothing refunded, a plain release at the start', async () => {
+      const sessionId = await paidSessionStarting(1);
+      const res = await cancelAs(playerCookie, sessionId).expect(200);
+      expect((res.body as SessionResponse).cancellation).toMatchObject({
+        tier: 'none',
+        refundMinor: 0,
+        coachNetMinor: 3604,
+      });
+
+      await reachStart(sessionId);
+      expect(await paymentOf(sessionId)).toMatchObject({
+        status: 'RELEASED',
+        refundedMinor: null,
+      });
+    });
+
+    it('a booking paid 5 h ahead is free to cancel for 30 minutes, then partial', async () => {
+      const inGrace = await paidSessionStarting(5, 20);
+      const shown = (
+        await request(server())
+          .get(`/sessions/${inGrace}`)
+          .set('Cookie', playerCookie)
+          .expect(200)
+      ).body as SessionResponse;
+      expect(shown.cancellationPolicy?.graceUntil).not.toBeNull();
+      const free = await cancelAs(playerCookie, inGrace).expect(200);
+      expect((free.body as SessionResponse).cancellation?.tier).toBe('free');
+      expect((await paymentOf(inGrace)).status).toBe('REFUNDED');
+
+      const afterGrace = await paidSessionStarting(5, 40);
+      const partial = await cancelAs(playerCookie, afterGrace).expect(200);
+      expect((partial.body as SessionResponse).cancellation?.tier).toBe(
+        'partial',
+      );
+    });
+
+    it('the terms are the session\'s own snapshot, not the current config', async () => {
+      const sessionId = await paidSessionStarting(10);
+      // Booked back when cancellation was free until 8 hours before start.
+      await prisma.session.update({
+        where: { id: sessionId },
+        data: { cancelFreeHours: 8 },
+      });
+      const res = await cancelAs(playerCookie, sessionId).expect(200);
+      expect((res.body as SessionResponse).cancellation?.tier).toBe('free');
+    });
+
+    it('the coach refunds in full before the start; afterwards it is too late', async () => {
+      const sessionId = await paidSessionStarting(10);
+      await cancelAs(playerCookie, sessionId).expect(200);
+
+      await request(server())
+        .post(`/sessions/${sessionId}/cancellation/waive`)
+        .set('Cookie', playerCookie)
+        .expect(403);
+      await request(server())
+        .post(`/sessions/${sessionId}/cancellation/waive`)
+        .set('Cookie', rivalCookie)
+        .expect(404);
+      const res = await request(server())
+        .post(`/sessions/${sessionId}/cancellation/waive`)
+        .set('Cookie', coachCookie)
+        .expect(200);
+      expect((res.body as SessionResponse).cancellation).toMatchObject({
+        waived: true,
+        refundMinor: 4005,
+        coachNetMinor: 0,
+        settled: true,
+      });
+      expect(await paymentOf(sessionId)).toMatchObject({
+        status: 'REFUNDED',
+        refundedMinor: null,
+      });
+      // Never released afterwards, and a second waiver conflicts.
+      await reachStart(sessionId);
+      expect((await paymentOf(sessionId)).status).toBe('REFUNDED');
+      await request(server())
+        .post(`/sessions/${sessionId}/cancellation/waive`)
+        .set('Cookie', coachCookie)
+        .expect(409);
+      expect(
+        (await outboxOf(sessionId))
+          .filter((r) => r.kind.startsWith('CANCELLATION_FEE_WAIVED_'))
+          .map((r) => r.role),
+      ).toEqual(['AMATEUR', 'PROFESSIONAL']);
+
+      const settled = await paidSessionStarting(1);
+      await cancelAs(playerCookie, settled).expect(200);
+      await reachStart(settled);
+      await request(server())
+        .post(`/sessions/${settled}/cancellation/waive`)
+        .set('Cookie', coachCookie)
+        .expect(409);
+      expect((await paymentOf(settled)).status).toBe('RELEASED');
+    });
+
+    it('a waiver racing the start-time sweep moves the money exactly once', async () => {
+      for (let round = 0; round < 4; round++) {
+        const sessionId = await paidSessionStarting(10);
+        await cancelAs(playerCookie, sessionId).expect(200);
+        await prisma.session.update({
+          where: { id: sessionId },
+          data: { startsAt: new Date(Date.now() - MINUTE) },
+        });
+
+        const [waiver] = await Promise.all([
+          request(server())
+            .post(`/sessions/${sessionId}/cancellation/waive`)
+            .set('Cookie', coachCookie),
+          settlement.sweep(),
+        ]);
+        await settlement.sweep();
+
+        const payment = await paymentOf(sessionId);
+        const session = await prisma.session.findUniqueOrThrow({
+          where: { id: sessionId },
+        });
+        if (waiver.status === 200) {
+          // The waiver was recorded: a refund, never a release.
+          expect(session.feeWaivedAt).not.toBeNull();
+          expect(payment).toMatchObject({
+            status: 'REFUNDED',
+            refundedMinor: null,
+          });
+        } else {
+          expect(waiver.status).toBe(409);
+          expect(session.feeWaivedAt).toBeNull();
+          expect(payment).toMatchObject({
+            status: 'RELEASED',
+            refundedMinor: 2003,
+          });
+        }
+      }
+    });
+
+    it('a late coach cancellation refunds in full, counts, and alerts the admins at the threshold', async () => {
+      const lateAlerts = () =>
+        prisma.notification.count({
+          where: { kind: 'COACH_LATE_CANCELLATIONS_ADMIN' },
+        });
+      for (let late = 1; late <= 4; late++) {
+        const sessionId = await paidSessionStarting(3);
+        const res = await cancelAs(coachCookie, sessionId).expect(200);
+        expect((res.body as SessionResponse).cancellation).toMatchObject({
+          by: 'coach',
+          tier: 'free',
+          refundMinor: 4005,
+          late: true,
+        });
+        expect((await paymentOf(sessionId)).status).toBe('REFUNDED');
+        // One alert per admin, exactly when the third one happens.
+        expect(await lateAlerts()).toBe(late >= 3 ? 1 : 0);
+      }
+
+      const directory = (
+        await request(server())
+          .get('/admin/users?role=professional')
+          .set('Cookie', adminCookie)
+          .expect(200)
+      ).body as AdminUserListResponse;
+      expect(
+        directory.items.find((u) => u.id === coachUserId)?.lateCancellations,
+      ).toEqual({ count: 4, flagged: true });
+      const detail = (
+        await request(server())
+          .get(`/admin/users/${coachUserId}`)
+          .set('Cookie', adminCookie)
+          .expect(200)
+      ).body as AdminUserDetail;
+      expect(detail.lateCancellations).toEqual({ count: 4, flagged: true });
+      expect(
+        directory.items.find((u) => u.id !== coachUserId)?.lateCancellations ??
+          null,
+      ).toBeNull();
+    });
+
+    it('force majeure: an admin cancels in full with a reason, and it never counts as late', async () => {
+      const sessionId = await paidSessionStarting(1);
+      await request(server())
+        .post(`/admin/sessions/${sessionId}/cancel`)
+        .set('Cookie', coachCookie)
+        .send({ reason: 'I am not an admin' })
+        .expect(403);
+      await request(server())
+        .post(`/admin/sessions/${sessionId}/cancel`)
+        .set('Cookie', adminCookie)
+        .send({ reason: '   ' })
+        .expect(400);
+      await request(server())
+        .post(`/admin/sessions/${sessionId}/cancel`)
+        .set('Cookie', adminCookie)
+        .send({ reason: 'Venue closed by the city' })
+        .expect(200);
+
+      const row = await prisma.session.findUniqueOrThrow({
+        where: { id: sessionId },
+      });
+      expect(row).toMatchObject({
+        status: 'CANCELLED',
+        cancelledBy: 'ADMIN',
+        cancellationTier: 'FREE',
+        cancellationRefundMinor: 4005,
+        cancellationLate: false,
+        cancellationReason: 'Venue closed by the city',
+      });
+      expect((await paymentOf(sessionId)).status).toBe('REFUNDED');
+      // The parties never see the admin's reason.
+      const seen = await request(server())
+        .get(`/sessions/${sessionId}`)
+        .set('Cookie', playerCookie)
+        .expect(200);
+      expect(JSON.stringify(seen.body)).not.toContain('Venue closed');
+      expect((seen.body as SessionResponse).cancellation?.by).toBe('admin');
+    });
+
+    it('an admin can waive a late fee too', async () => {
+      const sessionId = await paidSessionStarting(1);
+      await cancelAs(playerCookie, sessionId).expect(200);
+      await request(server())
+        .post(`/admin/sessions/${sessionId}/cancellation/waive`)
+        .set('Cookie', adminCookie)
+        .expect(200);
+      expect((await paymentOf(sessionId)).status).toBe('REFUNDED');
+    });
+  });
+
   describe('pre-start cancellation', () => {
     it('either party cancels a future paid session: refund + reopened slot', async () => {
       const sessionId = await bookAndPay();
@@ -1101,7 +1522,11 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
         'SESSION_CANCELLED_COACH:PROFESSIONAL',
         'SESSION_CANCELLED_ADMIN:ADMIN',
       ]);
-      expect(cancelled[0].payload).toEqual({ cancelledBy: 'coach' });
+      expect(cancelled[0].payload).toEqual({
+        cancelledBy: 'coach',
+        tier: 'free',
+        refundMinor: 4005,
+      });
       const after = await prisma.session.findUniqueOrThrow({
         where: { id: sessionId },
       });
