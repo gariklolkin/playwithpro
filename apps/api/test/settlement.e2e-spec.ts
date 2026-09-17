@@ -23,6 +23,8 @@ import { ANALYTICS, type Analytics } from '../src/observability/observability';
 import { SessionProgressionService } from '../src/bookings/session-progression.service';
 import { SettlementService } from '../src/bookings/settlement.service';
 import { NoShowService } from '../src/disputes/no-show.service';
+import { ReschedulesService } from '../src/bookings/reschedules.service';
+import { NotificationScanService } from '../src/notifications/notification-scan.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 const HOUR = 3_600_000;
@@ -62,6 +64,8 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
   let track: jest.SpyInstance;
   let dispatcher: NotificationDispatchService;
   let noShow: NoShowService;
+  let reschedules: ReschedulesService;
+  let scan: NotificationScanService;
   let playerId: string;
   let coachUserId: string;
   let playerCookie: string;
@@ -177,6 +181,8 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
     track = jest.spyOn(app.get<Analytics>(ANALYTICS), 'track');
     dispatcher = app.get(NotificationDispatchService);
     noShow = app.get(NoShowService);
+    reschedules = app.get(ReschedulesService);
+    scan = app.get(NotificationScanService);
     await truncateAll(prisma);
 
     const coach = await prisma.user.create({
@@ -207,7 +213,7 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
     });
     coachProfileId = coach.proProfile!.id;
 
-    for (let i = 0; i < 70; i++) {
+    for (let i = 0; i < 110; i++) {
       const slot = await prisma.availabilitySlot.create({
         data: {
           profileId: coachProfileId,
@@ -1173,7 +1179,7 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
       expect(await outboxOf(booked.id)).toEqual([]);
     });
 
-    it('25 h before start: full refund right away, recorded as the player\'s free cancellation', async () => {
+    it("25 h before start: full refund right away, recorded as the player's free cancellation", async () => {
       const sessionId = await paidSessionStarting(25);
       const terms = (
         await request(server())
@@ -1250,19 +1256,21 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
           .set('Cookie', adminCookie)
           .expect(200)
       ).body as AdminPaymentListResponse;
-      expect(ledger.items.find((i) => i.sessionId === sessionId)).toMatchObject({
-        amountMinor: 4005,
-        feeMinor: 401,
-        refundedMinor: 2003,
-        sessionStatus: 'cancelled',
-        cancellation: {
-          by: 'player',
-          tier: 'partial',
-          coachNetMinor: 1802,
-          settled: true,
-          reason: null,
+      expect(ledger.items.find((i) => i.sessionId === sessionId)).toMatchObject(
+        {
+          amountMinor: 4005,
+          feeMinor: 401,
+          refundedMinor: 2003,
+          sessionStatus: 'cancelled',
+          cancellation: {
+            by: 'player',
+            tier: 'partial',
+            coachNetMinor: 1802,
+            settled: true,
+            reason: null,
+          },
         },
-      });
+      );
     });
 
     it('1 h before start: nothing refunded, a plain release at the start', async () => {
@@ -1301,7 +1309,7 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
       );
     });
 
-    it('the terms are the session\'s own snapshot, not the current config', async () => {
+    it("the terms are the session's own snapshot, not the current config", async () => {
       const sessionId = await paidSessionStarting(10);
       // Booked back when cancellation was free until 8 hours before start.
       await prisma.session.update({
@@ -1488,6 +1496,415 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
         .set('Cookie', adminCookie)
         .expect(200);
       expect((await paymentOf(sessionId)).status).toBe('REFUNDED');
+    });
+  });
+
+  describe('rescheduling', () => {
+    const DAY = 24 * HOUR;
+
+    /** A fresh open one-hour slot of the coach, `hours` from now. */
+    async function openSlot(hours: number): Promise<string> {
+      const startsAt = new Date(
+        Date.now() + hours * HOUR + Math.floor(Math.random() * 50) * MINUTE,
+      );
+      startsAt.setUTCSeconds(0, Math.floor(Math.random() * 999));
+      const slot = await prisma.availabilitySlot.create({
+        data: {
+          profileId: coachProfileId,
+          startsAt,
+          endsAt: new Date(startsAt.getTime() + HOUR),
+          source: 'MANUAL',
+        },
+      });
+      return slot.id;
+    }
+
+    /** A paid session `hours` ahead, paid long enough ago for no grace. */
+    async function paidSessionStarting(hours: number): Promise<string> {
+      const sessionId = await bookAndPay();
+      await prisma.session.update({
+        where: { id: sessionId },
+        data: {
+          startsAt: new Date(Date.now() + hours * HOUR),
+          endsAt: new Date(Date.now() + (hours + 1) * HOUR),
+          paidAt: new Date(Date.now() - 3 * HOUR),
+        },
+      });
+      return sessionId;
+    }
+
+    const post = (
+      cookie: string,
+      sessionId: string,
+      path = '',
+      body?: object,
+    ) =>
+      request(server())
+        .post(`/sessions/${sessionId}/reschedule${path}`)
+        .set('Cookie', cookie)
+        .send(body ?? {});
+
+    const slotStatus = async (id: string) =>
+      (await prisma.availabilitySlot.findUniqueOrThrow({ where: { id } }))
+        .status;
+
+    it('player proposes two options, the coach accepts one: the session moves and nothing else does', async () => {
+      const sessionId = await paidSessionStarting(72);
+      const before = await prisma.session.findUniqueOrThrow({
+        where: { id: sessionId },
+      });
+      const [first, second] = [await openSlot(120), await openSlot(144)];
+
+      const proposed = (
+        await post(playerCookie, sessionId, '', {
+          slotIds: [first, second],
+        }).expect(200)
+      ).body as SessionResponse;
+      expect(proposed.reschedule).toMatchObject({
+        proposedBy: 'player',
+        mine: true,
+      });
+      expect(proposed.reschedule!.options).toHaveLength(2);
+      expect(proposed.rescheduleAllowed).toBe(false);
+      // Both offered slots are held: nobody else can book them.
+      expect(await slotStatus(first)).toBe('BOOKED');
+      expect(await slotStatus(second)).toBe('BOOKED');
+      await request(server())
+        .post('/bookings')
+        .set('Cookie', rivalCookie)
+        .send({
+          proId: coachProfileId,
+          serviceType: 'consultation',
+          slotId: first,
+        })
+        .expect(409);
+      // The session itself has not moved.
+      expect(
+        (await prisma.session.findUniqueOrThrow({ where: { id: sessionId } }))
+          .startsAt,
+      ).toEqual(before.startsAt);
+
+      // The coach sees it as theirs to answer; the proposer cannot accept.
+      const seenByCoach = (
+        await request(server())
+          .get(`/sessions/${sessionId}`)
+          .set('Cookie', coachCookie)
+          .expect(200)
+      ).body as SessionResponse;
+      expect(seenByCoach.reschedule).toMatchObject({ mine: false });
+      const chosen = seenByCoach.reschedule!.options[1];
+      await post(playerCookie, sessionId, '/accept', {
+        optionId: chosen.id,
+      }).expect(403);
+      await post(rivalCookie, sessionId, '/accept', {
+        optionId: chosen.id,
+      }).expect(404);
+
+      const accepted = (
+        await post(coachCookie, sessionId, '/accept', {
+          optionId: chosen.id,
+        }).expect(200)
+      ).body as SessionResponse;
+      expect(accepted.startsAt).toBe(chosen.startsAt);
+      expect(accepted.endsAt).toBe(chosen.endsAt);
+      expect(accepted.reschedule).toBeNull();
+      expect(accepted.rescheduleCount).toBe(1);
+      expect(accepted.escrow).toBe('held');
+
+      const after = await prisma.session.findUniqueOrThrow({
+        where: { id: sessionId },
+      });
+      expect(after.slotId).toBe(second);
+      expect(after.calendarSequence).toBe(before.calendarSequence + 1);
+      // Snapshots, room and money are untouched.
+      expect(after).toMatchObject({
+        priceMinor: before.priceMinor,
+        platformFeeMinor: before.platformFeeMinor,
+        roomSlug: before.roomSlug,
+        cancelFreeHours: before.cancelFreeHours,
+        status: 'PAID_ESCROW',
+      });
+      expect(await paymentStatusOf(sessionId)).toBe('HELD');
+      // The other option and the old slot are back on the market.
+      expect(await slotStatus(first)).toBe('OPEN');
+      expect(await slotStatus(before.slotId)).toBe('OPEN');
+      expect(await slotStatus(second)).toBe('BOOKED');
+
+      const outbox = (await outboxOf(sessionId)).map(
+        (r) => `${r.kind}:${r.role}`,
+      );
+      expect(outbox).toEqual(
+        expect.arrayContaining([
+          'RESCHEDULE_PROPOSED:PROFESSIONAL',
+          'RESCHEDULE_ACCEPTED_PLAYER:AMATEUR',
+          'RESCHEDULE_ACCEPTED_COACH:PROFESSIONAL',
+        ]),
+      );
+
+      // The room shows nothing pending; the admin ledger keeps the history.
+      const ledger = (
+        await request(server())
+          .get('/admin/payments?status=held')
+          .set('Cookie', adminCookie)
+          .expect(200)
+      ).body as AdminPaymentListResponse;
+      expect(
+        ledger.items.find((i) => i.sessionId === sessionId)?.reschedules,
+      ).toEqual([
+        expect.objectContaining({
+          proposedBy: 'player',
+          status: 'accepted',
+          fromStartsAt: before.startsAt.toISOString(),
+          toStartsAt: chosen.startsAt,
+        }),
+      ]);
+    });
+
+    it('decline, withdraw and expiry release the holds and keep the original time', async () => {
+      const sessionId = await paidSessionStarting(72);
+      const original = (
+        await prisma.session.findUniqueOrThrow({ where: { id: sessionId } })
+      ).startsAt;
+
+      const declined = await openSlot(120);
+      await post(coachCookie, sessionId, '', { slotIds: [declined] }).expect(
+        200,
+      );
+      await post(coachCookie, sessionId, '/decline').expect(403);
+      await post(playerCookie, sessionId, '/decline').expect(200);
+      expect(await slotStatus(declined)).toBe('OPEN');
+
+      const withdrawn = await openSlot(121);
+      await post(playerCookie, sessionId, '', { slotIds: [withdrawn] }).expect(
+        200,
+      );
+      await post(coachCookie, sessionId, '/withdraw').expect(403);
+      await post(playerCookie, sessionId, '/withdraw').expect(200);
+      expect(await slotStatus(withdrawn)).toBe('OPEN');
+
+      const expired = await openSlot(122);
+      await post(playerCookie, sessionId, '', { slotIds: [expired] }).expect(
+        200,
+      );
+      await reschedules.sweepOnce(new Date(Date.now() + 25 * HOUR));
+      expect(await slotStatus(expired)).toBe('OPEN');
+      const rows = await prisma.sessionReschedule.findMany({
+        where: { sessionId },
+        orderBy: { createdAt: 'asc' },
+      });
+      expect(rows.map((r) => r.status)).toEqual([
+        'DECLINED',
+        'WITHDRAWN',
+        'EXPIRED',
+      ]);
+      expect(
+        (await outboxOf(sessionId))
+          .filter((r) => r.kind === 'RESCHEDULE_EXPIRED')
+          .map((r) => r.role)
+          .sort(),
+      ).toEqual(['AMATEUR', 'PROFESSIONAL']);
+      // Nothing answered, nothing moved — and the late accept conflicts.
+      expect(
+        (await prisma.session.findUniqueOrThrow({ where: { id: sessionId } }))
+          .startsAt,
+      ).toEqual(original);
+      await post(coachCookie, sessionId, '/decline').expect(409);
+    });
+
+    it('refuses what the rules forbid', async () => {
+      const sessionId = await paidSessionStarting(72);
+      const valid = await openSlot(120);
+
+      // Malformed, foreign, wrong duration, too soon, too far.
+      await post(playerCookie, sessionId, '', { slotIds: [] }).expect(400);
+      await post(playerCookie, sessionId, '', {
+        slotIds: [valid, valid],
+      }).expect(400);
+      const longSlot = await prisma.availabilitySlot.create({
+        data: {
+          profileId: coachProfileId,
+          startsAt: new Date(Date.now() + 130 * HOUR),
+          endsAt: new Date(Date.now() + 132 * HOUR),
+          source: 'MANUAL',
+        },
+      });
+      await post(playerCookie, sessionId, '', {
+        slotIds: [longSlot.id],
+      }).expect(400);
+      await post(playerCookie, sessionId, '', {
+        slotIds: [await openSlot(1)],
+      }).expect(400);
+      await post(playerCookie, sessionId, '', {
+        slotIds: [await openSlot(40 * 24)],
+      }).expect(400);
+      expect(await slotStatus(valid)).toBe('OPEN');
+
+      // One open proposal at a time.
+      await post(playerCookie, sessionId, '', { slotIds: [valid] }).expect(200);
+      await post(coachCookie, sessionId, '', {
+        slotIds: [await openSlot(123)],
+      }).expect(409);
+      await post(playerCookie, sessionId, '/withdraw').expect(200);
+
+      // Too close to the start.
+      const soon = await paidSessionStarting(1.5);
+      await post(playerCookie, soon, '', { slotIds: [valid] }).expect(409);
+
+      // Third reschedule.
+      await prisma.session.update({
+        where: { id: sessionId },
+        data: { rescheduleCount: 2 },
+      });
+      const again = (
+        await request(server())
+          .get(`/sessions/${sessionId}`)
+          .set('Cookie', playerCookie)
+          .expect(200)
+      ).body as SessionResponse;
+      expect(again.rescheduleAllowed).toBe(false);
+      await post(playerCookie, sessionId, '', { slotIds: [valid] }).expect(409);
+    });
+
+    it('an accept racing a cancellation: exactly one wins, no slot stays held', async () => {
+      for (let round = 0; round < 4; round++) {
+        const sessionId = await paidSessionStarting(72);
+        const offered = await openSlot(120 + round);
+        const proposed = (
+          await post(playerCookie, sessionId, '', {
+            slotIds: [offered],
+          }).expect(200)
+        ).body as SessionResponse;
+        const optionId = proposed.reschedule!.options[0].id;
+
+        const [accept, cancel] = await Promise.all([
+          post(coachCookie, sessionId, '/accept', { optionId }),
+          request(server())
+            .post(`/sessions/${sessionId}/cancel`)
+            .set('Cookie', playerCookie),
+        ]);
+        expect([accept.status, cancel.status].sort()).toEqual([200, 409]);
+
+        const session = await prisma.session.findUniqueOrThrow({
+          where: { id: sessionId },
+        });
+        await reschedules.sweepOnce();
+        if (accept.status === 200) {
+          expect(session.status).toBe('PAID_ESCROW');
+          expect(session.slotId).toBe(offered);
+          expect(await slotStatus(offered)).toBe('BOOKED');
+        } else {
+          expect(session.status).toBe('CANCELLED');
+          // The proposal died with the session; its slot is free again.
+          expect(await slotStatus(offered)).toBe('OPEN');
+          expect(
+            await prisma.sessionReschedule.count({
+              where: { sessionId, status: 'OPEN' },
+            }),
+          ).toBe(0);
+        }
+      }
+    });
+
+    it('no loophole: a move accepted inside the window keeps the partial tier', async () => {
+      const sessionId = await paidSessionStarting(10);
+      const nextWeek = await openSlot(7 * 24);
+      const proposed = (
+        await post(playerCookie, sessionId, '', {
+          slotIds: [nextWeek],
+        }).expect(200)
+      ).body as SessionResponse;
+      await post(coachCookie, sessionId, '/accept', {
+        optionId: proposed.reschedule!.options[0].id,
+      }).expect(200);
+
+      const moved = (
+        await request(server())
+          .get(`/sessions/${sessionId}`)
+          .set('Cookie', playerCookie)
+          .expect(200)
+      ).body as SessionResponse;
+      expect(moved.cancellationTerms).toMatchObject({
+        tier: 'partial',
+        refundMinor: 2003,
+      });
+      const cancelled = (
+        await request(server())
+          .post(`/sessions/${sessionId}/cancel`)
+          .set('Cookie', playerCookie)
+          .expect(200)
+      ).body as SessionResponse;
+      expect(cancelled.cancellation?.tier).toBe('partial');
+    });
+
+    it('the coach asked to move: the player cancels for free, even this late', async () => {
+      const sessionId = await paidSessionStarting(5);
+      await post(coachCookie, sessionId, '', {
+        slotIds: [await openSlot(100)],
+      }).expect(200);
+
+      // While it is open…
+      const open = (
+        await request(server())
+          .get(`/sessions/${sessionId}`)
+          .set('Cookie', playerCookie)
+          .expect(200)
+      ).body as SessionResponse;
+      expect(open.cancellationTerms?.tier).toBe('free');
+
+      // …and after the player declined it.
+      await post(playerCookie, sessionId, '/decline').expect(200);
+      const cancelled = (
+        await request(server())
+          .post(`/sessions/${sessionId}/cancel`)
+          .set('Cookie', playerCookie)
+          .expect(200)
+      ).body as SessionResponse;
+      expect(cancelled.cancellation).toMatchObject({
+        tier: 'free',
+        refundMinor: 4005,
+      });
+      expect(await paymentStatusOf(sessionId)).toBe('REFUNDED');
+    });
+
+    it('reminders are re-armed for the new time', async () => {
+      const sessionId = await paidSessionStarting(20);
+      await prisma.session.update({
+        where: { id: sessionId },
+        data: { inviteSentAt: new Date(Date.now() - 5 * DAY) },
+      });
+      await scan.scanOnce();
+      const remindersOf = async () =>
+        (await outboxOf(sessionId)).filter(
+          (r) => r.kind === 'SESSION_REMINDER_24H',
+        ).length;
+      expect(await remindersOf()).toBe(2);
+
+      const proposed = (
+        await post(playerCookie, sessionId, '', {
+          slotIds: [await openSlot(200)],
+        }).expect(200)
+      ).body as SessionResponse;
+      await post(coachCookie, sessionId, '/accept', {
+        optionId: proposed.reschedule!.options[0].id,
+      }).expect(200);
+
+      // The new start comes within a day: time travel on every stamp — the
+      // old time's reminders went out before the move, the move was days ago.
+      await prisma.notification.updateMany({
+        where: { sessionId, kind: 'SESSION_REMINDER_24H' },
+        data: { createdAt: new Date(Date.now() - 4 * DAY) },
+      });
+      await prisma.session.update({
+        where: { id: sessionId },
+        data: {
+          startsAt: new Date(Date.now() + 20 * HOUR),
+          endsAt: new Date(Date.now() + 21 * HOUR),
+          rescheduledAt: new Date(Date.now() - 3 * DAY),
+        },
+      });
+      await scan.scanOnce();
+      await scan.scanOnce();
+      expect(await remindersOf()).toBe(4);
     });
   });
 

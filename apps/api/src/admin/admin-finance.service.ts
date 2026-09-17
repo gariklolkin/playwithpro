@@ -9,6 +9,7 @@ import {
   AdminTrendPoint,
   DisputeOutcome as SharedDisputeOutcome,
   PaymentStatus as SharedPaymentStatus,
+  RescheduleStatus as SharedRescheduleStatus,
   Role as SharedRole,
   SessionStatus as SharedSessionStatus,
 } from '@playwithpro/shared';
@@ -65,6 +66,18 @@ export class AdminFinanceService {
               cancellationLate: true,
               cancellationReason: true,
               feeWaivedAt: true,
+              reschedules: {
+                orderBy: { createdAt: 'asc' },
+                select: {
+                  byCoach: true,
+                  status: true,
+                  fromStartsAt: true,
+                  createdAt: true,
+                  respondedAt: true,
+                  acceptedOptionId: true,
+                  options: { select: { id: true, startsAt: true } },
+                },
+              },
               player: { select: { displayName: true } },
               proProfile: {
                 select: {
@@ -103,6 +116,17 @@ export class AdminFinanceService {
           cancellation: record
             ? { ...record, reason: payment.session.cancellationReason }
             : null,
+          reschedules: payment.session.reschedules.map((proposal) => ({
+            proposedBy: proposal.byCoach ? 'coach' : 'player',
+            status: proposal.status.toLowerCase() as SharedRescheduleStatus,
+            fromStartsAt: proposal.fromStartsAt.toISOString(),
+            toStartsAt:
+              proposal.options
+                .find((option) => option.id === proposal.acceptedOptionId)
+                ?.startsAt.toISOString() ?? null,
+            createdAt: proposal.createdAt.toISOString(),
+            respondedAt: proposal.respondedAt?.toISOString() ?? null,
+          })),
           createdAt: payment.createdAt.toISOString(),
           updatedAt: payment.updatedAt.toISOString(),
         };

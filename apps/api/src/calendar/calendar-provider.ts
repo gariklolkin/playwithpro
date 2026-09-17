@@ -44,10 +44,11 @@ export interface CalendarProvider {
     input: CalendarSessionInput,
     attendee: CalendarAttendee,
   ): Promise<void>;
-  /** A time change: REQUEST for the same UID with a higher sequence. */
+  /** A time change: REQUEST for the same UID with a higher sequence; the email names the previous time. */
   sendUpdate(
     input: CalendarSessionInput,
     attendee: CalendarAttendee,
+    previousStartsAt?: Date,
   ): Promise<void>;
   /** Revokes the event (method CANCEL, higher sequence) and says who cancelled and what happens to the money. */
   sendCancellation(

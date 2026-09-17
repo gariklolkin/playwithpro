@@ -25,6 +25,9 @@ describe('NotificationScanService', () => {
           id: 's1',
           startsAt: new Date(now.getTime() + 20 * HOUR),
           inviteSentAt: new Date(now.getTime() - 30 * HOUR),
+          rescheduledAt: null,
+          calendarSequence: 0,
+          notifications: [],
           playerId: 'p1',
           proProfile: { userId: 'c1' },
         },
@@ -32,6 +35,9 @@ describe('NotificationScanService', () => {
           id: 's2',
           startsAt: new Date(now.getTime() + 5 * HOUR),
           inviteSentAt: new Date(now.getTime() - HOUR),
+          rescheduledAt: null,
+          calendarSequence: 0,
+          notifications: [],
           playerId: 'p2',
           proProfile: { userId: 'c1' },
         },
@@ -56,6 +62,72 @@ describe('NotificationScanService', () => {
       expect.objectContaining({
         kind: 'SESSION_REMINDER_24H',
         sessionId: 's2',
+        payload: { skip: 'booked-inside-window', hours: 24 },
+      }),
+    ]);
+  });
+
+  it('re-arms the reminder for a moved session, once, under its own key', async () => {
+    const moved = {
+      id: 's4',
+      startsAt: new Date(now.getTime() + 20 * HOUR),
+      inviteSentAt: new Date(now.getTime() - 200 * HOUR),
+      // Moved two days ago; the old time's reminder had gone out before that.
+      rescheduledAt: new Date(now.getTime() - 48 * HOUR),
+      calendarSequence: 1,
+      notifications: [{ createdAt: new Date(now.getTime() - 72 * HOUR) }],
+      playerId: 'p1',
+      proProfile: { userId: 'c1' },
+    };
+    prisma.session.findMany
+      .mockResolvedValueOnce([moved])
+      .mockResolvedValue([]);
+
+    await service.scanOnce(now);
+
+    expect(notifications.enqueue).toHaveBeenCalledWith(prisma, [
+      expect.objectContaining({
+        kind: 'SESSION_REMINDER_24H',
+        sessionId: 's4',
+        recipientId: 'p1',
+        dedupeSuffix: 'seq1',
+      }),
+      expect.objectContaining({ recipientId: 'c1', dedupeSuffix: 'seq1' }),
+    ]);
+
+    // Next tick: the row written after the move means "already decided".
+    notifications.enqueue.mockClear();
+    prisma.session.findMany
+      .mockResolvedValueOnce([
+        { ...moved, notifications: [{ createdAt: new Date(now.getTime()) }] },
+      ])
+      .mockResolvedValue([]);
+    await service.scanOnce(now);
+    expect(notifications.enqueue).not.toHaveBeenCalled();
+  });
+
+  it('sends no reminder for a session moved inside the window', async () => {
+    prisma.session.findMany
+      .mockResolvedValueOnce([
+        {
+          id: 's5',
+          startsAt: new Date(now.getTime() + 5 * HOUR),
+          inviteSentAt: new Date(now.getTime() - 200 * HOUR),
+          rescheduledAt: new Date(now.getTime() - HOUR),
+          calendarSequence: 2,
+          notifications: [],
+          playerId: 'p1',
+          proProfile: { userId: 'c1' },
+        },
+      ])
+      .mockResolvedValue([]);
+
+    await service.scanOnce(now);
+
+    expect(notifications.enqueue).toHaveBeenCalledWith(prisma, [
+      expect.objectContaining({
+        sessionId: 's5',
+        dedupeSuffix: 'seq2',
         payload: { skip: 'booked-inside-window', hours: 24 },
       }),
     ]);

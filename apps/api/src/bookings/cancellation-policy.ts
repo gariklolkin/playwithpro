@@ -1,4 +1,4 @@
-import { CancellationTier } from '@prisma/client';
+import { CancellationTier, RescheduleStatus } from '@prisma/client';
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
@@ -30,6 +30,17 @@ export interface CancellationTermsInput {
   paidAt: Date | null;
   by: CancellationActor;
   now: Date;
+  /**
+   * The player's tier when a reschedule was last accepted (when worse than
+   * FREE): moving the session never buys back a better one.
+   */
+  tierFloor?: CancellationTier | null;
+  /**
+   * A coach-made reschedule proposal is open, or the latest one was declined
+   * or expired with no accepted move since: the coach signalled they cannot
+   * make the time, so the player cancels for free.
+   */
+  coachProposalOutstanding?: boolean;
 }
 
 export interface CancellationTermsResult {
@@ -136,7 +147,32 @@ export function cancellationTerms(
   };
 }
 
+const SEVERITY: Record<CancellationTier, number> = {
+  [CancellationTier.FREE]: 0,
+  [CancellationTier.PARTIAL]: 1,
+  [CancellationTier.NONE]: 2,
+};
+
+/** The tier that is worse for the player. */
+export function worseTier(
+  a: CancellationTier,
+  b: CancellationTier | null | undefined,
+): CancellationTier {
+  return b && SEVERITY[b] > SEVERITY[a] ? b : a;
+}
+
 function playerTier(
+  input: CancellationTermsInput,
+  msLeft: number,
+): CancellationTier {
+  if (input.coachProposalOutstanding) {
+    return CancellationTier.FREE;
+  }
+  return worseTier(clockTier(input, msLeft), input.tierFloor);
+}
+
+/** The tier by the clock alone: distance to the start and the grace. */
+function clockTier(
   input: CancellationTermsInput,
   msLeft: number,
 ): CancellationTier {
@@ -155,4 +191,34 @@ function playerTier(
   return graceUntil !== null && now.getTime() <= graceUntil.getTime()
     ? CancellationTier.FREE
     : CancellationTier.PARTIAL;
+}
+
+/**
+ * Whether the coach has an unanswered — or unsuccessfully answered — request
+ * to move the session: their latest proposal is open, or was declined or
+ * expired, and no reschedule was accepted after it.
+ */
+export function coachProposalOutstanding(
+  reschedules: Array<{
+    byCoach: boolean;
+    status: RescheduleStatus;
+    createdAt: Date;
+  }>,
+): boolean {
+  const newestFirst = [...reschedules].sort(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+  );
+  for (const proposal of newestFirst) {
+    if (proposal.status === RescheduleStatus.ACCEPTED) {
+      return false;
+    }
+    if (proposal.byCoach) {
+      return (
+        proposal.status === RescheduleStatus.OPEN ||
+        proposal.status === RescheduleStatus.DECLINED ||
+        proposal.status === RescheduleStatus.EXPIRED
+      );
+    }
+  }
+  return false;
 }

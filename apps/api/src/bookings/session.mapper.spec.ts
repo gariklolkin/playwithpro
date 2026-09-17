@@ -35,6 +35,10 @@ const base = {
   cancellationReason: null,
   feeWaivedAt: null,
   feeWaivedById: null,
+  rescheduleCount: 0,
+  rescheduledAt: null,
+  cancelTierFloor: null,
+  reschedules: [],
   coachGameAnswer: null,
   attendanceOutcome: null,
   attendancePartial: false,
@@ -369,7 +373,7 @@ describe('cancellation fields', () => {
         status: 'PENDING_PAYMENT',
         paidAt: null,
         payments: [],
-      } as SessionWithParties,
+      },
       avatarUrlOf,
       { viewer: player },
     );
@@ -385,7 +389,7 @@ describe('cancellation fields', () => {
       }).cancellationTerms,
     ).toBeNull();
     const started = toSessionResponse(
-      { ...upcoming, status: 'IN_PROGRESS' } as SessionWithParties,
+      { ...upcoming, status: 'IN_PROGRESS' },
       avatarUrlOf,
       { viewer: player },
     );
@@ -402,7 +406,7 @@ describe('cancellation fields', () => {
         cancelledBy: 'PLAYER',
         cancellationTier: 'PARTIAL',
         cancellationRefundMinor: 2003,
-      } as SessionWithParties,
+      },
       avatarUrlOf,
       { viewer: coach },
     );
@@ -430,7 +434,7 @@ describe('cancellation fields', () => {
         cancellationRefundMinor: 4005,
         feeWaivedAt: new Date(),
         payments: [{ status: 'REFUNDED' }],
-      } as SessionWithParties,
+      },
       avatarUrlOf,
     );
     expect(response.cancellation).toMatchObject({
@@ -446,7 +450,7 @@ describe('cancellation fields', () => {
   it('has no record for an unpaid release', () => {
     expect(
       toSessionResponse(
-        { ...base, status: 'CANCELLED', payments: [] } as SessionWithParties,
+        { ...base, status: 'CANCELLED', payments: [] },
         avatarUrlOf,
       ).cancellation,
     ).toBeNull();

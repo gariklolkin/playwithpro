@@ -161,12 +161,13 @@
   "session_updated": {
     "player": {
       "subject": "Votre séance avec {coach} est déplacée au {date}",
-      "text": "Bonjour {name},\n\nVotre séance {service} avec {coach} a un nouvel horaire :\n{when}\n\n{where}\n\nLa mise à jour jointe remplace l'événement dans votre calendrier.\n{sessionsLine}"
+      "text": "Bonjour {name},\n\nVotre séance {service} avec {coach} a un nouvel horaire :\n{when}\n{previousLine}\n\n{where}\n\nLa mise à jour jointe remplace l'événement dans votre calendrier.\n{sessionsLine}"
     },
     "coach": {
       "subject": "Votre séance avec {player} est déplacée au {date}",
-      "text": "Bonjour {name},\n\nVotre séance {service} avec {player} a un nouvel horaire :\n{when}\n\n{where}\n\nLa mise à jour jointe remplace l'événement dans votre calendrier.\n{sessionsLine}"
-    }
+      "text": "Bonjour {name},\n\nVotre séance {service} avec {player} a un nouvel horaire :\n{when}\n{previousLine}\n\n{where}\n\nLa mise à jour jointe remplace l'événement dans votre calendrier.\n{sessionsLine}"
+    },
+    "previousLine": "Horaire précédent : {when}"
   },
   "cancellation": {
     "feeWaived": {
@@ -184,6 +185,24 @@
         "subject": "Le coach {coach} atteint {count} annulations tardives",
         "text": "{coach} a annulé tardivement {count} séances payées au cours des 90 derniers jours — la dernière étant la séance « {service} » avec {player} du {when}.\n\nExaminer le coach : {url}"
       }
+    }
+  },
+  "reschedule": {
+    "proposed": {
+      "subject": "{counterpart} propose un nouvel horaire pour votre séance",
+      "text": "Bonjour {name},\n\n{counterpart} souhaite déplacer votre séance « {service} », actuellement prévue le {when}, à l'un de ces horaires :\n\n{options}\n\nMerci d'en accepter un ou de refuser avant le {expires}. D'ici là, ces créneaux vous sont réservés ; sans réponse, la séance garde son horaire actuel.\n\nRépondre ici : {url}"
+    },
+    "declined": {
+      "subject": "{counterpart} a refusé le nouvel horaire",
+      "text": "Bonjour {name},\n\n{counterpart} a refusé votre proposition de déplacer la séance « {service} ». Elle garde son horaire : {when}.\n\n{sessionsLine}"
+    },
+    "withdrawn": {
+      "subject": "{counterpart} a retiré sa proposition de déplacer votre séance",
+      "text": "Bonjour {name},\n\n{counterpart} a retiré sa proposition de déplacer votre séance « {service} ». Elle garde son horaire : {when}.\n\n{sessionsLine}"
+    },
+    "expired": {
+      "subject": "La proposition de déplacer votre séance a expiré",
+      "text": "Bonjour {name},\n\nPersonne n'a répondu à temps à la proposition de déplacer la séance « {service} » avec {counterpart}. Elle garde son horaire : {when}.\n\n{sessionsLine}"
     }
   }
 }

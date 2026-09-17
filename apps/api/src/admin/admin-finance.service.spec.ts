@@ -63,6 +63,20 @@ describe('AdminFinanceService', () => {
           cancellationLate: false,
           cancellationReason: 'Venue closed',
           feeWaivedAt: null,
+          reschedules: [
+            {
+              byCoach: false,
+              status: 'ACCEPTED',
+              fromStartsAt: new Date('2026-07-02T10:00:00Z'),
+              createdAt: new Date('2026-07-01T11:00:00Z'),
+              respondedAt: new Date('2026-07-01T12:00:00Z'),
+              acceptedOptionId: 'option-2',
+              options: [
+                { id: 'option-1', startsAt: new Date('2026-07-03T08:00:00Z') },
+                { id: 'option-2', startsAt: new Date('2026-07-03T10:00:00Z') },
+              ],
+            },
+          ],
           player: { displayName: 'Player' },
           proProfile: { userId: 'coach-1', user: { displayName: 'Coach' } },
         },
@@ -99,6 +113,16 @@ describe('AdminFinanceService', () => {
         settled: true,
         reason: 'Venue closed',
       },
+      reschedules: [
+        {
+          proposedBy: 'player',
+          status: 'accepted',
+          fromStartsAt: '2026-07-02T10:00:00.000Z',
+          toStartsAt: '2026-07-03T10:00:00.000Z',
+          createdAt: '2026-07-01T11:00:00.000Z',
+          respondedAt: '2026-07-01T12:00:00.000Z',
+        },
+      ],
     });
   });
 

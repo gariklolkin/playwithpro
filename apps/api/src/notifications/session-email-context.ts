@@ -45,6 +45,18 @@ export const SESSION_EMAIL_INCLUDE = {
     },
   },
   review: { select: { rating: true } },
+  // The proposal a reschedule email is about (looked up by the payload id).
+  reschedules: {
+    select: {
+      id: true,
+      status: true,
+      expiresAt: true,
+      options: {
+        select: { startsAt: true },
+        orderBy: { startsAt: 'asc' as const },
+      },
+    },
+  },
   payments: {
     where: { status: { in: ['HELD', 'RELEASED', 'REFUNDED'] } },
     select: { status: true },

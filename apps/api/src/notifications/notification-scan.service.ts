@@ -48,8 +48,11 @@ export class NotificationScanService implements OnApplicationBootstrap {
   }
 
   /**
-   * Paid sessions starting inside the window that were paid before the
-   * window opened (a last-minute booking gets its receipt instead).
+   * Paid sessions starting inside the window that were paid — or last moved
+   * — before the window opened (a last-minute booking or move gets its
+   * receipt or calendar update instead). A reminder belongs to one time: once
+   * a session was rescheduled, reminders are keyed by the calendar sequence,
+   * so the new time gets its own even if the old one was already reminded.
    */
   private async reminders(
     hoursBefore: number,
@@ -57,32 +60,51 @@ export class NotificationScanService implements OnApplicationBootstrap {
     now: Date,
   ): Promise<void> {
     const windowMs = hoursBefore * HOUR;
-    const due = await this.prisma.session.findMany({
+    const candidates = await this.prisma.session.findMany({
       where: {
         status: SessionStatus.PAID_ESCROW,
         startsAt: { gt: now, lte: new Date(now.getTime() + windowMs) },
         inviteSentAt: { not: null },
-        notifications: { none: { kind } },
+        OR: [
+          { notifications: { none: { kind } } },
+          { rescheduledAt: { not: null } },
+        ],
       },
       select: {
         id: true,
         startsAt: true,
         inviteSentAt: true,
+        rescheduledAt: true,
+        calendarSequence: true,
         playerId: true,
         proProfile: { select: { userId: true } },
+        notifications: { where: { kind }, select: { createdAt: true } },
       },
       take: 100,
     });
-    for (const session of due) {
-      const paidAt = session.inviteSentAt as Date;
-      if (paidAt.getTime() > session.startsAt.getTime() - windowMs) {
-        // Booked inside the window: nothing to remind about, but record the
-        // decision so the scan stops re-reading this session.
+    for (const session of candidates) {
+      const movedAt = session.rescheduledAt;
+      // Already decided for the current time (rows written after the move).
+      if (
+        session.notifications.some(
+          (row) => movedAt === null || row.createdAt >= movedAt,
+        )
+      ) {
+        continue;
+      }
+      const dedupeSuffix =
+        movedAt === null ? undefined : `seq${session.calendarSequence}`;
+      // inviteSentAt is non-null by the query's filter.
+      const settledAt = movedAt ?? session.inviteSentAt ?? now;
+      if (settledAt.getTime() > session.startsAt.getTime() - windowMs) {
+        // Booked or moved inside the window: nothing to remind about, but
+        // record the decision so the scan stops re-reading this session.
         await this.notifications.enqueue(this.prisma, [
           {
             kind,
             sessionId: session.id,
             recipientId: session.playerId,
+            dedupeSuffix,
             payload: { skip: 'booked-inside-window', hours: hoursBefore },
           },
         ]);
@@ -93,12 +115,14 @@ export class NotificationScanService implements OnApplicationBootstrap {
           kind,
           sessionId: session.id,
           recipientId: session.playerId,
+          dedupeSuffix,
           payload: { hours: hoursBefore },
         },
         {
           kind,
           sessionId: session.id,
           recipientId: session.proProfile.userId,
+          dedupeSuffix,
           payload: { hours: hoursBefore },
         },
       ]);

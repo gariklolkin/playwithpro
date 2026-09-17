@@ -321,7 +321,8 @@
       "hint": "Tap an hour to open or close that slot. Green means players can book it.",
       "booked": "Booked",
       "error": "Could not update the slot.",
-      "pickPrompt": "Select a day in the calendar to edit its hours."
+      "pickPrompt": "Select a day in the calendar to edit its hours.",
+      "heldForReschedule": "held for a reschedule"
     }
   },
   "adminVerification": {
@@ -965,6 +966,27 @@
     },
     "aboutPlayer": {
       "title": "About the player"
+    },
+    "reschedule": {
+      "proposeCta": "Propose a new time",
+      "insteadCta": "Propose a new time instead",
+      "dialogTitle": "Propose a new time",
+      "dialogHint": "Pick up to {max} of the coach's open times. They are held until the other side answers.",
+      "yourTime": "(your time)",
+      "noSlots": "The coach has no suitable open times right now.",
+      "loadError": "Could not load the coach's open times. Try again.",
+      "takenError": "One of these times was just taken, or a proposal is already open. Pick again.",
+      "propose": "{count, plural, one {Propose # time} other {Propose # times}}",
+      "back": "Back",
+      "titleMine": "You proposed a new time to {name}",
+      "titleTheirs": "{name} proposes a new time",
+      "accept": "Accept",
+      "decline": "Decline",
+      "withdraw": "Withdraw proposal",
+      "expires": "expires {relative}",
+      "keepsTime": "otherwise the session keeps its time",
+      "error": "Something went wrong. Try again.",
+      "proposeNone": "Propose"
     }
   },
   "adminDisputes": {
@@ -1159,6 +1181,24 @@
       "late": "late",
       "waived": "fee waived",
       "settlesAt": "settles {when}"
+    },
+    "reschedules": {
+      "title": "Reschedule history",
+      "entry": "{who} proposed · {status}",
+      "who": {
+        "player": "Player",
+        "coach": "Coach"
+      },
+      "status": {
+        "open": "open",
+        "accepted": "accepted",
+        "declined": "declined",
+        "withdrawn": "withdrawn",
+        "expired": "expired",
+        "superseded": "closed with the session"
+      },
+      "moved": "{from} → {to}",
+      "from": "from {from}"
     }
   },
   "clips": {

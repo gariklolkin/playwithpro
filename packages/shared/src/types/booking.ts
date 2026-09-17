@@ -9,6 +9,7 @@ import type {
 } from "./cancellation";
 import type { AttendanceSummary, DisputeSummary } from "./dispute";
 import type { PlayerCardResponse } from "./player-profile";
+import type { RescheduleProposal } from "./reschedule";
 import type { ReviewResponse } from "./review";
 
 /** Player's optional "what should we focus on?" for the coach. */
@@ -136,6 +137,12 @@ export interface SessionResponse {
   cancellationTerms: CancellationTerms | null;
   /** How a paid session was cancelled; null otherwise. */
   cancellation: CancellationRecord | null;
+  /** The open reschedule proposal; null when none. */
+  reschedule: RescheduleProposal | null;
+  /** A new time can be proposed: paid, far enough ahead, under the limit, none open. */
+  rescheduleAllowed: boolean;
+  /** Accepted reschedules so far. */
+  rescheduleCount: number;
   /** The session's dispute, visible to its parties; null when none. */
   dispute: DisputeSummary | null;
   /** The player's review of this session; null when none yet. */

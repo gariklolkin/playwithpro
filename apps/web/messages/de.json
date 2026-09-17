@@ -321,7 +321,8 @@
       "hint": "Tippe auf eine Stunde, um den Slot zu öffnen oder zu schließen. Grün heißt buchbar.",
       "booked": "Gebucht",
       "error": "Slot konnte nicht aktualisiert werden.",
-      "pickPrompt": "Wähle im Kalender einen Tag, um seine Stunden zu bearbeiten."
+      "pickPrompt": "Wähle im Kalender einen Tag, um seine Stunden zu bearbeiten.",
+      "heldForReschedule": "für Verschiebung reserviert"
     }
   },
   "adminVerification": {
@@ -965,6 +966,27 @@
     },
     "aboutPlayer": {
       "title": "Über den Spieler"
+    },
+    "reschedule": {
+      "proposeCta": "Neue Zeit vorschlagen",
+      "insteadCta": "Stattdessen neue Zeit vorschlagen",
+      "dialogTitle": "Neue Zeit vorschlagen",
+      "dialogHint": "Wähle bis zu {max} freie Termine des Trainers. Sie bleiben reserviert, bis die andere Seite antwortet.",
+      "yourTime": "(deine Zeit)",
+      "noSlots": "Der Trainer hat derzeit keine passenden freien Termine.",
+      "loadError": "Die Termine des Trainers konnten nicht geladen werden. Versuche es erneut.",
+      "takenError": "Einer dieser Termine wurde gerade vergeben, oder es ist bereits ein Vorschlag offen. Wähle erneut.",
+      "propose": "{count, plural, one {# Termin vorschlagen} other {# Termine vorschlagen}}",
+      "back": "Zurück",
+      "titleMine": "Du hast {name} eine neue Zeit vorgeschlagen",
+      "titleTheirs": "{name} schlägt eine neue Zeit vor",
+      "accept": "Annehmen",
+      "decline": "Ablehnen",
+      "withdraw": "Vorschlag zurückziehen",
+      "expires": "läuft {relative} ab",
+      "keepsTime": "sonst bleibt die Sitzung bei ihrer Zeit",
+      "error": "Etwas ist schiefgelaufen. Versuche es erneut.",
+      "proposeNone": "Vorschlagen"
     }
   },
   "adminDisputes": {
@@ -1159,6 +1181,24 @@
       "late": "spät",
       "waived": "Gebühr erlassen",
       "settlesAt": "Abrechnung {when}"
+    },
+    "reschedules": {
+      "title": "Verschiebungsverlauf",
+      "entry": "Vorschlag von {who} · {status}",
+      "who": {
+        "player": "Spieler",
+        "coach": "Trainer"
+      },
+      "status": {
+        "open": "offen",
+        "accepted": "angenommen",
+        "declined": "abgelehnt",
+        "withdrawn": "zurückgezogen",
+        "expired": "abgelaufen",
+        "superseded": "mit der Sitzung geschlossen"
+      },
+      "moved": "{from} → {to}",
+      "from": "ab {from}"
     }
   },
   "clips": {

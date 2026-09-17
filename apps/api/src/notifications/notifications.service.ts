@@ -18,6 +18,11 @@ export interface EnqueueInput {
   /** Defaults to now. */
   dueAt?: Date;
   payload?: Prisma.InputJsonValue;
+  /**
+   * Distinguishes repeatable events of one kind on the same session and
+   * recipient (a second reschedule proposal, a reminder for a moved time).
+   */
+  dedupeSuffix?: string;
 }
 
 /**
@@ -36,7 +41,12 @@ export class NotificationsService {
         kind: row.kind,
         sessionId: row.sessionId,
         recipientId: row.recipientId,
-        dedupeKey: dedupeKeyFor(row.kind, row.sessionId, row.recipientId),
+        dedupeKey: dedupeKeyFor(
+          row.kind,
+          row.sessionId,
+          row.recipientId,
+          row.dedupeSuffix,
+        ),
         dueAt: row.dueAt ?? new Date(),
         payload: row.payload,
       })),

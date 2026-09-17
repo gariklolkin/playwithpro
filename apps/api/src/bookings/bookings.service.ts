@@ -53,6 +53,7 @@ import { StorageService } from '../storage/storage.service';
 import { UnattachedVideosService } from '../videos/unattached-videos.service';
 import {
   cancellationTerms,
+  coachProposalOutstanding,
   policyOf,
   toPolicyColumns,
   type CancellationActor,
@@ -60,6 +61,7 @@ import {
 } from './cancellation-policy';
 import { DisputeResolutionService } from './dispute-resolution.service';
 import { toPrismaGameAnswer } from './dispute.mapper';
+import { supersedeOpenProposal } from './reschedule-slots';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { PaySessionDto } from './dto/pay-session.dto';
 import { assertEditableBeforeStart, isOnlineService } from './session-access';
@@ -139,6 +141,9 @@ export class BookingsService {
       },
       autoConfirmWindowHours: this.config.getOrThrow<number>(
         'AUTO_CONFIRM_WINDOW_HOURS',
+      ),
+      rescheduleMax: this.config.getOrThrow<number>(
+        'RESCHEDULE_MAX_PER_SESSION',
       ),
     };
   }
@@ -626,13 +631,18 @@ export class BookingsService {
       paidAt: session.paidAt,
       by,
       now,
+      tierFloor: session.cancelTierFloor,
+      coachProposalOutstanding: coachProposalOutstanding(session.reschedules),
     });
     const cancelled = await this.prisma.$transaction(async (tx) => {
       const updated = await tx.session.updateMany({
         where: {
           id: session.id,
           status: SessionStatus.PAID_ESCROW,
-          startsAt: { gt: now },
+          // Still the time the terms were computed for: a reschedule
+          // accepted in between makes this cancellation lose (409) and the
+          // client re-reads the new terms.
+          startsAt: { equals: session.startsAt, gt: now },
         },
         data: {
           status: SessionStatus.CANCELLED,
@@ -653,6 +663,7 @@ export class BookingsService {
         where: { id: session.slotId, status: SlotStatus.BOOKED },
         data: { status: SlotStatus.OPEN },
       });
+      await supersedeOpenProposal(tx, session.id, now);
       const payload = {
         cancelledBy: by,
         tier: terms.tier.toLowerCase(),

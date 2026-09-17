@@ -9,6 +9,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import {
   DisputeKind,
   DisputeStatus,
+  RescheduleStatus,
   NotificationKind,
   NotificationStatus,
   PaymentStatus,
@@ -265,6 +266,20 @@ export class NotificationDispatchService implements OnApplicationBootstrap {
         return session.status === SessionStatus.CANCELLED
           ? null
           : 'not-cancelled';
+      case NotificationKind.RESCHEDULE_PROPOSED:
+        // Answered or expired before the email went out: nothing to ask.
+        return session.reschedules.some(
+          (item) =>
+            item.id === (row.payload as Payload | null)?.rescheduleId &&
+            item.status === RescheduleStatus.OPEN,
+        )
+          ? null
+          : 'proposal-closed';
+      case NotificationKind.RESCHEDULE_ACCEPTED_PLAYER:
+      case NotificationKind.RESCHEDULE_ACCEPTED_COACH:
+        return session.status === SessionStatus.PAID_ESCROW
+          ? null
+          : 'not-upcoming';
       case NotificationKind.CANCELLATION_FEE_WAIVED_PLAYER:
       case NotificationKind.CANCELLATION_FEE_WAIVED_COACH:
         return session.feeWaivedAt ? null : 'not-waived';
@@ -303,6 +318,22 @@ export class NotificationDispatchService implements OnApplicationBootstrap {
     }
     if (row.kind === NotificationKind.SESSION_PAID_COACH) {
       await this.calendar.sendInvite(input, attendeeOf(session, 'coach'));
+      return;
+    }
+    if (
+      row.kind === NotificationKind.RESCHEDULE_ACCEPTED_PLAYER ||
+      row.kind === NotificationKind.RESCHEDULE_ACCEPTED_COACH
+    ) {
+      await this.calendar.sendUpdate(
+        input,
+        attendeeOf(
+          session,
+          row.kind === NotificationKind.RESCHEDULE_ACCEPTED_PLAYER
+            ? 'player'
+            : 'coach',
+        ),
+        payload.fromStartsAt ? new Date(payload.fromStartsAt) : undefined,
+      );
       return;
     }
     if (
@@ -426,6 +457,22 @@ export class NotificationDispatchService implements OnApplicationBootstrap {
           url: this.renderer.link(locale, '/dashboard/admin/transactions'),
           late: session.cancellationLate ? 'yes' : 'no',
         };
+      case NotificationKind.RESCHEDULE_PROPOSED: {
+        const proposal = session.reschedules.find(
+          (item) => item.id === payload.rescheduleId,
+        );
+        return {
+          options: (proposal?.options ?? [])
+            .map(
+              (option) =>
+                `• ${formatWhen(option.startsAt, locale, recipient.timezone)}`,
+            )
+            .join('\n'),
+          expires: proposal
+            ? formatWhen(proposal.expiresAt, locale, recipient.timezone)
+            : '',
+        };
+      }
       case NotificationKind.COACH_LATE_CANCELLATIONS_ADMIN:
         return {
           count: Number(payload.count ?? 0),
@@ -462,9 +509,7 @@ function cancellationDetails(
   return {
     cancelledBy: by === 'coach' ? 'coach' : by === 'admin' ? 'admin' : 'player',
     tier: (session.cancellationTier ?? 'FREE').toLowerCase() as
-      | 'free'
-      | 'partial'
-      | 'none',
+      'free' | 'partial' | 'none',
     refundMinor,
     coachNetMinor: retained - fee,
   };

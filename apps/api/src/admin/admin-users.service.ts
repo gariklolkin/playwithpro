@@ -204,10 +204,7 @@ export class AdminUsersService {
     return { ok: true };
   }
 
-  private toListItem(
-    user: User,
-    late: Map<string, number>,
-  ): AdminUserListItem {
+  private toListItem(user: User, late: Map<string, number>): AdminUserListItem {
     const lateCount = late.get(user.id) ?? 0;
     return {
       id: user.id,

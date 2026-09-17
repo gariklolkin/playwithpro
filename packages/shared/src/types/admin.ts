@@ -6,6 +6,7 @@ import type { Role } from "../enums/role";
 import type { ServiceType } from "../enums/service-type";
 import type { SessionStatus } from "../enums/session-status";
 import type { CancellationRecord } from "./cancellation";
+import type { AdminRescheduleEntry } from "./reschedule";
 import type { RatingAggregate } from "./review";
 
 export const ADMIN_USERS_PAGE_SIZE = 20;
@@ -76,6 +77,8 @@ export interface AdminPaymentItem {
   sessionStartsAt: string;
   /** The session's cancellation record, with the admin-only reason. */
   cancellation: (CancellationRecord & { reason: string | null }) | null;
+  /** The session's reschedule proposals, oldest first. */
+  reschedules: AdminRescheduleEntry[];
   createdAt: string;
   updatedAt: string;
 }

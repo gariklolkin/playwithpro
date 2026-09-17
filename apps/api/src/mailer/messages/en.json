@@ -161,12 +161,13 @@
   "session_updated": {
     "player": {
       "subject": "Your session with {coach} moved to {date}",
-      "text": "Hi {name},\n\nYour {service} session with {coach} has a new time:\n{when}\n\n{where}\n\nThe attached update replaces the event in your calendar.\n{sessionsLine}"
+      "text": "Hi {name},\n\nYour {service} session with {coach} has a new time:\n{when}\n{previousLine}\n\n{where}\n\nThe attached update replaces the event in your calendar.\n{sessionsLine}"
     },
     "coach": {
       "subject": "Your session with {player} moved to {date}",
-      "text": "Hi {name},\n\nYour {service} session with {player} has a new time:\n{when}\n\n{where}\n\nThe attached update replaces the event in your calendar.\n{sessionsLine}"
-    }
+      "text": "Hi {name},\n\nYour {service} session with {player} has a new time:\n{when}\n{previousLine}\n\n{where}\n\nThe attached update replaces the event in your calendar.\n{sessionsLine}"
+    },
+    "previousLine": "Previous time: {when}"
   },
   "cancellation": {
     "feeWaived": {
@@ -184,6 +185,24 @@
         "subject": "Coach {coach} reached {count} late cancellations",
         "text": "{coach} has cancelled {count} paid sessions late within the last 90 days — the latest was the {service} session with {player} on {when}.\n\nReview the coach: {url}"
       }
+    }
+  },
+  "reschedule": {
+    "proposed": {
+      "subject": "{counterpart} proposes a new time for your session",
+      "text": "Hi {name},\n\n{counterpart} would like to move your {service} session, currently on {when}, to one of these times:\n\n{options}\n\nPlease accept one or decline by {expires}. Until then these times are held for you; if nobody answers, the session keeps its current time.\n\nAnswer here: {url}"
+    },
+    "declined": {
+      "subject": "{counterpart} declined the new time",
+      "text": "Hi {name},\n\n{counterpart} declined your proposal to move the {service} session. It keeps its time: {when}.\n\n{sessionsLine}"
+    },
+    "withdrawn": {
+      "subject": "{counterpart} withdrew the proposal to move your session",
+      "text": "Hi {name},\n\n{counterpart} withdrew the proposal to move your {service} session. It keeps its time: {when}.\n\n{sessionsLine}"
+    },
+    "expired": {
+      "subject": "The proposal to move your session expired",
+      "text": "Hi {name},\n\nNobody answered the proposal to move the {service} session with {counterpart} in time. It keeps its time: {when}.\n\n{sessionsLine}"
     }
   }
 }

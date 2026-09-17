@@ -321,7 +321,8 @@
       "hint": "Touchez une heure pour ouvrir ou fermer le créneau. Vert : réservable par les joueurs.",
       "booked": "Réservé",
       "error": "Impossible de mettre à jour le créneau.",
-      "pickPrompt": "Sélectionnez un jour dans le calendrier pour modifier ses heures."
+      "pickPrompt": "Sélectionnez un jour dans le calendrier pour modifier ses heures.",
+      "heldForReschedule": "réservé pour un report"
     }
   },
   "adminVerification": {
@@ -965,6 +966,27 @@
     },
     "aboutPlayer": {
       "title": "À propos du joueur"
+    },
+    "reschedule": {
+      "proposeCta": "Proposer un nouvel horaire",
+      "insteadCta": "Proposer plutôt un nouvel horaire",
+      "dialogTitle": "Proposer un nouvel horaire",
+      "dialogHint": "Choisissez jusqu'à {max} créneaux libres du coach. Ils sont réservés jusqu'à la réponse de l'autre partie.",
+      "yourTime": "(votre heure)",
+      "noSlots": "Le coach n'a aucun créneau libre adapté pour le moment.",
+      "loadError": "Impossible de charger les créneaux du coach. Réessayez.",
+      "takenError": "L'un de ces créneaux vient d'être pris, ou une proposition est déjà en cours. Choisissez à nouveau.",
+      "propose": "{count, plural, one {Proposer # créneau} other {Proposer # créneaux}}",
+      "back": "Retour",
+      "titleMine": "Vous avez proposé un nouvel horaire à {name}",
+      "titleTheirs": "{name} propose un nouvel horaire",
+      "accept": "Accepter",
+      "decline": "Refuser",
+      "withdraw": "Retirer la proposition",
+      "expires": "expire {relative}",
+      "keepsTime": "sinon la séance garde son horaire",
+      "error": "Une erreur s'est produite. Réessayez.",
+      "proposeNone": "Proposer"
     }
   },
   "adminDisputes": {
@@ -1159,6 +1181,24 @@
       "late": "tardive",
       "waived": "frais annulés",
       "settlesAt": "règlement le {when}"
+    },
+    "reschedules": {
+      "title": "Historique des reports",
+      "entry": "Proposé par {who} · {status}",
+      "who": {
+        "player": "le joueur",
+        "coach": "le coach"
+      },
+      "status": {
+        "open": "en cours",
+        "accepted": "accepté",
+        "declined": "refusé",
+        "withdrawn": "retiré",
+        "expired": "expiré",
+        "superseded": "clos avec la séance"
+      },
+      "moved": "{from} → {to}",
+      "from": "depuis le {from}"
     }
   },
   "clips": {

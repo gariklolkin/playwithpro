@@ -48,6 +48,7 @@ export default async function AdminTransactionsPage({
   const t = await getTranslations("adminConsole.transactions");
   const tStatus = await getTranslations("adminConsole.paymentStatus");
   const tCancel = await getTranslations("adminConsole.cancellation");
+  const tMoves = await getTranslations("adminConsole.reschedules");
   const format = await getFormatter();
   const locale = await getLocale();
   const totalPages = Math.max(1, Math.ceil(ledger.total / ledger.pageSize));
@@ -177,6 +178,39 @@ export default async function AdminTransactionsPage({
                           </div>
                         ) : null}
                       </div>
+                    ) : null}
+                    {payment.reschedules.length > 0 ? (
+                      <details className="mt-1 text-[12px] text-text-secondary">
+                        <summary className="cursor-pointer">
+                          {tMoves("title")} ({payment.reschedules.length})
+                        </summary>
+                        <ul className="mt-1 space-y-0.5">
+                          {payment.reschedules.map((move, index) => {
+                            const short = (iso: string) =>
+                              format.dateTime(new Date(iso), {
+                                dateStyle: "short",
+                                timeStyle: "short",
+                              });
+                            return (
+                              <li key={index}>
+                                {tMoves("entry", {
+                                  who: tMoves(`who.${move.proposedBy}`),
+                                  status: tMoves(`status.${move.status}`),
+                                })}
+                                {" · "}
+                                {move.toStartsAt
+                                  ? tMoves("moved", {
+                                      from: short(move.fromStartsAt),
+                                      to: short(move.toStartsAt),
+                                    })
+                                  : tMoves("from", {
+                                      from: short(move.fromStartsAt),
+                                    })}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </details>
                     ) : null}
                     <AdminSessionActions payment={payment} />
                   </td>

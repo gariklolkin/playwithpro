@@ -161,12 +161,13 @@
   "session_updated": {
     "player": {
       "subject": "Deine Sitzung mit {coach} wurde auf den {date} verlegt",
-      "text": "Hallo {name},\n\ndeine {service}-Sitzung mit {coach} hat einen neuen Termin:\n{when}\n\n{where}\n\nDie angehängte Aktualisierung ersetzt den Termin in deinem Kalender.\n{sessionsLine}"
+      "text": "Hallo {name},\n\ndeine {service}-Sitzung mit {coach} hat einen neuen Termin:\n{when}\n{previousLine}\n\n{where}\n\nDie angehängte Aktualisierung ersetzt den Termin in deinem Kalender.\n{sessionsLine}"
     },
     "coach": {
       "subject": "Deine Sitzung mit {player} wurde auf den {date} verlegt",
-      "text": "Hallo {name},\n\ndeine {service}-Sitzung mit {player} hat einen neuen Termin:\n{when}\n\n{where}\n\nDie angehängte Aktualisierung ersetzt den Termin in deinem Kalender.\n{sessionsLine}"
-    }
+      "text": "Hallo {name},\n\ndeine {service}-Sitzung mit {player} hat einen neuen Termin:\n{when}\n{previousLine}\n\n{where}\n\nDie angehängte Aktualisierung ersetzt den Termin in deinem Kalender.\n{sessionsLine}"
+    },
+    "previousLine": "Bisherige Zeit: {when}"
   },
   "cancellation": {
     "feeWaived": {
@@ -184,6 +185,24 @@
         "subject": "Trainer {coach} hat {count} späte Stornierungen erreicht",
         "text": "{coach} hat in den letzten 90 Tagen {count} bezahlte Sitzungen spät storniert – zuletzt die {service}-Sitzung mit {player} am {when}.\n\nTrainer prüfen: {url}"
       }
+    }
+  },
+  "reschedule": {
+    "proposed": {
+      "subject": "{counterpart} schlägt eine neue Zeit für eure Sitzung vor",
+      "text": "Hallo {name},\n\n{counterpart} möchte eure {service}-Sitzung, aktuell am {when}, auf einen dieser Termine verschieben:\n\n{options}\n\nBitte nimm bis {expires} einen an oder lehne ab. Bis dahin sind diese Termine für euch reserviert; ohne Antwort behält die Sitzung ihre aktuelle Zeit.\n\nHier antworten: {url}"
+    },
+    "declined": {
+      "subject": "{counterpart} hat die neue Zeit abgelehnt",
+      "text": "Hallo {name},\n\n{counterpart} hat deinen Vorschlag, die {service}-Sitzung zu verschieben, abgelehnt. Sie behält ihre Zeit: {when}.\n\n{sessionsLine}"
+    },
+    "withdrawn": {
+      "subject": "{counterpart} hat den Verschiebungsvorschlag zurückgezogen",
+      "text": "Hallo {name},\n\n{counterpart} hat den Vorschlag, eure {service}-Sitzung zu verschieben, zurückgezogen. Sie behält ihre Zeit: {when}.\n\n{sessionsLine}"
+    },
+    "expired": {
+      "subject": "Der Vorschlag, eure Sitzung zu verschieben, ist abgelaufen",
+      "text": "Hallo {name},\n\nauf den Vorschlag, die {service}-Sitzung mit {counterpart} zu verschieben, hat niemand rechtzeitig geantwortet. Sie behält ihre Zeit: {when}.\n\n{sessionsLine}"
     }
   }
 }

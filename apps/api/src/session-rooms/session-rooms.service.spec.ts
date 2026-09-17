@@ -170,6 +170,7 @@ describe('SessionRoomsService.getRoom', () => {
       proProfile: { userId: 'coach-1', user: { displayName: 'Coach' } },
       player: { id: 'player-1', displayName: 'Player' },
       videos: [],
+      reschedules: [],
       serviceType: ServiceType.CONSULTATION,
       status: SessionStatus.IN_PROGRESS,
       roomSlug: 'slug',

@@ -30,6 +30,8 @@ import {
 } from "@/lib/observability/analytics";
 import { useNow } from "@/lib/use-now";
 import { EvidenceLine } from "./attendance-evidence";
+import { RescheduleBanner } from "./reschedule-banner";
+import { RescheduleDialog } from "./reschedule-dialog";
 import { SystemDisputePanel } from "./system-dispute-panel";
 
 const CATEGORIES = [
@@ -62,6 +64,8 @@ export function SessionActions({
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const [proposing, setProposing] = useState(false);
+  const tReschedule = useTranslations("sessions.reschedule");
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [category, setCategory] = useState<DisputeReasonCategory | "">("");
@@ -455,13 +459,45 @@ export function SessionActions({
   }
 
   if (cancellable) {
+    const counterpartName = isCoach
+      ? session.player.displayName
+      : session.coach.displayName;
     return (
       <div className="mt-3">
-        {confirmingCancel ? (
-          <div className="flex flex-wrap items-center gap-2 text-[13px]">
+        {session.reschedule ? (
+          <RescheduleBanner
+            sessionId={session.id}
+            proposal={session.reschedule}
+            counterpartName={counterpartName}
+            onChanged={() => router.refresh()}
+          />
+        ) : null}
+        {proposing ? (
+          <RescheduleDialog
+            session={session}
+            onClose={() => setProposing(false)}
+            onProposed={() => {
+              setProposing(false);
+              router.refresh();
+            }}
+          />
+        ) : confirmingCancel ? (
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-[13px]">
             <span className="text-text-secondary" data-testid="cancel-terms">
               {cancelTermsText()}
             </span>
+            {isCoach && session.rescheduleAllowed ? (
+              <Button
+                size="sm"
+                disabled={busy}
+                onClick={() => {
+                  setConfirmingCancel(false);
+                  setProposing(true);
+                }}
+              >
+                {tReschedule("insteadCta")}
+              </Button>
+            ) : null}
             <Button
               size="sm"
               variant="ghost"
@@ -486,13 +522,24 @@ export function SessionActions({
             </Button>
           </div>
         ) : (
-          <button
-            type="button"
-            className="cursor-pointer text-[13px] text-text-tertiary underline-offset-2 hover:text-[#C4554D] hover:underline"
-            onClick={() => setConfirmingCancel(true)}
-          >
-            {t("cancelCta")}
-          </button>
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            {session.rescheduleAllowed ? (
+              <button
+                type="button"
+                className="cursor-pointer text-[13px] text-text-secondary underline-offset-2 hover:text-text hover:underline"
+                onClick={() => setProposing(true)}
+              >
+                🗓️ {tReschedule("proposeCta")}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="cursor-pointer text-[13px] text-text-tertiary underline-offset-2 hover:text-[#C4554D] hover:underline"
+              onClick={() => setConfirmingCancel(true)}
+            >
+              {t("cancelCta")}
+            </button>
+          </div>
         )}
         {failed ? (
           <p className="mt-2 text-[13px] text-[#C4554D]">{t("error")}</p>

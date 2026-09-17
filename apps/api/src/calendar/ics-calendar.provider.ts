@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { EmailRenderer, formatMoney } from '../mailer/email-renderer';
+import {
+  EmailRenderer,
+  formatMoney,
+  formatWhen,
+} from '../mailer/email-renderer';
 import { MailerService } from '../mailer/mailer.service';
 import { sessionEmailParams } from '../mailer/session-email-params';
 import type {
@@ -54,12 +58,21 @@ export class IcsCalendarProvider implements CalendarProvider {
   async sendUpdate(
     input: CalendarSessionInput,
     attendee: CalendarAttendee,
+    previousStartsAt?: Date,
   ): Promise<void> {
+    const locale = this.renderer.resolveLocale(attendee.locale);
     await this.mailer.deliver(attendee.email, {
       ...this.renderer.render(
         attendee.locale,
         `session_updated.${attendee.role}`,
-        sessionEmailParams(this.renderer, input, attendee),
+        {
+          ...sessionEmailParams(this.renderer, input, attendee),
+          previousLine: previousStartsAt
+            ? this.renderer.message(locale, 'session_updated.previousLine', {
+                when: formatWhen(previousStartsAt, locale, attendee.timezone),
+              })
+            : '',
+        },
       ),
       attachments: [
         this.attachment(input, attendee, 'REQUEST', input.sequence),

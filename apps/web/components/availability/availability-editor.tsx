@@ -404,7 +404,10 @@ export function AvailabilityEditor({
                         key={hour}
                         className="rounded-lg bg-[#FDECC8] px-2.5 py-1.5 text-sm text-[#7A5A00]"
                       >
-                        {minuteLabel(hour * 60)} · {t("day.booked")}
+                        {minuteLabel(hour * 60)} ·{" "}
+                        {slot.heldForReschedule
+                          ? t("day.heldForReschedule")
+                          : t("day.booked")}
                       </span>
                     );
                   }
@@ -444,7 +447,9 @@ export function AvailabilityEditor({
                         className="rounded-lg bg-[#FDECC8] px-2.5 py-1.5 text-sm text-[#7A5A00]"
                       >
                         {formatTime(slot.startsAt, timezone, locale)} ·{" "}
-                        {t("day.booked")}
+                        {slot.heldForReschedule
+                          ? t("day.heldForReschedule")
+                          : t("day.booked")}
                       </span>
                     ) : (
                       <button

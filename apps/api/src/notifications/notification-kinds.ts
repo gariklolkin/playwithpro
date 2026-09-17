@@ -53,6 +53,13 @@ export const KIND_META: Record<NotificationKind, KindMeta> = {
   COACH_LATE_CANCELLATIONS_ADMIN: {
     messageKey: 'cancellation.coachLate.admin',
   },
+  RESCHEDULE_PROPOSED: { messageKey: 'reschedule.proposed' },
+  // Sent through the calendar provider (the update .ics), not the catalog.
+  RESCHEDULE_ACCEPTED_PLAYER: { messageKey: 'session_updated.player' },
+  RESCHEDULE_ACCEPTED_COACH: { messageKey: 'session_updated.coach' },
+  RESCHEDULE_DECLINED: { messageKey: 'reschedule.declined' },
+  RESCHEDULE_WITHDRAWN: { messageKey: 'reschedule.withdrawn' },
+  RESCHEDULE_EXPIRED: { messageKey: 'reschedule.expired' },
   REVIEW_RECEIVED: {
     messageKey: 'review.received',
     preference: 'emailReviews',
@@ -63,11 +70,13 @@ export function isTransactional(kind: NotificationKind): boolean {
   return KIND_META[kind].preference === undefined;
 }
 
-/** `<kind>:<sessionId>:<recipientId>` — the exactly-once key. */
+/** `<kind>:<sessionId>:<recipientId>[:<suffix>]` — the exactly-once key. */
 export function dedupeKeyFor(
   kind: NotificationKind,
   sessionId: string | null,
   recipientId: string,
+  suffix?: string,
 ): string {
-  return `${kind}:${sessionId ?? '-'}:${recipientId}`;
+  const key = `${kind}:${sessionId ?? '-'}:${recipientId}`;
+  return suffix ? `${key}:${suffix}` : key;
 }

@@ -19,8 +19,10 @@ import {
 } from '../bookings/session-access';
 import { SessionProgressionService } from '../bookings/session-progression.service';
 import {
+  SESSION_INCLUDE,
   SESSION_VIDEO_SELECT,
   toPlayerContext,
+  toRescheduleProposal,
   toSessionVideoItems,
 } from '../bookings/session.mapper';
 import { toSharedServiceType } from '../pros/pro-profile.mapper';
@@ -51,6 +53,8 @@ const ROOM_INCLUDE = {
     },
     orderBy: { position: 'asc' },
   },
+  // For the pre-join banner of an open reschedule proposal.
+  reschedules: SESSION_INCLUDE.reschedules,
 } as const;
 
 type RoomSession = Prisma.SessionGetPayload<{ include: typeof ROOM_INCLUDE }>;
@@ -93,6 +97,7 @@ export class SessionRoomsService {
         ? session.proProfile.user.displayName
         : session.player.displayName,
       goal: session.goal ?? null,
+      reschedule: toRescheduleProposal(session, user),
       // Same rule as the session lists: the coach, paid statuses only.
       playerContext: toPlayerContext(session, user, (key) =>
         this.storage.avatarUrl(key),

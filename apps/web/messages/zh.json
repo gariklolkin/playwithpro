@@ -321,7 +321,8 @@
       "hint": "点击小时即可开放或关闭该时段。绿色表示球员可预约。",
       "booked": "已预约",
       "error": "无法更新时段。",
-      "pickPrompt": "在日历中选择一天以编辑其时段。"
+      "pickPrompt": "在日历中选择一天以编辑其时段。",
+      "heldForReschedule": "为改期保留"
     }
   },
   "adminVerification": {
@@ -965,6 +966,27 @@
     },
     "aboutPlayer": {
       "title": "关于球员"
+    },
+    "reschedule": {
+      "proposeCta": "提议新的时间",
+      "insteadCta": "改为提议新的时间",
+      "dialogTitle": "提议新的时间",
+      "dialogHint": "最多选择 {max} 个教练的空闲时段。在对方回复之前，这些时段会被保留。",
+      "yourTime": "（您的时间）",
+      "noSlots": "教练目前没有合适的空闲时段。",
+      "loadError": "无法加载教练的空闲时段，请重试。",
+      "takenError": "其中一个时段刚被占用，或已有待处理的提议。请重新选择。",
+      "propose": "{count, plural, other {提议 # 个时段}}",
+      "back": "返回",
+      "titleMine": "您已向{name}提议新的时间",
+      "titleTheirs": "{name}提议新的时间",
+      "accept": "接受",
+      "decline": "拒绝",
+      "withdraw": "撤回提议",
+      "expires": "{relative}过期",
+      "keepsTime": "否则课程保持原定时间",
+      "error": "出了点问题，请重试。",
+      "proposeNone": "提议"
     }
   },
   "adminDisputes": {
@@ -1159,6 +1181,24 @@
       "late": "临近取消",
       "waived": "已免除费用",
       "settlesAt": "{when} 结算"
+    },
+    "reschedules": {
+      "title": "改期记录",
+      "entry": "{who}提议 · {status}",
+      "who": {
+        "player": "学员",
+        "coach": "教练"
+      },
+      "status": {
+        "open": "待处理",
+        "accepted": "已接受",
+        "declined": "已拒绝",
+        "withdrawn": "已撤回",
+        "expired": "已过期",
+        "superseded": "随课程关闭"
+      },
+      "moved": "{from} → {to}",
+      "from": "原定 {from}"
     }
   },
   "clips": {

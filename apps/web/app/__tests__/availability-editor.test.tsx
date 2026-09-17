@@ -34,6 +34,7 @@ const fixture: CoachAvailabilityResponse = {
       startsAt: dayIso,
       endsAt: nextHourIso,
       status: "open",
+      heldForReschedule: false,
       source: "manual",
     },
     {
@@ -41,6 +42,7 @@ const fixture: CoachAvailabilityResponse = {
       startsAt: bookedIso,
       endsAt: new Date(target.getTime() + 3 * 3_600_000).toISOString(),
       status: "booked",
+      heldForReschedule: false,
       source: "rule",
     },
   ],

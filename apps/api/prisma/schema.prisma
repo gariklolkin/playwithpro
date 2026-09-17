@@ -47,6 +47,7 @@ model User {
   playerSessions     Session[]
   sessionAttendance  SessionAttendance[]
   openedDisputes     Dispute[]           @relation("DisputeOpener")
+  rescheduleProposals SessionReschedule[] @relation("RescheduleProposer")
   resolvedDisputes   Dispute[]           @relation("DisputeResolver")
   reviews            Review[]
   notifications      Notification[]
@@ -344,6 +345,8 @@ model AvailabilitySlot {
   updatedAt DateTime               @updatedAt
   profile   ProProfile             @relation(fields: [profileId], references: [id], onDelete: Cascade)
   sessions  Session[]
+  /// Reschedule proposals that offer(ed) this slot; an OPEN one holds it BOOKED.
+  rescheduleOptions SessionRescheduleOption[]
 
   @@unique([profileId, startsAt])
   @@index([profileId, status, startsAt])
@@ -386,6 +389,13 @@ model Session {
   cancellationLate        Boolean @default(false)
   /// Required for an admin's force-majeure cancellation.
   cancellationReason      String?
+  /// Accepted reschedules so far (capped by RESCHEDULE_MAX_PER_SESSION).
+  rescheduleCount         Int @default(0)
+  /// Last accepted reschedule; re-arms reminders for the new time.
+  rescheduledAt           DateTime?
+  /// The player's tier at the moment a reschedule was accepted, when worse
+  /// than FREE: a later player cancellation never gets a better one.
+  cancelTierFloor         CancellationTier?
   /// Late fee waived (coach or admin) before the payment settled.
   feeWaivedAt             DateTime?
   feeWaivedById           String?
@@ -423,6 +433,7 @@ model Session {
   dispute    Dispute?
   review     Review?
   notifications Notification[]
+  reschedules   SessionReschedule[]
 
   @@index([playerId, startsAt])
   @@index([proProfileId, startsAt])
@@ -489,6 +500,57 @@ model Payment {
   session     Session       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
+}
+
+enum RescheduleStatus {
+  OPEN
+  ACCEPTED
+  DECLINED
+  WITHDRAWN
+  EXPIRED
+  /// Closed because the session was cancelled or started.
+  SUPERSEDED
+}
+
+/// A proposal to move a paid session. At most one OPEN per session — enforced
+/// by a partial unique index created in the migration (Prisma cannot express
+/// it): "SessionReschedule_one_open_per_session".
+model SessionReschedule {
+  id           String           @id @default(uuid())
+  sessionId    String
+  proposedById String
+  /// True when the session's coach made the proposal (cancellation interplay).
+  byCoach      Boolean
+  status       RescheduleStatus @default(OPEN)
+  /// The session's time when the proposal was made.
+  fromStartsAt DateTime
+  fromEndsAt   DateTime
+  expiresAt    DateTime
+  acceptedOptionId String?      @unique
+  respondedAt  DateTime?
+  createdAt    DateTime         @default(now())
+
+  session    Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  proposedBy User    @relation("RescheduleProposer", fields: [proposedById], references: [id])
+  options    SessionRescheduleOption[]
+
+  @@index([sessionId, createdAt])
+  @@index([status, expiresAt])
+}
+
+/// One offered slot; times are snapshotted so history survives slot deletion.
+model SessionRescheduleOption {
+  id           String   @id @default(uuid())
+  rescheduleId String
+  slotId       String?
+  startsAt     DateTime
+  endsAt       DateTime
+
+  reschedule SessionReschedule @relation(fields: [rescheduleId], references: [id], onDelete: Cascade)
+  slot       AvailabilitySlot? @relation(fields: [slotId], references: [id], onDelete: SetNull)
+
+  @@index([rescheduleId])
+  @@index([slotId])
 }
 
 enum CancelledBy {
@@ -652,6 +714,12 @@ enum NotificationKind {
   CANCELLATION_FEE_WAIVED_PLAYER
   CANCELLATION_FEE_WAIVED_COACH
   COACH_LATE_CANCELLATIONS_ADMIN
+  RESCHEDULE_PROPOSED
+  RESCHEDULE_ACCEPTED_PLAYER
+  RESCHEDULE_ACCEPTED_COACH
+  RESCHEDULE_DECLINED
+  RESCHEDULE_WITHDRAWN
+  RESCHEDULE_EXPIRED
 }
 
 enum NotificationStatus {

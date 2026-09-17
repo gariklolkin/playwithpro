@@ -161,12 +161,13 @@
   "session_updated": {
     "player": {
       "subject": "你与 {coach} 的课程已改到 {date}",
-      "text": "{name}，你好！\n\n你与教练 {coach} 的{service}课程有了新时间：\n{when}\n\n{where}\n\n附件更新会替换你日历中的事件。\n{sessionsLine}"
+      "text": "{name}，你好！\n\n你与教练 {coach} 的{service}课程有了新时间：\n{when}\n{previousLine}\n\n{where}\n\n附件更新会替换你日历中的事件。\n{sessionsLine}"
     },
     "coach": {
       "subject": "你与 {player} 的课程已改到 {date}",
-      "text": "{name}，你好！\n\n你与 {player} 的{service}课程有了新时间：\n{when}\n\n{where}\n\n附件更新会替换你日历中的事件。\n{sessionsLine}"
-    }
+      "text": "{name}，你好！\n\n你与 {player} 的{service}课程有了新时间：\n{when}\n{previousLine}\n\n{where}\n\n附件更新会替换你日历中的事件。\n{sessionsLine}"
+    },
+    "previousLine": "原定时间：{when}"
   },
   "cancellation": {
     "feeWaived": {
@@ -184,6 +185,24 @@
         "subject": "教练{coach}的临近取消已达 {count} 次",
         "text": "{coach}在过去 90 天内临近取消了 {count} 节已付费课程——最近一次是 {when} 与{player}的「{service}」课程。\n\n查看该教练：{url}"
       }
+    }
+  },
+  "reschedule": {
+    "proposed": {
+      "subject": "{counterpart}提议为您的课程更改时间",
+      "text": "{name}，您好！\n\n{counterpart}希望将您目前定于 {when} 的「{service}」课程改到以下时间之一：\n\n{options}\n\n请在 {expires} 之前接受其中一个时间或拒绝。在此之前这些时段会为您保留；如果无人回复，课程将保持原定时间。\n\n在此回复：{url}"
+    },
+    "declined": {
+      "subject": "{counterpart}拒绝了新的时间",
+      "text": "{name}，您好！\n\n{counterpart}拒绝了您更改「{service}」课程时间的提议。课程保持原定时间：{when}。\n\n{sessionsLine}"
+    },
+    "withdrawn": {
+      "subject": "{counterpart}撤回了更改课程时间的提议",
+      "text": "{name}，您好！\n\n{counterpart}撤回了更改您「{service}」课程时间的提议。课程保持原定时间：{when}。\n\n{sessionsLine}"
+    },
+    "expired": {
+      "subject": "更改课程时间的提议已过期",
+      "text": "{name}，您好！\n\n关于更改您与{counterpart}的「{service}」课程时间的提议无人及时回复。课程保持原定时间：{when}。\n\n{sessionsLine}"
     }
   }
 }

@@ -14,6 +14,7 @@ import {
   Prisma,
   ProProfile,
   ProProfileStatus,
+  RescheduleStatus,
   SlotStatus,
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -192,6 +193,14 @@ export class AvailabilityService {
           startsAt: { gt: new Date() },
         },
         orderBy: { startsAt: 'asc' },
+        include: {
+          // An open reschedule proposal holds the slots it offers.
+          rescheduleOptions: {
+            where: { reschedule: { status: RescheduleStatus.OPEN } },
+            select: { id: true },
+            take: 1,
+          },
+        },
       }),
     ]);
     return {
@@ -207,6 +216,9 @@ export class AvailabilityService {
         startsAt: slot.startsAt.toISOString(),
         endsAt: slot.endsAt.toISOString(),
         status: slot.status === SlotStatus.BOOKED ? 'booked' : 'open',
+        heldForReschedule:
+          slot.status === SlotStatus.BOOKED &&
+          slot.rescheduleOptions.length > 0,
         source:
           slot.source === AvailabilitySlotSource.MANUAL ? 'manual' : 'rule',
       })),

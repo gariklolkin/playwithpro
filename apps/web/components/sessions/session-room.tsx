@@ -12,6 +12,7 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 import { LocalTime } from "@/components/catalog/local-time";
 import { PlayerContextDisclosure } from "@/components/sessions/player-context-disclosure";
+import { RescheduleBanner } from "@/components/sessions/reschedule-banner";
 import {
   RoomToasts,
   type RoomToastItem,
@@ -312,6 +313,16 @@ export function SessionRoom({
           {/* Coach only (the API embeds the card under the paid-session rule);
               a native disclosure outside the LiveKit tree, so opening it
               never reconnects the call. */}
+          {room.reschedule ? (
+            <div className="max-w-[520px]">
+              <RescheduleBanner
+                sessionId={sessionId}
+                proposal={room.reschedule}
+                counterpartName={room.counterpartName}
+                onChanged={() => void load()}
+              />
+            </div>
+          ) : null}
           {room.playerContext ? (
             <PlayerContextDisclosure
               className="mt-2"

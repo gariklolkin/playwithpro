@@ -161,12 +161,13 @@
   "session_updated": {
     "player": {
       "subject": "Ваша сессия с {coach} перенесена на {date}",
-      "text": "Здравствуйте, {name}!\n\nУ вашей сессии «{service}» с тренером {coach} новое время:\n{when}\n\n{where}\n\nВложенное обновление заменит событие в вашем календаре.\n{sessionsLine}"
+      "text": "Здравствуйте, {name}!\n\nУ вашей сессии «{service}» с тренером {coach} новое время:\n{when}\n{previousLine}\n\n{where}\n\nВложенное обновление заменит событие в вашем календаре.\n{sessionsLine}"
     },
     "coach": {
       "subject": "Ваша сессия с {player} перенесена на {date}",
-      "text": "Здравствуйте, {name}!\n\nУ вашей сессии «{service}» с {player} новое время:\n{when}\n\n{where}\n\nВложенное обновление заменит событие в вашем календаре.\n{sessionsLine}"
-    }
+      "text": "Здравствуйте, {name}!\n\nУ вашей сессии «{service}» с {player} новое время:\n{when}\n{previousLine}\n\n{where}\n\nВложенное обновление заменит событие в вашем календаре.\n{sessionsLine}"
+    },
+    "previousLine": "Прежнее время: {when}"
   },
   "cancellation": {
     "feeWaived": {
@@ -184,6 +185,24 @@
         "subject": "Тренер {coach}: уже {count} поздних отмен",
         "text": "{coach} поздно отменил(а) оплаченных сессий за последние 90 дней: {count}. Последняя — сессия «{service}» с {player} ({when}).\n\nПроверить тренера: {url}"
       }
+    }
+  },
+  "reschedule": {
+    "proposed": {
+      "subject": "{counterpart} предлагает новое время для вашей сессии",
+      "text": "Здравствуйте, {name}!\n\n{counterpart} хочет перенести вашу сессию «{service}», которая сейчас назначена на {when}, на одно из этих времён:\n\n{options}\n\nПримите один из вариантов или отклоните предложение до {expires}. До тех пор эти слоты удерживаются для вас; если никто не ответит, сессия останется в прежнее время.\n\nОтветить: {url}"
+    },
+    "declined": {
+      "subject": "{counterpart} отклонил(а) новое время",
+      "text": "Здравствуйте, {name}!\n\n{counterpart} отклонил(а) ваше предложение перенести сессию «{service}». Она остаётся в прежнее время: {when}.\n\n{sessionsLine}"
+    },
+    "withdrawn": {
+      "subject": "{counterpart} отозвал(а) предложение о переносе сессии",
+      "text": "Здравствуйте, {name}!\n\n{counterpart} отозвал(а) предложение перенести вашу сессию «{service}». Она остаётся в прежнее время: {when}.\n\n{sessionsLine}"
+    },
+    "expired": {
+      "subject": "Предложение о переносе сессии истекло",
+      "text": "Здравствуйте, {name}!\n\nНа предложение перенести сессию «{service}» с {counterpart} никто не ответил вовремя. Она остаётся в прежнее время: {when}.\n\n{sessionsLine}"
     }
   }
 }

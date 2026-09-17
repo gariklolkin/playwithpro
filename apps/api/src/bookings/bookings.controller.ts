@@ -84,7 +84,7 @@ export class BookingsController {
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({
     description:
-      "The coach's \"Refund in full\": waives the late fee of a cancelled session while its payment has not settled.",
+      'The coach\'s "Refund in full": waives the late fee of a cancelled session while its payment has not settled.',
   })
   async waiveCancellationFee(
     @CurrentUser() user: AuthenticatedUser,

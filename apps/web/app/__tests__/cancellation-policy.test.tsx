@@ -79,6 +79,9 @@ const upcoming: SessionResponse = {
   playerConfirmedAt: null,
   coachConfirmedAt: null,
   coachGameAnswer: null,
+  reschedule: null,
+  rescheduleAllowed: false,
+  rescheduleCount: 0,
   cancellationPolicy: null,
   cancellationTerms: {
     tier: CancellationTier.Partial,
@@ -338,6 +341,7 @@ describe("admin session actions", () => {
     sessionStatus: SessionStatus.PaidEscrow,
     sessionStartsAt: "2026-09-22T22:00:00.000Z",
     cancellation: null,
+    reschedules: [],
     createdAt: "2026-09-19T10:00:00.000Z",
     updatedAt: "2026-09-19T10:00:00.000Z",
   };

@@ -225,6 +225,24 @@ class EnvironmentVariables {
   @Min(0)
   CANCELLATION_GRACE_MIN = 30;
 
+  /** Accepted reschedules allowed per session. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  RESCHEDULE_MAX_PER_SESSION = 2;
+
+  /** Hours a reschedule proposal stays open (also capped at 2 h before the start). */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  RESCHEDULE_PROPOSAL_TTL_HOURS = 24;
+
+  /** How far from the original start a proposed time may be, in days. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  RESCHEDULE_MAX_SHIFT_DAYS = 30;
+
   /** Late coach cancellations within 90 days that flag the coach for admins. */
   @Type(() => Number)
   @IsInt()

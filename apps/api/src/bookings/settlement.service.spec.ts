@@ -141,9 +141,7 @@ describe('SettlementService', () => {
   });
 
   describe('late cancellations', () => {
-    const late = (
-      overrides: Parameters<typeof sessionInState>[2] = {},
-    ) =>
+    const late = (overrides: Parameters<typeof sessionInState>[2] = {}) =>
       sessionInState(SessionStatus.CANCELLED, null, {
         cancellationTier: CancellationTier.PARTIAL,
         cancellationRefundMinor: 2003,

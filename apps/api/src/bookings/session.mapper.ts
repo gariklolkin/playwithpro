@@ -1,4 +1,6 @@
 import {
+  RESCHEDULE_MIN_NOTICE_HOURS,
+  RescheduleProposal,
   CancellationPolicyMoments,
   CancellationRecord,
   CancellationTerms,
@@ -12,6 +14,8 @@ import {
   SessionVideoItem,
 } from '@playwithpro/shared';
 import type {
+  SessionReschedule,
+  SessionRescheduleOption,
   Payment,
   PlayerProfile,
   ProProfile,
@@ -28,6 +32,7 @@ import type { AttendanceRow } from '../session-rooms/attendance-classifier';
 import {
   cancellationMoments,
   cancellationTerms,
+  coachProposalOutstanding,
   policyOf,
 } from './cancellation-policy';
 import {
@@ -62,7 +67,21 @@ export type SessionWithParties = Session & {
   payments: Array<Pick<Payment, 'status'>>;
   dispute: DisputeSummaryRow | null;
   attendance: AttendanceRow[];
+  reschedules: RescheduleRow[];
   review: Pick<Review, 'rating' | 'text' | 'createdAt'> | null;
+};
+
+export type RescheduleRow = Pick<
+  SessionReschedule,
+  | 'id'
+  | 'proposedById'
+  | 'byCoach'
+  | 'status'
+  | 'fromStartsAt'
+  | 'expiresAt'
+  | 'createdAt'
+> & {
+  options: Array<Pick<SessionRescheduleOption, 'id' | 'startsAt' | 'endsAt'>>;
 };
 
 /** The escrow lifecycle: failed attempts never enter it. */
@@ -122,6 +141,24 @@ export const SESSION_INCLUDE = {
     orderBy: { joinedAt: 'asc' },
   },
   review: { select: { rating: true, text: true, createdAt: true } },
+  // Proposals are few (capped per session); the open one is shown to the
+  // parties, the rest feeds the cancellation rules.
+  reschedules: {
+    select: {
+      id: true,
+      proposedById: true,
+      byCoach: true,
+      status: true,
+      fromStartsAt: true,
+      expiresAt: true,
+      createdAt: true,
+      options: {
+        select: { id: true, startsAt: true, endsAt: true },
+        orderBy: { startsAt: 'asc' },
+      },
+    },
+    orderBy: { createdAt: 'asc' },
+  },
 } as const;
 
 /** Join-window bounds around the slot, in minutes. */
@@ -131,6 +168,8 @@ export interface RoomWindow {
 }
 
 export interface SessionResponseExtras {
+  /** Present when the caller wants `rescheduleAllowed` computed. */
+  rescheduleMax?: number;
   /** Present when the caller wants the room join window exposed. */
   roomWindow?: RoomWindow;
   /** Present when the caller wants the auto-confirm deadline exposed. */
@@ -255,6 +294,9 @@ export function toSessionResponse(
           )
         : null,
     escrow: escrow !== undefined ? ESCROW_STATUS[escrow] : null,
+    reschedule: toRescheduleProposal(session, extras?.viewer),
+    rescheduleAllowed: isRescheduleAllowed(session, extras?.rescheduleMax),
+    rescheduleCount: session.rescheduleCount,
     cancellationPolicy: toCancellationPolicy(session),
     cancellationTerms: toCancellationTerms(session, extras?.viewer),
     cancellation: toCancellationRecord(session),
@@ -289,8 +331,55 @@ type CancellableSession = Pick<
   | 'cancellationRefundMinor'
   | 'cancellationLate'
   | 'feeWaivedAt'
+  | 'cancelTierFloor'
+  | 'reschedules'
   | 'payments'
 > & { proProfile: { userId: string } };
+
+/** Reschedule notice: proposals and offered slots must be this far ahead. */
+export const RESCHEDULE_NOTICE_MS = RESCHEDULE_MIN_NOTICE_HOURS * 3_600_000;
+
+/** The open proposal as the viewer sees it; an expired-but-unswept one is gone. */
+export function toRescheduleProposal(
+  session: Pick<SessionWithParties, 'reschedules'>,
+  viewer: AuthenticatedUser | undefined,
+  now = new Date(),
+): RescheduleProposal | null {
+  const open = session.reschedules.find(
+    (row) => row.status === 'OPEN' && row.expiresAt.getTime() > now.getTime(),
+  );
+  if (!open) return null;
+  return {
+    id: open.id,
+    proposedBy: open.byCoach ? 'coach' : 'player',
+    mine: viewer !== undefined && viewer.id === open.proposedById,
+    options: open.options.map((option) => ({
+      id: option.id,
+      startsAt: option.startsAt.toISOString(),
+      endsAt: option.endsAt.toISOString(),
+    })),
+    expiresAt: open.expiresAt.toISOString(),
+    fromStartsAt: open.fromStartsAt.toISOString(),
+  };
+}
+
+/** Paid, far enough ahead, under the limit, and nothing open. */
+export function isRescheduleAllowed(
+  session: Pick<
+    SessionWithParties,
+    'status' | 'startsAt' | 'rescheduleCount' | 'reschedules'
+  >,
+  max: number | undefined,
+  now = new Date(),
+): boolean {
+  return (
+    max !== undefined &&
+    session.status === 'PAID_ESCROW' &&
+    session.startsAt.getTime() - now.getTime() >= RESCHEDULE_NOTICE_MS &&
+    session.rescheduleCount < max &&
+    toRescheduleProposal(session, undefined, now) === null
+  );
+}
 
 /**
  * The snapshotted terms as moments, while they can still matter: an unpaid
@@ -349,6 +438,8 @@ export function toCancellationTerms(
     paidAt: session.paidAt,
     by,
     now,
+    tierFloor: session.cancelTierFloor,
+    coachProposalOutstanding: coachProposalOutstanding(session.reschedules),
   });
   return {
     tier: terms.tier.toLowerCase() as SharedCancellationTier,
@@ -360,7 +451,7 @@ export function toCancellationTerms(
 
 /** The cancellation record of a paid session; unpaid releases have none. */
 export function toCancellationRecord(
-  session: CancellableSession,
+  session: Omit<CancellableSession, 'reschedules' | 'cancelTierFloor'>,
 ): CancellationRecord | null {
   if (
     session.status !== 'CANCELLED' ||

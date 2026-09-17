@@ -21,6 +21,8 @@ export interface AvailabilitySlotItem {
   startsAt: string;
   endsAt: string;
   status: AvailabilitySlotStatus;
+  /** Booked only because an open reschedule proposal offers it. */
+  heldForReschedule: boolean;
   source: AvailabilitySlotOrigin;
 }
 
