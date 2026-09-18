@@ -16,12 +16,19 @@ K8S="$REPO_ROOT/infra/k8s"
 
 echo "==> preflight"
 kubectl get ns "$NS" >/dev/null
-for secret in playwithpro-env livekit-config fider-env; do
+for secret in playwithpro-env livekit-config; do
   kubectl -n "$NS" get secret "$secret" >/dev/null || {
     echo "secret $secret missing — run infra/scripts/apply-secrets.sh first" >&2
     exit 1
   }
 done
+# The feedback board is optional until the operator has set it up (change 25).
+if kubectl -n "$NS" get secret fider-env >/dev/null 2>&1; then
+  FIDER=1
+else
+  FIDER=0
+  echo "secret fider-env missing — skipping the feedback board (see infra/k8s/README.md)" >&2
+fi
 
 echo "==> applying static manifests"
 kubectl apply -f "$K8S/cluster/"
@@ -33,10 +40,12 @@ sed "s/__TAG__/$TAG/g" "$K8S/app/web.yaml" | kubectl apply -f -
 kubectl apply -f "$K8S/app/ingress.yaml"
 # Feedback board (change 25): role/database init is idempotent, so it runs on
 # every deploy (it also re-syncs the role password with the Secret).
-kubectl -n "$NS" delete job fider-init-db --ignore-not-found
-kubectl apply -f "$K8S/fider/init-db-job.yaml"
-kubectl -n "$NS" wait --for=condition=complete job/fider-init-db --timeout=120s
-kubectl apply -f "$K8S/fider/fider.yaml"
+if [[ "$FIDER" == 1 ]]; then
+  kubectl -n "$NS" delete job fider-init-db --ignore-not-found
+  kubectl apply -f "$K8S/fider/init-db-job.yaml"
+  kubectl -n "$NS" wait --for=condition=complete job/fider-init-db --timeout=120s
+  kubectl apply -f "$K8S/fider/fider.yaml"
+fi
 
 echo "==> waiting for postgres"
 kubectl -n "$NS" rollout status deploy/postgres --timeout=180s
@@ -55,7 +64,7 @@ fi
 echo "==> waiting for app rollout (tag $TAG)"
 kubectl -n "$NS" rollout status deploy/api --timeout=300s
 kubectl -n "$NS" rollout status deploy/web --timeout=300s
-kubectl -n "$NS" rollout status deploy/fider --timeout=180s
+[[ "$FIDER" == 1 ]] && kubectl -n "$NS" rollout status deploy/fider --timeout=180s
 
 # LiveKit reads its config and TURN certificate at start only: restart it
 # whenever the rendered config or the TLS secret changed since the last deploy.
