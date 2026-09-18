@@ -136,6 +136,7 @@ describe("RegisterCard", () => {
     fireEvent.change(screen.getByLabelText("Password"), {
       target: { value: "password1" },
     });
+    fireEvent.click(screen.getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
 
     // No session yet: the form switches to the check-your-inbox screen.
@@ -152,6 +153,10 @@ describe("RegisterCard", () => {
       email: "coach@example.com",
       password: "password1",
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      // The documents the form linked to, and the language it was shown in.
+      acceptedTerms: "2026-09-18",
+      acceptedPrivacy: "2026-09-18",
+      locale: "en",
     });
   });
 
@@ -169,6 +174,7 @@ describe("RegisterCard", () => {
     fireEvent.change(screen.getByLabelText("Password"), {
       target: { value: "password1" },
     });
+    fireEvent.click(screen.getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
     await screen.findByText(/Almost there/);
 
@@ -201,6 +207,7 @@ describe("RegisterCard", () => {
     fireEvent.change(screen.getByLabelText("Password"), {
       target: { value: "password1" },
     });
+    fireEvent.click(screen.getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
     await screen.findByText(/Almost there/);
 
@@ -290,6 +297,7 @@ describe("RegisterCard", () => {
     fireEvent.change(screen.getByLabelText("Password"), {
       target: { value: "password1" },
     });
+    fireEvent.click(screen.getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
 
     expect(await screen.findByText(/Almost there/)).toBeInTheDocument();
@@ -315,6 +323,7 @@ describe("RegisterCard", () => {
     fireEvent.change(screen.getByLabelText("Password"), {
       target: { value: "password1" },
     });
+    fireEvent.click(screen.getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
 
     expect(
@@ -336,6 +345,7 @@ describe("RegisterCard", () => {
     fireEvent.change(screen.getByLabelText("Password"), {
       target: { value: "password1" },
     });
+    fireEvent.click(screen.getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
 
     expect(

@@ -6,6 +6,7 @@ import type { Role } from "../enums/role";
 import type { ServiceType } from "../enums/service-type";
 import type { SessionStatus } from "../enums/session-status";
 import type { CancellationRecord } from "./cancellation";
+import type { LegalAcceptanceEntry } from "./legal";
 import type { AdminRescheduleEntry } from "./reschedule";
 import type { RatingAggregate } from "./review";
 
@@ -56,6 +57,8 @@ export interface AdminUserDetail extends AdminUserListItem {
   sessionCounts: AdminSessionCounts;
   /** Payment attempts across the user's sessions (both sides). */
   paymentAttempts: number;
+  /** Legal acceptances, newest first. */
+  legalAcceptances: LegalAcceptanceEntry[];
 }
 
 /** One row of the admin payment ledger — the raw audit trail entry. */

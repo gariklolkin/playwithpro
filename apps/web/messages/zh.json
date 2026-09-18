@@ -292,7 +292,9 @@
       "schedulePrompt": "只差一步：预约一次简短的视频通话以核实身份。",
       "scheduleCta": "选择时间",
       "readyInfo": "您的资料已包含审核所需的全部信息。提交后请选择一个简短（5–15 分钟）视频通话的时间。",
-      "confirmEmailFirst": "请先确认您的邮箱——预约确认、提醒和会议邀请都会发送到该邮箱。6 位确认码已发送至您的收件箱。"
+      "confirmEmailFirst": "请先确认您的邮箱——预约确认、提醒和会议邀请都会发送到该邮箱。6 位确认码已发送至您的收件箱。",
+      "agreementLabel": "我接受<agreement>教练协议</agreement>（费用、付款、取消、行为规范）。",
+      "agreementRequired": "请接受教练协议后再提交。"
     }
   },
   "availability": {
@@ -550,7 +552,8 @@
       "notAVideo": "只能上传视频文件。",
       "retry": "重试",
       "done": "完成",
-      "uploadingNote": "上传中… {progress}%——请保持页面打开。"
+      "uploadingNote": "上传中… {progress}%——请保持页面打开。",
+      "legalNotice": "仅上传您有权分享的影像，包括其中出现的其他人。只有您预约的教练可以看到——见<terms>内容条款</terms>。"
     },
     "player": {
       "loading": "视频加载中…",
@@ -679,7 +682,8 @@
     "expiredSubtitle": "支付时限已过，该时段已重新开放。你可以另选时间。",
     "backToCoach": "返回教练主页",
     "releaseSlot": "改为释放此时段",
-    "goal": "目标"
+    "goal": "目标",
+    "policyAck": "付款即表示您确认<policy>预约与取消政策</policy>。"
   },
   "sessions": {
     "title": "课程",
@@ -930,7 +934,8 @@
         "pendingPlayer": "{amount} 将于{relative}退还给您。",
         "pendingCoach": "您将于{relative}收到 {amount}。在此之前，您可以为学员全额退款。",
         "waiveCta": "全额退款"
-      }
+      },
+      "disputeRules": "争议规则"
     },
     "review": {
       "cta": "写评价",
@@ -942,7 +947,8 @@
       "abort": "取消",
       "error": "出错了，请重试。",
       "givenLabel": "您的评价",
-      "receivedLabel": "球员的评价"
+      "receivedLabel": "球员的评价",
+      "guidelines": "评价规则：公开且经审核"
     },
     "videos": {
       "title": "本次课程的片段",
@@ -1320,5 +1326,65 @@
     "partialUntil": "{when} 前取消退还 {percent}%。",
     "noRefundAfter": "之后不予退款。",
     "coachCancels": "教练取消时全额退款。"
+  },
+  "legal": {
+    "title": "法律信息",
+    "versionLine": "版本 {version} · 自 {effective} 起生效",
+    "olderVersion": "早期版本",
+    "readCurrent": "阅读当前版本",
+    "draft": "草稿：占位文本，待法律审核。它展示了结构及平台当前适用的规则；最终措辞将作为新版本发布。",
+    "convenience": "本翻译仅供参考；以 {locale} 版本为准。",
+    "versionsTitle": "所有版本",
+    "cookieSettingsTitle": "Cookie 设置",
+    "cookieSettingsBody": "您可以随时更改关于产品分析的选择。",
+    "consent": {
+      "label": "我接受<terms>服务条款</terms>，已阅读<privacy>隐私政策</privacy>，并确认我已年满 18 周岁。",
+      "coachHint": "教练在提交认证时还需接受<agreement>教练协议</agreement>——您可以现在就阅读。",
+      "required": "请接受条款以继续。"
+    },
+    "footer": {
+      "aria": "法律信息",
+      "operator": "© PlayWithPro",
+      "terms": "条款",
+      "privacy": "隐私",
+      "imprint": "法律信息",
+      "bookingPolicy": "预约政策",
+      "coachAgreement": "教练协议",
+      "cookieSettings": "Cookie 设置",
+      "support": "支持"
+    },
+    "gate": {
+      "title": "请查看我们更新的条款",
+      "intro": "我们更改了您曾接受的文件。请阅读并接受新版本，以继续使用 PlayWithPro。",
+      "version": "（版本 {version}）",
+      "paused": "在您接受之前，预约、付款和发布可预约时间将暂停。已付费的课程不受影响。",
+      "accept": "我已阅读并接受",
+      "error": "出了点问题，请重试。",
+      "noticeIntro": "我们更新了：",
+      "dismiss": "关闭",
+      "documents": {
+        "terms": "服务条款",
+        "privacy": "隐私政策",
+        "imprint": "法律信息",
+        "booking-policy": "预约与取消政策",
+        "coach-agreement": "教练协议"
+      }
+    },
+    "contexts": {
+      "registration": "注册",
+      "oauth_complete": "Google 注册",
+      "verification_submit": "认证",
+      "checkout": "结账",
+      "reaccept": "重新接受"
+    },
+    "historyTitle": "法律接受记录",
+    "none": "没有接受记录。",
+    "documents": {
+      "terms": "服务条款",
+      "privacy": "隐私政策",
+      "imprint": "法律信息",
+      "booking-policy": "预约与取消政策",
+      "coach-agreement": "教练协议"
+    }
   }
 }

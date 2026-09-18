@@ -4,10 +4,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import type { SignupRole } from '@playwithpro/shared';
+import { LegalAcceptanceContext } from '@playwithpro/shared';
+import { LegalService } from '../legal/legal.service';
+import { requestLocale } from '../legal/request-locale';
+import { OAuthCompleteDto } from './dto/oauth-complete.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { toPrismaRole } from '../users/user.mapper';
-import { AuthResult, AuthService } from './auth.service';
+import { AuthResult, AuthService, signupAcceptances } from './auth.service';
 import { GoogleProfile } from './google-oauth.client';
 
 const PENDING_SIGNUP_TTL = '15m';
@@ -35,6 +38,7 @@ export class OAuthService {
     private readonly prisma: PrismaService,
     private readonly auth: AuthService,
     private readonly jwt: JwtService,
+    private readonly legal: LegalService,
   ) {}
 
   async handleGoogleCallback(
@@ -104,9 +108,9 @@ export class OAuthService {
   /** Finishes first-time Google signup once the visitor picked a role. */
   async completeSignup(
     pendingToken: string | undefined,
-    role: SignupRole,
-    timezone?: string,
+    dto: OAuthCompleteDto,
   ): Promise<AuthResult> {
+    const { role, timezone } = dto;
     if (!pendingToken) {
       throw new UnauthorizedException();
     }
@@ -129,21 +133,34 @@ export class OAuthService {
       );
     }
 
-    const user = await this.prisma.user.create({
-      data: {
-        email: payload.email,
-        role: toPrismaRole(role),
-        displayName: payload.displayName,
-        ...(timezone ? { timezone } : {}),
-        emailVerifiedAt: new Date(), // Google already verified the address
-        oauthAccounts: {
-          create: {
-            provider: payload.provider,
-            providerAccountId: payload.providerAccountId,
+    const accepted = signupAcceptances(dto);
+    this.legal.assertCurrent(accepted);
+    const locale = requestLocale(dto.locale);
+    const user = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: {
+          email: payload.email,
+          role: toPrismaRole(role),
+          displayName: payload.displayName,
+          locale,
+          ...(timezone ? { timezone } : {}),
+          emailVerifiedAt: new Date(), // Google already verified the address
+          oauthAccounts: {
+            create: {
+              provider: payload.provider,
+              providerAccountId: payload.providerAccountId,
+            },
           },
         },
-      },
-      include: { oauthAccounts: true },
+        include: { oauthAccounts: true },
+      });
+      await this.legal.record(tx, {
+        userId: created.id,
+        accepted,
+        locale,
+        context: LegalAcceptanceContext.OauthComplete,
+      });
+      return created;
     });
     return this.auth.signIn(user);
   }

@@ -34,6 +34,7 @@ export default async function AdminUserDetailPage({
     notFound();
   }
   const t = await getTranslations("adminConsole.users");
+  const tLegal = await getTranslations("legal");
   const tRoles = await getTranslations("adminConsole.roles");
   const tSessions = await getTranslations("sessions.status");
   const format = await getFormatter();
@@ -165,6 +166,31 @@ export default async function AdminUserDetailPage({
         <p className="mt-3 text-sm text-text-secondary">
           {t("paymentAttempts", { count: user.paymentAttempts })}
         </p>
+      </section>
+
+      <section className="mt-4 rounded-card border border-border bg-bg p-6">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-text-tertiary">
+          {tLegal("historyTitle")}
+        </h2>
+        {user.legalAcceptances.length === 0 ? (
+          <p className="mt-3 text-sm text-text-secondary">{tLegal("none")}</p>
+        ) : (
+          <ul className="mt-3 space-y-1 text-sm text-text-secondary">
+            {user.legalAcceptances.map((row, index) => (
+              <li key={index}>
+                <strong className="text-text">
+                  {tLegal(`documents.${row.document}`)}
+                </strong>{" "}
+                {row.version} · {row.locale} ·{" "}
+                {tLegal(`contexts.${row.context}`)} ·{" "}
+                {format.dateTime(new Date(row.acceptedAt), {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                })}
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
   );

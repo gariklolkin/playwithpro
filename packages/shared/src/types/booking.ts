@@ -79,6 +79,8 @@ export interface ConfirmSessionRequest {
 export interface PaySessionRequest {
   /** Opaque payment-instrument token; omitted = mock success. */
   instrument?: string;
+  /** The booking-policy version shown at checkout; must be current when given. */
+  bookingPolicyVersion?: string;
 }
 
 export interface SessionParty {

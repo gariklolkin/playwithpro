@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
   Param,
@@ -23,6 +24,8 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { LegalGuard } from '../legal/legal.guard';
+import { requestLocale } from '../legal/request-locale';
 import { BookingsService } from './bookings.service';
 import { ConfirmSessionDto } from './dto/confirm-session.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
@@ -38,6 +41,7 @@ export class BookingsController {
 
   @Post('bookings')
   @Roles(Role.Amateur)
+  @UseGuards(LegalGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({
     description: 'Slot claimed; session created in pending_payment.',
@@ -136,6 +140,7 @@ export class BookingsController {
 
   @Post('sessions/:id/pay')
   @Roles(Role.Amateur)
+  @UseGuards(LegalGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({
     description: 'Escrow hold attempted; session paid on success.',
@@ -144,7 +149,8 @@ export class BookingsController {
     @CurrentUser() user: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: PaySessionDto,
+    @Headers('x-locale') localeHeader: string | undefined,
   ): Promise<PaySessionResponse> {
-    return this.bookings.pay(user.id, id, dto);
+    return this.bookings.pay(user.id, id, dto, requestLocale(localeHeader));
   }
 }

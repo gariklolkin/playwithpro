@@ -6,6 +6,7 @@ import {
 import { Test } from '@nestjs/testing';
 import { ServiceType } from '@playwithpro/shared';
 import { PrismaService } from '../prisma/prisma.service';
+import { LegalService } from '../legal/legal.service';
 import { ProsService } from './pros.service';
 
 const baseProfile = {
@@ -36,6 +37,7 @@ const baseProfile = {
 describe('ProsService', () => {
   let service: ProsService;
 
+  const legal = { assertCurrent: jest.fn(), record: jest.fn() };
   const prisma = {
     proProfile: {
       findUnique: jest.fn(),
@@ -52,7 +54,10 @@ describe('ProsService', () => {
     user: {
       findUniqueOrThrow: jest.fn(),
     },
-    $transaction: jest.fn().mockResolvedValue([]),
+    $transaction: jest.fn(
+      (fn: (t: typeof prisma) => Promise<unknown>): Promise<unknown> =>
+        fn(prisma),
+    ),
   };
 
   beforeEach(async () => {
@@ -61,7 +66,11 @@ describe('ProsService', () => {
       emailVerifiedAt: new Date(),
     });
     const moduleRef = await Test.createTestingModule({
-      providers: [ProsService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        ProsService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: LegalService, useValue: legal },
+      ],
     }).compile();
     service = moduleRef.get(ProsService);
   });
@@ -120,9 +129,9 @@ describe('ProsService', () => {
     prisma.user.findUniqueOrThrow.mockResolvedValue({ emailVerifiedAt: null });
     prisma.proProfile.findUnique.mockResolvedValue(baseProfile);
 
-    await expect(service.submitVerification('user-1')).rejects.toBeInstanceOf(
-      ForbiddenException,
-    );
+    await expect(
+      service.submitVerification('user-1', '2026-09-18', 'en'),
+    ).rejects.toBeInstanceOf(ForbiddenException);
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
@@ -132,9 +141,9 @@ describe('ProsService', () => {
       status: 'PENDING_REVIEW',
     });
 
-    await expect(service.submitVerification('user-1')).rejects.toBeInstanceOf(
-      ConflictException,
-    );
+    await expect(
+      service.submitVerification('user-1', '2026-09-18', 'en'),
+    ).rejects.toBeInstanceOf(ConflictException);
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
@@ -147,7 +156,7 @@ describe('ProsService', () => {
     });
 
     const error = await service
-      .submitVerification('user-1')
+      .submitVerification('user-1', '2026-09-18', 'en')
       .catch((caught: ConflictException) => caught);
 
     expect(error).toBeInstanceOf(ConflictException);
@@ -161,7 +170,7 @@ describe('ProsService', () => {
       status: 'REJECTED',
     });
 
-    await service.submitVerification('user-1');
+    await service.submitVerification('user-1', '2026-09-18', 'en');
 
     expect(prisma.verificationRequest.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -175,5 +184,15 @@ describe('ProsService', () => {
         data: { status: 'PENDING_REVIEW' },
       }),
     );
+    // The coach agreement is checked first and recorded with the submission.
+    expect(legal.assertCurrent).toHaveBeenCalledWith([
+      { document: 'coach-agreement', version: '2026-09-18' },
+    ]);
+    expect(legal.record).toHaveBeenCalledWith(prisma, {
+      userId: 'user-1',
+      accepted: [{ document: 'coach-agreement', version: '2026-09-18' }],
+      locale: 'en',
+      context: 'verification_submit',
+    });
   });
 });

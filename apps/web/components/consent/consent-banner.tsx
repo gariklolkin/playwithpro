@@ -24,7 +24,7 @@ export function ConsentBanner() {
         <p className="flex-1 text-[13px] leading-snug text-text-secondary">
           🍪 {t("body")}{" "}
           <Link
-            href="/privacy"
+            href="/legal/privacy"
             className="text-accent no-underline hover:underline"
           >
             {t("privacyLink")}

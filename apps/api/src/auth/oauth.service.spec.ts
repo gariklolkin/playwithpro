@@ -3,6 +3,8 @@ import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import { Role } from '@playwithpro/shared';
 import { PrismaService } from '../prisma/prisma.service';
+import { LegalService } from '../legal/legal.service';
+import type { OAuthCompleteDto } from './dto/oauth-complete.dto';
 import { AuthService } from './auth.service';
 import { GoogleProfile } from './google-oauth.client';
 import { OAuthService } from './oauth.service';
@@ -27,7 +29,20 @@ describe('OAuthService', () => {
       findUniqueOrThrow: jest.fn(),
       create: jest.fn(),
     },
+    $transaction: jest.fn(
+      (fn: (t: typeof prisma) => Promise<unknown>): Promise<unknown> =>
+        fn(prisma),
+    ),
   };
+  const legal = { assertCurrent: jest.fn(), record: jest.fn() };
+  const signup = (role: Role, timezone?: string): OAuthCompleteDto =>
+    ({
+      role,
+      timezone,
+      acceptedTerms: '2026-09-18',
+      acceptedPrivacy: '2026-09-18',
+      locale: 'fr',
+    }) as OAuthCompleteDto;
   const auth = {
     signIn: jest.fn().mockResolvedValue({
       user: { id: 'user-1' },
@@ -47,6 +62,7 @@ describe('OAuthService', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: AuthService, useValue: auth },
         { provide: JwtService, useValue: jwt },
+        { provide: LegalService, useValue: legal },
       ],
     }).compile();
     service = moduleRef.get(OAuthService);
@@ -159,7 +175,7 @@ describe('OAuthService', () => {
         oauthAccounts: [{ provider: 'google' }],
       });
 
-      await service.completeSignup('pending-jwt', Role.Professional);
+      await service.completeSignup('pending-jwt', signup(Role.Professional));
 
       expect(prisma.user.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
@@ -167,9 +183,18 @@ describe('OAuthService', () => {
           role: 'PROFESSIONAL',
           displayName: 'Player One',
           emailVerifiedAt: expect.any(Date) as Date,
+          locale: 'fr',
         }) as object,
         include: { oauthAccounts: true },
       });
+      expect(legal.record).toHaveBeenCalledWith(
+        prisma,
+        expect.objectContaining({
+          userId: 'user-1',
+          locale: 'fr',
+          context: 'oauth_complete',
+        }),
+      );
       expect(auth.signIn).toHaveBeenCalled();
     });
     it('stores the client timezone on the created user', async () => {
@@ -180,7 +205,10 @@ describe('OAuthService', () => {
         oauthAccounts: [{ provider: 'google' }],
       });
 
-      await service.completeSignup('pending-jwt', Role.Amateur, 'Asia/Tokyo');
+      await service.completeSignup(
+        'pending-jwt',
+        signup(Role.Amateur, 'Asia/Tokyo'),
+      );
 
       expect(prisma.user.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -191,14 +219,14 @@ describe('OAuthService', () => {
 
     it('rejects a missing or invalid pending token', async () => {
       await expect(
-        service.completeSignup(undefined, Role.Amateur),
+        service.completeSignup(undefined, signup(Role.Amateur)),
       ).rejects.toBeInstanceOf(UnauthorizedException);
 
       jwt.verify.mockImplementation(() => {
         throw new Error('expired');
       });
       await expect(
-        service.completeSignup('bad', Role.Amateur),
+        service.completeSignup('bad', signup(Role.Amateur)),
       ).rejects.toBeInstanceOf(UnauthorizedException);
     });
 
@@ -207,7 +235,7 @@ describe('OAuthService', () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'existing' });
 
       await expect(
-        service.completeSignup('pending-jwt', Role.Amateur),
+        service.completeSignup('pending-jwt', signup(Role.Amateur)),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
   });

@@ -101,9 +101,12 @@ export function formatMoney(
 export class EmailRenderer {
   private readonly webAppUrl: string;
 
+  private readonly operatorName: string;
+
   constructor(config: ConfigService) {
     this.webAppUrl =
       config.get<string>('WEB_APP_URL') ?? 'http://localhost:3000';
+    this.operatorName = config.get<string>('OPERATOR_NAME') ?? 'PlayWithPro';
   }
 
   /** Resolves an unknown or unsupported locale to the default. */
@@ -154,6 +157,15 @@ export class EmailRenderer {
         }),
       );
     }
+    // Every email ends with the operator and the legal links.
+    lines.push(
+      '',
+      this.message(resolved, 'common.legalFooter', {
+        operator: this.operatorName,
+        imprintUrl: this.link(resolved, '/legal/imprint'),
+        privacyUrl: this.link(resolved, '/legal/privacy'),
+      }),
+    );
     const text = lines.join('\n');
     return { subject, text, html: toHtml(text, subject) };
   }

@@ -7,6 +7,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { StarRating, StarRatingInput } from "@/components/ui/star-rating";
 import { apiFetch } from "@/lib/api";
@@ -113,6 +114,13 @@ export function SessionReview({
         >
           {t("abort")}
         </Button>
+        <Link
+          href="/legal/terms"
+          target="_blank"
+          className="self-center text-[12px] text-text-tertiary hover:text-text"
+        >
+          {t("guidelines")}
+        </Link>
       </div>
       {failed ? (
         <p className="mt-2 text-[13px] text-[#C4554D]">{t("error")}</p>

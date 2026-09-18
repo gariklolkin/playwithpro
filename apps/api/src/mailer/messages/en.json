@@ -4,7 +4,8 @@
     "unsubscribe": "You get this email because it is switched on in your notification settings. Turn it off with one click: {url}",
     "whereRoom": "Join the session room: {url}",
     "whereVenue": "Venue: {venue}",
-    "sessions": "Your sessions: {url}"
+    "sessions": "Your sessions: {url}",
+    "legalFooter": "{operator} · Imprint: {imprintUrl} · Privacy: {privacyUrl}"
   },
   "session": {
     "paid": {
@@ -203,6 +204,19 @@
     "expired": {
       "subject": "The proposal to move your session expired",
       "text": "Hi {name},\n\nNobody answered the proposal to move the {service} session with {counterpart} in time. It keeps its time: {when}.\n\n{sessionsLine}"
+    }
+  },
+  "legal": {
+    "updated": {
+      "subject": "{material, select, yes {Please accept our updated {document}} other {We updated our {document}}}",
+      "text": "Hi {name},\n\nWe published a new version of our {document}, effective {effective}.\n\n{material, select, yes {Because the change is material, please read and accept the new version the next time you sign in; booking and paying are paused until then. Sessions you already paid for are not affected.} other {The change is minor and needs no action from you.}}\n\nRead it here: {url}"
+    },
+    "document": {
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy",
+      "imprint": "Imprint",
+      "booking-policy": "Booking and Cancellation Policy",
+      "coach-agreement": "Coach Agreement"
     }
   }
 }

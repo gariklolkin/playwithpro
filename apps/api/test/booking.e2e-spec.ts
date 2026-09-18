@@ -15,6 +15,7 @@ import {
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { acceptCurrentLegal } from './legal-helper';
 import { TokenService } from '../src/auth/token.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 
@@ -174,6 +175,8 @@ describe('Booking & escrow (e2e)', () => {
     });
     videoId = video.id;
 
+    // Suite users never signed up: bind them to the current terms.
+    await acceptCurrentLegal(prisma);
     const tokens = app.get(TokenService);
     playerCookie = `access_token=${tokens.signAccessToken(
       playerId,

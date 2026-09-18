@@ -292,7 +292,9 @@
       "schedulePrompt": "Une dernière étape : réservez un court appel vidéo pour confirmer votre identité.",
       "scheduleCta": "Choisir un horaire",
       "readyInfo": "Votre profil contient tout ce qu'il nous faut pour la vérification. Soumettez-le et choisissez un horaire pour un court appel vidéo (5–15 min).",
-      "confirmEmailFirst": "Confirmez d'abord votre adresse e-mail — la confirmation de réservation, les rappels et l'invitation à la réunion y seront envoyés. Le code de confirmation à 6 chiffres est dans votre boîte de réception."
+      "confirmEmailFirst": "Confirmez d'abord votre adresse e-mail — la confirmation de réservation, les rappels et l'invitation à la réunion y seront envoyés. Le code de confirmation à 6 chiffres est dans votre boîte de réception.",
+      "agreementLabel": "J'accepte le <agreement>Contrat coach</agreement> (commission, versements, annulations, conduite).",
+      "agreementRequired": "Merci d'accepter le contrat coach pour soumettre."
     }
   },
   "availability": {
@@ -550,7 +552,8 @@
       "notAVideo": "Seuls les fichiers vidéo peuvent être importés.",
       "retry": "Réessayer",
       "done": "Terminé",
-      "uploadingNote": "Envoi… {progress} % — gardez cette page ouverte."
+      "uploadingNote": "Envoi… {progress} % — gardez cette page ouverte.",
+      "legalNotice": "Ne téléversez que des images que vous avez le droit de partager, y compris les autres personnes visibles. Seuls les coachs que vous réservez peuvent les voir — voir les <terms>conditions relatives au contenu</terms>."
     },
     "player": {
       "loading": "Chargement de la vidéo…",
@@ -679,7 +682,8 @@
     "expiredSubtitle": "Le délai de paiement est écoulé et le créneau a été libéré. Vous pouvez choisir un nouvel horaire.",
     "backToCoach": "Retour au coach",
     "releaseSlot": "Libérer ce créneau à la place",
-    "goal": "Objectif"
+    "goal": "Objectif",
+    "policyAck": "En payant, vous reconnaissez les <policy>Conditions de réservation et d'annulation</policy>."
   },
   "sessions": {
     "title": "Séances",
@@ -930,7 +934,8 @@
         "pendingPlayer": "{amount} vous seront remboursés {relative}.",
         "pendingCoach": "Vous recevrez {amount} {relative}. D'ici là, vous pouvez rembourser intégralement le joueur.",
         "waiveCta": "Rembourser intégralement"
-      }
+      },
+      "disputeRules": "Règles des litiges"
     },
     "review": {
       "cta": "Laisser un avis",
@@ -942,7 +947,8 @@
       "abort": "Annuler",
       "error": "Une erreur est survenue. Réessayez.",
       "givenLabel": "Votre avis",
-      "receivedLabel": "Avis du joueur"
+      "receivedLabel": "Avis du joueur",
+      "guidelines": "Règles des avis : publics et modérés"
     },
     "videos": {
       "title": "Clips de cette séance",
@@ -1320,5 +1326,65 @@
     "partialUntil": "Remboursement de {percent} % jusqu'au {when}.",
     "noRefundAfter": "Aucun remboursement ensuite.",
     "coachCancels": "Remboursement intégral si le coach annule."
+  },
+  "legal": {
+    "title": "Informations légales",
+    "versionLine": "Version {version} · en vigueur le {effective}",
+    "olderVersion": "version antérieure",
+    "readCurrent": "Lire la version en vigueur",
+    "draft": "Brouillon : texte provisoire en attente de validation juridique. Il présente la structure et les règles appliquées aujourd'hui ; la rédaction définitive sera publiée comme nouvelle version.",
+    "convenience": "Cette traduction est fournie à titre indicatif ; la version {locale} fait foi.",
+    "versionsTitle": "Toutes les versions",
+    "cookieSettingsTitle": "Paramètres des cookies",
+    "cookieSettingsBody": "Modifiez à tout moment votre choix concernant l'analyse produit.",
+    "consent": {
+      "label": "J'accepte les <terms>Conditions d'utilisation</terms>, j'ai lu la <privacy>Politique de confidentialité</privacy> et je confirme avoir au moins 18 ans.",
+      "coachHint": "Les coachs acceptent aussi le <agreement>Contrat coach</agreement> lors de la demande de vérification — vous pouvez le lire dès maintenant.",
+      "required": "Merci d'accepter les conditions pour continuer."
+    },
+    "footer": {
+      "aria": "Informations légales",
+      "operator": "© PlayWithPro",
+      "terms": "Conditions",
+      "privacy": "Confidentialité",
+      "imprint": "Mentions légales",
+      "bookingPolicy": "Politique de réservation",
+      "coachAgreement": "Contrat coach",
+      "cookieSettings": "Paramètres des cookies",
+      "support": "Assistance"
+    },
+    "gate": {
+      "title": "Merci de relire nos conditions mises à jour",
+      "intro": "Nous avons modifié un document que vous aviez accepté. Lisez la nouvelle version et acceptez-la pour continuer à utiliser PlayWithPro.",
+      "version": "(version {version})",
+      "paused": "Réservations, paiements et publication de disponibilités sont suspendus jusqu'à votre acceptation. Les séances déjà payées ne sont pas concernées.",
+      "accept": "J'ai lu et j'accepte",
+      "error": "Une erreur s'est produite. Réessayez.",
+      "noticeIntro": "Nous avons mis à jour :",
+      "dismiss": "Fermer",
+      "documents": {
+        "terms": "Conditions d'utilisation",
+        "privacy": "Politique de confidentialité",
+        "imprint": "Mentions légales",
+        "booking-policy": "Conditions de réservation et d'annulation",
+        "coach-agreement": "Contrat coach"
+      }
+    },
+    "contexts": {
+      "registration": "inscription",
+      "oauth_complete": "inscription Google",
+      "verification_submit": "vérification",
+      "checkout": "paiement",
+      "reaccept": "nouvelle acceptation"
+    },
+    "historyTitle": "Acceptations juridiques",
+    "none": "Aucune acceptation enregistrée.",
+    "documents": {
+      "terms": "Conditions d'utilisation",
+      "privacy": "Politique de confidentialité",
+      "imprint": "Mentions légales",
+      "booking-policy": "Conditions de réservation et d'annulation",
+      "coach-agreement": "Contrat coach"
+    }
   }
 }

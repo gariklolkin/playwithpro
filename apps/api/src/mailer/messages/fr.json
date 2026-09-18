@@ -4,7 +4,8 @@
     "unsubscribe": "Vous recevez cet e-mail parce qu'il est activé dans vos paramètres de notification. Désactivez-le en un clic : {url}",
     "whereRoom": "Rejoindre la salle de séance : {url}",
     "whereVenue": "Lieu : {venue}",
-    "sessions": "Vos séances : {url}"
+    "sessions": "Vos séances : {url}",
+    "legalFooter": "{operator} · Mentions légales : {imprintUrl} · Confidentialité : {privacyUrl}"
   },
   "session": {
     "paid": {
@@ -203,6 +204,19 @@
     "expired": {
       "subject": "La proposition de déplacer votre séance a expiré",
       "text": "Bonjour {name},\n\nPersonne n'a répondu à temps à la proposition de déplacer la séance « {service} » avec {counterpart}. Elle garde son horaire : {when}.\n\n{sessionsLine}"
+    }
+  },
+  "legal": {
+    "updated": {
+      "subject": "{material, select, yes {Merci d'accepter la nouvelle version de notre document : {document}} other {Nous avons mis à jour notre document : {document}}}",
+      "text": "Bonjour {name},\n\nNous avons publié une nouvelle version de notre document « {document} », en vigueur à partir du {effective}.\n\n{material, select, yes {Ce changement étant substantiel, merci de lire et d'accepter la nouvelle version lors de votre prochaine connexion ; les réservations et paiements sont suspendus jusque-là. Les séances déjà payées ne sont pas concernées.} other {Ce changement est mineur et ne nécessite aucune action de votre part.}}\n\nLire ici : {url}"
+    },
+    "document": {
+      "terms": "Conditions d'utilisation",
+      "privacy": "Politique de confidentialité",
+      "imprint": "Mentions légales",
+      "booking-policy": "Politique de réservation et d'annulation",
+      "coach-agreement": "Contrat coach"
     }
   }
 }

@@ -4,7 +4,8 @@
     "unsubscribe": "Du bekommst diese E-Mail, weil sie in deinen Benachrichtigungseinstellungen aktiviert ist. Mit einem Klick abbestellen: {url}",
     "whereRoom": "Sitzungsraum betreten: {url}",
     "whereVenue": "Ort: {venue}",
-    "sessions": "Deine Sitzungen: {url}"
+    "sessions": "Deine Sitzungen: {url}",
+    "legalFooter": "{operator} · Impressum: {imprintUrl} · Datenschutz: {privacyUrl}"
   },
   "session": {
     "paid": {
@@ -203,6 +204,19 @@
     "expired": {
       "subject": "Der Vorschlag, eure Sitzung zu verschieben, ist abgelaufen",
       "text": "Hallo {name},\n\nauf den Vorschlag, die {service}-Sitzung mit {counterpart} zu verschieben, hat niemand rechtzeitig geantwortet. Sie behält ihre Zeit: {when}.\n\n{sessionsLine}"
+    }
+  },
+  "legal": {
+    "updated": {
+      "subject": "{material, select, yes {Bitte akzeptiere unsere aktualisierten {document}} other {Wir haben unsere {document} aktualisiert}}",
+      "text": "Hallo {name},\n\nwir haben eine neue Version unserer {document} veröffentlicht, gültig ab {effective}.\n\n{material, select, yes {Da es sich um eine wesentliche Änderung handelt, lies und akzeptiere die neue Version bitte bei deiner nächsten Anmeldung; Buchen und Bezahlen sind bis dahin pausiert. Bereits bezahlte Sitzungen sind nicht betroffen.} other {Die Änderung ist geringfügig und erfordert nichts von dir.}}\n\nHier lesen: {url}"
+    },
+    "document": {
+      "terms": "Nutzungsbedingungen",
+      "privacy": "Datenschutzerklärung",
+      "imprint": "Impressum",
+      "booking-policy": "Buchungs- und Stornobedingungen",
+      "coach-agreement": "Trainervereinbarung"
     }
   }
 }

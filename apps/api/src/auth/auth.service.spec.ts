@@ -10,13 +10,20 @@ import * as argon2 from 'argon2';
 import { MailerService } from '../mailer/mailer.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { LegalService } from '../legal/legal.service';
 import { AuthService } from './auth.service';
 import { TokenService } from './token.service';
 
 describe('AuthService', () => {
   let service: AuthService;
 
+  const legal = { assertCurrent: jest.fn(), record: jest.fn() };
   const prisma = {
+    // The registration transaction runs against the same mocked tables.
+    $transaction: jest.fn(
+      (fn: (t: typeof prisma) => Promise<unknown>): Promise<unknown> =>
+        fn(prisma),
+    ),
     user: {
       findUnique: jest.fn(),
       create: jest.fn(),
@@ -48,6 +55,7 @@ describe('AuthService', () => {
         { provide: TokenService, useValue: tokens },
         { provide: MailerService, useValue: mailer },
         { provide: ConfigService, useValue: { get: jest.fn() } },
+        { provide: LegalService, useValue: legal },
         {
           provide: StorageService,
           useValue: {
@@ -68,6 +76,8 @@ describe('AuthService', () => {
         password: 'password1',
         displayName: 'X',
         role: 'amateur',
+        acceptedTerms: '2026-09-18',
+        acceptedPrivacy: '2026-09-18',
       } as never),
     ).rejects.toBeInstanceOf(ConflictException);
     expect(prisma.user.create).not.toHaveBeenCalled();
@@ -93,13 +103,53 @@ describe('AuthService', () => {
       displayName: 'N',
       role: 'amateur',
       timezone: 'Europe/Berlin',
+      acceptedTerms: '2026-09-18',
+      acceptedPrivacy: '2026-09-18',
+      locale: 'de',
     } as never);
 
     expect(prisma.user.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ timezone: 'Europe/Berlin' }) as object,
+        data: expect.objectContaining({
+          timezone: 'Europe/Berlin',
+          // The visitor's language, not the database default.
+          locale: 'de',
+        }) as object,
       }),
     );
+    // The evidence is written in the same transaction, with that locale.
+    expect(legal.assertCurrent).toHaveBeenCalledWith([
+      { document: 'terms', version: '2026-09-18' },
+      { document: 'privacy', version: '2026-09-18' },
+    ]);
+    expect(legal.record).toHaveBeenCalledWith(prisma, {
+      userId: 'u1',
+      accepted: [
+        { document: 'terms', version: '2026-09-18' },
+        { document: 'privacy', version: '2026-09-18' },
+      ],
+      locale: 'de',
+      context: 'registration',
+    });
+  });
+
+  it('register refuses an outdated terms version before creating anything', async () => {
+    prisma.user.findUnique.mockResolvedValue(null);
+    legal.assertCurrent.mockImplementationOnce(() => {
+      throw new BadRequestException('outdated');
+    });
+
+    await expect(
+      service.register({
+        email: 'new@example.com',
+        password: 'password1',
+        displayName: 'N',
+        role: 'amateur',
+        acceptedTerms: '2020-01-01',
+        acceptedPrivacy: '2026-09-18',
+      } as never),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.user.create).not.toHaveBeenCalled();
   });
 
   it('register without a timezone leaves the database default', async () => {

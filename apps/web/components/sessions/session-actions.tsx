@@ -18,6 +18,7 @@ import {
 } from "@playwithpro/shared";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { Link } from "@/i18n/navigation";
 import { useState } from "react";
 import { SupportButton } from "@/components/support/support-button";
 import { Button } from "@/components/ui/button";
@@ -424,6 +425,13 @@ export function SessionActions({
                 variant="ghost"
                 context={{ kind: "dispute", sessionId: session.id }}
               />
+              <Link
+                href="/legal/booking-policy"
+                target="_blank"
+                className="self-center text-[12px] text-text-tertiary hover:text-text"
+              >
+                {t("disputeRules")}
+              </Link>
             </div>
           </form>
         ) : null}

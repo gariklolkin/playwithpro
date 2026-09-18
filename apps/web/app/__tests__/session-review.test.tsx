@@ -17,8 +17,19 @@ import { SessionReview } from "@/components/sessions/session-review";
 
 const refresh = vi.fn();
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh }),
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
+// The legal links use the locale-aware Link; the real module needs Next's runtime.
+vi.mock("@/i18n/navigation", () => ({
+  useRouter: () => ({ refresh, push: vi.fn(), replace: vi.fn() }),
+  Link: ({
+    href,
+    children,
+    ...props
+  }: React.ComponentProps<"a"> & { href: string }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
 }));
 
 const fetchMock = vi.fn();

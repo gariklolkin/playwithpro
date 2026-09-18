@@ -41,6 +41,18 @@ export default async function VideoUploadPage() {
           ⬆️ {t("title")}
         </h1>
         <p className="mt-1 text-text-secondary">{t("subtitle")}</p>
+        <p
+          className="mt-2 text-[13px] text-text-tertiary"
+          data-testid="upload-notice"
+        >
+          {t.rich("legalNotice", {
+            terms: (chunks) => (
+              <Link href="/legal/terms" className="text-accent" target="_blank">
+                {chunks}
+              </Link>
+            ),
+          })}
+        </p>
       </header>
       <VideoUploader limits={library?.limits ?? null} />
     </div>

@@ -1,8 +1,6 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
-import { SUPPORTED_LOCALES } from "@playwithpro/shared";
 import { Link } from "@/i18n/navigation";
-import { LOCALE_LABELS } from "@/i18n/locale-labels";
 
 const STEP_STYLES = [
   { key: "step1", bg: "#D3E5EF", emoji: "📹" },
@@ -100,11 +98,6 @@ export default async function Home() {
           ))}
         </section>
       </div>
-
-      <footer className="pb-12 text-center text-[13px] text-text-tertiary">
-        PlayWithPro ·{" "}
-        {SUPPORTED_LOCALES.map((locale) => LOCALE_LABELS[locale]).join(" · ")}
-      </footer>
     </main>
   );
 }

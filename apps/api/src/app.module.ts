@@ -8,6 +8,7 @@ import { validate } from './config/env.validation';
 import { HealthModule } from './health/health.module';
 import { MailerModule } from './mailer/mailer.module';
 import { NotificationsCoreModule } from './notifications/notifications-core.module';
+import { LegalModule } from './legal/legal.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ObservabilityModule } from './observability/observability.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -38,6 +39,7 @@ import { VideosModule } from './videos/videos.module';
     PrismaModule,
     ObservabilityModule,
     NotificationsCoreModule,
+    LegalModule,
     HealthModule,
     MailerModule,
     AuthModule,

@@ -5,12 +5,15 @@ import {
   Injectable,
 } from '@nestjs/common';
 import {
+  LegalAcceptanceContext,
+  LegalDocument,
   ProProfileResponse,
   ServiceType,
   UpdateProProfileRequest,
   UpsertProServiceRequest,
 } from '@playwithpro/shared';
 import { ProProfileStatus } from '@prisma/client';
+import { LegalService } from '../legal/legal.service';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   PROFILE_INCLUDE,
@@ -21,7 +24,10 @@ import {
 
 @Injectable()
 export class ProsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly legal: LegalService,
+  ) {}
 
   /** Returns the coach's profile, creating an empty draft on first access. */
   private async ensureProfile(userId: string): Promise<ProfileWithRelations> {
@@ -104,7 +110,19 @@ export class ProsService {
     return this.getProfile(userId);
   }
 
-  async submitVerification(userId: string): Promise<ProProfileResponse> {
+  async submitVerification(
+    userId: string,
+    coachAgreementVersion: string,
+    locale: string,
+  ): Promise<ProProfileResponse> {
+    // The card showed the current agreement, or it is stale.
+    const accepted = [
+      {
+        document: LegalDocument.CoachAgreement,
+        version: coachAgreementVersion,
+      },
+    ];
+    this.legal.assertCurrent(accepted);
     // The whole verification flow (booking confirmations, reminders, the
     // meeting invite) runs over email — it must be confirmed first.
     const user = await this.prisma.user.findUniqueOrThrow({
@@ -139,15 +157,19 @@ export class ProsService {
       );
     }
 
-    await this.prisma.$transaction([
-      this.prisma.verificationRequest.create({
-        data: { profileId: profile.id },
-      }),
-      this.prisma.proProfile.update({
+    await this.prisma.$transaction(async (tx) => {
+      await tx.verificationRequest.create({ data: { profileId: profile.id } });
+      await tx.proProfile.update({
         where: { id: profile.id },
         data: { status: ProProfileStatus.PENDING_REVIEW },
-      }),
-    ]);
+      });
+      await this.legal.record(tx, {
+        userId,
+        accepted,
+        locale,
+        context: LegalAcceptanceContext.VerificationSubmit,
+      });
+    });
     return this.getProfile(userId);
   }
 }

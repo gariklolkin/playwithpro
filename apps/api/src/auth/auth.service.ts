@@ -6,8 +6,15 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AUTH_ERROR_SUSPENDED, MeResponse } from '@playwithpro/shared';
+import {
+  AUTH_ERROR_SUSPENDED,
+  LegalAcceptanceContext,
+  LegalDocument,
+  MeResponse,
+} from '@playwithpro/shared';
 import * as argon2 from 'argon2';
+import { LegalService } from '../legal/legal.service';
+import { requestLocale } from '../legal/request-locale';
 import { MailerService } from '../mailer/mailer.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
@@ -54,6 +61,7 @@ export class AuthService {
     private readonly mailer: MailerService,
     private readonly config: ConfigService,
     private readonly storage: StorageService,
+    private readonly legal: LegalService,
   ) {}
 
   private readonly avatarUrlOf = (key: string): string =>
@@ -69,17 +77,34 @@ export class AuthService {
       throw new ConflictException(EMAIL_TAKEN);
     }
 
+    // The form showed the current documents, or it is stale: say so before
+    // creating anything.
+    const accepted = signupAcceptances(dto);
+    this.legal.assertCurrent(accepted);
+    const locale = requestLocale(dto.locale);
+
     const passwordHash = await argon2.hash(dto.password, {
       type: argon2.argon2id,
     });
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email,
-        passwordHash,
-        role: toPrismaRole(dto.role),
-        displayName: dto.displayName,
-        ...(dto.timezone ? { timezone: dto.timezone } : {}),
-      },
+    const user = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: {
+          email: dto.email,
+          passwordHash,
+          role: toPrismaRole(dto.role),
+          displayName: dto.displayName,
+          locale,
+          ...(dto.timezone ? { timezone: dto.timezone } : {}),
+        },
+      });
+      // The evidence is written with the account, never after it.
+      await this.legal.record(tx, {
+        userId: created.id,
+        accepted,
+        locale,
+        context: LegalAcceptanceContext.Registration,
+      });
+      return created;
     });
 
     await this.sendVerificationEmail(user.id, user.email, user.locale);
@@ -226,4 +251,15 @@ export class AuthService {
   private webAppUrl(): string {
     return this.config.get<string>('WEB_APP_URL') ?? 'http://localhost:3000';
   }
+}
+
+/** The two documents every sign-up accepts, as the form reported them. */
+export function signupAcceptances(dto: {
+  acceptedTerms: string;
+  acceptedPrivacy: string;
+}): Array<{ document: LegalDocument; version: string }> {
+  return [
+    { document: LegalDocument.Terms, version: dto.acceptedTerms },
+    { document: LegalDocument.Privacy, version: dto.acceptedPrivacy },
+  ];
 }

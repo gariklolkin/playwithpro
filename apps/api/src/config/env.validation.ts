@@ -225,6 +225,19 @@ class EnvironmentVariables {
   @Min(0)
   CANCELLATION_GRACE_MIN = 30;
 
+  /**
+   * Operator facts for the imprint, the email footer and the legal texts'
+   * placeholders. Placeholders until counsel confirms them.
+   */
+  @IsString()
+  OPERATOR_NAME = 'PlayWithPro (operator name pending)';
+
+  @IsString()
+  OPERATOR_ADDRESS = 'Operator address pending, Germany';
+
+  @IsString()
+  SUPPORT_EMAIL = 'support@play-with.pro';
+
   /** Accepted reschedules allowed per session. */
   @Type(() => Number)
   @IsInt()

@@ -292,7 +292,9 @@
       "schedulePrompt": "Noch ein Schritt: Buchen Sie einen kurzen Videoanruf zur Identitätsprüfung.",
       "scheduleCta": "Termin wählen",
       "readyInfo": "Ihr Profil enthält alles, was wir für die Prüfung brauchen. Reichen Sie es ein und wählen Sie eine Zeit für einen kurzen (5–15 Min.) Videoanruf.",
-      "confirmEmailFirst": "Bestätigen Sie zuerst Ihre E-Mail-Adresse — Buchungsbestätigung, Erinnerungen und die Meeting-Einladung gehen dorthin. Der 6-stellige Bestätigungscode ist in Ihrem Postfach."
+      "confirmEmailFirst": "Bestätigen Sie zuerst Ihre E-Mail-Adresse — Buchungsbestätigung, Erinnerungen und die Meeting-Einladung gehen dorthin. Der 6-stellige Bestätigungscode ist in Ihrem Postfach.",
+      "agreementLabel": "Ich akzeptiere die <agreement>Trainervereinbarung</agreement> (Gebühr, Auszahlungen, Stornierungen, Verhalten).",
+      "agreementRequired": "Bitte akzeptiere die Trainervereinbarung, um einzureichen."
     }
   },
   "availability": {
@@ -550,7 +552,8 @@
       "notAVideo": "Es können nur Videodateien hochgeladen werden.",
       "retry": "Erneut versuchen",
       "done": "Fertig",
-      "uploadingNote": "Wird hochgeladen… {progress} % — lass diese Seite geöffnet."
+      "uploadingNote": "Wird hochgeladen… {progress} % — lass diese Seite geöffnet.",
+      "legalNotice": "Lade nur Aufnahmen hoch, die du teilen darfst – auch mit anderen Personen darin. Nur von dir gebuchte Trainer sehen sie – siehe <terms>Inhaltsbedingungen</terms>."
     },
     "player": {
       "loading": "Video wird geladen…",
@@ -679,7 +682,8 @@
     "expiredSubtitle": "Das Zahlungsfenster wurde geschlossen und der Termin freigegeben. Du kannst eine neue Zeit wählen.",
     "backToCoach": "Zurück zum Trainer",
     "releaseSlot": "Diesen Termin stattdessen freigeben",
-    "goal": "Ziel"
+    "goal": "Ziel",
+    "policyAck": "Mit der Zahlung bestätigst du die <policy>Buchungs- und Stornobedingungen</policy>."
   },
   "sessions": {
     "title": "Sessions",
@@ -930,7 +934,8 @@
         "pendingPlayer": "{amount} werden dir {relative} erstattet.",
         "pendingCoach": "Du erhältst {amount} {relative}. Bis dahin kannst du dem Spieler den vollen Betrag erstatten.",
         "waiveCta": "Vollständig erstatten"
-      }
+      },
+      "disputeRules": "Regeln für Streitfälle"
     },
     "review": {
       "cta": "Bewertung abgeben",
@@ -942,7 +947,8 @@
       "abort": "Abbrechen",
       "error": "Etwas ist schiefgelaufen. Versuchen Sie es erneut.",
       "givenLabel": "Deine Bewertung",
-      "receivedLabel": "Bewertung des Spielers"
+      "receivedLabel": "Bewertung des Spielers",
+      "guidelines": "Bewertungsregeln: öffentlich und moderiert"
     },
     "videos": {
       "title": "Clips für diese Sitzung",
@@ -1320,5 +1326,65 @@
     "partialUntil": "{percent} % Erstattung bis {when}.",
     "noRefundAfter": "Danach keine Erstattung.",
     "coachCancels": "Volle Erstattung, wenn der Trainer storniert."
+  },
+  "legal": {
+    "title": "Rechtliches",
+    "versionLine": "Version {version} · gültig ab {effective}",
+    "olderVersion": "frühere Version",
+    "readCurrent": "Aktuelle Version lesen",
+    "draft": "Entwurf: Platzhaltertext bis zur juristischen Prüfung. Er zeigt die Struktur und die heute geltenden Regeln der Plattform; der endgültige Wortlaut erscheint als neue Version.",
+    "convenience": "Diese Übersetzung dient der Verständlichkeit; die Fassung in {locale} ist maßgeblich.",
+    "versionsTitle": "Alle Versionen",
+    "cookieSettingsTitle": "Cookie-Einstellungen",
+    "cookieSettingsBody": "Ändere deine Entscheidung zur Produktanalyse jederzeit.",
+    "consent": {
+      "label": "Ich akzeptiere die <terms>Nutzungsbedingungen</terms>, habe die <privacy>Datenschutzerklärung</privacy> gelesen und bestätige, dass ich mindestens 18 Jahre alt bin.",
+      "coachHint": "Trainer akzeptieren bei der Verifizierung zusätzlich die <agreement>Trainervereinbarung</agreement> – lies sie gern jetzt schon.",
+      "required": "Bitte akzeptiere die Bedingungen, um fortzufahren."
+    },
+    "footer": {
+      "aria": "Rechtliches",
+      "operator": "© PlayWithPro",
+      "terms": "AGB",
+      "privacy": "Datenschutz",
+      "imprint": "Impressum",
+      "bookingPolicy": "Stornobedingungen",
+      "coachAgreement": "Trainervereinbarung",
+      "cookieSettings": "Cookie-Einstellungen",
+      "support": "Support"
+    },
+    "gate": {
+      "title": "Bitte prüfe unsere aktualisierten Bedingungen",
+      "intro": "Wir haben ein Dokument geändert, das du akzeptiert hattest. Lies die neue Version und akzeptiere sie, um PlayWithPro weiter zu nutzen.",
+      "version": "(Version {version})",
+      "paused": "Buchen, Bezahlen und das Veröffentlichen von Verfügbarkeit sind bis zu deiner Zustimmung pausiert. Bereits bezahlte Sitzungen sind nicht betroffen.",
+      "accept": "Gelesen und akzeptiert",
+      "error": "Etwas ist schiefgelaufen. Versuche es erneut.",
+      "noticeIntro": "Aktualisiert:",
+      "dismiss": "Ausblenden",
+      "documents": {
+        "terms": "Nutzungsbedingungen",
+        "privacy": "Datenschutzerklärung",
+        "imprint": "Impressum",
+        "booking-policy": "Buchungs- und Stornobedingungen",
+        "coach-agreement": "Trainervereinbarung"
+      }
+    },
+    "contexts": {
+      "registration": "Registrierung",
+      "oauth_complete": "Google-Registrierung",
+      "verification_submit": "Verifizierung",
+      "checkout": "Bezahlung",
+      "reaccept": "erneute Zustimmung"
+    },
+    "historyTitle": "Rechtliche Zustimmungen",
+    "none": "Keine Zustimmungen erfasst.",
+    "documents": {
+      "terms": "Nutzungsbedingungen",
+      "privacy": "Datenschutzerklärung",
+      "imprint": "Impressum",
+      "booking-policy": "Buchungs- und Stornobedingungen",
+      "coach-agreement": "Trainervereinbarung"
+    }
   }
 }

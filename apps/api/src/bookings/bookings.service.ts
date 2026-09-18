@@ -11,7 +11,11 @@ import {
 import { ConfigService } from '@nestjs/config';
 import {
   CoachGameAnswer as SharedCoachGameAnswer,
+  DEFAULT_LOCALE,
+  LegalAcceptanceContext,
+  LegalDocument,
   PaySessionResponse,
+  currentLegalVersion,
   PaymentStatus as SharedPaymentStatus,
   Role,
   SessionListResponse,
@@ -33,6 +37,7 @@ import {
 } from '@prisma/client';
 import { MIN_NOTICE_MS } from '../availability/availability.service';
 import type { AuthenticatedUser } from '../auth/auth-cookies';
+import { LegalService } from '../legal/legal.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import {
   ANALYTICS,
@@ -112,6 +117,7 @@ export class BookingsService {
     private readonly unattached: UnattachedVideosService,
     @Inject(ANALYTICS) private readonly analytics: Analytics,
     private readonly notifications: NotificationsService,
+    private readonly legal: LegalService,
   ) {}
 
   private readonly avatarUrlOf = (key: string): string =>
@@ -326,7 +332,17 @@ export class BookingsService {
     playerId: string,
     sessionId: string,
     dto: PaySessionDto,
+    locale: string = DEFAULT_LOCALE,
   ): Promise<PaySessionResponse> {
+    // The checkout showed the policy; a stale tab must re-render it.
+    if (dto.bookingPolicyVersion !== undefined) {
+      this.legal.assertCurrent([
+        {
+          document: LegalDocument.BookingPolicy,
+          version: dto.bookingPolicyVersion,
+        },
+      ]);
+    }
     const session = await this.prisma.session.findUnique({
       where: { id: sessionId },
       include: SESSION_INCLUDE,
@@ -417,6 +433,19 @@ export class BookingsService {
           recipientId: session.proProfile.userId,
         },
       ]);
+      // Paying acknowledges the booking policy the checkout showed.
+      await this.legal.record(tx, {
+        userId: playerId,
+        accepted: [
+          {
+            document: LegalDocument.BookingPolicy,
+            version: currentLegalVersion(LegalDocument.BookingPolicy).version,
+          },
+        ],
+        locale,
+        context: LegalAcceptanceContext.Checkout,
+        sessionId: session.id,
+      });
       return true;
     });
     if (!transitioned) {

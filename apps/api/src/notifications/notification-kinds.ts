@@ -60,6 +60,7 @@ export const KIND_META: Record<NotificationKind, KindMeta> = {
   RESCHEDULE_DECLINED: { messageKey: 'reschedule.declined' },
   RESCHEDULE_WITHDRAWN: { messageKey: 'reschedule.withdrawn' },
   RESCHEDULE_EXPIRED: { messageKey: 'reschedule.expired' },
+  LEGAL_UPDATE_NOTICE: { messageKey: 'legal.updated' },
   REVIEW_RECEIVED: {
     messageKey: 'review.received',
     preference: 'emailReviews',

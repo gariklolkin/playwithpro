@@ -203,8 +203,7 @@ export class AuthController {
   ): Promise<AuthResponse> {
     const { user, tokens } = await this.oauth.completeSignup(
       this.cookie(req, OAUTH_PENDING_COOKIE),
-      dto.role,
-      dto.timezone,
+      dto,
     );
     clearOAuthCookie(
       res,

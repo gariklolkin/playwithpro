@@ -1,15 +1,21 @@
 "use client";
 
-import { Role, type SignupRole } from "@playwithpro/shared";
+import {
+  LegalDocument,
+  Role,
+  currentLegalVersion,
+  type SignupRole,
+} from "@playwithpro/shared";
 import { useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { AuthCard, AuthDivider, AuthFooter } from "./auth-card";
 import { EmailCodeForm, PENDING_EMAIL_KEY } from "./email-code-form";
 import { GoogleButton } from "./google-button";
 import { RolePicker } from "./role-picker";
+import { LegalConsentCheckbox } from "@/components/legal/legal-consent-checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +23,7 @@ import { Label } from "@/components/ui/label";
 export function RegisterCard() {
   const t = useTranslations("auth.register");
   const tNav = useTranslations("nav");
+  const locale = useLocale();
 
   // "For pros" entry points deep-link here with ?role=professional.
   const preselected =
@@ -30,9 +37,15 @@ export function RegisterCard() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [consent, setConsent] = useState(false);
+  const [consentMissing, setConsentMissing] = useState(false);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (!consent) {
+      setConsentMissing(true);
+      return;
+    }
     setSubmitting(true);
     setError(null);
     const response = await apiFetch("/auth/register", {
@@ -43,6 +56,10 @@ export function RegisterCard() {
         email,
         password,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        // The versions this form linked to: the API refuses stale ones.
+        acceptedTerms: currentLegalVersion(LegalDocument.Terms).version,
+        acceptedPrivacy: currentLegalVersion(LegalDocument.Privacy).version,
+        locale,
       }),
     });
     setSubmitting(false);
@@ -104,6 +121,15 @@ export function RegisterCard() {
           onChange={(event) => setPassword(event.target.value)}
           className="mb-3"
         />
+        <LegalConsentCheckbox
+          checked={consent}
+          onChange={(value) => {
+            setConsent(value);
+            if (value) setConsentMissing(false);
+          }}
+          role={role}
+          showError={consentMissing}
+        />
         {error ? (
           <p role="alert" className="mb-3 text-[13px] text-[#E03E3E]">
             {error}
@@ -120,7 +146,7 @@ export function RegisterCard() {
         {t("haveAccount")} <Link href="/login">{t("logIn")}</Link>
       </AuthFooter>
       <AuthFooter>
-        <Link href="/privacy">{tNav("privacy")}</Link>
+        <Link href="/legal/privacy">{tNav("privacy")}</Link>
       </AuthFooter>
     </AuthCard>
   );

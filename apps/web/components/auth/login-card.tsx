@@ -161,7 +161,7 @@ export function LoginCard() {
         {t("noAccount")} <Link href="/register">{t("createAccount")}</Link>
       </AuthFooter>
       <AuthFooter>
-        <Link href="/privacy">{tNav("privacy")}</Link>
+        <Link href="/legal/privacy">{tNav("privacy")}</Link>
       </AuthFooter>
     </AuthCard>
   );

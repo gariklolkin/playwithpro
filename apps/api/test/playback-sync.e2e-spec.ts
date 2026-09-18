@@ -15,6 +15,7 @@ import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { io, type Socket } from 'socket.io-client';
 import { AppModule } from '../src/app.module';
+import { acceptCurrentLegal } from './legal-helper';
 import { TokenService } from '../src/auth/token.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 
@@ -223,6 +224,8 @@ describe('Playback sync (e2e)', () => {
       'IN_PROGRESS',
     );
 
+    // Suite users never signed up: bind them to the current terms.
+    await acceptCurrentLegal(prisma);
     const tokens = app.get(TokenService);
     playerCookie = `access_token=${tokens.signAccessToken(
       player.id,

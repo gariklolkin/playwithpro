@@ -21,6 +21,7 @@ describe('AdminUsersService', () => {
     },
     session: { groupBy: jest.fn() },
     proProfile: { findMany: jest.fn() },
+    legalAcceptance: { findMany: jest.fn().mockResolvedValue([]) },
     payment: { count: jest.fn() },
     $transaction: jest.fn((arg: unknown): Promise<unknown> =>
       Array.isArray(arg)

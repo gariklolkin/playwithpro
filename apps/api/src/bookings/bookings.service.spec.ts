@@ -13,6 +13,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { ANALYTICS } from '../observability/observability';
 import { PAYMENT_PROVIDER } from '../payments/payment-provider';
 import { BookingsService } from './bookings.service';
+import { LegalService } from '../legal/legal.service';
 import { DisputeResolutionService } from './dispute-resolution.service';
 import { SessionProgressionService } from './session-progression.service';
 import { SessionVideosService } from './session-videos.service';
@@ -127,6 +128,7 @@ describe('BookingsService', () => {
     $transaction: jest.fn(),
   };
   const resolution = { resolve: jest.fn() };
+  const legal = { assertCurrent: jest.fn(), record: jest.fn() };
   const provider = {
     hold: jest.fn(),
     release: jest.fn(),
@@ -192,6 +194,7 @@ describe('BookingsService', () => {
         { provide: SessionProgressionService, useValue: progression },
         { provide: SettlementService, useValue: settlement },
         { provide: DisputeResolutionService, useValue: resolution },
+        { provide: LegalService, useValue: legal },
         { provide: SessionVideosService, useValue: sessionVideos },
         { provide: UnattachedVideosService, useValue: unattached },
         { provide: ANALYTICS, useValue: analytics },

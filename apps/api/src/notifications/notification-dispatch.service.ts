@@ -25,6 +25,7 @@ import {
 } from '../calendar/calendar-provider';
 import {
   EmailRenderer,
+  formatDateOnly,
   formatMoney,
   formatWhen,
   type EmailParams,
@@ -212,6 +213,9 @@ export class NotificationDispatchService implements OnApplicationBootstrap {
 
   /** Why a due row no longer applies; null when it should be sent. */
   private async staleReason(row: Row, now: Date): Promise<string | null> {
+    if (row.kind === NotificationKind.LEGAL_UPDATE_NOTICE) {
+      return this.legalNoticeStale(row);
+    }
     const session = row.session;
     if (!session) return 'no-session';
     const upcoming =
@@ -305,10 +309,42 @@ export class NotificationDispatchService implements OnApplicationBootstrap {
     };
   }
 
+  /** The user accepted the announced version meanwhile: nothing to say. */
+  private async legalNoticeStale(row: Row): Promise<string | null> {
+    const payload = (row.payload ?? {}) as Payload;
+    const latest = await this.prisma.legalAcceptance.findFirst({
+      where: { userId: row.recipientId, document: String(payload.document) },
+      orderBy: { acceptedAt: 'desc' },
+      select: { version: true },
+    });
+    return latest && latest.version >= String(payload.version)
+      ? 'accepted'
+      : null;
+  }
+
   private async send(row: Row, payload: Payload): Promise<void> {
-    const session = row.session as SessionEmailRow;
     const recipient = this.recipientOf(row);
     const locale = this.renderer.resolveLocale(recipient.locale);
+    if (row.kind === NotificationKind.LEGAL_UPDATE_NOTICE) {
+      // No session: the document, its version and where to read it.
+      const document = String(payload.document);
+      await this.mailer.deliver(
+        row.recipient.email,
+        this.renderer.render(locale, 'legal.updated', {
+          name: recipient.displayName,
+          document: this.renderer.message(locale, `legal.document.${document}`),
+          effective: formatDateOnly(
+            new Date(String(payload.effectiveAt)),
+            locale,
+            recipient.timezone,
+          ),
+          material: String(payload.material ?? 'no'),
+          url: this.renderer.link(locale, `/legal/${document}`),
+        }),
+      );
+      return;
+    }
+    const session = row.session as SessionEmailRow;
     const input = calendarInput(session);
 
     // Calendar kinds go through the provider (it owns the .ics).

@@ -11,6 +11,8 @@ import {
   AdminUserDetail,
   AdminUserListItem,
   AdminUserListResponse,
+  LegalAcceptanceContext,
+  LegalDocument,
   PlayerLevel as SharedPlayerLevel,
   ProProfileStatus as SharedProProfileStatus,
   SessionStatus as SharedSessionStatus,
@@ -115,13 +117,17 @@ export class AdminUsersService {
     const partyFilter: Prisma.SessionWhereInput = {
       OR: [{ playerId: id }, { proProfile: { userId: id } }],
     };
-    const [sessionGroups, paymentAttempts] = await Promise.all([
+    const [sessionGroups, paymentAttempts, acceptances] = await Promise.all([
       this.prisma.session.groupBy({
         by: ['status'],
         where: partyFilter,
         _count: { _all: true },
       }),
       this.prisma.payment.count({ where: { session: partyFilter } }),
+      this.prisma.legalAcceptance.findMany({
+        where: { userId: id },
+        orderBy: { acceptedAt: 'desc' },
+      }),
     ]);
     const sessionCounts: AdminSessionCounts = {};
     for (const group of sessionGroups) {
@@ -156,6 +162,14 @@ export class AdminUsersService {
         : null,
       sessionCounts,
       paymentAttempts,
+      legalAcceptances: acceptances.map((row) => ({
+        document: row.document as LegalDocument,
+        version: row.version,
+        locale: row.locale,
+        context: row.context.toLowerCase() as LegalAcceptanceContext,
+        sessionId: row.sessionId,
+        acceptedAt: row.acceptedAt.toISOString(),
+      })),
     };
   }
 

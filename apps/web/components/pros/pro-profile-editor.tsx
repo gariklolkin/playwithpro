@@ -1,10 +1,12 @@
 "use client";
 
 import {
+  LegalDocument,
   ProProfileStatus,
   SUPPORTED_LOCALES,
   ServiceType,
   VerificationState,
+  currentLegalVersion,
   type ProProfileResponse,
   type ProServiceResponse,
 } from "@playwithpro/shared";
@@ -120,6 +122,9 @@ export function ProProfileEditor({
   const t = useTranslations("proProfile");
   const router = useRouter();
   const [profile, setProfile] = useState(initialProfile);
+  const locale = useLocale();
+  const [agreementAccepted, setAgreementAccepted] = useState(false);
+  const [agreementMissing, setAgreementMissing] = useState(false);
 
   // About form
   const [bio, setBio] = useState(profile.bio);
@@ -213,11 +218,19 @@ export function ProProfileEditor({
 
   async function handleVerifySubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (!agreementAccepted) {
+      setAgreementMissing(true);
+      return;
+    }
     setVerifyStatus("submitting");
     setVerifyError("");
     const response = await apiFetch("/pros/me/verification", {
       method: "POST",
-      body: JSON.stringify({}),
+      headers: { "x-locale": locale },
+      body: JSON.stringify({
+        coachAgreementVersion: currentLegalVersion(LegalDocument.CoachAgreement)
+          .version,
+      }),
     });
     if (!response.ok) {
       setVerifyStatus("error");
@@ -426,6 +439,36 @@ export function ProProfileEditor({
             <p className="mb-3 text-[12px] text-text-tertiary">
               {t("verification.privacyNote")}
             </p>
+            <label className="mb-3 flex cursor-pointer items-start gap-2 text-[13px] leading-snug text-text">
+              <input
+                type="checkbox"
+                checked={agreementAccepted}
+                aria-invalid={agreementMissing}
+                onChange={(event) => {
+                  setAgreementAccepted(event.target.checked);
+                  if (event.target.checked) setAgreementMissing(false);
+                }}
+                className="mt-0.5"
+              />
+              <span>
+                {t.rich("verification.agreementLabel", {
+                  agreement: (chunks) => (
+                    <Link
+                      href={`/legal/${LegalDocument.CoachAgreement}`}
+                      className="text-accent"
+                      target="_blank"
+                    >
+                      {chunks}
+                    </Link>
+                  ),
+                })}
+              </span>
+            </label>
+            {agreementMissing ? (
+              <p role="alert" className="mb-3 text-[12px] text-[#E03E3E]">
+                {t("verification.agreementRequired")}
+              </p>
+            ) : null}
             <div className="flex items-center gap-3">
               <Button type="submit" disabled={verifyStatus === "submitting"}>
                 {verifyStatus === "submitting"

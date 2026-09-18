@@ -48,6 +48,7 @@ model User {
   sessionAttendance  SessionAttendance[]
   openedDisputes     Dispute[]           @relation("DisputeOpener")
   rescheduleProposals SessionReschedule[] @relation("RescheduleProposer")
+  legalAcceptances    LegalAcceptance[]
   resolvedDisputes   Dispute[]           @relation("DisputeResolver")
   reviews            Review[]
   notifications      Notification[]
@@ -502,6 +503,36 @@ model Payment {
   @@index([sessionId])
 }
 
+enum LegalAcceptanceContext {
+  REGISTRATION
+  OAUTH_COMPLETE
+  VERIFICATION_SUBMIT
+  CHECKOUT
+  REACCEPT
+}
+
+/// Append-only evidence of what a user accepted or acknowledged, and when.
+/// Product code never updates or deletes these rows. The documents and
+/// versions themselves live in the shared registry (packages/shared/src/legal).
+model LegalAcceptance {
+  id         String                 @id @default(uuid())
+  userId     String
+  /// Registry key: terms, privacy, imprint, booking-policy, coach-agreement.
+  document   String
+  /// Registry version (YYYY-MM-DD).
+  version    String
+  /// Site locale of the request.
+  locale     String
+  context    LegalAcceptanceContext
+  /// The session a checkout acknowledgment belongs to.
+  sessionId  String?
+  acceptedAt DateTime               @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, document, acceptedAt])
+}
+
 enum RescheduleStatus {
   OPEN
   ACCEPTED
@@ -720,6 +751,7 @@ enum NotificationKind {
   RESCHEDULE_DECLINED
   RESCHEDULE_WITHDRAWN
   RESCHEDULE_EXPIRED
+  LEGAL_UPDATE_NOTICE
 }
 
 enum NotificationStatus {

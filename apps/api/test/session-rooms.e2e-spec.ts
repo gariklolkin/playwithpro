@@ -15,6 +15,7 @@ import cookieParser from 'cookie-parser';
 import { AccessToken, TokenVerifier } from 'livekit-server-sdk';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { acceptCurrentLegal } from './legal-helper';
 import { TokenService } from '../src/auth/token.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 
@@ -189,6 +190,8 @@ describe('Session rooms & calendar (e2e)', () => {
       },
     });
 
+    // Suite users never signed up: bind them to the current terms.
+    await acceptCurrentLegal(prisma);
     const tokens = app.get(TokenService);
     adminCookie = `access_token=${tokens.signAccessToken(admin.id, Role.Admin)}`;
     playerCookie = `access_token=${tokens.signAccessToken(playerId, Role.Amateur)}`;

@@ -20,6 +20,8 @@ export * from "./types/catalog";
 export * from "./types/booking";
 export * from "./types/cancellation";
 export * from "./types/reschedule";
+export * from "./types/legal";
+export * from "./legal/registry";
 export * from "./types/session-room";
 export * from "./types/playback-sync";
 export * from "./types/dispute";

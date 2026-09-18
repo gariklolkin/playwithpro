@@ -9,6 +9,12 @@ export interface RegisterRequest {
   role: SignupRole;
   /** IANA zone reported by the browser; server falls back to UTC. */
   timezone?: string;
+  /** The terms version the visitor accepted (must be current). */
+  acceptedTerms: string;
+  /** The privacy policy version the visitor confirmed having read. */
+  acceptedPrivacy: string;
+  /** The site locale the visitor used; recorded with the acceptance and on the account. */
+  locale?: string;
 }
 
 export interface LoginRequest {
@@ -48,6 +54,9 @@ export interface OAuthCompleteRequest {
   role: SignupRole;
   /** IANA zone reported by the browser; server falls back to UTC. */
   timezone?: string;
+  acceptedTerms: string;
+  acceptedPrivacy: string;
+  locale?: string;
 }
 
 export interface UpdateMeRequest {

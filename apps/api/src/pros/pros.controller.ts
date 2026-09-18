@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Headers,
   Param,
   ParseEnumPipe,
   Patch,
@@ -17,6 +18,9 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { LegalGuard } from '../legal/legal.guard';
+import { requestLocale } from '../legal/request-locale';
+import { SubmitVerificationDto } from './dto/submit-verification.dto';
 import { UpdateProProfileDto } from './dto/update-pro-profile.dto';
 import { UpsertProServiceDto } from './dto/upsert-pro-service.dto';
 import { ProsService } from './pros.service';
@@ -65,10 +69,17 @@ export class ProsController {
   }
 
   @Post('me/verification')
+  @UseGuards(LegalGuard)
   @ApiOkResponse({ description: 'Verification submitted; profile pending.' })
   async submitVerification(
     @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: SubmitVerificationDto,
+    @Headers('x-locale') localeHeader: string | undefined,
   ): Promise<ProProfileResponse> {
-    return this.pros.submitVerification(user.id);
+    return this.pros.submitVerification(
+      user.id,
+      dto.coachAgreementVersion,
+      requestLocale(localeHeader),
+    );
   }
 }

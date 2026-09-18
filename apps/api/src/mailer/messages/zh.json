@@ -4,7 +4,8 @@
     "unsubscribe": "你收到这封邮件是因为它在你的通知设置中已开启。一键关闭：{url}",
     "whereRoom": "进入课程房间：{url}",
     "whereVenue": "地点：{venue}",
-    "sessions": "你的课程：{url}"
+    "sessions": "你的课程：{url}",
+    "legalFooter": "{operator} · 法律信息：{imprintUrl} · 隐私：{privacyUrl}"
   },
   "session": {
     "paid": {
@@ -203,6 +204,19 @@
     "expired": {
       "subject": "更改课程时间的提议已过期",
       "text": "{name}，您好！\n\n关于更改您与{counterpart}的「{service}」课程时间的提议无人及时回复。课程保持原定时间：{when}。\n\n{sessionsLine}"
+    }
+  },
+  "legal": {
+    "updated": {
+      "subject": "{material, select, yes {请接受我们更新的{document}} other {我们更新了{document}}}",
+      "text": "{name}，您好！\n\n我们发布了新版本的{document}，自 {effective} 起生效。\n\n{material, select, yes {由于这是重大变更，请在下次登录时阅读并接受新版本；在此之前预约和付款将暂停。已付费的课程不受影响。} other {此变更较小，您无需采取任何操作。}}\n\n在此阅读：{url}"
+    },
+    "document": {
+      "terms": "服务条款",
+      "privacy": "隐私政策",
+      "imprint": "法律信息",
+      "booking-policy": "预约与取消政策",
+      "coach-agreement": "教练协议"
     }
   }
 }

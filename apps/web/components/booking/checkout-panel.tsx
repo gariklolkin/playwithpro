@@ -1,8 +1,10 @@
 "use client";
 
 import {
+  LegalDocument,
   MOCK_DECLINE_INSTRUMENT,
   SessionStatus,
+  currentLegalVersion,
   type PaySessionResponse,
   type SessionResponse,
 } from "@playwithpro/shared";
@@ -89,9 +91,13 @@ export function CheckoutPanel({
     try {
       const response = await apiFetch(`/sessions/${session.id}/pay`, {
         method: "POST",
-        body: JSON.stringify(
-          simulateDecline ? { instrument: MOCK_DECLINE_INSTRUMENT } : {},
-        ),
+        headers: { "x-locale": locale },
+        body: JSON.stringify({
+          ...(simulateDecline ? { instrument: MOCK_DECLINE_INSTRUMENT } : {}),
+          // The policy version this page showed; the API refuses a stale one.
+          bookingPolicyVersion: currentLegalVersion(LegalDocument.BookingPolicy)
+            .version,
+        }),
       });
       if (response.status === 409) {
         // Late payment: the API cancelled the session and released the slot.
@@ -238,6 +244,19 @@ export function CheckoutPanel({
       {session.cancellationPolicy ? (
         <CancellationPolicyBlock policy={session.cancellationPolicy} />
       ) : null}
+      <p className="mt-2 text-[12px] leading-snug text-text-tertiary">
+        {t.rich("policyAck", {
+          policy: (chunks) => (
+            <Link
+              href={`/legal/${LegalDocument.BookingPolicy}`}
+              className="text-accent"
+              target="_blank"
+            >
+              {chunks}
+            </Link>
+          ),
+        })}
+      </p>
 
       {declined ? (
         <div className="mt-3 rounded-md bg-[#FBE4E4] p-3 text-[13px] text-[#C4554D]">

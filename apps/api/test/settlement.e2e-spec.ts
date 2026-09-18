@@ -16,6 +16,7 @@ import {
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { acceptCurrentLegal } from './legal-helper';
 import { TokenService } from '../src/auth/token.service';
 import { NotificationDispatchService } from '../src/notifications/notification-dispatch.service';
 import { signUnsubscribeToken } from '../src/notifications/unsubscribe-token';
@@ -249,6 +250,8 @@ describe('Confirmation, payouts & disputes (e2e)', () => {
     playerId = player.id;
     coachUserId = coach.id;
 
+    // Suite users never signed up: bind them to the current terms.
+    await acceptCurrentLegal(prisma);
     const tokens = app.get(TokenService);
     playerCookie = `access_token=${tokens.signAccessToken(player.id, Role.Amateur)}`;
     rivalCookie = `access_token=${tokens.signAccessToken(rival.id, Role.Amateur)}`;

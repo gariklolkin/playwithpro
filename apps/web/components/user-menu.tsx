@@ -81,7 +81,7 @@ export function UserMenu({
             {labels.settings}
           </Link>
           <Link
-            href="/privacy"
+            href="/legal/privacy"
             className={itemClass}
             onClick={() => setOpen(false)}
           >

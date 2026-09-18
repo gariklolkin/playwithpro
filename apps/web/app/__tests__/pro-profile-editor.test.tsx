@@ -190,6 +190,14 @@ describe("ProProfileEditor", () => {
       screen.getByText(/everything we need for the review/),
     ).toBeInTheDocument();
 
+    // Without the coach agreement nothing is sent.
+    fireEvent.click(
+      screen.getByRole("button", { name: "Submit for verification" }),
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert").textContent).toContain("coach agreement");
+
+    fireEvent.click(screen.getByRole("checkbox", { name: /Coach Agreement/ }));
     fireEvent.click(
       screen.getByRole("button", { name: "Submit for verification" }),
     );
@@ -201,7 +209,9 @@ describe("ProProfileEditor", () => {
     const call = fetchMock.mock.calls.find(([url]) =>
       String(url).endsWith("/pros/me/verification"),
     );
-    expect(JSON.parse((call![1] as RequestInit).body as string)).toEqual({});
+    expect(JSON.parse((call![1] as RequestInit).body as string)).toEqual({
+      coachAgreementVersion: "2026-09-18",
+    });
   });
 
   it("asks to confirm the email instead of offering submission", () => {

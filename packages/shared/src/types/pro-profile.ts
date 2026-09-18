@@ -58,6 +58,12 @@ export interface ProProfileResponse extends RatingAggregate {
   latestVerification: VerificationRequestResponse | null;
 }
 
+/** Body of the coach's verification submission. */
+export interface SubmitVerificationRequest {
+  /** The coach agreement version accepted on the card (must be current). */
+  coachAgreementVersion: string;
+}
+
 export interface RejectVerificationRequest {
   note: string;
 }

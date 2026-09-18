@@ -8,6 +8,7 @@ import {
   AdminAnalyticsResponse,
   AdminPaymentListResponse,
   AdminReviewListResponse,
+  AdminUserDetail,
   AdminUserListResponse,
   CatalogResponse,
   ReviewListResponse,
@@ -18,6 +19,7 @@ import * as argon2 from 'argon2';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { acceptCurrentLegal } from './legal-helper';
 import { TokenService } from '../src/auth/token.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 
@@ -184,6 +186,8 @@ describe('Admin console (e2e)', () => {
     });
     adminId = admin.id;
 
+    // Suite users never signed up: bind them to the current terms.
+    await acceptCurrentLegal(prisma);
     const tokens = app.get(TokenService);
     playerCookie = `access_token=${tokens.signAccessToken(player.id, Role.Amateur)}`;
     adminCookie = `access_token=${tokens.signAccessToken(admin.id, Role.Admin)}`;
@@ -411,6 +415,241 @@ describe('Admin console (e2e)', () => {
         .get('/admin/analytics')
         .set('Cookie', playerCookie)
         .expect(403);
+    });
+  });
+
+  describe('legal terms acceptance', () => {
+    const CURRENT = '2026-09-18';
+    const signup = {
+      email: 'legal.player@e2e.test',
+      password: 'password123',
+      displayName: 'Legal Player',
+      role: 'amateur',
+      acceptedTerms: CURRENT,
+      acceptedPrivacy: CURRENT,
+      locale: 'fr',
+    };
+
+    it('publishes the platform facts and the status of a signed-in user', async () => {
+      const facts = await request(server()).get('/platform-facts').expect(200);
+      expect(facts.body).toMatchObject({
+        feePercent: 10,
+        cancellationFreeHours: 24,
+        unattachedVideoRetentionDays: 90,
+      });
+      const status = await request(server())
+        .get('/legal/status')
+        .set('Cookie', playerCookie)
+        .expect(200);
+      expect(status.body).toEqual({ stale: [], notices: [] });
+    });
+
+    it('refuses registration without the current versions, records them otherwise', async () => {
+      await request(server())
+        .post('/auth/register')
+        .send({ ...signup, acceptedTerms: undefined })
+        .expect(400);
+      const outdated = await request(server())
+        .post('/auth/register')
+        .send({ ...signup, acceptedTerms: '2020-01-01' })
+        .expect(400);
+      expect(outdated.body.code).toBe('legal_version_outdated');
+      expect(
+        await prisma.user.findUnique({ where: { email: signup.email } }),
+      ).toBeNull();
+
+      await request(server()).post('/auth/register').send(signup).expect(201);
+      const user = await prisma.user.findUniqueOrThrow({
+        where: { email: signup.email },
+        include: { legalAcceptances: true },
+      });
+      // The visitor's language, on the account and on the evidence.
+      expect(user.locale).toBe('fr');
+      expect(
+        user.legalAcceptances.map((row) => [
+          row.document,
+          row.version,
+          row.locale,
+          row.context,
+        ]),
+      ).toEqual(
+        expect.arrayContaining([
+          ['terms', CURRENT, 'fr', 'REGISTRATION'],
+          ['privacy', CURRENT, 'fr', 'REGISTRATION'],
+        ]),
+      );
+    });
+
+    it('gates booking and paying for a stale user, never the room; accepting clears it', async () => {
+      // The e2e player accepted the terms in the suite setup; a fresh
+      // account with nothing accepted stands in for a user whose acceptance
+      // went stale after a material republication.
+      const stale = await prisma.user.create({
+        data: {
+          email: 'stale@e2e.test',
+          role: 'AMATEUR',
+          displayName: 'Stale',
+          emailVerifiedAt: new Date(),
+        },
+      });
+      const tokens = app.get(TokenService);
+      const staleCookie = `access_token=${tokens.signAccessToken(stale.id, Role.Amateur)}`;
+
+      const status = await request(server())
+        .get('/legal/status')
+        .set('Cookie', staleCookie)
+        .expect(200);
+      expect(status.body.stale).toEqual([
+        expect.objectContaining({ document: 'terms', acceptedVersion: null }),
+      ]);
+
+      // A slot of our own: the suite's pre-made ones belong to other tests.
+      const slot = await prisma.availabilitySlot.create({
+        data: {
+          profileId: coachProfileId,
+          startsAt: new Date(Date.now() + 500 * HOUR),
+          endsAt: new Date(Date.now() + 501 * HOUR),
+          source: 'MANUAL',
+        },
+      });
+      const refused = await request(server())
+        .post('/bookings')
+        .set('Cookie', staleCookie)
+        .send({
+          proId: coachProfileId,
+          serviceType: 'consultation',
+          slotId: slot.id,
+        })
+        .expect(409);
+      expect(refused.body).toMatchObject({
+        code: 'legal_reacceptance_required',
+        documents: [{ document: 'terms', version: CURRENT }],
+      });
+      // Reads are never gated.
+      await request(server())
+        .get('/sessions')
+        .set('Cookie', staleCookie)
+        .expect(200);
+
+      await request(server())
+        .post('/legal/accept')
+        .set('Cookie', staleCookie)
+        .set('x-locale', 'de')
+        .send({ accepted: [{ document: 'terms', version: '2001-01-01' }] })
+        .expect(400);
+      const accepted = await request(server())
+        .post('/legal/accept')
+        .set('Cookie', staleCookie)
+        .set('x-locale', 'de')
+        .send({ accepted: [{ document: 'terms', version: CURRENT }] })
+        .expect(200);
+      expect(accepted.body).toEqual({ stale: [], notices: [] });
+      expect(
+        await prisma.legalAcceptance.findFirst({
+          where: { userId: stale.id, document: 'terms' },
+        }),
+      ).toMatchObject({ version: CURRENT, locale: 'de', context: 'REACCEPT' });
+
+      // Booking works now, and paying records the checkout acknowledgment.
+      const booked = await request(server())
+        .post('/bookings')
+        .set('Cookie', staleCookie)
+        .send({
+          proId: coachProfileId,
+          serviceType: 'consultation',
+          slotId: slot.id,
+        })
+        .expect(200);
+      const bookedId = (booked.body as SessionResponse).id;
+      await request(server())
+        .post(`/sessions/${bookedId}/pay`)
+        .set('Cookie', staleCookie)
+        .set('x-locale', 'de')
+        .send({ bookingPolicyVersion: '2020-01-01' })
+        .expect(400);
+      await request(server())
+        .post(`/sessions/${bookedId}/pay`)
+        .set('Cookie', staleCookie)
+        .set('x-locale', 'de')
+        .send({ bookingPolicyVersion: CURRENT })
+        .expect(200);
+      expect(
+        await prisma.legalAcceptance.findFirst({
+          where: { userId: stale.id, document: 'booking-policy' },
+        }),
+      ).toMatchObject({
+        version: CURRENT,
+        locale: 'de',
+        context: 'CHECKOUT',
+        sessionId: bookedId,
+      });
+
+      // The admin sees the whole history, newest first.
+      const detail = await request(server())
+        .get(`/admin/users/${stale.id}`)
+        .set('Cookie', adminCookie)
+        .expect(200);
+      expect(
+        (detail.body as AdminUserDetail).legalAcceptances.map(
+          (row) => `${row.document}:${row.context}`,
+        ),
+      ).toEqual(['booking-policy:checkout', 'terms:reaccept']);
+    });
+
+    it('requires the coach agreement to submit for verification', async () => {
+      const draft = await prisma.user.create({
+        data: {
+          email: 'draft.coach@e2e.test',
+          role: 'PROFESSIONAL',
+          displayName: 'Draft Coach',
+          emailVerifiedAt: new Date(),
+          proProfile: {
+            create: {
+              bio: 'x',
+              languages: ['en'],
+              services: {
+                create: [
+                  { type: 'CONSULTATION', priceMinor: 1000, currency: 'EUR' },
+                ],
+              },
+            },
+          },
+        },
+      });
+      await acceptCurrentLegal(prisma, [draft.id]);
+      // Only the terms: the agreement is what the submission itself asks for.
+      await prisma.legalAcceptance.deleteMany({
+        where: { userId: draft.id, document: 'coach-agreement' },
+      });
+      const tokens = app.get(TokenService);
+      const cookie = `access_token=${tokens.signAccessToken(draft.id, Role.Professional)}`;
+
+      await request(server())
+        .post('/pros/me/verification')
+        .set('Cookie', cookie)
+        .send({})
+        .expect(400);
+      const outdated = await request(server())
+        .post('/pros/me/verification')
+        .set('Cookie', cookie)
+        .send({ coachAgreementVersion: '2020-01-01' })
+        .expect(400);
+      expect(outdated.body.code).toBe('legal_version_outdated');
+      await request(server())
+        .post('/pros/me/verification')
+        .set('Cookie', cookie)
+        .set('x-locale', 'ru')
+        .send({ coachAgreementVersion: CURRENT })
+        .expect(201);
+      expect(
+        await prisma.legalAcceptance.findFirst({
+          where: { userId: draft.id, document: 'coach-agreement' },
+        }),
+      ).toMatchObject({
+        version: CURRENT,
+        locale: 'ru',
+        context: 'VERIFICATION_SUBMIT',
+      });
     });
   });
 });
