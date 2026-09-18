@@ -30,6 +30,7 @@ export function DeletionGate({
   const pathname = usePathname();
   const router = useRouter();
   const [postponed, setPostponed] = useState(false);
+  const [byAdmin, setByAdmin] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -40,6 +41,7 @@ export function DeletionGate({
       if (active && response.ok) {
         const status = (await response.json()) as DeletionStatusResponse;
         setPostponed(status.postponed);
+        setByAdmin(status.initiatedBy === "admin");
       }
     });
     return () => {
@@ -96,14 +98,23 @@ export function DeletionGate({
             {t("postponed")}
           </p>
         ) : null}
-        <Button
-          size="full"
-          className="mt-4"
-          disabled={busy}
-          onClick={() => void cancel()}
-        >
-          {busy ? t("cancelling") : t("cancel")}
-        </Button>
+        {byAdmin ? (
+          <p
+            className="mt-4 text-sm text-text-secondary"
+            data-testid="deletion-by-admin"
+          >
+            {t("byAdmin")}
+          </p>
+        ) : (
+          <Button
+            size="full"
+            className="mt-4"
+            disabled={busy}
+            onClick={() => void cancel()}
+          >
+            {busy ? t("cancelling") : t("cancel")}
+          </Button>
+        )}
         {failed ? (
           <p className="mt-2 text-[13px] text-[#C4554D]">{t("error")}</p>
         ) : null}

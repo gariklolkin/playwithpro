@@ -402,6 +402,16 @@ export class BookingsService {
     }
 
     const transitioned = await this.prisma.$transaction(async (tx) => {
+      // Both parties under the row lock a deletion request takes first: a
+      // request that committed before is seen, one behind us sees the pay.
+      const departing = await tx.$queryRaw<Array<{ id: string }>>`
+        SELECT "id" FROM "User"
+        WHERE "id" IN (${playerId}, ${session.proProfile.userId})
+          AND ("deletionScheduledFor" IS NOT NULL OR "deletedAt" IS NOT NULL)
+        FOR NO KEY UPDATE`;
+      if (departing.length > 0) {
+        return false;
+      }
       const updated = await tx.session.updateMany({
         where: { id: session.id, status: SessionStatus.PENDING_PAYMENT },
         data: {
@@ -457,7 +467,8 @@ export class BookingsService {
       return true;
     });
     if (!transitioned) {
-      // Lost the race (sweep cancelled or a concurrent pay won): void the hold.
+      // Lost the race (sweep cancelled, a concurrent pay won or a party is
+      // leaving): void the hold.
       await this.payments.refund(result.providerRef);
       await this.prisma.payment.update({
         where: { id: payment.id },
@@ -912,11 +923,16 @@ export class BookingsService {
     await this.unattached.recompute(rows.map((row) => row.videoId));
   }
 
-  /** Cancels a PENDING_PAYMENT session and reopens its slot; false if it was not unpaid. */
-  /** Releases every unpaid booking of a user (an accepted deletion request). */
-  async cancelUnpaidOf(playerId: string): Promise<void> {
+  /**
+   * Releases every unpaid booking a user is a party of, as player or as
+   * coach (an accepted deletion request).
+   */
+  async cancelUnpaidOf(userId: string): Promise<void> {
     const pending = await this.prisma.session.findMany({
-      where: { playerId, status: SessionStatus.PENDING_PAYMENT },
+      where: {
+        OR: [{ playerId: userId }, { proProfile: { userId } }],
+        status: SessionStatus.PENDING_PAYMENT,
+      },
       select: { id: true },
     });
     for (const session of pending) {
@@ -924,6 +940,7 @@ export class BookingsService {
     }
   }
 
+  /** Cancels a PENDING_PAYMENT session and reopens its slot; false if it was not unpaid. */
   private async cancelUnpaidSession(sessionId: string): Promise<boolean> {
     const cancelled = await this.cancelUnpaidSessionTx(sessionId);
     if (cancelled) await this.releaseAttachments(sessionId);

@@ -25,9 +25,9 @@ import {
   AccountDataRequestStatus,
   NotificationKind,
   PaymentStatus,
+  Prisma,
   Role,
   SessionStatus,
-  VerificationState,
 } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { TokenService } from '../auth/token.service';
@@ -39,7 +39,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { toSharedServiceType } from '../pros/pro-profile.mapper';
 import { SchedulingService } from '../scheduling/scheduling.service';
 import { ACCOUNT_ERASURE_HOOKS, type AccountErasureHook } from './erasure-hook';
-import { withdrawAvailability } from './hooks/core-hooks';
+import {
+  withdrawAvailability,
+  withdrawOpenVerification,
+} from './hooks/core-hooks';
 
 const DAY = 24 * 3_600_000;
 
@@ -52,6 +55,9 @@ const BLOCKING_STATUSES: SessionStatus[] = [
 ];
 
 type Steps = Record<string, { status: string; at: string; error?: string }>;
+
+/** Prisma client or the transaction client of an open transaction. */
+type Db = Prisma.TransactionClient | PrismaService;
 
 /**
  * The deletion request lifecycle. A request is refused while money or
@@ -87,8 +93,11 @@ export class AccountDeletionService implements OnApplicationBootstrap {
   }
 
   /** What stands in the way of deleting this account right now. */
-  async blockers(userId: string): Promise<DeletionBlocker[]> {
-    const sessions = await this.prisma.session.findMany({
+  async blockers(
+    userId: string,
+    db: Db = this.prisma,
+  ): Promise<DeletionBlocker[]> {
+    const sessions = await db.session.findMany({
       where: {
         OR: [{ playerId: userId }, { proProfile: { userId } }],
         status: { in: BLOCKING_STATUSES },
@@ -102,7 +111,7 @@ export class AccountDeletionService implements OnApplicationBootstrap {
       },
       orderBy: { startsAt: 'asc' },
     });
-    const held = await this.prisma.payment.findMany({
+    const held = await db.payment.findMany({
       where: {
         status: PaymentStatus.HELD,
         session: { OR: [{ playerId: userId }, { proProfile: { userId } }] },
@@ -131,6 +140,18 @@ export class AccountDeletionService implements OnApplicationBootstrap {
     return blockers;
   }
 
+  private async assertNoBlockers(userId: string, db: Db = this.prisma) {
+    const blockers = await this.blockers(userId, db);
+    if (blockers.length > 0) {
+      throw new ConflictException({
+        statusCode: 409,
+        code: ACCOUNT_ERROR_DELETION_BLOCKED,
+        message: 'Settle your open sessions and payments first.',
+        blockers,
+      });
+    }
+  }
+
   async status(userId: string): Promise<DeletionStatusResponse> {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
@@ -148,12 +169,17 @@ export class AccountDeletionService implements OnApplicationBootstrap {
               ],
             },
           },
-          select: { postponedAt: true },
+          select: { postponedAt: true, initiatedBy: true },
         })
       : null;
     return {
       scheduledFor: user.deletionScheduledFor?.toISOString() ?? null,
       postponed: Boolean(pending?.postponedAt),
+      initiatedBy: pending
+        ? pending.initiatedBy === AccountDataRequestInitiator.ADMIN
+          ? 'admin'
+          : 'self'
+        : null,
       blockers: user.deletionScheduledFor ? [] : await this.blockers(userId),
       reauth: user.passwordHash ? 'password' : 'code',
       graceDays: this.graceDays,
@@ -178,7 +204,7 @@ export class AccountDeletionService implements OnApplicationBootstrap {
     );
   }
 
-  /** Self-service: credential, blockers, then the request. */
+  /** Self-service: blockers, credential, then the request. */
   async request(
     userId: string,
     proof: { password?: string; code?: string },
@@ -199,6 +225,8 @@ export class AccountDeletionService implements OnApplicationBootstrap {
         message: 'This account is already scheduled for deletion.',
       });
     }
+    // Blockers first: a one-time code must not be burnt on a refused request.
+    await this.assertNoBlockers(userId);
     if (user.passwordHash) {
       if (
         !proof.password ||
@@ -287,56 +315,56 @@ export class AccountDeletionService implements OnApplicationBootstrap {
       graceDays: number;
     },
   ): Promise<void> {
-    const blockers = await this.blockers(userId);
-    if (blockers.length > 0) {
-      throw new ConflictException({
-        statusCode: 409,
-        code: ACCOUNT_ERROR_DELETION_BLOCKED,
-        message: 'Settle your open sessions and payments first.',
-        blockers,
-      });
-    }
+    await this.assertNoBlockers(userId);
     const now = new Date();
     const scheduledFor = new Date(now.getTime() + options.graceDays * DAY);
-    const request = await this.prisma.$transaction(async (tx) => {
-      const claimed = await tx.user.updateMany({
-        where: { id: userId, deletionScheduledFor: null, deletedAt: null },
-        data: { deletionScheduledFor: scheduledFor },
-      });
-      if (claimed.count === 0) {
-        throw new ConflictException(
-          'This account is already scheduled for deletion.',
-        );
-      }
-      const created = await tx.accountDataRequest.create({
-        data: {
-          userId,
-          kind: AccountDataRequestKind.DELETION,
-          initiatedBy: options.initiatedBy,
-          adminId: options.adminId ?? null,
-          reason: options.reason ?? null,
-          scheduledFor,
-        },
-      });
-      // Everyone else is signed out; the requester's browser refreshes.
-      await tx.refreshToken.updateMany({
-        where: { userId, revokedAt: null },
-        data: { revokedAt: now },
-      });
-      await this.notifications.enqueue(tx, [
-        {
-          kind:
-            options.initiatedBy === AccountDataRequestInitiator.ADMIN
-              ? NotificationKind.ACCOUNT_DELETION_BY_ADMIN
-              : NotificationKind.ACCOUNT_DELETION_REQUESTED,
-          sessionId: null,
-          recipientId: userId,
-          dedupeSuffix: created.id,
-          payload: { scheduledFor: scheduledFor.toISOString() },
-        },
-      ]);
-      return created;
-    });
+    const request = await this.prisma.$transaction(
+      async (tx) => {
+        const claimed = await tx.user.updateMany({
+          where: { id: userId, deletionScheduledFor: null, deletedAt: null },
+          data: { deletionScheduledFor: scheduledFor },
+        });
+        if (claimed.count === 0) {
+          throw new ConflictException(
+            'This account is already scheduled for deletion.',
+          );
+        }
+        // The stamp above locks the user row; a payment in flight either
+        // committed before it (seen here) or waits for it and then refuses.
+        await this.assertNoBlockers(userId, tx);
+        const created = await tx.accountDataRequest.create({
+          data: {
+            userId,
+            kind: AccountDataRequestKind.DELETION,
+            initiatedBy: options.initiatedBy,
+            adminId: options.adminId ?? null,
+            reason: options.reason ?? null,
+            scheduledFor,
+          },
+        });
+        // Everyone else is signed out; the requester's browser refreshes.
+        await tx.refreshToken.updateMany({
+          where: { userId, revokedAt: null },
+          data: { revokedAt: now },
+        });
+        await this.notifications.enqueue(tx, [
+          {
+            kind:
+              options.initiatedBy === AccountDataRequestInitiator.ADMIN
+                ? NotificationKind.ACCOUNT_DELETION_BY_ADMIN
+                : NotificationKind.ACCOUNT_DELETION_REQUESTED,
+            sessionId: null,
+            recipientId: userId,
+            dedupeSuffix: created.id,
+            payload: { scheduledFor: scheduledFor.toISOString() },
+          },
+        ]);
+        return created;
+        // Argon2 and a loaded CI box: the default 5 s interactive-transaction
+        // budget is too tight for a request that holds only one user row.
+      },
+      { timeout: 15_000 },
+    );
     // Follow-ups outside the transaction: each is idempotent and the job's
     // hooks repeat them at execution anyway.
     await this.bookings.cancelUnpaidOf(userId);
@@ -346,26 +374,17 @@ export class AccountDeletionService implements OnApplicationBootstrap {
     });
     if (profile) {
       await withdrawAvailability(this.prisma, profile.id);
-      // As if the coach withdrew: booking cancelled, event deleted, admins told.
-      const open = await this.prisma.verificationRequest.count({
-        where: {
-          profileId: profile.id,
-          state: {
-            in: [
-              VerificationState.AWAITING_SCHEDULING,
-              VerificationState.SCHEDULED,
-            ],
-          },
-        },
-      });
-      if (open > 0) await this.scheduling.withdraw(userId);
+      await withdrawOpenVerification(this.prisma, this.scheduling, userId);
     }
     this.logger.log(
       `Deletion ${request.id} scheduled for user ${userId} (${options.initiatedBy}) at ${scheduledFor.toISOString()}`,
     );
   }
 
-  /** The user changed their mind inside the grace period. */
+  /**
+   * The user changed their mind inside the grace period. A deletion an
+   * admin scheduled is theirs to undo, not the user's.
+   */
   async cancel(userId: string): Promise<DeletionStatusResponse> {
     const now = new Date();
     await this.prisma.$transaction(async (tx) => {
@@ -381,6 +400,11 @@ export class AccountDeletionService implements OnApplicationBootstrap {
           },
         },
       });
+      if (request?.initiatedBy === AccountDataRequestInitiator.ADMIN) {
+        throw new ForbiddenException(
+          'This deletion was scheduled by our team; reply to the email to contest it.',
+        );
+      }
       const restored = await tx.user.updateMany({
         where: {
           id: userId,
@@ -422,7 +446,11 @@ export class AccountDeletionService implements OnApplicationBootstrap {
     }
   }
 
-  /** Executes every due deletion; public for tests and the admin retry. */
+  /**
+   * Executes every due deletion; public for tests. Failed requests are not
+   * picked up again: an admin retries them from the console once the cause
+   * is fixed.
+   */
   async runDue(now = new Date()): Promise<void> {
     const due = await this.prisma.accountDataRequest.findMany({
       where: {
@@ -431,7 +459,6 @@ export class AccountDeletionService implements OnApplicationBootstrap {
           in: [
             AccountDataRequestStatus.SCHEDULED,
             AccountDataRequestStatus.POSTPONED,
-            AccountDataRequestStatus.FAILED,
           ],
         },
         scheduledFor: { lte: now },
@@ -493,6 +520,23 @@ export class AccountDeletionService implements OnApplicationBootstrap {
       data: { status: AccountDataRequestStatus.RUNNING },
     });
     if (claimed.count === 0) return;
+    try {
+      await this.runSteps(request);
+    } catch (error) {
+      // Nothing may stay RUNNING: the console retries FAILED rows only.
+      await this.prisma.accountDataRequest.update({
+        where: { id: request.id },
+        data: {
+          status: AccountDataRequestStatus.FAILED,
+          lastError: error instanceof Error ? error.message : String(error),
+        },
+      });
+      throw error;
+    }
+  }
+
+  /** The hooks in order, then the tombstone; throws on anything unexpected. */
+  private async runSteps(request: AccountDataRequest): Promise<void> {
     const steps: Steps = (request.steps as Steps | null) ?? {};
     let failed = false;
     for (const hook of this.hooks) {
@@ -597,8 +641,9 @@ export class AccountDeletionService implements OnApplicationBootstrap {
   }
 
   /**
-   * The last step: the completion email goes out first (the address is
-   * about to disappear), then the row keeps only what the money trail needs.
+   * The last step: the row keeps only what the money trail needs, then the
+   * completion email goes to the address read before the scrub — after the
+   * commit, so a failed scrub retried later does not send it twice.
    */
   private async tombstone(
     userId: string,
@@ -609,14 +654,6 @@ export class AccountDeletionService implements OnApplicationBootstrap {
       select: { email: true, locale: true, displayName: true, deletedAt: true },
     });
     if (user.deletedAt && !options.force) return;
-    if (options.notify) {
-      await this.mailer.send(
-        user.email,
-        this.renderer.render(user.locale, 'account.deletionCompleted', {
-          name: user.displayName,
-        }),
-      );
-    }
     await this.prisma.$transaction([
       this.prisma.user.update({
         where: { id: userId },
@@ -641,5 +678,13 @@ export class AccountDeletionService implements OnApplicationBootstrap {
         data: { status: 'SKIPPED', lastError: 'account-deleted' },
       }),
     ]);
+    if (options.notify) {
+      await this.mailer.send(
+        user.email,
+        this.renderer.render(user.locale, 'account.deletionCompleted', {
+          name: user.displayName,
+        }),
+      );
+    }
   }
 }

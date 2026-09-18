@@ -44,6 +44,8 @@ export interface DeletionStatusResponse {
   scheduledFor: string | null;
   /** Postponed since the original request (a blocker appeared). */
   postponed: boolean;
+  /** Who scheduled it; only a self-requested deletion can be cancelled here. */
+  initiatedBy: "self" | "admin" | null;
   blockers: DeletionBlocker[];
   /** Password accounts re-authenticate with it; the others with an emailed code. */
   reauth: "password" | "code";

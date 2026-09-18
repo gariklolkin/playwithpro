@@ -1436,6 +1436,7 @@
       "title": "Your account is scheduled for deletion",
       "body": "It will be deleted on {date}. Until then you can change your mind or download a copy of your data. Booking, paying and uploading are paused.",
       "postponed": "The deletion was postponed because a session or a payment is still open.",
+      "byAdmin": "Our team scheduled this deletion. If you think this is a mistake, reply to the email we sent you.",
       "cancel": "Cancel deletion",
       "cancelling": "Cancelling…",
       "download": "Download my data",

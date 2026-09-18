@@ -498,11 +498,17 @@ describe('Account data rights (e2e)', () => {
 
   describe('coach request', () => {
     it('the coach leaves the catalog and the market at once', async () => {
+      const unpaid = await session(playerId, 'PENDING_PAYMENT', 200);
       await request(server())
         .post('/users/me/deletion')
         .set('Cookie', coachCookie)
         .send({ password: PASSWORD })
         .expect(200);
+      // The players' unpaid bookings with this coach are released too.
+      expect(
+        (await prisma.session.findUniqueOrThrow({ where: { id: unpaid.id } }))
+          .status,
+      ).toBe('CANCELLED');
       const catalog = await request(server()).get('/pros').expect(200);
       expect(
         (catalog.body as CatalogResponse).items.map((item) => item.id),
@@ -521,6 +527,24 @@ describe('Account data rights (e2e)', () => {
       expect(
         await prisma.availabilityRule.count({
           where: { profileId: coachProfileId },
+        }),
+      ).toBe(0);
+    });
+
+    it('refuses a payment to a leaving coach and voids the hold', async () => {
+      const unpaid = await session(playerId, 'PENDING_PAYMENT', 220);
+      await request(server())
+        .post(`/sessions/${unpaid.id}/pay`)
+        .set('Cookie', playerCookie)
+        .send({})
+        .expect(409);
+      expect(
+        (await prisma.session.findUniqueOrThrow({ where: { id: unpaid.id } }))
+          .status,
+      ).toBe('PENDING_PAYMENT');
+      expect(
+        await prisma.payment.count({
+          where: { sessionId: unpaid.id, status: 'HELD' },
         }),
       ).toBe(0);
     });
@@ -588,15 +612,20 @@ describe('Account data rights (e2e)', () => {
       expect(
         await prisma.session.count({ where: { playerId } }),
       ).toBeGreaterThan(0);
+      // The fixture's payment row outlives the account (the FAILED row of
+      // the refused payment above is a second one).
       expect(
-        await prisma.payment.count({ where: { session: { playerId } } }),
+        await prisma.payment.count({ where: { sessionId: paidSessionId } }),
       ).toBe(1);
+      // The export zip built during the grace period goes with the account.
+      expect(await storage.listPrefix(`exports/${playerId}/`)).toEqual([]);
 
       const row = await prisma.accountDataRequest.findFirstOrThrow({
         where: { userId: playerId, kind: 'DELETION', status: 'COMPLETED' },
       });
       const steps = row.steps as Record<string, { status: string }>;
       expect(steps.avatars.status).toBe('done');
+      expect(steps.exports.status).toBe('done');
       expect(steps.observability.status).toBe('skipped');
       expect(steps.tombstone.status).toBe('done');
       expect(mailer.send).toHaveBeenCalledWith(
@@ -687,6 +716,17 @@ describe('Account data rights (e2e)', () => {
         .post(`/admin/account-requests/${row.id}/retry`)
         .set('Cookie', adminCookie)
         .expect(409);
+      // The user sees who scheduled it and cannot undo it.
+      const targetCookie = cookieOf(target.id, Role.Amateur);
+      const status = await request(server())
+        .get('/users/me/deletion')
+        .set('Cookie', targetCookie)
+        .expect(200);
+      expect((status.body as DeletionStatusResponse).initiatedBy).toBe('admin');
+      await request(server())
+        .delete('/users/me/deletion')
+        .set('Cookie', targetCookie)
+        .expect(403);
 
       await deletion.runDue();
       const done = await prisma.user.findUniqueOrThrow({

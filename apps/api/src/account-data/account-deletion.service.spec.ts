@@ -19,6 +19,9 @@ describe('AccountDeletionService', () => {
       findFirst: jest.fn(),
     },
     refreshToken: { updateMany: jest.fn() },
+    // The blockers are re-read under the row lock.
+    session: { findMany: jest.fn() },
+    payment: { findMany: jest.fn() },
   };
   const prisma = {
     user: {
@@ -70,6 +73,8 @@ describe('AccountDeletionService', () => {
     prisma.user.findUniqueOrThrow.mockReset();
     prisma.session.findMany.mockResolvedValue([]);
     prisma.payment.findMany.mockResolvedValue([]);
+    tx.session.findMany.mockResolvedValue([]);
+    tx.payment.findMany.mockResolvedValue([]);
     prisma.proProfile.findUnique.mockResolvedValue(null);
     prisma.accountDataRequest.findFirst.mockResolvedValue(null);
     tx.user.updateMany.mockResolvedValue({ count: 1 });
@@ -130,6 +135,32 @@ describe('AccountDeletionService', () => {
       await expect(
         service.request('u1', { password: 'nope' }),
       ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('checks the blockers before consuming a one-time code', async () => {
+      prisma.user.findUniqueOrThrow.mockResolvedValueOnce({
+        role: 'AMATEUR',
+        passwordHash: null,
+        deletionScheduledFor: null,
+      });
+      prisma.payment.findMany.mockResolvedValue([
+        { sessionId: 's9', amountMinor: 5000, currency: 'EUR' },
+      ]);
+      await expect(
+        service.request('u1', { code: '123456' }),
+      ).rejects.toBeInstanceOf(ConflictException);
+      expect(tokens.consumeEmailCode).not.toHaveBeenCalled();
+    });
+
+    it('refuses when a payment slipped in before the row lock', async () => {
+      prisma.user.findUniqueOrThrow.mockResolvedValueOnce(await passwordUser());
+      tx.payment.findMany.mockResolvedValue([
+        { sessionId: 's9', amountMinor: 5000, currency: 'EUR' },
+      ]);
+      await expect(
+        service.request('u1', { password: 'secret-pass' }),
+      ).rejects.toBeInstanceOf(ConflictException);
+      expect(tx.accountDataRequest.create).not.toHaveBeenCalled();
     });
 
     it('asks a Google-only account for the emailed code', async () => {
@@ -225,8 +256,22 @@ describe('AccountDeletionService', () => {
     });
   });
 
+  it('cancel refuses a deletion an admin scheduled', async () => {
+    tx.accountDataRequest.findFirst.mockResolvedValue({
+      id: 'req-1',
+      initiatedBy: 'ADMIN',
+    });
+    await expect(service.cancel('u1')).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+    expect(tx.user.updateMany).not.toHaveBeenCalled();
+  });
+
   it('cancel clears the schedule and marks the request cancelled', async () => {
-    tx.accountDataRequest.findFirst.mockResolvedValue({ id: 'req-1' });
+    tx.accountDataRequest.findFirst.mockResolvedValue({
+      id: 'req-1',
+      initiatedBy: 'SELF',
+    });
     prisma.user.findUniqueOrThrow.mockResolvedValue({
       deletionScheduledFor: null,
       passwordHash: 'x',
@@ -287,7 +332,20 @@ describe('AccountDeletionService', () => {
       expect(prisma.user.update).not.toHaveBeenCalled();
     });
 
-    it('resumes: done steps are skipped, then the email and the tombstone', async () => {
+    it('marks the request failed when a step record cannot be written', async () => {
+      prisma.accountDataRequest.update.mockRejectedValueOnce(
+        new Error('db gone'),
+      );
+      await expect(service.execute(request)).rejects.toThrow('db gone');
+      const last = prisma.accountDataRequest.update.mock.calls.at(-1)[0];
+      expect(last.data).toMatchObject({
+        status: 'FAILED',
+        lastError: 'db gone',
+      });
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('resumes: done steps are skipped, then the tombstone and the email', async () => {
       await service.execute({
         ...(request as object),
         status: 'FAILED',
@@ -320,7 +378,8 @@ describe('AccountDeletionService', () => {
       });
       const last = prisma.accountDataRequest.update.mock.calls.at(-1)[0];
       expect(last.data.status).toBe('COMPLETED');
-      expect(mailer.send.mock.invocationCallOrder[0]).toBeLessThan(
+      // The address is read before the scrub, the email sent after it.
+      expect(mailer.send.mock.invocationCallOrder[0]).toBeGreaterThan(
         prisma.user.update.mock.invocationCallOrder[0],
       );
     });

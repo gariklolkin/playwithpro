@@ -173,6 +173,25 @@ describe('NotificationDispatchService', () => {
     expect(prisma.notification.update).toHaveBeenCalledTimes(2);
   });
 
+  it('sends a coach back to availability after a cancelled deletion, a player to the dashboard', async () => {
+    prisma.notification.findMany.mockResolvedValue([
+      row('ACCOUNT_DELETION_CANCELLED', { sessionId: null, session: null }),
+      row('ACCOUNT_DELETION_CANCELLED', {
+        id: 'n2',
+        sessionId: null,
+        session: null,
+        recipient: { ...row('x').recipient, role: 'PROFESSIONAL' },
+      }),
+    ]);
+    await service.dispatchOnce();
+    const [player, coach] = mailer.deliver.mock.calls.map(
+      (call: unknown[]) => call[1] as { text: string },
+    );
+    expect(player.text).toContain('/de/dashboard');
+    expect(player.text).not.toContain('/dashboard/availability');
+    expect(coach.text).toContain('/de/dashboard/availability');
+  });
+
   it('never writes to a tombstone', async () => {
     prisma.notification.findMany.mockResolvedValue([
       row('ACCOUNT_DELETION_CANCELLED', {

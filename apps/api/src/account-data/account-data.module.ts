@@ -15,6 +15,7 @@ import {
   AvailabilityErasureHook,
   AvatarsErasureHook,
   CredentialsErasureHook,
+  ExportsErasureHook,
   ObservabilityErasureHook,
   PlayerProfileErasureHook,
   ProProfileErasureHook,
@@ -31,6 +32,7 @@ const CORE_HOOKS = [
   VerificationErasureHook,
   VideosErasureHook,
   AvatarsErasureHook,
+  ExportsErasureHook,
   ObservabilityErasureHook,
 ];
 

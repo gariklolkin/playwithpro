@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access
    -- jest mock call records are untyped; assertions narrow where it matters. */
 import type { ConfigService } from '@nestjs/config';
-import { ObservabilityErasureHook, ProProfileErasureHook } from './core-hooks';
+import {
+  ExportsErasureHook,
+  ObservabilityErasureHook,
+  ProProfileErasureHook,
+  withdrawOpenVerification,
+} from './core-hooks';
 
 const config = (values: Record<string, string>) =>
   ({ get: (key: string) => values[key] }) as unknown as ConfigService;
@@ -78,5 +83,34 @@ describe('ProProfileErasureHook', () => {
       status: 'skipped',
       reason: 'no coach profile',
     });
+  });
+});
+
+describe('ExportsErasureHook', () => {
+  it('drops the zips and forgets their keys', async () => {
+    const storage = { deletePrefix: jest.fn().mockResolvedValue(2) };
+    const prisma = {
+      accountDataRequest: { updateMany: jest.fn().mockResolvedValue({}) },
+    };
+    const hook = new ExportsErasureHook(prisma as never, storage as never);
+    await expect(hook.erase('u1')).resolves.toEqual({ status: 'done' });
+    expect(storage.deletePrefix).toHaveBeenCalledWith('exports/u1/');
+    expect(prisma.accountDataRequest.updateMany).toHaveBeenCalledWith({
+      where: { userId: 'u1', kind: 'EXPORT' },
+      data: { exportKey: null, exportExpiresAt: null },
+    });
+  });
+});
+
+describe('withdrawOpenVerification', () => {
+  it('goes through the coach withdrawal only when a request is open', async () => {
+    const prisma = { verificationRequest: { count: jest.fn() } };
+    const scheduling = { withdraw: jest.fn() };
+    prisma.verificationRequest.count.mockResolvedValue(0);
+    await withdrawOpenVerification(prisma as never, scheduling as never, 'u1');
+    expect(scheduling.withdraw).not.toHaveBeenCalled();
+    prisma.verificationRequest.count.mockResolvedValue(1);
+    await withdrawOpenVerification(prisma as never, scheduling as never, 'u1');
+    expect(scheduling.withdraw).toHaveBeenCalledWith('u1');
   });
 });

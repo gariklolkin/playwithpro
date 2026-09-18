@@ -1436,6 +1436,7 @@
       "title": "Ihr Konto wird gelöscht",
       "body": "Es wird am {date} gelöscht. Bis dahin können Sie es sich anders überlegen oder eine Kopie Ihrer Daten herunterladen. Buchen, Bezahlen und Hochladen sind pausiert.",
       "postponed": "Die Löschung wurde verschoben, weil eine Session oder Zahlung noch offen ist.",
+      "byAdmin": "Unser Team hat diese Löschung veranlasst. Wenn Sie das für einen Fehler halten, antworten Sie auf die E-Mail, die wir Ihnen geschickt haben.",
       "cancel": "Löschung abbrechen",
       "cancelling": "Wird abgebrochen…",
       "download": "Meine Daten herunterladen",

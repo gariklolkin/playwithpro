@@ -28,4 +28,5 @@
 
 - [x] 4.1 `infra/storage/backup-lifecycle.json` + `scripts/apply-backup-lifecycle.sh`; README: lifecycle, restore re-apply, `account-requests:reapply` script
 - [x] 4.2 Lint, tsc, api unit + e2e, web vitest green; browser smoke: request deletion (blocked, then allowed), grace screen, cancel, export download, admin log
-- [ ] 4.3 Roadmap entry 31; staging verification, then archive
+- [x] 4.3 Review fixes (2026-09-18): blockers before the code and under the row lock, `pay()` refuses a leaving party, unpaid bookings on both sides, admin-scheduled deletion not user-cancellable, FAILED on any throw after the claim, no hourly re-run of FAILED, completion email after the scrub, role-aware cancelled link, `exports` hook, shared verification withdrawal
+- [ ] 4.4 Roadmap entry 31; staging verification, then archive

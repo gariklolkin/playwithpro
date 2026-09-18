@@ -303,12 +303,18 @@ export class NotificationDispatchService implements OnApplicationBootstrap {
   }
 
   private recipientOf(row: Row): EmailRecipient {
+    // Session kinds: the side of that session. Account kinds have no
+    // session, so the account role decides.
     const role =
       row.recipient.role === 'ADMIN'
         ? 'admin'
-        : row.recipient.id === row.session?.playerId
-          ? 'player'
-          : 'coach';
+        : row.session
+          ? row.recipient.id === row.session.playerId
+            ? 'player'
+            : 'coach'
+          : row.recipient.role === 'PROFESSIONAL'
+            ? 'coach'
+            : 'player';
     return {
       displayName: row.recipient.displayName,
       locale: row.recipient.locale,
@@ -447,9 +453,15 @@ export class NotificationDispatchService implements OnApplicationBootstrap {
       value
         ? formatWhen(new Date(String(value)), locale, recipient.timezone)
         : '';
+    // A coach republishes availability; everyone else lands on the dashboard.
     const url =
       kind === NotificationKind.ACCOUNT_DELETION_CANCELLED
-        ? this.renderer.link(locale, '/dashboard/availability')
+        ? this.renderer.link(
+            locale,
+            recipient.role === 'coach'
+              ? '/dashboard/availability'
+              : '/dashboard',
+          )
         : this.renderer.link(
             locale,
             kind === NotificationKind.ACCOUNT_DELETION_POSTPONED

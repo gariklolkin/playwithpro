@@ -1436,6 +1436,7 @@
       "title": "La suppression de votre compte est programmée",
       "body": "Il sera supprimé le {date}. D'ici là, vous pouvez changer d'avis ou télécharger une copie de vos données. Les réservations, paiements et envois de vidéos sont suspendus.",
       "postponed": "La suppression a été reportée car une séance ou un paiement est encore en cours.",
+      "byAdmin": "Notre équipe a programmé cette suppression. Si vous pensez qu'il s'agit d'une erreur, répondez à l'e-mail que nous vous avons envoyé.",
       "cancel": "Annuler la suppression",
       "cancelling": "Annulation…",
       "download": "Télécharger mes données",

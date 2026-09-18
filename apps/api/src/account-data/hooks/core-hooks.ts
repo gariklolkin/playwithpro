@@ -1,8 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { BookingStatus, SlotStatus, VerificationState } from '@prisma/client';
+import {
+  AccountDataRequestKind,
+  SlotStatus,
+  VerificationState,
+} from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { MeetingSyncService } from '../../scheduling/meeting/meeting-sync.service';
+import { SchedulingService } from '../../scheduling/scheduling.service';
 import { StorageService } from '../../storage/storage.service';
 import { VideosService } from '../../videos/videos.service';
 import {
@@ -98,13 +102,13 @@ export async function withdrawAvailability(
   ]);
 }
 
-/** Scheduled verification calls cancelled (Google event too), admin notes cleared. */
+/** An open verification withdrawn as the coach would, admin notes cleared. */
 @Injectable()
 export class VerificationErasureHook implements AccountErasureHook {
   readonly name = 'verification';
   constructor(
     private readonly prisma: PrismaService,
-    private readonly sync: MeetingSyncService,
+    private readonly scheduling: SchedulingService,
   ) {}
   async erase(userId: string): Promise<ErasureOutcome> {
     const profile = await this.prisma.proProfile.findUnique({
@@ -112,7 +116,7 @@ export class VerificationErasureHook implements AccountErasureHook {
       select: { id: true },
     });
     if (!profile) return skipped('no coach profile');
-    await withdrawVerificationCalls(this.prisma, this.sync, profile.id);
+    await withdrawOpenVerification(this.prisma, this.scheduling, userId);
     await this.prisma.verificationRequest.updateMany({
       where: { profileId: profile.id },
       data: { adminNote: '' },
@@ -121,15 +125,19 @@ export class VerificationErasureHook implements AccountErasureHook {
   }
 }
 
-/** Shared with the request path: a scheduled call is withdrawn as the coach would. */
-export async function withdrawVerificationCalls(
+/**
+ * Shared by the request path and the hook: an open verification request is
+ * withdrawn through the coach's own path (booking cancelled, slot reopened,
+ * calendar event deleted, admins notified); nothing to do otherwise.
+ */
+export async function withdrawOpenVerification(
   prisma: PrismaService,
-  sync: MeetingSyncService,
-  profileId: string,
+  scheduling: SchedulingService,
+  userId: string,
 ): Promise<void> {
-  const requests = await prisma.verificationRequest.findMany({
+  const open = await prisma.verificationRequest.count({
     where: {
-      profileId,
+      profile: { userId },
       state: {
         in: [
           VerificationState.AWAITING_SCHEDULING,
@@ -137,29 +145,8 @@ export async function withdrawVerificationCalls(
         ],
       },
     },
-    include: { bookings: { where: { status: BookingStatus.SCHEDULED } } },
   });
-  for (const request of requests) {
-    await prisma.$transaction(async (tx) => {
-      for (const booking of request.bookings) {
-        await tx.verificationBooking.update({
-          where: { id: booking.id },
-          data: { status: BookingStatus.CANCELLED_BY_PRO },
-        });
-        await tx.verificationSlot.update({
-          where: { id: booking.slotId },
-          data: { status: SlotStatus.OPEN },
-        });
-      }
-      await tx.verificationRequest.update({
-        where: { id: request.id },
-        data: { state: VerificationState.CANCELLED },
-      });
-    });
-    for (const booking of request.bookings) {
-      await sync.cancelEvent(booking.googleEventId);
-    }
-  }
+  if (open > 0) await scheduling.withdraw(userId);
 }
 
 /** Every video: objects and rows (attachment rows cascade). */
@@ -188,6 +175,27 @@ export class AvatarsErasureHook implements AccountErasureHook {
   constructor(private readonly storage: StorageService) {}
   async erase(userId: string): Promise<ErasureOutcome> {
     await this.storage.deletePrefix(`avatars/${userId}/`);
+    return done;
+  }
+}
+
+/**
+ * Export zips hold the whole inventory: they go with the account instead of
+ * waiting for their own TTL.
+ */
+@Injectable()
+export class ExportsErasureHook implements AccountErasureHook {
+  readonly name = 'exports';
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storage: StorageService,
+  ) {}
+  async erase(userId: string): Promise<ErasureOutcome> {
+    await this.storage.deletePrefix(`exports/${userId}/`);
+    await this.prisma.accountDataRequest.updateMany({
+      where: { userId, kind: AccountDataRequestKind.EXPORT },
+      data: { exportKey: null, exportExpiresAt: null },
+    });
     return done;
   }
 }

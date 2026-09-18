@@ -85,6 +85,7 @@ const user: MeResponse = {
 const noDeletion = {
   scheduledFor: null,
   postponed: false,
+  initiatedBy: null,
   blockers: [],
   reauth: "password",
   graceDays: 14,
@@ -303,6 +304,30 @@ describe("DeletionGate", () => {
       expect.stringContaining("/users/me/deletion"),
       expect.objectContaining({ method: "DELETE" }),
     );
+    expect(screen.getByTestId("export-card")).toBeInTheDocument();
+  });
+
+  it("shows how to contest an admin-scheduled deletion instead of a cancel button", async () => {
+    fetchMock.mockImplementation(async (url: string) =>
+      url.endsWith("/users/me/deletion")
+        ? ok({
+            ...noDeletion,
+            scheduledFor: "2026-10-02T08:00:00.000Z",
+            initiatedBy: "admin",
+          })
+        : ok({
+            status: null,
+            requestedAt: null,
+            downloadUrl: null,
+            expiresAt: null,
+            nextAllowedAt: null,
+          }),
+    );
+    wrap(<DeletionGate scheduledFor="2026-10-02T08:00:00.000Z" />);
+    await screen.findByTestId("deletion-by-admin");
+    expect(
+      screen.queryByRole("button", { name: "Cancel deletion" }),
+    ).toBeNull();
     expect(screen.getByTestId("export-card")).toBeInTheDocument();
   });
 

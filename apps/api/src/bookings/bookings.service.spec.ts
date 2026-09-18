@@ -109,6 +109,7 @@ describe('BookingsService', () => {
     },
     payment: { update: jest.fn(), updateMany: jest.fn() },
     sessionReschedule: { findFirst: jest.fn(), updateMany: jest.fn() },
+    $queryRaw: jest.fn(),
   };
   const prisma = {
     proProfile: { findUnique: jest.fn() },
@@ -182,6 +183,7 @@ describe('BookingsService', () => {
     prisma.$transaction.mockImplementation(
       (fn: (t: typeof tx) => Promise<unknown>) => fn(tx),
     );
+    tx.$queryRaw.mockResolvedValue([]);
     prisma.sessionVideo.findMany.mockResolvedValue([]);
     sessionVideos.validate.mockResolvedValue([]);
     const moduleRef = await Test.createTestingModule({
@@ -538,6 +540,17 @@ describe('BookingsService', () => {
       await expect(
         service.pay('player-1', 'session-1', {}),
       ).rejects.toBeInstanceOf(ConflictException);
+      expect(provider.refund).toHaveBeenCalledWith('ref-1');
+    });
+
+    it('voids the hold when a party is leaving the platform', async () => {
+      provider.hold.mockResolvedValue({ ok: true, providerRef: 'ref-1' });
+      tx.$queryRaw.mockResolvedValue([{ id: 'player-1' }]);
+
+      await expect(
+        service.pay('player-1', 'session-1', {}),
+      ).rejects.toBeInstanceOf(ConflictException);
+      expect(tx.session.updateMany).not.toHaveBeenCalled();
       expect(provider.refund).toHaveBeenCalledWith('ref-1');
     });
 

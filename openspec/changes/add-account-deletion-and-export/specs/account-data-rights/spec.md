@@ -12,7 +12,7 @@ The system SHALL erase an account through a registry of erasure hooks, one per d
 - **THEN** the observability step is recorded as skipped with that reason and the deletion still completes
 
 ### Requirement: Deletion request with blockers, re-authentication and grace
-A user SHALL be able to request the deletion of their account. The request SHALL be refused with a list of blockers while the user is a party of a session in `paid_escrow`, `in_progress`, `awaiting_confirmation` or `disputed`, or while a payment on one of their sessions is still held. The request SHALL require re-authentication — the password, or a six-digit emailed code for accounts without one. On acceptance the system SHALL, atomically with recording the request: schedule execution after the configurable grace period (default 14 days), sign out every other session, cancel the user's unpaid bookings, and for a coach delete availability rules, remove future open slots and withdraw a scheduled verification call. Admin accounts SHALL NOT use self-service deletion. The user SHALL be emailed with a cancellation link.
+A user SHALL be able to request the deletion of their account. The request SHALL be refused with a list of blockers while the user is a party of a session in `paid_escrow`, `in_progress`, `awaiting_confirmation` or `disputed`, or while a payment on one of their sessions is still held. The request SHALL require re-authentication — the password, or a six-digit emailed code for accounts without one. On acceptance the system SHALL, atomically with recording the request: schedule execution after the configurable grace period (default 14 days), sign out every other session, cancel the unpaid bookings the user is a party of (as player or as coach), and for a coach delete availability rules, remove future open slots and withdraw a scheduled verification call. The blockers SHALL be checked before a one-time code is consumed, and a payment SHALL be refused once either party's deletion request is recorded. Admin accounts SHALL NOT use self-service deletion. The user SHALL be emailed with a cancellation link.
 
 #### Scenario: Blocked by an open session
 - **WHEN** a player with a session awaiting confirmation requests deletion
@@ -32,6 +32,10 @@ While a deletion is scheduled the user SHALL still be able to sign in, but SHALL
 #### Scenario: Cancel within the grace period
 - **WHEN** the user cancels two days after requesting
 - **THEN** the request is marked cancelled, the account works again, and a coach's profile is public again once availability is republished
+
+#### Scenario: Admin-scheduled deletion
+- **WHEN** the user tries to cancel a deletion an admin scheduled
+- **THEN** the request is refused and the grace screen shows how to contest it instead of a cancel action
 
 #### Scenario: Booking during the grace period
 - **WHEN** a user with a scheduled deletion tries to book
@@ -64,4 +68,8 @@ Every deletion or export request SHALL be recorded with its kind, status (schedu
 
 #### Scenario: Admin reviews a failed step
 - **WHEN** an admin opens the request log after a deletion whose storage step failed
-- **THEN** the request shows status failed with that step's error and offers a retry
+- **THEN** the request shows status failed with that step's error and offers a retry; the hourly job does not re-run it on its own
+
+#### Scenario: Export zip goes with the account
+- **WHEN** a deletion executes for a user who exported their data during the grace period
+- **THEN** the zip is removed from storage with the other erasure steps
