@@ -26,6 +26,6 @@
 
 ## 4. Infra and verification
 
-- [x] 4.1 `infra/k8s/postgres/backup-lifecycle.json` + `scripts/apply-backup-lifecycle.sh`; README: lifecycle, restore re-apply, `account-requests:reapply` script
+- [x] 4.1 `infra/storage/backup-lifecycle.json` + `scripts/apply-backup-lifecycle.sh`; README: lifecycle, restore re-apply, `account-requests:reapply` script
 - [x] 4.2 Lint, tsc, api unit + e2e, web vitest green; browser smoke: request deletion (blocked, then allowed), grace screen, cancel, export download, admin log
 - [ ] 4.3 Roadmap entry 31; staging verification, then archive

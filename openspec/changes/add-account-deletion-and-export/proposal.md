@@ -40,4 +40,4 @@ Out of scope: legal texts (#7), rectification/restriction flows, DPAs, inactive-
 - **API:** `AccountDataModule` (`AccountDeletionService`, `AccountExportService`, `AccountRequestsService`, hooks registry + core hooks, `ActiveAccountGuard`, controllers), `StorageService.deletePrefix/listPrefix`, `TokenService` code kind, catalog/pro/availability filters, tombstone-aware mappers, mailer log scrub, dispatcher sessionless kinds; env `ACCOUNT_DELETION_GRACE_DAYS`, `ACCOUNT_DELETION_POSTPONE_DAYS`, `ACCOUNT_EXPORT_TTL_DAYS`, `ACCOUNT_EXPORT_COOLDOWN_HOURS`, `POSTHOG_PERSONAL_API_KEY` (optional).
 - **Shared:** `AccountDataRequestKind/Status`, `DeletionBlocker`, `DeletionStatusResponse`, `ExportStatusResponse`, request types, `MeResponse.deletionScheduledFor`, `AdminAccountRequestItem`; `FORMER_MEMBER` sentinel handling.
 - **Web:** settings Account tab, `DeletionGate` in the locale layout, "Former member" rendering, admin actions + request log; catalogs ×5.
-- **Infra:** `infra/k8s/postgres/backup-lifecycle.json` + apply script, README notes.
+- **Infra:** `infra/storage/backup-lifecycle.json` + apply script, README notes.

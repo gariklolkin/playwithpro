@@ -9,7 +9,7 @@ set -euo pipefail
 
 ENV_FILE="${1:-$HOME/.playwithpro-prod.env}"
 REPO_ROOT="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
-RULES="$REPO_ROOT/infra/k8s/postgres/backup-lifecycle.json"
+RULES="$REPO_ROOT/infra/storage/backup-lifecycle.json"
 
 [[ -f "$ENV_FILE" ]] || { echo "env file not found: $ENV_FILE" >&2; exit 1; }
 env_value() {

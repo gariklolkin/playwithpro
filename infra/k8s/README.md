@@ -9,7 +9,7 @@ machine — there is no CI/CD; the cluster is not managed from the server itself
 ```
 infra/k8s/
   cluster/       # cluster-scoped: namespace, cert-manager ClusterIssuers
-  postgres/      # PostgreSQL + PVC + backup CronJob + bucket lifecycle rules
+  postgres/      # PostgreSQL + PVC + backup CronJob
   app/           # api + web Deployments/Services/Ingress, migration Job
   livekit/       # LiveKit media server (host network) + config template
   fider/         # feedback board (Fider) Deployment/Service/Ingress + DB init Job
@@ -76,7 +76,7 @@ from the nightly `pg_dump` objects in the Hetzner bucket.
 ## Backups, retention and account deletions
 
 - **Lifecycle**: `infra/scripts/apply-backup-lifecycle.sh` puts
-  `postgres/backup-lifecycle.json` on the bucket — nightly dumps under
+  `infra/storage/backup-lifecycle.json` on the bucket — nightly dumps under
   `backups/` expire after **30 days** (the backup window for the privacy policy),
   account exports under `exports/` after 8 days (a backstop behind the API's
   7-day sweep). The call replaces the bucket's whole lifecycle configuration:

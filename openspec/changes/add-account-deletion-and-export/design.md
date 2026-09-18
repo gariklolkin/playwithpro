@@ -35,7 +35,7 @@ Password accounts send `password` (argon2 verify). Google-only accounts request 
 `POST /admin/users/:id/deletion { reason, graceDays? }` — same request path with `initiatedBy: ADMIN`, `adminId`, `reason`; `graceDays: 0` executes on the next job tick. Refused for admins (self or other) unless another active admin exists, and never for the last admin. `GET /admin/account-requests`, `POST /admin/account-requests/:id/retry`.
 
 ### D9. Backups and logs
-`infra/k8s/postgres/backup-lifecycle.json` + `scripts/apply-backup-lifecycle.sh` (`aws s3api put-bucket-lifecycle-configuration`, prefix `backups/`, 30 days); README documents applying it and re-running completed `AccountDataRequest` rows after a restore (`pnpm --filter api run account-requests:reapply` — a small script that re-executes COMPLETED deletions idempotently). `MailerService` logs the recipient's user id, never the address.
+`infra/storage/backup-lifecycle.json` + `scripts/apply-backup-lifecycle.sh` (`aws s3api put-bucket-lifecycle-configuration`, prefix `backups/`, 30 days); README documents applying it and re-running completed `AccountDataRequest` rows after a restore (`pnpm --filter api run account-requests:reapply` — a small script that re-executes COMPLETED deletions idempotently). `MailerService` logs the recipient's user id, never the address.
 
 ## Risks / Trade-offs
 
