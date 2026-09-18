@@ -17,7 +17,8 @@ NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL:-https://api.play-with.pro}"
 # source-map upload and never enters an image. Both default to "off".
 PROD_ENV="${PLAYWITHPRO_PROD_ENV:-$HOME/.playwithpro-prod.env}"
 POSTHOG_CLI_TOKEN_FILE="${POSTHOG_CLI_TOKEN_FILE:-$HOME/.playwithpro-posthog-cli}"
-env_value() { grep -E "^$1=" "$PROD_ENV" 2>/dev/null | tail -1 | cut -d= -f2-; }
+# A missing key is an empty value, not a failure (pipefail + set -e).
+env_value() { { grep -E "^$1=" "$PROD_ENV" 2>/dev/null || true; } | tail -1 | cut -d= -f2-; }
 NEXT_PUBLIC_POSTHOG_KEY="${NEXT_PUBLIC_POSTHOG_KEY:-$(env_value NEXT_PUBLIC_POSTHOG_KEY)}"
 NEXT_PUBLIC_POSTHOG_REPLAY_SAMPLE="${NEXT_PUBLIC_POSTHOG_REPLAY_SAMPLE:-$(env_value NEXT_PUBLIC_POSTHOG_REPLAY_SAMPLE)}"
 # Feedback board link (change 25); empty = links hidden.
