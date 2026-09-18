@@ -28,6 +28,7 @@ const user: MeResponse = {
   hasPassword: true,
   googleLinked: false,
   avatarUrl: null,
+  deletionScheduledFor: null,
 };
 
 beforeEach(() => {

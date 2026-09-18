@@ -18,6 +18,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { ActiveAccountGuard } from '../account-data/active-account.guard';
 import { BookSlotDto } from './dto/book-slot.dto';
 import { SchedulingService } from './scheduling.service';
 
@@ -37,6 +38,7 @@ export class VerificationController {
   }
 
   @Post('bookings')
+  @UseGuards(ActiveAccountGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ description: 'Slot booked; confirmation email sent.' })
   async book(
@@ -47,6 +49,7 @@ export class VerificationController {
   }
 
   @Post('bookings/reschedule')
+  @UseGuards(ActiveAccountGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({
     description: 'Meeting moved to the new slot; previous slot reopened.',

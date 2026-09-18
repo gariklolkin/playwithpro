@@ -19,6 +19,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { LegalGuard } from '../legal/legal.guard';
+import { ActiveAccountGuard } from '../account-data/active-account.guard';
 import { requestLocale } from '../legal/request-locale';
 import { SubmitVerificationDto } from './dto/submit-verification.dto';
 import { UpdateProProfileDto } from './dto/update-pro-profile.dto';
@@ -69,7 +70,7 @@ export class ProsController {
   }
 
   @Post('me/verification')
-  @UseGuards(LegalGuard)
+  @UseGuards(LegalGuard, ActiveAccountGuard)
   @ApiOkResponse({ description: 'Verification submitted; profile pending.' })
   async submitVerification(
     @CurrentUser() user: AuthenticatedUser,

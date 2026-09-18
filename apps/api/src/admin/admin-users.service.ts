@@ -222,12 +222,15 @@ export class AdminUsersService {
     const lateCount = late.get(user.id) ?? 0;
     return {
       id: user.id,
-      email: user.email,
+      // The tombstone address is an implementation detail, never shown.
+      email: user.deletedAt ? '' : user.email,
       displayName: user.displayName,
       role: toSharedRole(user.role),
       emailVerified: user.emailVerifiedAt !== null,
       createdAt: user.createdAt.toISOString(),
       suspendedAt: user.suspendedAt?.toISOString() ?? null,
+      deletionScheduledFor: user.deletionScheduledFor?.toISOString() ?? null,
+      deletedAt: user.deletedAt?.toISOString() ?? null,
       lateCancellations:
         user.role === Role.PROFESSIONAL
           ? {

@@ -204,7 +204,10 @@ describe('ReviewsService', () => {
   });
 
   describe('listPublic', () => {
-    const verifiedProfile = { status: 'VERIFIED' };
+    const verifiedProfile = {
+      status: 'VERIFIED',
+      user: { deletionScheduledFor: null, deletedAt: null },
+    };
     const reviewRow = {
       id: 'review-1',
       rating: 5,

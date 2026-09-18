@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useRouter } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api";
+import { formerMember } from "@/lib/former-member";
 
 function listHref(query: string, page: number): string {
   const params = new URLSearchParams();
@@ -30,6 +31,7 @@ function ReviewCard({
   onDeleted: () => void;
 }) {
   const t = useTranslations("adminConsole.reviews");
+  const tAccount = useTranslations("account");
   const format = useFormatter();
   const [deleting, setDeleting] = useState(false);
   const [reason, setReason] = useState("");
@@ -56,11 +58,11 @@ function ReviewCard({
       <header className="flex flex-wrap items-baseline justify-between gap-2">
         <div className="text-sm">
           <span className="font-semibold text-text">
-            {review.playerDisplayName}
+            {formerMember(review.playerDisplayName, tAccount("formerMember"))}
           </span>{" "}
           <span className="text-text-secondary">{t("about")}</span>{" "}
           <span className="font-semibold text-text">
-            {review.coachDisplayName}
+            {formerMember(review.coachDisplayName, tAccount("formerMember"))}
           </span>
         </div>
         <span className="text-sm">

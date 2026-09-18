@@ -25,6 +25,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { LegalGuard } from '../legal/legal.guard';
+import { ActiveAccountGuard } from '../account-data/active-account.guard';
 import { requestLocale } from '../legal/request-locale';
 import { BookingsService } from './bookings.service';
 import { ConfirmSessionDto } from './dto/confirm-session.dto';
@@ -41,7 +42,7 @@ export class BookingsController {
 
   @Post('bookings')
   @Roles(Role.Amateur)
-  @UseGuards(LegalGuard)
+  @UseGuards(LegalGuard, ActiveAccountGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({
     description: 'Slot claimed; session created in pending_payment.',
@@ -140,7 +141,7 @@ export class BookingsController {
 
   @Post('sessions/:id/pay')
   @Roles(Role.Amateur)
-  @UseGuards(LegalGuard)
+  @UseGuards(LegalGuard, ActiveAccountGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({
     description: 'Escrow hold attempted; session paid on success.',

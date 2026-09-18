@@ -150,7 +150,8 @@
         "users": "Users",
         "transactions": "Transactions",
         "analytics": "Analytics",
-        "reviews": "Reviews"
+        "reviews": "Reviews",
+        "accountRequests": "Data requests"
       }
     }
   },
@@ -215,7 +216,8 @@
       "tabs": {
         "profile": "Profile",
         "security": "Security",
-        "notifications": "Notifications"
+        "notifications": "Notifications",
+        "account": "Account"
       }
     },
     "notifications": {
@@ -381,7 +383,8 @@
     "adminAnalyticsTitle": "Analytics — PlayWithPro",
     "adminReviewsTitle": "Review moderation — PlayWithPro",
     "privacyTitle": "Privacy — PlayWithPro",
-    "unsubscribeTitle": "Email preferences — PlayWithPro"
+    "unsubscribeTitle": "Email preferences — PlayWithPro",
+    "adminAccountRequestsTitle": "Data requests — PlayWithPro"
   },
   "verification": {
     "title": "Verification",
@@ -1385,6 +1388,105 @@
       "imprint": "Imprint",
       "booking-policy": "Booking and Cancellation Policy",
       "coach-agreement": "Coach Agreement"
+    }
+  },
+  "account": {
+    "formerMember": "Former member",
+    "export": {
+      "title": "Download my data",
+      "intro": "Get a copy of your account data — profile, sessions, payments, reviews, disputes and video details — as a zip file with JSON inside. Videos themselves are downloaded from your video library.",
+      "request": "Request my data",
+      "requesting": "Preparing…",
+      "ready": "Your export is ready. The link works until {date}.",
+      "download": "Download zip",
+      "building": "Your export is being prepared. We will email you when it is ready.",
+      "failed": "The export could not be built yet; we keep trying. You can also ask again later.",
+      "nextAllowed": "You can request another export on {date}.",
+      "error": "Could not request the export. Please try again."
+    },
+    "delete": {
+      "title": "Delete account",
+      "intro": "Deleting your account is permanent once the waiting period is over.",
+      "goesTitle": "What is deleted",
+      "goes": "Your profile and photo, your coach services and availability, your videos, your sign-in details and your settings.",
+      "staysTitle": "What is kept, without your name",
+      "stays": "Paid sessions, payments, disputes, attendance records, reviews and your acceptance of our terms — the law and the other party's rights require them. They are shown as \"Former member\".",
+      "grace": "Your account is deleted {days, plural, =0 {right away} one {# day} other {# days}} after you confirm. Until then you can sign in, cancel the deletion or download your data. Every other device is signed out immediately.",
+      "coachNote": "Coaches leave the catalog at once and their open slots are removed; if you cancel, publish your availability again.",
+      "blockersTitle": "Settle these first",
+      "blockersIntro": "An account cannot be deleted while money or a session is still open.",
+      "blockerSession": "{service} on {date} — you are {role, select, coach {the coach} other {the player}}",
+      "blockerPayment": "A held payment of {amount}",
+      "openSession": "Open",
+      "password": "Your current password",
+      "sendCode": "Email me a code",
+      "sendingCode": "Sending…",
+      "codeSent": "We sent a 6-digit code to your email.",
+      "code": "Code from the email",
+      "confirmLabel": "Type {word} to confirm",
+      "submit": "Delete my account",
+      "submitting": "Deleting…",
+      "wrongCredential": "The password or code is not correct.",
+      "blocked": "Something is still open — see the list above.",
+      "error": "Could not delete the account. Please try again.",
+      "adminNote": "Admin accounts are deleted by another admin.",
+      "scheduled": "Your account will be deleted on {date}."
+    },
+    "gate": {
+      "title": "Your account is scheduled for deletion",
+      "body": "It will be deleted on {date}. Until then you can change your mind or download a copy of your data. Booking, paying and uploading are paused.",
+      "postponed": "The deletion was postponed because a session or a payment is still open.",
+      "cancel": "Cancel deletion",
+      "cancelling": "Cancelling…",
+      "download": "Download my data",
+      "signOut": "Sign out",
+      "error": "Something went wrong. Please try again."
+    },
+    "admin": {
+      "deleteCta": "Delete account",
+      "deleteTitle": "Delete this account",
+      "reason": "Reason (required, kept in the log)",
+      "grace": "When",
+      "graceDefault": "After {days} days",
+      "graceNow": "Immediately (next hourly run)",
+      "submit": "Schedule deletion",
+      "submitting": "Scheduling…",
+      "cancel": "Cancel",
+      "blocked": "Open sessions or payments block this deletion.",
+      "error": "Could not schedule the deletion.",
+      "scheduledBadge": "Deletion on {date}",
+      "deletedBadge": "Deleted",
+      "log": {
+        "title": "Data requests",
+        "subtitle": "Account deletions and data exports with every step. Read-only; failed requests can be retried.",
+        "empty": "No requests yet.",
+        "requested": "Requested",
+        "user": "User",
+        "kind": "Kind",
+        "status": "Status",
+        "initiator": "By",
+        "details": "Details",
+        "kinds": {
+          "deletion": "Deletion",
+          "export": "Export"
+        },
+        "statuses": {
+          "scheduled": "Scheduled",
+          "running": "Running",
+          "postponed": "Postponed",
+          "completed": "Completed",
+          "cancelled": "Cancelled",
+          "failed": "Failed"
+        },
+        "initiators": {
+          "self": "User",
+          "admin": "Admin"
+        },
+        "scheduledFor": "Runs {date}",
+        "retry": "Retry",
+        "retrying": "Retrying…",
+        "retryError": "The retry failed again."
+      }
     }
   }
 }

@@ -35,6 +35,11 @@ model User {
   emailVerifiedAt DateTime?
   /// Set while the account is suspended by an admin; blocks sign-in and refresh.
   suspendedAt     DateTime?
+  /// A deletion request was accepted; executed at this time (grace period).
+  deletionScheduledFor DateTime?
+  /// The account is a tombstone: credentials, profile and media are gone,
+  /// the row stays for the money and dispute trail ("Former member").
+  deletedAt       DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -49,6 +54,7 @@ model User {
   openedDisputes     Dispute[]           @relation("DisputeOpener")
   rescheduleProposals SessionReschedule[] @relation("RescheduleProposer")
   legalAcceptances    LegalAcceptance[]
+  accountDataRequests AccountDataRequest[] @relation("AccountDataRequestUser")
   resolvedDisputes   Dispute[]           @relation("DisputeResolver")
   reviews            Review[]
   notifications      Notification[]
@@ -159,7 +165,7 @@ model RefreshToken {
 model VerificationToken {
   id        String    @id @default(uuid())
   userId    String
-  kind      String // "email_verify" | "password_reset"
+  kind      String // "email_verify" | "password_reset" | "account_deletion"
   tokenHash String    @unique
   /// Wrong email-code entries; the code is burned after the limit.
   attempts  Int       @default(0)
@@ -503,6 +509,53 @@ model Payment {
   @@index([sessionId])
 }
 
+enum AccountDataRequestKind {
+  DELETION
+  EXPORT
+}
+
+enum AccountDataRequestStatus {
+  SCHEDULED
+  RUNNING
+  POSTPONED
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+enum AccountDataRequestInitiator {
+  SELF
+  ADMIN
+}
+
+/// A deletion or export request and its audit trail. References the user id
+/// only (it must survive the tombstone) and never holds an email or a name.
+model AccountDataRequest {
+  id           String                      @id @default(uuid())
+  userId       String
+  kind         AccountDataRequestKind
+  status       AccountDataRequestStatus    @default(SCHEDULED)
+  initiatedBy  AccountDataRequestInitiator @default(SELF)
+  adminId      String?
+  reason       String?
+  requestedAt  DateTime                    @default(now())
+  scheduledFor DateTime
+  cancelledAt  DateTime?
+  completedAt  DateTime?
+  postponedAt  DateTime?
+  /// Per-step outcomes: { [hook]: { status, at, error? } }.
+  steps        Json?
+  lastError    String?
+  /// Exports: the stored zip and when the sweep removes it.
+  exportKey       String?
+  exportExpiresAt DateTime?
+
+  user User @relation("AccountDataRequestUser", fields: [userId], references: [id])
+
+  @@index([userId, kind, requestedAt])
+  @@index([kind, status, scheduledFor])
+}
+
 enum LegalAcceptanceContext {
   REGISTRATION
   OAUTH_COMPLETE
@@ -752,6 +805,11 @@ enum NotificationKind {
   RESCHEDULE_WITHDRAWN
   RESCHEDULE_EXPIRED
   LEGAL_UPDATE_NOTICE
+  ACCOUNT_DELETION_REQUESTED
+  ACCOUNT_DELETION_CANCELLED
+  ACCOUNT_DELETION_POSTPONED
+  ACCOUNT_DELETION_BY_ADMIN
+  ACCOUNT_EXPORT_READY
 }
 
 enum NotificationStatus {

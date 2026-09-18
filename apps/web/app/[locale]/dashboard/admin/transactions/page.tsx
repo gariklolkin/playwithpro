@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { AdminSessionActions } from "@/components/admin/admin-session-actions";
 import { Link } from "@/i18n/navigation";
+import { formerMember } from "@/lib/former-member";
 import { formatMoney } from "@/lib/money";
 import { serverApiGet } from "@/lib/server-user";
 
@@ -49,6 +50,7 @@ export default async function AdminTransactionsPage({
   const tStatus = await getTranslations("adminConsole.paymentStatus");
   const tCancel = await getTranslations("adminConsole.cancellation");
   const tMoves = await getTranslations("adminConsole.reschedules");
+  const formerLabel = (await getTranslations("account"))("formerMember");
   const format = await getFormatter();
   const locale = await getLocale();
   const totalPages = Math.max(1, Math.ceil(ledger.total / ledger.pageSize));
@@ -123,11 +125,11 @@ export default async function AdminTransactionsPage({
                   </td>
                   <td className="px-4 py-2.5">
                     <span className="font-medium text-text">
-                      {payment.playerDisplayName}
+                      {formerMember(payment.playerDisplayName, formerLabel)}
                     </span>{" "}
                     <span className="text-text-tertiary">→</span>{" "}
                     <span className="font-medium text-text">
-                      {payment.coachDisplayName}
+                      {formerMember(payment.coachDisplayName, formerLabel)}
                     </span>
                   </td>
                   <td className="px-4 py-2.5 font-medium text-text">

@@ -17,6 +17,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { LegalGuard } from '../legal/legal.guard';
+import { ActiveAccountGuard } from '../account-data/active-account.guard';
 import { AvailabilityService } from './availability.service';
 import { CreateManualSlotDto } from './dto/create-manual-slot.dto';
 import { ReplaceAvailabilityRulesDto } from './dto/replace-availability-rules.dto';
@@ -37,7 +38,7 @@ export class AvailabilityController {
   }
 
   @Put('rules')
-  @UseGuards(LegalGuard)
+  @UseGuards(LegalGuard, ActiveAccountGuard)
   @ApiOkResponse({ description: 'Template replaced; slots re-materialized.' })
   async replaceRules(
     @CurrentUser() user: AuthenticatedUser,
@@ -47,7 +48,7 @@ export class AvailabilityController {
   }
 
   @Post('slots')
-  @UseGuards(LegalGuard)
+  @UseGuards(LegalGuard, ActiveAccountGuard)
   @ApiOkResponse({ description: 'One-off slot added.' })
   async addManualSlot(
     @CurrentUser() user: AuthenticatedUser,

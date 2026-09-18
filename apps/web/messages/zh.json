@@ -150,7 +150,8 @@
         "users": "用户",
         "transactions": "交易",
         "analytics": "数据分析",
-        "reviews": "评价"
+        "reviews": "评价",
+        "accountRequests": "数据请求"
       }
     }
   },
@@ -215,7 +216,8 @@
       "tabs": {
         "profile": "个人资料",
         "security": "安全",
-        "notifications": "通知"
+        "notifications": "通知",
+        "account": "账户"
       }
     },
     "notifications": {
@@ -381,7 +383,8 @@
     "adminAnalyticsTitle": "数据分析 — PlayWithPro",
     "adminReviewsTitle": "评价审核 — PlayWithPro",
     "privacyTitle": "隐私 — PlayWithPro",
-    "unsubscribeTitle": "邮件偏好 — PlayWithPro"
+    "unsubscribeTitle": "邮件偏好 — PlayWithPro",
+    "adminAccountRequestsTitle": "数据请求 — PlayWithPro"
   },
   "verification": {
     "title": "认证",
@@ -1385,6 +1388,105 @@
       "imprint": "法律信息",
       "booking-policy": "预约与取消政策",
       "coach-agreement": "教练协议"
+    }
+  },
+  "account": {
+    "formerMember": "已注销用户",
+    "export": {
+      "title": "下载我的数据",
+      "intro": "以包含 JSON 的 zip 文件获取您的账户数据副本——个人资料、课程、付款、评价、争议和视频信息。视频本身请在视频库中下载。",
+      "request": "申请导出我的数据",
+      "requesting": "准备中…",
+      "ready": "导出已就绪。链接有效期至 {date}。",
+      "download": "下载 zip",
+      "building": "正在准备导出。准备好后我们会发邮件通知您。",
+      "failed": "暂时无法生成导出，我们会继续尝试。您也可以稍后再次申请。",
+      "nextAllowed": "您可以在 {date} 再次申请导出。",
+      "error": "无法申请导出，请重试。"
+    },
+    "delete": {
+      "title": "删除账户",
+      "intro": "等待期结束后，删除将无法撤销。",
+      "goesTitle": "将被删除的内容",
+      "goes": "您的个人资料和照片、教练服务和可预约时间、视频、登录信息和设置。",
+      "staysTitle": "将保留但不含您姓名的内容",
+      "stays": "已付费课程、付款、争议、出勤记录、评价以及您对条款的同意记录——这是法律和对方权利的要求。它们将显示为“已注销用户”。",
+      "grace": "确认后{days, plural, =0 {立即} other { # 天后}}删除您的账户。在此之前，您可以登录、取消删除或下载数据。其他所有设备会立即退出登录。",
+      "coachNote": "教练会立即从目录中移除，未被预约的时间段会被删除；如果取消删除，请重新发布可预约时间。",
+      "blockersTitle": "请先处理以下事项",
+      "blockersIntro": "存在未完成的课程或款项时无法删除账户。",
+      "blockerSession": "{service}，{date}——您是{role, select, coach {教练} other {学员}}",
+      "blockerPayment": "一笔冻结中的付款：{amount}",
+      "openSession": "打开",
+      "password": "当前密码",
+      "sendCode": "通过邮件发送验证码",
+      "sendingCode": "发送中…",
+      "codeSent": "我们已向您的邮箱发送了 6 位验证码。",
+      "code": "邮件中的验证码",
+      "confirmLabel": "输入 {word} 以确认",
+      "submit": "删除我的账户",
+      "submitting": "删除中…",
+      "wrongCredential": "密码或验证码不正确。",
+      "blocked": "仍有未完成的事项——见上方列表。",
+      "error": "无法删除账户，请重试。",
+      "adminNote": "管理员账户需由其他管理员删除。",
+      "scheduled": "您的账户将于 {date} 删除。"
+    },
+    "gate": {
+      "title": "您的账户已安排删除",
+      "body": "账户将于 {date} 删除。在此之前，您可以改变主意或下载数据副本。预约、付款和上传已暂停。",
+      "postponed": "由于仍有未完成的课程或付款，删除已推迟。",
+      "cancel": "取消删除",
+      "cancelling": "取消中…",
+      "download": "下载我的数据",
+      "signOut": "退出登录",
+      "error": "出了点问题，请重试。"
+    },
+    "admin": {
+      "deleteCta": "删除账户",
+      "deleteTitle": "删除此账户",
+      "reason": "原因（必填，将记录在日志中）",
+      "grace": "时间",
+      "graceDefault": "{days} 天后",
+      "graceNow": "立即（下一次每小时运行时）",
+      "submit": "安排删除",
+      "submitting": "安排中…",
+      "cancel": "取消",
+      "blocked": "存在未完成的课程或付款，无法删除。",
+      "error": "无法安排删除。",
+      "scheduledBadge": "将于 {date} 删除",
+      "deletedBadge": "已删除",
+      "log": {
+        "title": "数据请求",
+        "subtitle": "账户删除和数据导出及其每个步骤。只读；失败的请求可以重试。",
+        "empty": "暂无请求。",
+        "requested": "申请时间",
+        "user": "用户",
+        "kind": "类型",
+        "status": "状态",
+        "initiator": "发起方",
+        "details": "详情",
+        "kinds": {
+          "deletion": "删除",
+          "export": "导出"
+        },
+        "statuses": {
+          "scheduled": "已安排",
+          "running": "运行中",
+          "postponed": "已推迟",
+          "completed": "已完成",
+          "cancelled": "已取消",
+          "failed": "失败"
+        },
+        "initiators": {
+          "self": "用户",
+          "admin": "管理员"
+        },
+        "scheduledFor": "执行时间 {date}",
+        "retry": "重试",
+        "retrying": "重试中…",
+        "retryError": "重试再次失败。"
+      }
     }
   }
 }

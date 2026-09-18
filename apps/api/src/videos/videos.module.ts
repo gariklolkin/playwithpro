@@ -16,6 +16,6 @@ import { VideosService } from './videos.service';
     VideoRetentionService,
     UnattachedVideosService,
   ],
-  exports: [UnattachedVideosService],
+  exports: [UnattachedVideosService, VideosService],
 })
 export class VideosModule {}

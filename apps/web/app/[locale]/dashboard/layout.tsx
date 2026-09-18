@@ -53,6 +53,11 @@ const NAV: Record<
       },
       { key: "analytics", emoji: "📈", href: "/dashboard/admin/analytics" },
       { key: "reviews", emoji: "⭐", href: "/dashboard/admin/reviews" },
+      {
+        key: "accountRequests",
+        emoji: "🗂️",
+        href: "/dashboard/admin/account-requests",
+      },
     ],
   },
 };

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formerMember } from "@/lib/former-member";
 
 export const ROLE_TAG_CLASSES: Record<Role, string> = {
   [Role.Amateur]: "bg-bg-secondary text-text-secondary",
@@ -33,6 +34,7 @@ export function AdminUsersTable({
 }) {
   const t = useTranslations("adminConsole.users");
   const tRoles = useTranslations("adminConsole.roles");
+  const tAccount = useTranslations("account");
   const format = useFormatter();
   const router = useRouter();
   const [search, setSearch] = useState(query);
@@ -104,8 +106,22 @@ export function AdminUsersTable({
                       href={`/dashboard/admin/users/${user.id}`}
                       className="font-medium text-text hover:underline"
                     >
-                      {user.displayName}
+                      {formerMember(user.displayName, tAccount("formerMember"))}
                     </Link>
+                    {user.deletedAt ? (
+                      <span className="ml-2 rounded bg-bg-secondary px-1.5 py-0.5 text-[11px] text-text-tertiary">
+                        {tAccount("admin.deletedBadge")}
+                      </span>
+                    ) : user.deletionScheduledFor ? (
+                      <span className="ml-2 rounded bg-[#FFE2DD] px-1.5 py-0.5 text-[11px] text-[#5D1715]">
+                        {tAccount("admin.scheduledBadge", {
+                          date: format.dateTime(
+                            new Date(user.deletionScheduledFor),
+                            { dateStyle: "medium" },
+                          ),
+                        })}
+                      </span>
+                    ) : null}
                     <div className="text-[12px] text-text-tertiary">
                       {user.email}
                     </div>

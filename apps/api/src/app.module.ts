@@ -12,6 +12,7 @@ import { LegalModule } from './legal/legal.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ObservabilityModule } from './observability/observability.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { AccountDataModule } from './account-data/account-data.module';
 import { AdminModule } from './admin/admin.module';
 import { AvailabilityModule } from './availability/availability.module';
 import { BookingsModule } from './bookings/bookings.module';
@@ -52,6 +53,7 @@ import { VideosModule } from './videos/videos.module';
     DisputesModule,
     ReviewsModule,
     AdminModule,
+    AccountDataModule,
     SchedulingModule,
     SessionRoomsModule,
     StorageModule,

@@ -17,6 +17,7 @@ import { SessionActions } from "./session-actions";
 import { SessionGoalEditor } from "./session-goal-editor";
 import { SessionReview } from "./session-review";
 import { SessionVideosEditor } from "./session-videos-editor";
+import { formerMember } from "@/lib/former-member";
 
 /** Statuses in which the coach may open the attached clips (paid, not cancelled). */
 const COACH_CLIP_ACCESS: SessionStatus[] = [
@@ -55,7 +56,9 @@ function SessionCard({
 }) {
   const t = useTranslations("sessions");
   const tCatalog = useTranslations("catalog");
+  const tAccount = useTranslations("account");
   const other = isCoach ? session.player : session.coach;
+  const otherName = formerMember(other.displayName, tAccount("formerMember"));
   // The clip set and goal edited in place; the rest of the card keeps the
   // server's session until the next refresh.
   const [edited, setEdited] = useState<SessionResponse | null>(null);
@@ -83,22 +86,17 @@ function SessionCard({
     <li className="rounded-card border border-border bg-bg p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <UserAvatar
-            displayName={other.displayName}
-            avatarUrl={other.avatarUrl}
-          />
+          <UserAvatar displayName={otherName} avatarUrl={other.avatarUrl} />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               {isCoach ? (
-                <span className="font-semibold text-text">
-                  {other.displayName}
-                </span>
+                <span className="font-semibold text-text">{otherName}</span>
               ) : (
                 <Link
                   href={`/coaches/${session.coach.id}`}
                   className="truncate font-semibold text-text hover:underline"
                 >
-                  {other.displayName}
+                  {otherName}
                 </Link>
               )}
               <span className="text-[13px] text-text-secondary">

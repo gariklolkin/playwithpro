@@ -1,7 +1,12 @@
 /** Search parameter that opens the account settings dialog on any page. */
 export const SETTINGS_PARAM = "settings";
 
-export const SETTINGS_TABS = ["profile", "security", "notifications"] as const;
+export const SETTINGS_TABS = [
+  "profile",
+  "security",
+  "notifications",
+  "account",
+] as const;
 export type SettingsTab = (typeof SETTINGS_TABS)[number];
 
 /** Unknown or empty values fall back to the Profile tab. */

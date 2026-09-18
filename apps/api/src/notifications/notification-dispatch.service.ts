@@ -37,7 +37,11 @@ import {
 } from '../mailer/session-email-params';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailDailyBudget } from './email-daily-budget';
-import { KIND_META, isTransactional } from './notification-kinds';
+import {
+  ACCOUNT_KINDS,
+  KIND_META,
+  isTransactional,
+} from './notification-kinds';
 import {
   SESSION_EMAIL_INCLUDE,
   attendeeOf,
@@ -62,6 +66,7 @@ const ROW_INCLUDE = {
       locale: true,
       timezone: true,
       role: true,
+      deletedAt: true,
       emailReminders: true,
       emailClipChanges: true,
       emailReviews: true,
@@ -213,9 +218,12 @@ export class NotificationDispatchService implements OnApplicationBootstrap {
 
   /** Why a due row no longer applies; null when it should be sent. */
   private async staleReason(row: Row, now: Date): Promise<string | null> {
+    // A tombstone has no address left to write to.
+    if (row.recipient.deletedAt) return 'account-deleted';
     if (row.kind === NotificationKind.LEGAL_UPDATE_NOTICE) {
       return this.legalNoticeStale(row);
     }
+    if (ACCOUNT_KINDS.has(row.kind)) return null;
     const session = row.session;
     if (!session) return 'no-session';
     const upcoming =
@@ -344,6 +352,17 @@ export class NotificationDispatchService implements OnApplicationBootstrap {
       );
       return;
     }
+    if (ACCOUNT_KINDS.has(row.kind)) {
+      await this.mailer.deliver(
+        row.recipient.email,
+        this.renderer.render(
+          locale,
+          KIND_META[row.kind].messageKey,
+          this.accountParams(row.kind, payload, locale, recipient),
+        ),
+      );
+      return;
+    }
     const session = row.session as SessionEmailRow;
     const input = calendarInput(session);
 
@@ -415,6 +434,34 @@ export class NotificationDispatchService implements OnApplicationBootstrap {
       mail = this.renderer.render(locale, meta.messageKey, params);
     }
     await this.mailer.deliver(row.recipient.email, mail);
+  }
+
+  /** Account kinds: the name, a date from the payload, the settings link. */
+  private accountParams(
+    kind: NotificationKind,
+    payload: Payload,
+    locale: string,
+    recipient: EmailRecipient,
+  ): EmailParams {
+    const at = (value: string | number | undefined) =>
+      value
+        ? formatWhen(new Date(String(value)), locale, recipient.timezone)
+        : '';
+    const url =
+      kind === NotificationKind.ACCOUNT_DELETION_CANCELLED
+        ? this.renderer.link(locale, '/dashboard/availability')
+        : this.renderer.link(
+            locale,
+            kind === NotificationKind.ACCOUNT_DELETION_POSTPONED
+              ? '/dashboard/sessions'
+              : '/dashboard?settings=account',
+          );
+    return {
+      name: recipient.displayName,
+      when: at(payload.scheduledFor),
+      expires: at(payload.expiresAt),
+      url,
+    };
   }
 
   /** Kind-specific parameters on top of the shared session ones. */

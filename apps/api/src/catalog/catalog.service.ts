@@ -21,6 +21,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { CatalogQueryDto } from './dto/catalog-query.dto';
+import { PRESENT_USER, isDeparting } from '../account-data/departing';
 
 type CatalogProfile = {
   id: string;
@@ -54,6 +55,7 @@ export class CatalogService {
     };
     const where: Prisma.ProProfileWhereInput = {
       status: ProProfileStatus.VERIFIED,
+      user: PRESENT_USER,
       ...(query.languages?.length
         ? { languages: { hasSome: query.languages } }
         : {}),
@@ -101,11 +103,22 @@ export class CatalogService {
         languages: true,
         ratingSum: true,
         ratingCount: true,
-        user: { select: { displayName: true, avatarKey: true } },
+        user: {
+          select: {
+            displayName: true,
+            avatarKey: true,
+            deletionScheduledFor: true,
+            deletedAt: true,
+          },
+        },
         services: { where: { active: true }, orderBy: { type: 'asc' } },
       },
     });
-    if (!profile || profile.status !== ProProfileStatus.VERIFIED) {
+    if (
+      !profile ||
+      profile.status !== ProProfileStatus.VERIFIED ||
+      isDeparting(profile.user)
+    ) {
       throw new NotFoundException();
     }
     return {

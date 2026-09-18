@@ -218,5 +218,35 @@
       "booking-policy": "Politique de réservation et d'annulation",
       "coach-agreement": "Contrat coach"
     }
+  },
+  "account": {
+    "deletionCode": {
+      "subject": "Votre code pour confirmer la suppression du compte",
+      "text": "Votre code de confirmation est {code}.\n\nSaisissez-le dans les paramètres du compte pour confirmer la suppression de votre compte PlayWithPro. Le code expire dans 15 minutes. Si vous ne l'avez pas demandé, ignorez cet e-mail et pensez à changer votre mot de passe."
+    },
+    "deletionRequested": {
+      "subject": "La suppression de votre compte est programmée",
+      "text": "Bonjour {name},\n\nNous avons reçu votre demande de suppression de votre compte PlayWithPro. Il sera supprimé le {when}.\n\nD'ici là, vous pouvez changer d'avis : connectez-vous et annulez la suppression, ou téléchargez d'abord une copie de vos données : {url}\n\nTous vos autres appareils ont été déconnectés. Si vous n'êtes pas à l'origine de cette demande, connectez-vous et annulez la suppression immédiatement, puis changez votre mot de passe."
+    },
+    "deletionByAdmin": {
+      "subject": "La suppression de votre compte est programmée",
+      "text": "Bonjour {name},\n\nNotre équipe a programmé la suppression de votre compte PlayWithPro le {when}.\n\nVous pouvez encore vous connecter et télécharger une copie de vos données : {url}\n\nSi vous pensez qu'il s'agit d'une erreur, répondez à cet e-mail avant cette date."
+    },
+    "deletionCancelled": {
+      "subject": "La suppression de votre compte a été annulée",
+      "text": "Bonjour {name},\n\nLa suppression de votre compte PlayWithPro a été annulée et votre compte reste inchangé. Si vous êtes coach, publiez à nouveau vos disponibilités pour réapparaître dans le catalogue : {url}"
+    },
+    "deletionPostponed": {
+      "subject": "La suppression de votre compte a été reportée",
+      "text": "Bonjour {name},\n\nNous n'avons pas encore pu supprimer votre compte PlayWithPro : une séance ou un paiement est toujours en cours. Nous réessaierons le {when}.\n\nVoir ce qui reste en cours : {url}"
+    },
+    "deletionCompleted": {
+      "subject": "Votre compte a été supprimé",
+      "text": "Bonjour {name},\n\nVotre compte PlayWithPro a été supprimé. Votre profil, vos vidéos, vos photos et vos identifiants ont disparu. Les traces des séances payées, des paiements et des litiges sont conservées sans votre nom, comme l'exigent la loi et notre politique de confidentialité.\n\nC'est le dernier e-mail envoyé à cette adresse. Vous pouvez vous réinscrire à tout moment."
+    },
+    "exportReady": {
+      "subject": "Votre export de données est prêt",
+      "text": "Bonjour {name},\n\nLa copie de vos données PlayWithPro est prête. Téléchargez-la depuis les paramètres de votre compte jusqu'au {expires} : {url}\n\nVos vidéos ne sont pas dans le fichier ; téléchargez-les une par une depuis votre vidéothèque."
+    }
   }
 }

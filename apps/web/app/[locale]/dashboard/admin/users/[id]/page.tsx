@@ -1,11 +1,17 @@
-import { Role, type AdminUserDetail } from "@playwithpro/shared";
+import {
+  Role,
+  type AdminUserDetail,
+  type DeletionStatusResponse,
+} from "@playwithpro/shared";
 import type { Metadata } from "next";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { AdminDeleteUser } from "@/components/admin/admin-delete-user";
 import { AdminUserActions } from "@/components/admin/admin-user-actions";
 import { ROLE_TAG_CLASSES } from "@/components/admin/admin-users-table";
 import { Link } from "@/i18n/navigation";
-import { serverApiGet } from "@/lib/server-user";
+import { formerMember } from "@/lib/former-member";
+import { getCurrentUser, serverApiGet } from "@/lib/server-user";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("meta");
@@ -34,6 +40,16 @@ export default async function AdminUserDetailPage({
     notFound();
   }
   const t = await getTranslations("adminConsole.users");
+  const tAccount = await getTranslations("account");
+  const [me, ownDeletion] = await Promise.all([
+    getCurrentUser(),
+    // Only for the platform grace shown in the admin delete form.
+    serverApiGet<DeletionStatusResponse>("/users/me/deletion"),
+  ]);
+  const canDelete =
+    user.deletedAt === null &&
+    user.deletionScheduledFor === null &&
+    user.id !== me?.id;
   const tLegal = await getTranslations("legal");
   const tRoles = await getTranslations("adminConsole.roles");
   const tSessions = await getTranslations("sessions.status");
@@ -52,7 +68,7 @@ export default async function AdminUserDetailPage({
       <header className="flex flex-wrap items-center justify-between gap-3 pb-2 pt-3">
         <div>
           <h1 className="text-[28px] font-bold text-text">
-            {user.displayName}
+            {formerMember(user.displayName, tAccount("formerMember"))}
           </h1>
           <p className="mt-0.5 flex flex-wrap items-center gap-2 text-text-secondary">
             {user.email}
@@ -66,11 +82,33 @@ export default async function AdminUserDetailPage({
                 {t("suspended")}
               </span>
             ) : null}
+            {user.deletedAt ? (
+              <span className="rounded bg-bg-secondary px-2 py-0.5 text-xs font-medium text-text-secondary">
+                {tAccount("admin.deletedBadge")}
+              </span>
+            ) : user.deletionScheduledFor ? (
+              <span className="rounded bg-[#FFE2DD] px-2 py-0.5 text-xs font-medium text-[#5D1715]">
+                {tAccount("admin.scheduledBadge", {
+                  date: format.dateTime(new Date(user.deletionScheduledFor), {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  }),
+                })}
+              </span>
+            ) : null}
           </p>
         </div>
-        {user.role !== Role.Admin ? (
-          <AdminUserActions userId={user.id} suspendedAt={user.suspendedAt} />
-        ) : null}
+        <div className="flex flex-col items-end gap-2">
+          {user.role !== Role.Admin && user.deletedAt === null ? (
+            <AdminUserActions userId={user.id} suspendedAt={user.suspendedAt} />
+          ) : null}
+          {canDelete ? (
+            <AdminDeleteUser
+              userId={user.id}
+              graceDays={ownDeletion?.graceDays ?? 14}
+            />
+          ) : null}
+        </div>
       </header>
 
       <section className="mt-4 rounded-card border border-border bg-bg p-6">

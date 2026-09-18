@@ -29,6 +29,7 @@ import { RenameVideoDto } from './dto/rename-video.dto';
 import { SignVideoPartsDto } from './dto/sign-video-parts.dto';
 import { VideoProcessingService } from './video-processing.service';
 import { toVideoResponse, VideoResponseExtras } from './video.mapper';
+import { PRESENT_USER } from '../account-data/departing';
 
 const URL_TTL_SECONDS = 3600;
 const GB = 1024 * 1024 * 1024;
@@ -345,6 +346,8 @@ export class VideosService {
         videos: { some: { videoId } },
         proProfile: { userId },
         status: { in: COACH_ACCESS_STATUSES },
+        // A departing player's clips close at the deletion request.
+        player: PRESENT_USER,
       },
       select: { id: true },
     });

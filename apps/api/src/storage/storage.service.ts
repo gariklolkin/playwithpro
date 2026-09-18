@@ -3,6 +3,8 @@ import {
   CompleteMultipartUploadCommand,
   CreateMultipartUploadCommand,
   DeleteObjectCommand,
+  DeleteObjectsCommand,
+  ListObjectsV2Command,
   GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
@@ -241,6 +243,43 @@ export class StorageService {
     } catch (error) {
       this.logger.warn(`Failed to delete object ${key}: ${String(error)}`);
     }
+  }
+
+  /** Every key under a prefix (paginated); used for erasure and export sweeps. */
+  async listPrefix(prefix: string): Promise<string[]> {
+    const keys: string[] = [];
+    let token: string | undefined;
+    do {
+      const page = await this.internalClient.send(
+        new ListObjectsV2Command({
+          Bucket: this.bucket,
+          Prefix: prefix,
+          ContinuationToken: token,
+        }),
+      );
+      for (const object of page.Contents ?? []) {
+        if (object.Key) keys.push(object.Key);
+      }
+      token = page.IsTruncated ? page.NextContinuationToken : undefined;
+    } while (token);
+    return keys;
+  }
+
+  /** Removes every object under a prefix; throws so the caller can record and retry. */
+  async deletePrefix(prefix: string): Promise<number> {
+    const keys = await this.listPrefix(prefix);
+    for (let i = 0; i < keys.length; i += 1000) {
+      await this.internalClient.send(
+        new DeleteObjectsCommand({
+          Bucket: this.bucket,
+          Delete: {
+            Objects: keys.slice(i, i + 1000).map((Key) => ({ Key })),
+            Quiet: true,
+          },
+        }),
+      );
+    }
+    return keys.length;
   }
 
   /**

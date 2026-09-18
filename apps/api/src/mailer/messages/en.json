@@ -218,5 +218,35 @@
       "booking-policy": "Booking and Cancellation Policy",
       "coach-agreement": "Coach Agreement"
     }
+  },
+  "account": {
+    "deletionCode": {
+      "subject": "Your code to confirm the account deletion",
+      "text": "Your confirmation code is {code}.\n\nEnter it in the account settings to confirm that you want to delete your PlayWithPro account. The code expires in 15 minutes. If you did not ask for it, ignore this email and consider changing your password."
+    },
+    "deletionRequested": {
+      "subject": "Your account is scheduled for deletion",
+      "text": "Hi {name},\n\nWe received your request to delete your PlayWithPro account. It will be deleted on {when}.\n\nUntil then you can change your mind: sign in and cancel the deletion, or download a copy of your data first: {url}\n\nEvery other device was signed out. If you did not ask for this, sign in and cancel the deletion right away, then change your password."
+    },
+    "deletionByAdmin": {
+      "subject": "Your account is scheduled for deletion",
+      "text": "Hi {name},\n\nOur team scheduled your PlayWithPro account for deletion on {when}.\n\nYou can still sign in and download a copy of your data: {url}\n\nIf you think this is a mistake, reply to this email before that date."
+    },
+    "deletionCancelled": {
+      "subject": "Your account deletion was cancelled",
+      "text": "Hi {name},\n\nThe deletion of your PlayWithPro account was cancelled and your account stays as it is. If you are a coach, publish your availability again to reappear in the catalog: {url}"
+    },
+    "deletionPostponed": {
+      "subject": "Your account deletion was postponed",
+      "text": "Hi {name},\n\nWe could not delete your PlayWithPro account yet: a session or a payment is still open. We will try again on {when}.\n\nSee what is still open: {url}"
+    },
+    "deletionCompleted": {
+      "subject": "Your account was deleted",
+      "text": "Hi {name},\n\nYour PlayWithPro account was deleted. Your profile, videos, photos and sign-in details are gone. Records of paid sessions, payments and disputes are kept without your name, as the law and our Privacy Policy require.\n\nThis is the last email we send to this address. You are welcome to sign up again at any time."
+    },
+    "exportReady": {
+      "subject": "Your data export is ready",
+      "text": "Hi {name},\n\nThe copy of your PlayWithPro data is ready. Download it from your account settings until {expires}: {url}\n\nYour videos are not in the file; download them one by one from your video library."
+    }
   }
 }

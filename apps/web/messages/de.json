@@ -150,7 +150,8 @@
         "users": "Nutzer",
         "transactions": "Transaktionen",
         "analytics": "Statistiken",
-        "reviews": "Bewertungen"
+        "reviews": "Bewertungen",
+        "accountRequests": "Datenanfragen"
       }
     }
   },
@@ -215,7 +216,8 @@
       "tabs": {
         "profile": "Profil",
         "security": "Sicherheit",
-        "notifications": "Benachrichtigungen"
+        "notifications": "Benachrichtigungen",
+        "account": "Konto"
       }
     },
     "notifications": {
@@ -381,7 +383,8 @@
     "adminAnalyticsTitle": "Statistiken — PlayWithPro",
     "adminReviewsTitle": "Bewertungsmoderation — PlayWithPro",
     "privacyTitle": "Datenschutz — PlayWithPro",
-    "unsubscribeTitle": "E-Mail-Einstellungen — PlayWithPro"
+    "unsubscribeTitle": "E-Mail-Einstellungen — PlayWithPro",
+    "adminAccountRequestsTitle": "Datenanfragen — PlayWithPro"
   },
   "verification": {
     "title": "Verifizierung",
@@ -1385,6 +1388,105 @@
       "imprint": "Impressum",
       "booking-policy": "Buchungs- und Stornobedingungen",
       "coach-agreement": "Trainervereinbarung"
+    }
+  },
+  "account": {
+    "formerMember": "Ehemaliges Mitglied",
+    "export": {
+      "title": "Meine Daten herunterladen",
+      "intro": "Erhalten Sie eine Kopie Ihrer Kontodaten — Profil, Sessions, Zahlungen, Bewertungen, Streitfälle und Videoangaben — als ZIP-Datei mit JSON. Die Videos selbst laden Sie in Ihrer Videobibliothek herunter.",
+      "request": "Meine Daten anfordern",
+      "requesting": "Wird vorbereitet…",
+      "ready": "Ihr Export ist fertig. Der Link gilt bis {date}.",
+      "download": "ZIP herunterladen",
+      "building": "Ihr Export wird vorbereitet. Wir schicken Ihnen eine E-Mail, sobald er fertig ist.",
+      "failed": "Der Export konnte noch nicht erstellt werden; wir versuchen es weiter. Sie können ihn auch später erneut anfordern.",
+      "nextAllowed": "Einen weiteren Export können Sie am {date} anfordern.",
+      "error": "Der Export konnte nicht angefordert werden. Bitte versuchen Sie es erneut."
+    },
+    "delete": {
+      "title": "Konto löschen",
+      "intro": "Nach Ablauf der Wartezeit ist die Löschung endgültig.",
+      "goesTitle": "Was gelöscht wird",
+      "goes": "Ihr Profil und Foto, Ihre Coach-Leistungen und Verfügbarkeit, Ihre Videos, Ihre Anmeldedaten und Einstellungen.",
+      "staysTitle": "Was ohne Ihren Namen bleibt",
+      "stays": "Bezahlte Sessions, Zahlungen, Streitfälle, Anwesenheitsnachweise, Bewertungen und Ihre Zustimmung zu unseren Bedingungen — Gesetz und die Rechte der anderen Seite verlangen das. Sie erscheinen als „Ehemaliges Mitglied“.",
+      "grace": "Ihr Konto wird {days, plural, =0 {sofort} one {# Tag} other {# Tage}} nach Ihrer Bestätigung gelöscht. Bis dahin können Sie sich anmelden, die Löschung abbrechen oder Ihre Daten herunterladen. Alle anderen Geräte werden sofort abgemeldet.",
+      "coachNote": "Coaches verschwinden sofort aus dem Katalog, offene Termine werden entfernt; wenn Sie abbrechen, veröffentlichen Sie Ihre Verfügbarkeit erneut.",
+      "blockersTitle": "Bitte zuerst erledigen",
+      "blockersIntro": "Ein Konto kann nicht gelöscht werden, solange Geld oder eine Session offen ist.",
+      "blockerSession": "{service} am {date} — Sie sind {role, select, coach {Coach} other {Spieler}}",
+      "blockerPayment": "Eine zurückgehaltene Zahlung über {amount}",
+      "openSession": "Öffnen",
+      "password": "Ihr aktuelles Passwort",
+      "sendCode": "Code per E-Mail senden",
+      "sendingCode": "Wird gesendet…",
+      "codeSent": "Wir haben einen 6-stelligen Code an Ihre E-Mail-Adresse geschickt.",
+      "code": "Code aus der E-Mail",
+      "confirmLabel": "Geben Sie {word} zur Bestätigung ein",
+      "submit": "Mein Konto löschen",
+      "submitting": "Wird gelöscht…",
+      "wrongCredential": "Passwort oder Code ist nicht korrekt.",
+      "blocked": "Es ist noch etwas offen — siehe Liste oben.",
+      "error": "Das Konto konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+      "adminNote": "Admin-Konten werden von einem anderen Admin gelöscht.",
+      "scheduled": "Ihr Konto wird am {date} gelöscht."
+    },
+    "gate": {
+      "title": "Ihr Konto wird gelöscht",
+      "body": "Es wird am {date} gelöscht. Bis dahin können Sie es sich anders überlegen oder eine Kopie Ihrer Daten herunterladen. Buchen, Bezahlen und Hochladen sind pausiert.",
+      "postponed": "Die Löschung wurde verschoben, weil eine Session oder Zahlung noch offen ist.",
+      "cancel": "Löschung abbrechen",
+      "cancelling": "Wird abgebrochen…",
+      "download": "Meine Daten herunterladen",
+      "signOut": "Abmelden",
+      "error": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+    },
+    "admin": {
+      "deleteCta": "Konto löschen",
+      "deleteTitle": "Dieses Konto löschen",
+      "reason": "Grund (erforderlich, wird protokolliert)",
+      "grace": "Wann",
+      "graceDefault": "Nach {days} Tagen",
+      "graceNow": "Sofort (beim nächsten stündlichen Lauf)",
+      "submit": "Löschung planen",
+      "submitting": "Wird geplant…",
+      "cancel": "Abbrechen",
+      "blocked": "Offene Sessions oder Zahlungen verhindern die Löschung.",
+      "error": "Die Löschung konnte nicht geplant werden.",
+      "scheduledBadge": "Löschung am {date}",
+      "deletedBadge": "Gelöscht",
+      "log": {
+        "title": "Datenanfragen",
+        "subtitle": "Kontolöschungen und Datenexporte mit jedem Schritt. Nur lesend; fehlgeschlagene Anfragen können wiederholt werden.",
+        "empty": "Noch keine Anfragen.",
+        "requested": "Angefordert",
+        "user": "Nutzer",
+        "kind": "Art",
+        "status": "Status",
+        "initiator": "Von",
+        "details": "Details",
+        "kinds": {
+          "deletion": "Löschung",
+          "export": "Export"
+        },
+        "statuses": {
+          "scheduled": "Geplant",
+          "running": "Läuft",
+          "postponed": "Verschoben",
+          "completed": "Abgeschlossen",
+          "cancelled": "Abgebrochen",
+          "failed": "Fehlgeschlagen"
+        },
+        "initiators": {
+          "self": "Nutzer",
+          "admin": "Admin"
+        },
+        "scheduledFor": "Läuft {date}",
+        "retry": "Wiederholen",
+        "retrying": "Wird wiederholt…",
+        "retryError": "Die Wiederholung ist erneut fehlgeschlagen."
+      }
     }
   }
 }

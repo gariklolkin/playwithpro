@@ -24,6 +24,7 @@ import { toSharedServiceType } from '../pros/pro-profile.mapper';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateReviewDto } from './dto/create-review.dto';
+import { isDeparting } from '../account-data/departing';
 
 @Injectable()
 export class ReviewsService {
@@ -123,9 +124,16 @@ export class ReviewsService {
   async listPublic(proId: string, page: number): Promise<ReviewListResponse> {
     const profile = await this.prisma.proProfile.findUnique({
       where: { id: proId },
-      select: { status: true },
+      select: {
+        status: true,
+        user: { select: { deletionScheduledFor: true, deletedAt: true } },
+      },
     });
-    if (!profile || profile.status !== ProProfileStatus.VERIFIED) {
+    if (
+      !profile ||
+      profile.status !== ProProfileStatus.VERIFIED ||
+      isDeparting(profile.user)
+    ) {
       throw new NotFoundException();
     }
     const [total, reviews] = await this.prisma.$transaction([

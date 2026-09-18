@@ -61,11 +61,25 @@ export const KIND_META: Record<NotificationKind, KindMeta> = {
   RESCHEDULE_WITHDRAWN: { messageKey: 'reschedule.withdrawn' },
   RESCHEDULE_EXPIRED: { messageKey: 'reschedule.expired' },
   LEGAL_UPDATE_NOTICE: { messageKey: 'legal.updated' },
+  ACCOUNT_DELETION_REQUESTED: { messageKey: 'account.deletionRequested' },
+  ACCOUNT_DELETION_CANCELLED: { messageKey: 'account.deletionCancelled' },
+  ACCOUNT_DELETION_POSTPONED: { messageKey: 'account.deletionPostponed' },
+  ACCOUNT_DELETION_BY_ADMIN: { messageKey: 'account.deletionByAdmin' },
+  ACCOUNT_EXPORT_READY: { messageKey: 'account.exportReady' },
   REVIEW_RECEIVED: {
     messageKey: 'review.received',
     preference: 'emailReviews',
   },
 };
+
+/** Account-level kinds: no session, rendered from the payload alone. */
+export const ACCOUNT_KINDS: ReadonlySet<NotificationKind> = new Set([
+  NotificationKind.ACCOUNT_DELETION_REQUESTED,
+  NotificationKind.ACCOUNT_DELETION_CANCELLED,
+  NotificationKind.ACCOUNT_DELETION_POSTPONED,
+  NotificationKind.ACCOUNT_DELETION_BY_ADMIN,
+  NotificationKind.ACCOUNT_EXPORT_READY,
+]);
 
 export function isTransactional(kind: NotificationKind): boolean {
   return KIND_META[kind].preference === undefined;

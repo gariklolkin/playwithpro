@@ -218,5 +218,35 @@
       "booking-policy": "预约与取消政策",
       "coach-agreement": "教练协议"
     }
+  },
+  "account": {
+    "deletionCode": {
+      "subject": "确认删除账户的验证码",
+      "text": "您的验证码是 {code}。\n\n请在账户设置中输入该验证码，以确认删除您的 PlayWithPro 账户。验证码 15 分钟内有效。如果这不是您本人的操作，请忽略此邮件，并考虑修改密码。"
+    },
+    "deletionRequested": {
+      "subject": "您的账户已安排删除",
+      "text": "{name}，您好：\n\n我们已收到您删除 PlayWithPro 账户的请求。账户将于 {when} 删除。\n\n在此之前您可以改变主意：登录后取消删除，或先下载一份您的数据副本：{url}\n\n其他所有设备均已退出登录。如果这不是您本人的操作，请立即登录取消删除，并修改密码。"
+    },
+    "deletionByAdmin": {
+      "subject": "您的账户已安排删除",
+      "text": "{name}，您好：\n\n我们的团队已安排于 {when} 删除您的 PlayWithPro 账户。\n\n您仍可以登录并下载一份您的数据副本：{url}\n\n如果您认为这是一个错误，请在该日期之前回复此邮件。"
+    },
+    "deletionCancelled": {
+      "subject": "账户删除已取消",
+      "text": "{name}，您好：\n\n您的 PlayWithPro 账户删除已取消，账户保持不变。如果您是教练，请重新发布可预约时间，以便重新出现在目录中：{url}"
+    },
+    "deletionPostponed": {
+      "subject": "账户删除已推迟",
+      "text": "{name}，您好：\n\n我们暂时无法删除您的 PlayWithPro 账户：仍有未完成的课程或付款。我们将于 {when} 再次尝试。\n\n查看仍未完成的事项：{url}"
+    },
+    "deletionCompleted": {
+      "subject": "您的账户已删除",
+      "text": "{name}，您好：\n\n您的 PlayWithPro 账户已删除。您的个人资料、视频、照片和登录信息均已移除。已付费课程、付款和争议的记录将按照法律和我们的隐私政策的要求保留，但不含您的姓名。\n\n这是我们发送到此地址的最后一封邮件。欢迎您随时重新注册。"
+    },
+    "exportReady": {
+      "subject": "您的数据导出已就绪",
+      "text": "{name}，您好：\n\n您的 PlayWithPro 数据副本已准备好。请在 {expires} 之前从账户设置中下载：{url}\n\n视频不包含在文件中，请在视频库中逐个下载。"
+    }
   }
 }

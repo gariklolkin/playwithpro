@@ -22,6 +22,7 @@ import {
   AvailabilityMaterializerService,
   SLOT_MINUTES,
 } from './availability-materializer.service';
+import { isDeparting } from '../account-data/departing';
 
 const MINUTE = 60_000;
 const HOUR = 3_600_000;
@@ -142,9 +143,16 @@ export class AvailabilityService {
   async getPublicSlots(proId: string): Promise<PublicAvailabilitySlot[]> {
     const profile = await this.prisma.proProfile.findUnique({
       where: { id: proId },
-      select: { status: true },
+      select: {
+        status: true,
+        user: { select: { deletionScheduledFor: true, deletedAt: true } },
+      },
     });
-    if (!profile || profile.status !== ProProfileStatus.VERIFIED) {
+    if (
+      !profile ||
+      profile.status !== ProProfileStatus.VERIFIED ||
+      isDeparting(profile.user)
+    ) {
       throw new NotFoundException();
     }
     const slots = await this.prisma.availabilitySlot.findMany({

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
 import { formatMoney } from "@/lib/money";
 import { useNow } from "@/lib/use-now";
+import { formerMember } from "@/lib/former-member";
 
 const KINDS = [
   DisputeKind.PlayerReported,
@@ -56,6 +57,7 @@ function AttendanceSummaryBlock({ item }: { item: AdminDisputeItem }) {
 
 function AttendanceEvidence({ item }: { item: AdminDisputeItem }) {
   const t = useTranslations("adminDisputes");
+  const tAccount = useTranslations("account");
   const format = useFormatter();
   if (item.attendance.length === 0) {
     return (
@@ -66,7 +68,7 @@ function AttendanceEvidence({ item }: { item: AdminDisputeItem }) {
     <ul className="mt-2 space-y-1 text-[13px] text-text-secondary">
       {item.attendance.map((entry, index) => (
         <li key={`${entry.userId}-${index}`}>
-          🕐 {entry.displayName}:{" "}
+          🕐 {formerMember(entry.displayName, tAccount("formerMember"))}:{" "}
           {format.dateTime(new Date(entry.joinedAt), {
             dateStyle: "short",
             timeStyle: "short",
@@ -98,6 +100,7 @@ function DisputeCard({
   const t = useTranslations("adminDisputes");
   const tCatalog = useTranslations("catalog");
   const tActions = useTranslations("sessions.actions");
+  const tAccount = useTranslations("account");
   const locale = useLocale();
   const format = useFormatter();
   const [note, setNote] = useState("");
@@ -130,11 +133,11 @@ function DisputeCard({
       <header className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
           <span className="font-semibold text-text">
-            {item.player.displayName}
+            {formerMember(item.player.displayName, tAccount("formerMember"))}
           </span>{" "}
           <span className="text-sm text-text-secondary">vs</span>{" "}
           <span className="font-semibold text-text">
-            {item.coach.displayName}
+            {formerMember(item.coach.displayName, tAccount("formerMember"))}
           </span>{" "}
           <span className="rounded bg-bg-secondary px-2 py-0.5 text-[12px] text-text-secondary">
             {tCatalog(`service.${item.serviceType}`)}

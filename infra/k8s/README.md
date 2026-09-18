@@ -9,7 +9,7 @@ machine — there is no CI/CD; the cluster is not managed from the server itself
 ```
 infra/k8s/
   cluster/       # cluster-scoped: namespace, cert-manager ClusterIssuers
-  postgres/      # PostgreSQL + PVC + backup CronJob
+  postgres/      # PostgreSQL + PVC + backup CronJob + bucket lifecycle rules
   app/           # api + web Deployments/Services/Ingress, migration Job
   livekit/       # LiveKit media server (host network) + config template
   fider/         # feedback board (Fider) Deployment/Service/Ingress + DB init Job
@@ -72,6 +72,40 @@ from the nightly `pg_dump` objects in the Hetzner bucket.
   only; `deploy.sh` restarts it when either changed, and after a cert-manager
   renewal outside a deploy run `kubectl -n playwithpro rollout restart deploy/livekit`.
 - Before risky operations take a netcup SCP snapshot of the VPS.
+
+## Backups, retention and account deletions
+
+- **Lifecycle**: `infra/scripts/apply-backup-lifecycle.sh` puts
+  `postgres/backup-lifecycle.json` on the bucket — nightly dumps under
+  `backups/` expire after **30 days** (the backup window for the privacy policy),
+  account exports under `exports/` after 8 days (a backstop behind the API's
+  7-day sweep). The call replaces the bucket's whole lifecycle configuration:
+  add any future rule to the JSON, never by hand. Re-run it after creating a
+  new bucket; verify with the `get-bucket-lifecycle-configuration` output the
+  script prints.
+- **Deletions and restores**: an executed account deletion is not undone in
+  old dumps. Restoring one would bring deleted people back, so a restore is
+  always followed by re-applying the deletions:
+  1. While the live database is still readable, save the ids of deletions
+     completed after the dump was taken:
+     ```bash
+     kubectl -n playwithpro exec deploy/postgres -- psql -U playwithpro -d playwithpro -tAc \
+       "SELECT \"userId\" FROM \"AccountDataRequest\" WHERE kind='DELETION' AND status='COMPLETED'" > deleted-users.txt
+     ```
+  2. Restore the dump (see the header of `postgres/backup-cronjob.yaml`).
+  3. Before announcing the service again, re-apply (every erasure hook and
+     the tombstone, no emails; deletions the restored database records are
+     always included):
+     ```bash
+     kubectl -n playwithpro cp deleted-users.txt deploy/api:/tmp/deleted-users.txt
+     kubectl -n playwithpro exec deploy/api -- node dist/src/account-data/reapply /tmp/deleted-users.txt
+     ```
+     (`pnpm --filter @playwithpro/api run account-requests:reapply` does the
+     same in a dev checkout after `nest build`.)
+- **PostHog erasure**: the deletion job erases the PostHog person only when
+  `POSTHOG_PERSONAL_API_KEY` (person write scope) and `POSTHOG_PROJECT_ID` are
+  set; otherwise the step is logged as *skipped* in the admin request log
+  (Dashboard → Data requests) and the person has to be deleted in PostHog by hand.
 
 ## Observability (PostHog Cloud EU)
 

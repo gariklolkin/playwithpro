@@ -81,6 +81,8 @@ export interface MeResponse {
   hasPassword: boolean;
   googleLinked: boolean;
   avatarUrl: string | null;
+  /** The account is scheduled for deletion at this time (grace period); null otherwise. */
+  deletionScheduledFor: string | null;
 }
 
 /** Returned by register/login/refresh alongside the httpOnly auth cookies. */

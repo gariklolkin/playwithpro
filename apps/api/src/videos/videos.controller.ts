@@ -25,6 +25,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { ActiveAccountGuard } from '../account-data/active-account.guard';
 import { CompleteVideoUploadDto } from './dto/complete-video-upload.dto';
 import { CreateVideoUploadDto } from './dto/create-video-upload.dto';
 import { RenameVideoDto } from './dto/rename-video.dto';
@@ -41,6 +42,7 @@ export class VideosController {
 
   @Post()
   @Roles(Role.Amateur)
+  @UseGuards(ActiveAccountGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ description: 'Multipart upload initiated.' })
   async createUpload(

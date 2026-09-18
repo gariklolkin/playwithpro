@@ -150,7 +150,8 @@
         "users": "Utilisateurs",
         "transactions": "Transactions",
         "analytics": "Statistiques",
-        "reviews": "Avis"
+        "reviews": "Avis",
+        "accountRequests": "Demandes de données"
       }
     }
   },
@@ -215,7 +216,8 @@
       "tabs": {
         "profile": "Profil",
         "security": "Sécurité",
-        "notifications": "Notifications"
+        "notifications": "Notifications",
+        "account": "Compte"
       }
     },
     "notifications": {
@@ -381,7 +383,8 @@
     "adminAnalyticsTitle": "Statistiques — PlayWithPro",
     "adminReviewsTitle": "Modération des avis — PlayWithPro",
     "privacyTitle": "Confidentialité — PlayWithPro",
-    "unsubscribeTitle": "Préférences e-mail — PlayWithPro"
+    "unsubscribeTitle": "Préférences e-mail — PlayWithPro",
+    "adminAccountRequestsTitle": "Demandes de données — PlayWithPro"
   },
   "verification": {
     "title": "Vérification",
@@ -1385,6 +1388,105 @@
       "imprint": "Mentions légales",
       "booking-policy": "Conditions de réservation et d'annulation",
       "coach-agreement": "Contrat coach"
+    }
+  },
+  "account": {
+    "formerMember": "Ancien membre",
+    "export": {
+      "title": "Télécharger mes données",
+      "intro": "Obtenez une copie des données de votre compte — profil, séances, paiements, avis, litiges et informations sur les vidéos — dans un fichier zip contenant du JSON. Les vidéos elles-mêmes se téléchargent depuis votre vidéothèque.",
+      "request": "Demander mes données",
+      "requesting": "Préparation…",
+      "ready": "Votre export est prêt. Le lien est valable jusqu'au {date}.",
+      "download": "Télécharger le zip",
+      "building": "Votre export est en préparation. Nous vous enverrons un e-mail dès qu'il sera prêt.",
+      "failed": "L'export n'a pas encore pu être créé ; nous réessayons. Vous pouvez aussi le redemander plus tard.",
+      "nextAllowed": "Vous pourrez demander un autre export le {date}.",
+      "error": "Impossible de demander l'export. Veuillez réessayer."
+    },
+    "delete": {
+      "title": "Supprimer le compte",
+      "intro": "Une fois la période d'attente écoulée, la suppression est définitive.",
+      "goesTitle": "Ce qui est supprimé",
+      "goes": "Votre profil et votre photo, vos prestations et disponibilités de coach, vos vidéos, vos identifiants et vos paramètres.",
+      "staysTitle": "Ce qui est conservé, sans votre nom",
+      "stays": "Les séances payées, paiements, litiges, preuves de présence, avis et votre acceptation de nos conditions — la loi et les droits de l'autre partie l'exigent. Ils apparaissent comme « Ancien membre ».",
+      "grace": "Votre compte est supprimé {days, plural, =0 {immédiatement} one {# jour} other {# jours}} après votre confirmation. D'ici là, vous pouvez vous connecter, annuler la suppression ou télécharger vos données. Tous vos autres appareils sont déconnectés immédiatement.",
+      "coachNote": "Les coachs quittent le catalogue immédiatement et leurs créneaux ouverts sont retirés ; si vous annulez, publiez à nouveau vos disponibilités.",
+      "blockersTitle": "À régler d'abord",
+      "blockersIntro": "Un compte ne peut pas être supprimé tant qu'une séance ou de l'argent est en cours.",
+      "blockerSession": "{service} le {date} — vous êtes {role, select, coach {le coach} other {le joueur}}",
+      "blockerPayment": "Un paiement retenu de {amount}",
+      "openSession": "Ouvrir",
+      "password": "Votre mot de passe actuel",
+      "sendCode": "M'envoyer un code par e-mail",
+      "sendingCode": "Envoi…",
+      "codeSent": "Nous avons envoyé un code à 6 chiffres à votre adresse e-mail.",
+      "code": "Code reçu par e-mail",
+      "confirmLabel": "Saisissez {word} pour confirmer",
+      "submit": "Supprimer mon compte",
+      "submitting": "Suppression…",
+      "wrongCredential": "Le mot de passe ou le code est incorrect.",
+      "blocked": "Quelque chose est encore en cours — voir la liste ci-dessus.",
+      "error": "Impossible de supprimer le compte. Veuillez réessayer.",
+      "adminNote": "Les comptes administrateur sont supprimés par un autre administrateur.",
+      "scheduled": "Votre compte sera supprimé le {date}."
+    },
+    "gate": {
+      "title": "La suppression de votre compte est programmée",
+      "body": "Il sera supprimé le {date}. D'ici là, vous pouvez changer d'avis ou télécharger une copie de vos données. Les réservations, paiements et envois de vidéos sont suspendus.",
+      "postponed": "La suppression a été reportée car une séance ou un paiement est encore en cours.",
+      "cancel": "Annuler la suppression",
+      "cancelling": "Annulation…",
+      "download": "Télécharger mes données",
+      "signOut": "Se déconnecter",
+      "error": "Une erreur est survenue. Veuillez réessayer."
+    },
+    "admin": {
+      "deleteCta": "Supprimer le compte",
+      "deleteTitle": "Supprimer ce compte",
+      "reason": "Motif (obligatoire, conservé dans le journal)",
+      "grace": "Quand",
+      "graceDefault": "Dans {days} jours",
+      "graceNow": "Immédiatement (au prochain passage horaire)",
+      "submit": "Programmer la suppression",
+      "submitting": "Programmation…",
+      "cancel": "Annuler",
+      "blocked": "Des séances ou paiements en cours bloquent cette suppression.",
+      "error": "Impossible de programmer la suppression.",
+      "scheduledBadge": "Suppression le {date}",
+      "deletedBadge": "Supprimé",
+      "log": {
+        "title": "Demandes de données",
+        "subtitle": "Suppressions de comptes et exports de données, étape par étape. Lecture seule ; les demandes échouées peuvent être relancées.",
+        "empty": "Aucune demande pour l'instant.",
+        "requested": "Demandé",
+        "user": "Utilisateur",
+        "kind": "Type",
+        "status": "Statut",
+        "initiator": "Par",
+        "details": "Détails",
+        "kinds": {
+          "deletion": "Suppression",
+          "export": "Export"
+        },
+        "statuses": {
+          "scheduled": "Programmée",
+          "running": "En cours",
+          "postponed": "Reportée",
+          "completed": "Terminée",
+          "cancelled": "Annulée",
+          "failed": "Échec"
+        },
+        "initiators": {
+          "self": "Utilisateur",
+          "admin": "Admin"
+        },
+        "scheduledFor": "Exécution {date}",
+        "retry": "Relancer",
+        "retrying": "Relance…",
+        "retryError": "La relance a de nouveau échoué."
+      }
     }
   }
 }

@@ -27,7 +27,12 @@ const verifiedProfile = {
   languages: ['en', 'de'],
   ratingSum: 0,
   ratingCount: 0,
-  user: { displayName: 'Anna Coach', avatarKey: 'avatars/a.jpg' },
+  user: {
+    displayName: 'Anna Coach',
+    avatarKey: 'avatars/a.jpg',
+    deletionScheduledFor: null,
+    deletedAt: null,
+  },
   services: [
     service(),
     service({ id: 's2', type: 'VIDEO_ANALYSIS', priceMinor: 6000 }),

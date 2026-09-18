@@ -79,6 +79,7 @@ import {
   SessionWithParties,
   toSessionResponse,
 } from './session.mapper';
+import { isDeparting } from '../account-data/departing';
 
 const MINUTE = 60_000;
 const DAY = 24 * 60 * MINUTE;
@@ -161,9 +162,16 @@ export class BookingsService {
     const serviceType = toPrismaServiceType(dto.serviceType);
     const profile = await this.prisma.proProfile.findUnique({
       where: { id: dto.proId },
-      include: { services: { where: { type: serviceType } } },
+      include: {
+        services: { where: { type: serviceType } },
+        user: { select: { deletionScheduledFor: true, deletedAt: true } },
+      },
     });
-    if (!profile || profile.status !== ProProfileStatus.VERIFIED) {
+    if (
+      !profile ||
+      profile.status !== ProProfileStatus.VERIFIED ||
+      isDeparting(profile.user)
+    ) {
       throw new NotFoundException();
     }
     const service = profile.services[0];
@@ -905,6 +913,17 @@ export class BookingsService {
   }
 
   /** Cancels a PENDING_PAYMENT session and reopens its slot; false if it was not unpaid. */
+  /** Releases every unpaid booking of a user (an accepted deletion request). */
+  async cancelUnpaidOf(playerId: string): Promise<void> {
+    const pending = await this.prisma.session.findMany({
+      where: { playerId, status: SessionStatus.PENDING_PAYMENT },
+      select: { id: true },
+    });
+    for (const session of pending) {
+      await this.cancelUnpaidSession(session.id);
+    }
+  }
+
   private async cancelUnpaidSession(sessionId: string): Promise<boolean> {
     const cancelled = await this.cancelUnpaidSessionTx(sessionId);
     if (cancelled) await this.releaseAttachments(sessionId);

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
+import { DeletionGate } from "@/components/account/deletion-gate";
 import { LegalGate } from "@/components/legal/legal-gate";
 import { SiteFooter } from "@/components/legal/site-footer";
 import { Navbar } from "@/components/navbar";
@@ -61,7 +62,11 @@ export default async function LocaleLayout({
             flags={observability.flags}
           >
             <Navbar user={user} />
-            <LegalGate initialStatus={legalStatus} locale={locale} />
+            {user?.deletionScheduledFor ? (
+              <DeletionGate scheduledFor={user.deletionScheduledFor} />
+            ) : (
+              <LegalGate initialStatus={legalStatus} locale={locale} />
+            )}
             {children}
             <SiteFooter />
             {/* `useSearchParams` in a layout-level client component needs a

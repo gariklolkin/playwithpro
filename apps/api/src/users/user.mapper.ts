@@ -28,5 +28,6 @@ export function toMeResponse(
       (account) => account.provider === 'google',
     ),
     avatarUrl: user.avatarKey === null ? null : avatarUrlOf(user.avatarKey),
+    deletionScheduledFor: user.deletionScheduledFor?.toISOString() ?? null,
   };
 }

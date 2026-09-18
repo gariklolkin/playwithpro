@@ -184,7 +184,10 @@ describe('AvailabilityService', () => {
     });
 
     it('serves open slots beyond the 2-hour notice window', async () => {
-      prisma.proProfile.findUnique.mockResolvedValue({ status: 'VERIFIED' });
+      prisma.proProfile.findUnique.mockResolvedValue({
+        status: 'VERIFIED',
+        user: { deletionScheduledFor: null, deletedAt: null },
+      });
       const startsAt = new Date(Date.now() + 72 * 3_600_000);
       prisma.availabilitySlot.findMany.mockResolvedValue([
         {

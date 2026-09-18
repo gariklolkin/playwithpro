@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/ui/star-rating";
 import { apiFetch } from "@/lib/api";
+import { formerMember } from "@/lib/former-member";
 
 /**
  * Public reviews section of the coach page: aggregate header plus a
@@ -24,6 +25,7 @@ export function CoachReviews({
 }) {
   const t = useTranslations("coach.reviews");
   const tCatalog = useTranslations("catalog");
+  const tAccount = useTranslations("account");
   const format = useFormatter();
   const [items, setItems] = useState(initial.items);
   const [page, setPage] = useState(initial.page);
@@ -70,7 +72,10 @@ export function CoachReviews({
                 <div className="flex items-center gap-2">
                   <StarRating value={review.rating} />
                   <span className="font-medium text-text">
-                    {review.playerDisplayName}
+                    {formerMember(
+                      review.playerDisplayName,
+                      tAccount("formerMember"),
+                    )}
                   </span>
                 </div>
                 <span className="text-[13px] text-text-tertiary">

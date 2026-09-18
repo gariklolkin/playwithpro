@@ -218,5 +218,35 @@
       "booking-policy": "Buchungs- und Stornobedingungen",
       "coach-agreement": "Trainervereinbarung"
     }
+  },
+  "account": {
+    "deletionCode": {
+      "subject": "Ihr Code zur Bestätigung der Kontolöschung",
+      "text": "Ihr Bestätigungscode lautet {code}.\n\nGeben Sie ihn in den Kontoeinstellungen ein, um die Löschung Ihres PlayWithPro-Kontos zu bestätigen. Der Code ist 15 Minuten gültig. Wenn Sie ihn nicht angefordert haben, ignorieren Sie diese E-Mail und ändern Sie sicherheitshalber Ihr Passwort."
+    },
+    "deletionRequested": {
+      "subject": "Ihr Konto wird gelöscht",
+      "text": "Hallo {name},\n\nwir haben Ihren Antrag auf Löschung Ihres PlayWithPro-Kontos erhalten. Es wird am {when} gelöscht.\n\nBis dahin können Sie es sich anders überlegen: Melden Sie sich an und brechen Sie die Löschung ab, oder laden Sie vorher eine Kopie Ihrer Daten herunter: {url}\n\nAlle anderen Geräte wurden abgemeldet. Wenn Sie das nicht veranlasst haben, melden Sie sich sofort an, brechen Sie die Löschung ab und ändern Sie Ihr Passwort."
+    },
+    "deletionByAdmin": {
+      "subject": "Ihr Konto wird gelöscht",
+      "text": "Hallo {name},\n\nunser Team hat die Löschung Ihres PlayWithPro-Kontos für den {when} geplant.\n\nSie können sich weiterhin anmelden und eine Kopie Ihrer Daten herunterladen: {url}\n\nWenn Sie das für einen Fehler halten, antworten Sie bitte vor diesem Datum auf diese E-Mail."
+    },
+    "deletionCancelled": {
+      "subject": "Die Löschung Ihres Kontos wurde abgebrochen",
+      "text": "Hallo {name},\n\ndie Löschung Ihres PlayWithPro-Kontos wurde abgebrochen, Ihr Konto bleibt bestehen. Wenn Sie Coach sind, veröffentlichen Sie Ihre Verfügbarkeit erneut, um wieder im Katalog zu erscheinen: {url}"
+    },
+    "deletionPostponed": {
+      "subject": "Die Löschung Ihres Kontos wurde verschoben",
+      "text": "Hallo {name},\n\nwir konnten Ihr PlayWithPro-Konto noch nicht löschen: Eine Session oder eine Zahlung ist noch offen. Wir versuchen es am {when} erneut.\n\nSehen Sie, was noch offen ist: {url}"
+    },
+    "deletionCompleted": {
+      "subject": "Ihr Konto wurde gelöscht",
+      "text": "Hallo {name},\n\nIhr PlayWithPro-Konto wurde gelöscht. Ihr Profil, Ihre Videos, Fotos und Anmeldedaten sind entfernt. Aufzeichnungen zu bezahlten Sessions, Zahlungen und Streitfällen bleiben ohne Ihren Namen erhalten, wie es das Gesetz und unsere Datenschutzerklärung vorsehen.\n\nDies ist die letzte E-Mail an diese Adresse. Sie können sich jederzeit neu registrieren."
+    },
+    "exportReady": {
+      "subject": "Ihr Datenexport ist fertig",
+      "text": "Hallo {name},\n\ndie Kopie Ihrer PlayWithPro-Daten ist fertig. Laden Sie sie bis {expires} in Ihren Kontoeinstellungen herunter: {url}\n\nIhre Videos sind nicht in der Datei enthalten; laden Sie sie einzeln aus Ihrer Videobibliothek herunter."
+    }
   }
 }

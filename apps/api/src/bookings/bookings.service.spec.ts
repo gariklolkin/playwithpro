@@ -35,6 +35,7 @@ const verifiedProfile = {
   id: 'profile-1',
   userId: 'coach-1',
   status: 'VERIFIED',
+  user: { deletionScheduledFor: null, deletedAt: null },
   services: [
     {
       id: 's1',

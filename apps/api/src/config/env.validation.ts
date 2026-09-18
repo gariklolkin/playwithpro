@@ -238,6 +238,30 @@ class EnvironmentVariables {
   @IsString()
   SUPPORT_EMAIL = 'support@play-with.pro';
 
+  /** Days between an accepted deletion request and its execution. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  ACCOUNT_DELETION_GRACE_DAYS = 14;
+
+  /** Days a deletion is pushed back when a blocker appeared meanwhile. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  ACCOUNT_DELETION_POSTPONE_DAYS = 7;
+
+  /** Days an export zip stays downloadable. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  ACCOUNT_EXPORT_TTL_DAYS = 7;
+
+  /** Hours between two export requests of one account. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  ACCOUNT_EXPORT_COOLDOWN_HOURS = 24;
+
   /** Accepted reschedules allowed per session. */
   @Type(() => Number)
   @IsInt()
@@ -304,6 +328,11 @@ class EnvironmentVariables {
   @IsOptional()
   @IsString()
   POSTHOG_PERSONAL_API_KEY?: string;
+
+  /** Project id for the persons API (account erasure); optional. */
+  @IsOptional()
+  @IsString()
+  POSTHOG_PROJECT_ID?: string;
 
   /** Support "Secret API key": signs the HMAC identity for the in-app support panel. */
   @IsOptional()

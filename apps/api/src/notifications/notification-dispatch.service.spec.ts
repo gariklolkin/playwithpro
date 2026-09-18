@@ -79,6 +79,7 @@ function row(kind: string, overrides: Record<string, unknown> = {}) {
       locale: 'de',
       timezone: 'Europe/Berlin',
       role: 'AMATEUR',
+      deletedAt: null,
       emailReminders: true,
       emailClipChanges: true,
       emailReviews: true,
@@ -142,6 +143,49 @@ describe('NotificationDispatchService', () => {
     expect(prisma.notification.update).toHaveBeenCalledWith({
       where: { id: 'n1' },
       data: expect.objectContaining({ status: 'SENT' }) as object,
+    });
+  });
+
+  it('sends account kinds without a session, linking the account settings', async () => {
+    prisma.notification.findMany.mockResolvedValue([
+      row('ACCOUNT_DELETION_REQUESTED', {
+        sessionId: null,
+        session: null,
+        payload: { scheduledFor: '2026-10-02T08:00:00.000Z' },
+      }),
+      row('ACCOUNT_EXPORT_READY', {
+        id: 'n2',
+        sessionId: null,
+        session: null,
+        payload: { expiresAt: '2026-09-25T08:00:00.000Z' },
+      }),
+    ]);
+
+    await service.dispatchOnce();
+
+    const [first, second] = mailer.deliver.mock.calls.map(
+      (call: unknown[]) => call[1] as { subject: string; text: string },
+    );
+    expect(first.text).toContain('Anna');
+    expect(first.text).toContain('(Europe/Berlin)');
+    expect(first.text).toContain('/de/dashboard?settings=account');
+    expect(second.text).toContain('/de/dashboard?settings=account');
+    expect(prisma.notification.update).toHaveBeenCalledTimes(2);
+  });
+
+  it('never writes to a tombstone', async () => {
+    prisma.notification.findMany.mockResolvedValue([
+      row('ACCOUNT_DELETION_CANCELLED', {
+        sessionId: null,
+        session: null,
+        recipient: { ...row('x').recipient, deletedAt: new Date() },
+      }),
+    ]);
+    await service.dispatchOnce();
+    expect(mailer.deliver).not.toHaveBeenCalled();
+    expect(prisma.notification.update).toHaveBeenCalledWith({
+      where: { id: 'n1' },
+      data: { status: 'SKIPPED', lastError: 'account-deleted' },
     });
   });
 

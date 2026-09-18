@@ -34,6 +34,7 @@ import { EvidenceLine } from "./attendance-evidence";
 import { RescheduleBanner } from "./reschedule-banner";
 import { RescheduleDialog } from "./reschedule-dialog";
 import { SystemDisputePanel } from "./system-dispute-panel";
+import { formerMember } from "@/lib/former-member";
 
 const CATEGORIES = [
   DisputeReasonCategory.CoachNoShow,
@@ -67,6 +68,7 @@ export function SessionActions({
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [proposing, setProposing] = useState(false);
   const tReschedule = useTranslations("sessions.reschedule");
+  const tAccount = useTranslations("account");
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [category, setCategory] = useState<DisputeReasonCategory | "">("");
@@ -467,9 +469,10 @@ export function SessionActions({
   }
 
   if (cancellable) {
-    const counterpartName = isCoach
-      ? session.player.displayName
-      : session.coach.displayName;
+    const counterpartName = formerMember(
+      isCoach ? session.player.displayName : session.coach.displayName,
+      tAccount("formerMember"),
+    );
     return (
       <div className="mt-3">
         {session.reschedule ? (

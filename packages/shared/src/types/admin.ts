@@ -27,6 +27,10 @@ export interface AdminUserListItem {
   createdAt: string;
   /** Null while the account is active. */
   suspendedAt: string | null;
+  /** A deletion is scheduled for this time (grace period); null otherwise. */
+  deletionScheduledFor: string | null;
+  /** The account is a tombstone ("Former member"); email and name are empty. */
+  deletedAt: string | null;
   /**
    * Professionals only: paid sessions this coach cancelled late in the last
    * 90 days, and whether that reaches the platform's threshold. Null for

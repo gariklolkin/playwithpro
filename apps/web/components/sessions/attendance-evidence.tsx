@@ -6,6 +6,7 @@ import {
   type SessionResponse,
 } from "@playwithpro/shared";
 import { useTranslations } from "next-intl";
+import { formerMember } from "@/lib/former-member";
 
 /** The coach connecting later than this is worth telling the player. */
 const LATE_MINUTES = 10;
@@ -60,13 +61,20 @@ export function EvidenceLine({
   className?: string;
 }) {
   const t = useTranslations("sessions.actions.evidence");
+  const tAccount = useTranslations("account");
   const key = evidenceKey(session.attendance, isCoach);
   if (key === null || session.attendance === null) return null;
   return (
     <p className={className} data-testid="attendance-evidence">
       {t(key, {
-        coach: session.coach.displayName,
-        player: session.player.displayName,
+        coach: formerMember(
+          session.coach.displayName,
+          tAccount("formerMember"),
+        ),
+        player: formerMember(
+          session.player.displayName,
+          tAccount("formerMember"),
+        ),
         minutes:
           key === "shortOverlap"
             ? session.attendance.overlapMinutes
